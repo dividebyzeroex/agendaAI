@@ -1,0 +1,207 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Configurações <span class="gradient-text">do Negócio</span></h2>
+      <p>Gerencie os dados do estabelecimento, serviços e horários de atendimento — tudo salvo no Supabase.</p>
+    </div>
+    <div class="saved-toast" *ngIf="savedMsg">
+      <i class="pi pi-check-circle"></i> {{ savedMsg }}
+    </div>
+  </div>
+
+  <!-- Tab Switcher -->
+  <div class="tabs-bar">
+    <button class="tab-btn" [class.active]="activeTab === 'negocio'" (click)="setTab('negocio')">
+      <i class="pi pi-building"></i> Estabelecimento
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'servicos'" (click)="setTab('servicos')">
+      <i class="pi pi-tag"></i> Serviços
+    </button>
+    <button class="tab-btn" [class.active]="activeTab === 'horarios'" (click)="setTab('horarios')">
+      <i class="pi pi-clock"></i> Horários
+    </button>
+  </div>
+
+  <!-- TAB: Estabelecimento -->
+  <div class="tab-content" *ngIf="activeTab === 'negocio'">
+
+    <!-- 🔗 Card do Link Público -->
+    <div class="config-card link-card" *ngIf="estabelecimento.nome">
+      <div class="link-card-header">
+        <div class="link-icon">🔗</div>
+        <div>
+          <h3>Seu Link de Agendamento</h3>
+          <p>Compartilhe com seus clientes para que eles agendem sem precisar de login.</p>
+        </div>
+      </div>
+      <div class="link-box">
+        <span class="link-url">{{ publicLink }}</span>
+        <button class="btn-copy" (click)="copiarLink()" [class.copied]="linkCopiado">
+          <i class="pi" [class.pi-copy]="!linkCopiado" [class.pi-check]="linkCopiado"></i>
+          {{ linkCopiado ? 'Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+      <div class="link-actions">
+        <a [href]="publicLink" target="_blank" class="btn-preview">
+          <i class="pi pi-external-link"></i> Abrir portal
+        </a>
+        <span class="link-tip">Compartilhe no WhatsApp, Instagram bio ou onde preferir.</span>
+      </div>
+    </div>
+
+    <!-- 📱 Card do Portal do Profissional -->
+    <div class="config-card link-card pro-link-card" *ngIf="estabelecimento.nome">
+      <div class="link-card-header">
+        <div class="link-icon">📱</div>
+        <div>
+          <h3>Portal do Profissional</h3>
+          <p>Agenda mobile para sua equipe — confirmar clientes, adicionar serviços e enviar para o caixa.</p>
+        </div>
+      </div>
+      <div class="link-box">
+        <span class="link-url">{{ proLink }}</span>
+        <button class="btn-copy pro" (click)="copiarProLink()" [class.copied]="proLinkCopiado">
+          <i class="pi" [class.pi-copy]="!proLinkCopiado" [class.pi-check]="proLinkCopiado"></i>
+          {{ proLinkCopiado ? 'Copiado!' : 'Copiar' }}
+        </button>
+      </div>
+      <div class="link-actions">
+        <a [href]="proLink" target="_blank" class="btn-preview pro">
+          <i class="pi pi-external-link"></i> Abrir portal
+        </a>
+        <span class="link-tip">Compartilhe apenas com sua equipe de profissionais.</span>
+      </div>
+    </div>
+
+    <div class="config-card">
+      <h3>Dados do Negócio</h3>
+
+      <div class="form-grid">
+        <div class="field">
+          <label>Nome do Estabelecimento</label>
+          <input type="text" [(ngModel)]="estabelecimento.nome" class="ag-input" placeholder="Ex: Barbearia Silva" />
+        </div>
+        <div class="field">
+          <label>Cidade</label>
+          <input type="text" [(ngModel)]="estabelecimento.cidade" class="ag-input" placeholder="Ex: São Paulo - SP" />
+        </div>
+        <div class="field">
+          <label>Endereço</label>
+          <input type="text" [(ngModel)]="estabelecimento.endereco" class="ag-input" placeholder="Ex: Rua das Flores, 123" />
+        </div>
+        <div class="field">
+          <label>Telefone / WhatsApp</label>
+          <input type="text" [(ngModel)]="estabelecimento.telefone" class="ag-input" placeholder="(11) 99999-8888" />
+        </div>
+      </div>
+      <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()">
+        <i class="pi" [class.pi-check]="!isSaving" [class.pi-spin]="isSaving" [class.pi-spinner]="isSaving"></i>
+        {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
+      </button>
+    </div>
+  </div>
+
+  <!-- TAB: Serviços -->
+  <div class="tab-content" *ngIf="activeTab === 'servicos'">
+    <div class="config-card">
+      <div class="card-header-row">
+        <h3>Serviços Oferecidos</h3>
+        <button class="btn-add" (click)="showNovoServico = !showNovoServico">
+          <i class="pi pi-plus"></i> Novo Serviço
+        </button>
+      </div>
+
+      <!-- Add Form -->
+      <div class="add-form" *ngIf="showNovoServico">
+        <div class="add-form-grid">
+          <div class="field">
+            <label>Emoji</label>
+            <input type="text" [(ngModel)]="novoServico.emoji" class="ag-input emoji-input" maxlength="2" />
+          </div>
+          <div class="field full">
+            <label>Nome do Serviço</label>
+            <input type="text" [(ngModel)]="novoServico.titulo" class="ag-input" placeholder="Ex: Corte Social" />
+          </div>
+          <div class="field">
+            <label>Preço (R$)</label>
+            <input type="number" [(ngModel)]="novoServico.preco" class="ag-input" min="0" />
+          </div>
+          <div class="field">
+            <label>Duração (min)</label>
+            <input type="number" [(ngModel)]="novoServico.duracao_min" class="ag-input" min="5" step="5" />
+          </div>
+          <div class="field full">
+            <label>Descrição</label>
+            <input type="text" [(ngModel)]="novoServico.descricao" class="ag-input" placeholder="Breve descrição do serviço..." />
+          </div>
+        </div>
+        <button class="btn-save" (click)="adicionarServico()">
+          <i class="pi pi-plus"></i> Adicionar Serviço
+        </button>
+      </div>
+
+      <!-- Servicos List -->
+      <div class="servicos-list">
+        <!-- Skeletons -->
+        <ng-container *ngIf="isLoadingService.isLoading$ | async">
+          <div class="servico-row" *ngFor="let i of [1,2,3]">
+             <div class="ag-skeleton" style="width: 32px; height: 32px; border-radius: 8px;"></div>
+             <div class="s-info">
+               <div class="ag-skeleton" style="width: 140px; height: 16px; margin-bottom: 4px;"></div>
+               <div class="ag-skeleton" style="width: 200px; height: 12px;"></div>
+             </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="!(isLoadingService.isLoading$ | async)">
+          <div class="servico-row" *ngFor="let s of servicos">
+            <span class="s-emoji">{{ s.emoji }}</span>
+            <div class="s-info">
+              <strong>{{ s.titulo }}</strong>
+              <span>{{ s.descricao }}</span>
+            </div>
+            <div class="s-meta">
+              <span class="s-preco">R$ {{ s.preco | number:'1.2-2' }}</span>
+              <span class="s-dur">{{ s.duracao_min }} min</span>
+            </div>
+            <button class="icon-btn red" (click)="removerServico(s.id!)">
+              <i class="pi pi-trash"></i>
+            </button>
+          </div>
+          <div class="empty-state" *ngIf="servicos.length === 0">
+            <i class="pi pi-tag"></i>
+            <p>Nenhum serviço cadastrado. Clique em "Novo Serviço".</p>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Horários -->
+  <div class="tab-content" *ngIf="activeTab === 'horarios'">
+    <div class="config-card">
+      <h3>Grade de Atendimento Semanal</h3>
+      <div class="horarios-list">
+        <div class="horario-row" *ngFor="let h of horarios" [class.fechado]="!h.ativo">
+          <div class="dia-toggle">
+            <div class="toggle-pill" [class.on]="h.ativo" (click)="h.ativo = !h.ativo; salvarHorario(h)">
+              <div class="knob"></div>
+            </div>
+            <span class="dia-nome">{{ h.dia_nome }}</span>
+          </div>
+          <div class="horario-fields" *ngIf="h.ativo">
+            <div class="field-inline">
+              <label>Abre</label>
+              <input type="time" [(ngModel)]="h.abre" class="ag-input time-input" (change)="salvarHorario(h)" />
+            </div>
+            <div class="field-inline">
+              <label>Fecha</label>
+              <input type="time" [(ngModel)]="h.fecha" class="ag-input time-input" (change)="salvarHorario(h)" />
+            </div>
+          </div>
+          <span class="fechado-label" *ngIf="!h.ativo">Fechado</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

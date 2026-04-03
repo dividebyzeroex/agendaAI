@@ -1,0 +1,58 @@
+<div class="ag-dashboard" *ngIf="!isLoading; else loading">
+
+  <!-- Stats Row -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-icon blue"><i class="pi pi-calendar"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Agendamentos Hoje</span>
+        <span class="stat-value">{{ totalToday }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="pi pi-dollar"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Faturamento Projetado</span>
+        <span class="stat-value">R$ {{ revenue | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="pi pi-sparkles"></i></div>
+      <div class="stat-body">
+        <span class="stat-label">Agente IA</span>
+        <span class="stat-value" style="font-size:1rem; color:#10b981">● Online</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Today's Agenda -->
+  <div class="agenda-section">
+    <h3>Agenda de Hoje</h3>
+
+    <div *ngIf="todayAppointments.length === 0" class="empty-state">
+      <i class="pi pi-calendar-times"></i>
+      <p>Nenhum agendamento para hoje. <br>Adicione na aba <strong>Agenda</strong>.</p>
+    </div>
+
+    <div class="appointment-list" *ngIf="todayAppointments.length > 0">
+      <div class="appointment-row" *ngFor="let apt of todayAppointments">
+        <div class="apt-time">{{ apt.start | date:'HH:mm' }}</div>
+        <div class="apt-dot" [style.background]="apt.backgroundColor || '#1a73e8'"></div>
+        <div class="apt-info">
+          <strong>{{ apt.title }}</strong>
+        </div>
+        <span class="status-badge confirmado">Confirmado</span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<ng-template #loading>
+  <div class="loading-state">
+    <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #1a73e8"></i>
+    <p>Carregando dados do Supabase...</p>
+  </div>
+</ng-template>

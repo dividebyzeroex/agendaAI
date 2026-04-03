@@ -1,3 +1,48 @@
 import { Routes } from '@angular/router';
+import { Landing } from './pages/landing/landing';
+import { Login } from './pages/login/login';
+import { Agendar } from './pages/agendar/agendar';
+import { Profissional } from './pages/profissional/profissional';
+import { Onboarding } from './pages/onboarding/onboarding';
+import { AdminLayout } from './layouts/admin-layout/admin-layout';
 
-export const routes: Routes = [];
+import { Admin } from './pages/admin/admin';
+import { AdminAgenda } from './pages/admin-agenda/admin-agenda';
+import { AdminClientes } from './pages/admin-clientes/admin-clientes';
+import { AdminConfiguracoes } from './pages/admin-configuracoes/admin-configuracoes';
+import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
+import { AdminAutomacoes } from './pages/admin-automacoes/admin-automacoes';
+import { AdminAgents } from './pages/admin-agents/admin-agents';
+import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
+import { authGuard } from './guards/auth.guard';
+
+export const routes: Routes = [
+  { path: '', component: Landing, pathMatch: 'full' },
+  { path: 'login', component: Login },
+  { path: 'onboarding', component: Onboarding, canActivate: [authGuard] },
+  // Rota pública de agendamento — /agendar/:slug (ex: /agendar/barbearia-do-joao)
+  { path: 'agendar/:slug', component: Agendar },
+  // Fallback genérico sem slug
+  { path: 'agendar', component: Agendar },
+
+  // Portal do Profissional — /pro/:slug (ex: /pro/barbearia-do-joao)
+  { path: 'pro/:slug', component: Profissional },
+  { path: 'pro',       component: Profissional },
+
+  { 
+    path: 'admin', 
+    component: AdminLayout,
+    canActivate: [authGuard],
+    children: [
+      { path: '', component: Admin, pathMatch: 'full' },
+      { path: 'agenda', component: AdminAgenda },
+      { path: 'clientes', component: AdminClientes },
+      { path: 'configuracoes', component: AdminConfiguracoes },
+      { path: 'analytics', component: AdminAnalytics },
+      { path: 'automacoes', component: AdminAutomacoes },
+      { path: 'agents', component: AdminAgents },
+      { path: 'profissionais', component: AdminProfissionais }
+    ]
+  },
+  { path: '**', redirectTo: '' }
+];

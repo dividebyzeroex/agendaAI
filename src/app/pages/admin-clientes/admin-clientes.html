@@ -1,0 +1,134 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Base de <span class="gradient-text">Clientes</span></h2>
+      <p>Gerencie sua carteira e envie SMS diretamente do painel.</p>
+    </div>
+    <div class="header-actions-right">
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilter()" placeholder="Buscar cliente..." />
+      </div>
+      <!-- Botão Novo Cliente -->
+      <button class="btn-novo-cliente" (click)="showNovoClienteModal = true">
+        <i class="pi pi-user-plus"></i>
+        Novo Cliente
+      </button>
+    </div>
+  </div>
+
+  <!-- Skeleton Loading -->
+  <div class="ag-table-card" *ngIf="isLoading">
+    <table class="ag-table">
+      <thead>
+        <tr>
+          <th>Cliente</th> <th>Telefone</th> <th>Última Visita</th> <th>Faltas</th> <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let i of [1,2,3,4,5]">
+          <td><div class="ag-skeleton" style="width: 150px; height: 16px;"></div></td>
+          <td><div class="ag-skeleton" style="width: 100px; height: 16px;"></div></td>
+          <td><div class="ag-skeleton" style="width: 80px; height: 16px;"></div></td>
+          <td><div class="ag-skeleton" style="width: 60px; height: 16px;"></div></td>
+          <td><div class="ag-skeleton" style="width: 40px; height: 16px;"></div></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Tabela -->
+  <div class="ag-table-card" *ngIf="!isLoading">
+    <div class="empty-state" *ngIf="filteredClientes.length === 0">
+      <div class="empty-icon">👥</div>
+      <strong>Nenhum cliente ainda</strong>
+      <p>Clientes aparecem após agendamentos, ou cadastre manualmente.</p>
+      <button class="btn-empty-add" (click)="showNovoClienteModal = true">
+        <i class="pi pi-plus"></i> Cadastrar primeiro cliente
+      </button>
+    </div>
+
+    <table class="ag-table" *ngIf="filteredClientes.length > 0">
+      <thead>
+        <tr>
+          <th>Cliente</th>
+          <th>Telefone</th>
+          <th>Última Visita</th>
+          <th>Faltas</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of filteredClientes" class="table-row">
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar">{{ c.nome.charAt(0) }}</div>
+              <strong>{{ c.nome }}</strong>
+            </div>
+          </td>
+          <td class="mono">{{ c.telefone || '—' }}</td>
+          <td>{{ c.ultima_visita || '—' }}</td>
+          <td>
+            <span class="falta-badge" [class.danger]="(c.faltas || 0) > 2">
+              {{ c.faltas || 0 }} faltas
+            </span>
+          </td>
+          <td>
+            <div class="row-actions">
+              <button class="icon-btn green" (click)="openSmsModal(c)"
+                [title]="c.telefone ? 'Enviar SMS' : 'Sem telefone'"
+                [disabled]="!c.telefone">
+                <i class="pi pi-send"></i>
+              </button>
+              <button class="icon-btn blue" (click)="enviarLembreteCliente(c)"
+                title="Enviar lembrete"
+                [disabled]="!c.telefone">
+                <i class="pi pi-bell"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal Novo Cliente -->
+  <app-novo-cliente-modal
+    *ngIf="showNovoClienteModal"
+    (salvo)="onClienteSalvo($event)"
+    (cancelado)="showNovoClienteModal = false">
+  </app-novo-cliente-modal>
+
+  <!-- Modal SMS Manual -->
+  <div class="sms-modal-backdrop" *ngIf="smsModal.open" (click)="closeSmsModal()">
+    <div class="sms-modal" (click)="$event.stopPropagation()">
+      <div class="sms-modal-header">
+        <div class="sms-header-info">
+          <div class="sms-avatar">{{ smsModal.cliente?.nome?.charAt(0) }}</div>
+          <div>
+            <strong>{{ smsModal.cliente?.nome }}</strong>
+            <span class="mono">{{ smsModal.cliente?.telefone }}</span>
+          </div>
+        </div>
+        <button class="close-btn" (click)="closeSmsModal()"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="sms-modal-body">
+        <label>Mensagem SMS</label>
+        <textarea [(ngModel)]="smsModal.mensagem" rows="4"
+          placeholder="Digite a mensagem..." class="sms-textarea" [maxlength]="160">
+        </textarea>
+        <div class="char-count">{{ smsModal.mensagem.length }}/160 caracteres</div>
+        <div class="sms-result" *ngIf="smsModal.result">{{ smsModal.result }}</div>
+      </div>
+      <div class="sms-modal-footer">
+        <button class="btn-ghost-sm" (click)="closeSmsModal()">Cancelar</button>
+        <button class="btn-sms-send"
+          [disabled]="smsModal.sending || !smsModal.mensagem.trim()"
+          (click)="enviarSms()">
+          <i class="pi" [class.pi-send]="!smsModal.sending" [class.pi-spin]="smsModal.sending" [class.pi-spinner]="smsModal.sending"></i>
+          {{ smsModal.sending ? 'Enviando...' : 'Enviar SMS' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

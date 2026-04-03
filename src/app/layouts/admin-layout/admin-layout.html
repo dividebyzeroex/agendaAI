@@ -1,0 +1,99 @@
+<div class="ag-admin-shell">
+
+  <!-- Update Notifier Toast (background check) -->
+  <app-update-notifier></app-update-notifier>
+
+  <!-- Sidebar -->
+
+  <aside class="ag-sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-mark">▲</span>
+      <span class="logo-text">AgendaAi</span>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+        <i class="pi pi-home"></i><span>Painel</span>
+      </a>
+      <a routerLink="/admin/agenda" routerLinkActive="active">
+        <i class="pi pi-calendar-times"></i><span>Agenda</span>
+      </a>
+      <a routerLink="/admin/clientes" routerLinkActive="active">
+        <i class="pi pi-users"></i><span>Clientes</span>
+      </a>
+      <a routerLink="/admin/profissionais" routerLinkActive="active">
+        <i class="pi pi-id-card"></i><span>Profissionais</span>
+      </a>
+      <a routerLink="/admin/analytics" routerLinkActive="active">
+        <i class="pi pi-chart-bar"></i><span>Analytics IA</span>
+      </a>
+      <a routerLink="/admin/agents" routerLinkActive="active">
+        <i class="pi pi-share-alt"></i><span>Multi-Agents</span>
+      </a>
+      <a routerLink="/admin/automacoes" routerLinkActive="active">
+        <i class="pi pi-bolt"></i><span>Automações</span>
+      </a>
+      <a routerLink="/admin/configuracoes" routerLinkActive="active">
+        <i class="pi pi-cog"></i><span>Configurações</span>
+      </a>
+    </nav>
+
+    <!-- Cost Tracker at bottom of sidebar -->
+    <div class="sidebar-footer" *ngIf="costTracker.quota$ | async as quota">
+      <div class="cost-row">
+        <i class="pi pi-sparkles"></i>
+        <div class="cost-bar-wrap">
+          <div class="cost-label">Tokens IA</div>
+          <div class="cost-track">
+            <div class="cost-fill" [style.width]="((quota.tokensUsed / quota.tokensLimit) * 100) + '%'"></div>
+          </div>
+          <div class="cost-nums">{{ quota.tokensUsed | number }} / {{ quota.tokensLimit | number }}</div>
+        </div>
+      </div>
+      <div class="cost-row">
+        <i class="pi pi-comments"></i>
+        <div class="cost-bar-wrap">
+          <div class="cost-label">SMS Enviados</div>
+          <div class="cost-track green">
+            <div class="cost-fill green" [style.width]="((quota.smsUsed / 100) * 100) + '%'"></div>
+          </div>
+          <div class="cost-nums">{{ quota.smsUsed }} / 100</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Area -->
+  <div class="ag-main">
+    <!-- Topbar -->
+    <header class="ag-topbar">
+      <div class="topbar-search">
+        <i class="pi pi-search"></i>
+        <span>Pressione <kbd>Ctrl+K</kbd> para buscar</span>
+      </div>
+      <div class="topbar-right">
+        <div class="notif-wrapper">
+          <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" 
+            (click)="isNotifOpen = !isNotifOpen"></p-button>
+          <span class="notif-badge" *ngIf="notifService.unreadCount > 0">{{ notifService.unreadCount }}</span>
+        </div>
+        <div class="user-avatar">A</div>
+      </div>
+    </header>
+
+    <!-- Notification Center Overlay -->
+    <app-notification-center [isOpen]="isNotifOpen" (close)="isNotifOpen = false"></app-notification-center>
+
+    <!-- Child Page Content -->
+    <div class="ag-page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </div>
+
+  <app-command-palette></app-command-palette>
+  <app-ai-assistant></app-ai-assistant>
+
+  <!-- Onboarding Modal — shown only once per user -->
+  <app-onboarding-modal *ngIf="showOnboarding"></app-onboarding-modal>
+
+</div>

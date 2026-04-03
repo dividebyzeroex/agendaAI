@@ -1,0 +1,100 @@
+.ag-dashboard {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Stats Row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 16px;
+  padding: 1.75rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.stat-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+}
+
+.stat-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.stat-icon.blue { background: #e8f0fe; color: #1a73e8; }
+.stat-icon.green { background: #e6f4ea; color: #34a853; }
+.stat-icon.purple { background: #f3e8fe; color: #a142f4; }
+
+.stat-body { display: flex; flex-direction: column; gap: 4px; }
+.stat-label { font-size: 0.85rem; color: #5f6368; font-weight: 500; }
+.stat-value { font-size: 1.6rem; font-weight: 700; color: #202124; letter-spacing: -1px; }
+
+/* Agenda Section */
+.agenda-section {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 16px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+.agenda-section h3 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #202124;
+}
+
+.appointment-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.appointment-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fafafa;
+  border-radius: 10px;
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: background 0.2s;
+}
+.appointment-row:hover { background: #f1f3f4; }
+
+.apt-time { font-family: 'Space Mono', monospace; font-size: 0.9rem; color: #5f6368; min-width: 50px; }
+.apt-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.apt-info { flex: 1; font-size: 0.95rem; color: #202124; }
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+  text-transform: capitalize;
+}
+.status-badge.confirmado { background: #e6f4ea; color: #34a853; }
+.status-badge.cancelado { background: #fce8e8; color: #ea4335; }
+.status-badge.aguardando { background: #fef3e2; color: #f9ab00; }
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #9aa0a6;
+}
+.empty-state i { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+
+.loading-state {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; height: 50vh; gap: 1rem; color: #5f6368;
+}

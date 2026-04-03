@@ -1,0 +1,63 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Automações <span class="gradient-text">& Workflows</span></h2>
+      <p>Defina gatilhos e ações automáticas. Suas regras de negócio na nuvem.</p>
+    </div>
+  </div>
+
+  <div class="loading-state" *ngIf="isLoading">
+    <i class="pi pi-spin pi-spinner"></i>
+    <p>Carregando workflows do Supabase...</p>
+  </div>
+
+  <div *ngIf="!isLoading">
+    <!-- Rules List -->
+    <div class="rules-grid">
+      <div class="rule-card" *ngFor="let rule of rules" [class.inactive]="!rule.active">
+        <div class="rule-card-top">
+          <h3>{{ rule.name }}</h3>
+          <div class="toggle-switch" (click)="toggleRule(rule.id)">
+            <div class="toggle-pill" [class.on]="rule.active">
+              <div class="knob"></div>
+            </div>
+          </div>
+        </div>
+        <div class="rule-flow">
+          <span class="flow-badge trigger">
+            <i class="pi pi-bolt"></i> {{ formatTrigger(rule.trigger) }}
+          </span>
+          <i class="pi pi-arrow-right flow-arrow"></i>
+          <span class="flow-badge action">
+            <i class="pi pi-play"></i> {{ formatAction(rule.action) }}
+          </span>
+        </div>
+      </div>
+
+      <div class="empty-state" *ngIf="rules.length === 0">
+        <i class="pi pi-bolt"></i>
+        <p>Nenhum workflow criado ainda. Adicione sua primeira automação abaixo.</p>
+      </div>
+    </div>
+
+    <!-- New Rule Form -->
+    <div class="new-rule-card">
+      <h3><i class="pi pi-plus-circle"></i> Nova Automação</h3>
+      <div class="new-rule-form">
+        <input type="text" [(ngModel)]="newRuleName" placeholder="Nome da Automação (ex: Lembrete de Consulta)" />
+        <select [(ngModel)]="newRuleTrigger">
+          <option value="ON_EVENT_CREATED">Quando: Novo Agendamento</option>
+          <option value="ON_EVENT_CANCELED">Quando: Cliente Cancelar</option>
+        </select>
+        <select [(ngModel)]="newRuleAction">
+          <option value="SEND_SMS">Então: Enviar SMS de Lembrete</option>
+          <option value="SEND_EMAIL">Então: Enviar Email Analítico</option>
+          <option value="NOTIFY_ADMIN">Então: Alarme no Dashboard</option>
+        </select>
+        <button class="btn-create" (click)="createRule()">
+          <i class="pi pi-plus"></i> Criar Workflow
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

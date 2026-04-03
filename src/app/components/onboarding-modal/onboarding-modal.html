@@ -1,0 +1,213 @@
+<!-- Backdrop -->
+<div class="ob-backdrop" (click)="$event.stopPropagation()">
+
+  <div class="ob-modal" role="dialog" aria-modal="true">
+
+    <!-- Progress Bar -->
+    <div class="ob-progress-track" *ngIf="step !== 'conclusao'">
+      <div class="ob-progress-fill" [style.width]="progress + '%'"></div>
+    </div>
+
+    <!-- ===================== STEP: Boas Vindas ===================== -->
+    <div class="ob-step" *ngIf="step === 'boas_vindas'">
+      <div class="ob-glow-icon large">▲</div>
+      <h1>Bem-vindo ao <span class="g-text">AgendaAi</span>!</h1>
+      <p class="ob-subtitle">
+        Vamos configurar seu negócio em <strong>2 minutos</strong>.<br>
+        Você pode alterar qualquer informação depois em <em>Configurações</em>.
+      </p>
+
+      <div class="what-to-do">
+        <div class="todo-item">
+          <div class="todo-icon blue"><i class="pi pi-building"></i></div>
+          <div>
+            <strong>Seu negócio</strong>
+            <span>Nome, cidade e tipo de estabelecimento</span>
+          </div>
+        </div>
+        <div class="todo-item">
+          <div class="todo-icon green"><i class="pi pi-tag"></i></div>
+          <div>
+            <strong>Seus serviços</strong>
+            <span>O que você oferece e quanto cobra</span>
+          </div>
+        </div>
+        <div class="todo-item">
+          <div class="todo-icon purple"><i class="pi pi-clock"></i></div>
+          <div>
+            <strong>Seus horários</strong>
+            <span>Quando você atende seus clientes</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-primary" (click)="nextStep()">
+        Começar <i class="pi pi-arrow-right"></i>
+      </button>
+      <p class="skip-link" (click)="dismiss()">Pular por agora</p>
+    </div>
+
+    <!-- ===================== STEP: Negócio ===================== -->
+    <div class="ob-step" *ngIf="step === 'negocio'">
+      <div class="ob-step-header">
+        <div class="ob-glow-icon small blue"><i class="pi pi-building"></i></div>
+        <h2>Sobre o seu negócio</h2>
+        <p>Essas informações aparecem no portal de agendamento para os seus clientes.</p>
+      </div>
+
+      <div class="ob-form">
+        <div class="ob-field required">
+          <label>Nome do Estabelecimento *</label>
+          <input type="text" [(ngModel)]="nomeNegocio" placeholder="Ex: Barbearia do João" class="ob-input" />
+        </div>
+
+        <div class="ob-field required">
+          <label>Tipo de Negócio *</label>
+          <div class="tipo-grid">
+            <button class="tipo-btn"
+              *ngFor="let t of tiposNegocio"
+              [class.selected]="tipoNegocio === t.value"
+              (click)="tipoNegocio = t.value">
+              {{ t.label }}
+            </button>
+          </div>
+        </div>
+
+        <div class="ob-form-row">
+          <div class="ob-field">
+            <label>Cidade</label>
+            <input type="text" [(ngModel)]="cidadeNegocio" placeholder="Ex: São Paulo - SP" class="ob-input" />
+          </div>
+          <div class="ob-field">
+            <label>WhatsApp</label>
+            <input type="tel" [(ngModel)]="telefoneNegocio" placeholder="(11) 99999-8888" class="ob-input" />
+          </div>
+        </div>
+      </div>
+
+      <div class="ob-actions">
+        <button class="btn-ghost" (click)="prevStep()"><i class="pi pi-arrow-left"></i> Voltar</button>
+        <button class="btn-primary" [disabled]="!canNextNegocio" (click)="nextStep()">
+          Próximo: Serviços <i class="pi pi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== STEP: Serviços ===================== -->
+    <div class="ob-step" *ngIf="step === 'servicos'">
+      <div class="ob-step-header">
+        <div class="ob-glow-icon small green"><i class="pi pi-tag"></i></div>
+        <h2>Seus serviços</h2>
+        <p>Cadastre o que você oferece. Você pode adicionar mais depois em Configurações.</p>
+      </div>
+
+      <div class="servicos-list">
+        <div class="servico-item" *ngFor="let s of servicos; let i = index">
+          <div class="servico-item-top">
+            <input type="text" [(ngModel)]="s.emoji" class="ob-input emoji-input" maxlength="2" title="Emoji" />
+            <input type="text" [(ngModel)]="s.titulo" placeholder="Nome do serviço *" class="ob-input flex-1" />
+            <button class="remove-btn" (click)="removeServico(i)" *ngIf="servicos.length > 1">
+              <i class="pi pi-times"></i>
+            </button>
+          </div>
+          <div class="servico-item-bottom">
+            <div class="ob-field-inline">
+              <label>Preço (R$)</label>
+              <input type="number" [(ngModel)]="s.preco" min="0" step="5" class="ob-input small-input" />
+            </div>
+            <div class="ob-field-inline">
+              <label>Duração (min)</label>
+              <input type="number" [(ngModel)]="s.duracao_min" min="5" step="5" class="ob-input small-input" />
+            </div>
+            <div class="ob-field-inline flex-1">
+              <label>Descrição breve</label>
+              <input type="text" [(ngModel)]="s.descricao" placeholder="Opcional" class="ob-input" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-add-servico" (click)="addServico()">
+        <i class="pi pi-plus"></i> Adicionar serviço
+      </button>
+
+      <div class="ob-actions">
+        <button class="btn-ghost" (click)="prevStep()"><i class="pi pi-arrow-left"></i> Voltar</button>
+        <button class="btn-primary" [disabled]="!canNextServicos" (click)="nextStep()">
+          Próximo: Horários <i class="pi pi-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== STEP: Horários ===================== -->
+    <div class="ob-step" *ngIf="step === 'horarios'">
+      <div class="ob-step-header">
+        <div class="ob-glow-icon small purple"><i class="pi pi-clock"></i></div>
+        <h2>Horários de atendimento</h2>
+        <p>Ative os dias que você trabalha e defina os horários. Isso controla os slots disponíveis no portal.</p>
+      </div>
+
+      <div class="horarios-grid-ob">
+        <div class="horario-ob-row" *ngFor="let h of horarios" [class.fechado]="!h.ativo">
+          <div class="h-toggle">
+            <div class="toggle-pill" [class.on]="h.ativo" (click)="h.ativo = !h.ativo">
+              <div class="knob"></div>
+            </div>
+            <span class="h-dia">{{ h.dia_nome }}</span>
+          </div>
+
+          <div class="h-horas" *ngIf="h.ativo">
+            <div class="ob-field-inline">
+              <label>Abre</label>
+              <input type="time" [(ngModel)]="h.abre" class="ob-input time-in" />
+            </div>
+            <span class="h-sep">→</span>
+            <div class="ob-field-inline">
+              <label>Fecha</label>
+              <input type="time" [(ngModel)]="h.fecha" class="ob-input time-in" />
+            </div>
+          </div>
+          <span class="fechado-tag" *ngIf="!h.ativo">Fechado</span>
+        </div>
+      </div>
+
+      <div class="ob-actions">
+        <button class="btn-ghost" (click)="prevStep()"><i class="pi pi-arrow-left"></i> Voltar</button>
+        <button class="btn-primary" [class.loading]="isSaving" [disabled]="isSaving" (click)="finalizarOnboarding()">
+          <i class="pi" [class.pi-check]="!isSaving" [class.pi-spin]="isSaving" [class.pi-spinner]="isSaving"></i>
+          {{ isSaving ? 'Salvando...' : 'Concluir Configuração' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- ===================== STEP: Conclusão ===================== -->
+    <div class="ob-step conclusao" *ngIf="step === 'conclusao'">
+      <div class="success-anim">🎉</div>
+      <h1>Tudo configurado!</h1>
+      <p class="ob-subtitle">
+        Seu negócio está pronto no <strong>AgendaAi</strong>.<br>
+        Seus clientes já podem agendar em <code>/agendar</code>.
+      </p>
+
+      <div class="next-steps">
+        <div class="next-item">
+          <i class="pi pi-link" style="color:#1a73e8"></i>
+          <span>Compartilhe o link <strong>/agendar</strong> com seus clientes</span>
+        </div>
+        <div class="next-item">
+          <i class="pi pi-share-alt" style="color:#a142f4"></i>
+          <span>Acompanhe os <strong>Multi-Agents</strong> trabalhando por você</span>
+        </div>
+        <div class="next-item">
+          <i class="pi pi-cog" style="color:#34a853"></i>
+          <span>Ajuste serviços e horários em <strong>Configurações</strong></span>
+        </div>
+      </div>
+
+      <button class="btn-primary large" (click)="dismiss()">
+        Ir para o Painel <i class="pi pi-arrow-right"></i>
+      </button>
+    </div>
+
+  </div>
+</div>

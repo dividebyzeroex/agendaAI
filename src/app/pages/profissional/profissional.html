@@ -1,0 +1,181 @@
+<div class="pro-root">
+
+  <!-- ══════════════ AUTH SECTION ══════════════ -->
+  <div class="pro-auth" *ngIf="authState !== 'ready'">
+    <div class="auth-card" *ngIf="authState === 'login'">
+      <div class="auth-hero">
+        <span class="emoji">💇‍♂️</span>
+        <h2>Portal do Colaborador</h2>
+        <p>Acesse sua agenda diária e gerencie seus atendimentos.</p>
+      </div>
+
+      <div class="field">
+        <label>ID ou WhatsApp</label>
+        <input type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input" (keyup.enter)="requestAcesso()" />
+      </div>
+
+      <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <button class="btn-primary" [disabled]="!identificador.trim() || isSaving" (click)="requestAcesso()">
+        {{ isSaving ? 'Buscando...' : 'Solicitar Acesso' }}
+      </button>
+    </div>
+
+    <!-- OTP -->
+    <div class="auth-card" *ngIf="authState === 'otp'">
+      <div class="auth-hero">
+        <span class="emoji">📲</span>
+        <h2>Validar Código</h2>
+        <p>Enviamos um código para o número <strong>{{ maskedPhone }}</strong>.</p>
+      </div>
+
+      <div class="field">
+        <label>Código de 6 dígitos</label>
+        <input type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp" (keyup.enter)="verifyOtp()" maxlength="6" />
+      </div>
+
+      <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
+
+      <button class="btn-primary" [disabled]="otpCode.length < 6 || isSaving" (click)="verifyOtp()">
+        {{ isSaving ? 'Verificando...' : 'Entrar na Agenda' }}
+      </button>
+
+      <button class="btn-ghost" (click)="authState = 'login'" [disabled]="isSaving">Alterar Dados</button>
+    </div>
+  </div>
+
+  <!-- ══════════════ PORTAL SECTION ══════════════ -->
+  <div class="pro-app" *ngIf="authState === 'ready'">
+    
+    <!-- HEADER -->
+    <header class="pro-header">
+       <div class="h-user">
+          <div class="h-avatar" [style.background]="profile?.cor_agenda || '#1a73e8'">
+             <img *ngIf="profile?.foto_url" [src]="profile?.foto_url" alt="" />
+             <span *ngIf="!profile?.foto_url">{{ profile?.nome?.[0] }}</span>
+          </div>
+          <div class="h-info">
+             <strong>Olá, {{ profile?.nome?.split(' ')?.[0] }}!</strong>
+             <span>{{ estabName }}</span>
+          </div>
+       </div>
+       <button (click)="logout()" class="btn-logout"><i class="pi pi-power-off"></i></button>
+    </header>
+
+    <!-- CONTENT -->
+    <main class="pro-main">
+
+      <!-- VIEW: AGENDA -->
+      <div class="view-agenda" *ngIf="view === 'agenda'">
+         <div class="vh-title">
+            <h3>Minha Agenda Hoje</h3>
+            <span>{{ agenda.length }} agendamentos</span>
+         </div>
+
+         <!-- SKELETONS -->
+         <div class="skeleton-list" *ngIf="isLoading">
+            <div class="sk-item" *ngFor="let i of [1,2,3,4]">
+               <div class="ag-skeleton" style="width: 44px; height: 44px; border-radius: 12px;"></div>
+               <div class="sk-info">
+                  <div class="ag-skeleton" style="width: 70%; height: 16px; margin-bottom: 6px;"></div>
+                  <div class="ag-skeleton" style="width: 40%; height: 12px;"></div>
+               </div>
+            </div>
+         </div>
+
+         <!-- ACTUAL LIST -->
+         <div class="agenda-list" *ngIf="!isLoading">
+            <div class="empty-agenda" *ngIf="agenda.length === 0">
+               <div class="e-icon">☕</div>
+               <h4>Nada por aqui agora</h4>
+               <p>Não há agendamentos para hoje.</p>
+            </div>
+
+            <div class="ev-card" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
+               <div class="ev-time">
+                  <strong>{{ fmtH(ev.start) }}</strong>
+                  <span>{{ fmtH(ev.end) }}</span>
+               </div>
+               <div class="ev-body">
+                  <div class="ev-header">
+                     <strong>{{ ev?.clientes?.nome || 'Cliente' }}</strong>
+                     <span class="st-pill" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
+                        {{ getStat(ev.status).label }}
+                     </span>
+                  </div>
+                  <p>{{ ev?.servicos?.titulo || 'Serviço' }}</p>
+               </div>
+               <div class="ev-actions" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado'">
+                  <button class="btn-action" [disabled]="isSaving" (click)="goAtendimento(ev)">
+                     {{ ev.status === 'em_atendimento' ? 'Continuar' : 'Atender' }}
+                  </button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- VIEW: ATENDIMENTO -->
+      <div class="view-atendimento" *ngIf="view === 'atendimento'">
+         <div class="at-header">
+            <button class="btn-back" (click)="backToAgenda()"><i class="pi pi-arrow-left"></i></button>
+            <h3>Atendimento: {{ activeEvent?.clientes?.nome }}</h3>
+         </div>
+
+         <div class="at-card">
+            <div class="at-section">
+               <label>Serviço Principal</label>
+               <div class="s-row">
+                  <span class="s-emoji">{{ activeEvent?.servicos?.emoji || '✂️' }}</span>
+                  <div class="s-text">
+                     <strong>{{ activeEvent?.servicos?.titulo }}</strong>
+                     <span>R$ {{ activeEvent?.servicos?.preco }},00</span>
+                  </div>
+               </div>
+            </div>
+
+            <div class="at-section">
+               <div class="s-head">
+                  <label>Serviços Extras</label>
+                  <button class="btn-add" (click)="showAddExtras = true"><i class="pi pi-plus"></i></button>
+               </div>
+               <div class="extras-list">
+                  <p class="e-empty" *ngIf="extras.length === 0">Nenhum extra adicionado</p>
+                  <div class="extra-item" *ngFor="let ex of extras; let i = index">
+                     <span>{{ ex.emoji }} {{ ex.titulo }} (R$ {{ ex.preco }})</span>
+                     <button (click)="removeExtra(i)" class="btn-close"><i class="pi pi-times"></i></button>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+         <button class="btn-primary large" [disabled]="isSaving" (click)="finishAtendimento()">
+            {{ isSaving ? 'Finalizando...' : 'Finalizar Atendimento' }}
+         </button>
+
+         <!-- Modal Extras -->
+         <div class="modal-overlay" *ngIf="showAddExtras" (click)="showAddExtras = false">
+            <div class="modal-body" (click)="$event.stopPropagation()">
+               <h4>Adicionar Extra</h4>
+               <div class="m-list">
+                  <button class="m-item" *ngFor="let s of services" (click)="addExtra(s)">
+                     <span>{{ s.emoji }} {{ s.titulo }}</span>
+                     <strong>R$ {{ s.preco }}</strong>
+                  </button>
+               </div>
+            </div>
+         </div>
+      </div>
+
+      <!-- VIEW: SUCESSO -->
+      <div class="view-sucesso" *ngIf="view === 'sucesso'">
+         <div class="s-icon">💰</div>
+         <h2>Atendimento Finalizado!</h2>
+         <p>O valor de <strong>R$ {{ finishedItem?.valor_total }},00</strong> foi enviado para o caixa.</p>
+         <button class="btn-primary" (click)="backToAgenda()">Voltar para Agenda</button>
+      </div>
+
+    </main>
+
+  </div>
+
+</div>

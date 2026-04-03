@@ -1,0 +1,106 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Analytics <span class="gradient-text">com IA</span></h2>
+      <p>Acompanhe o desempenho do seu negócio em tempo real.</p>
+    </div>
+    <div class="ai-badge">
+      <i class="pi pi-sparkles"></i> Inteligência Operacional
+    </div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="stats-row" *ngIf="!isLoadingStats">
+    <div class="stat-card">
+      <div class="stat-icon res"><i class="pi pi-calendar-plus"></i></div>
+      <div class="stat-content">
+        <span class="stat-label">Hoje</span>
+        <h3 class="stat-value">{{ stats.agendamentosHoje }}</h3>
+        <span class="stat-hint">agendamentos</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon fat"><i class="pi pi-money-bill"></i></div>
+      <div class="stat-content">
+        <span class="stat-label">Faturamento Mensal</span>
+        <h3 class="stat-value">R$ {{ stats.faturamentoMes | number:'1.0-0' }}</h3>
+        <span class="stat-hint">consolidado</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon tic"><i class="pi pi-chart-line"></i></div>
+      <div class="stat-content">
+        <span class="stat-label">Ticket Médio</span>
+        <h3 class="stat-value">R$ {{ stats.ticketMedio | number:'1.0-0' }}</h3>
+        <span class="stat-hint">por atendimento</span>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon cli"><i class="pi pi-user-plus"></i></div>
+      <div class="stat-content">
+        <span class="stat-label">Novos Clientes</span>
+        <h3 class="stat-value">{{ stats.clientesNovos }}</h3>
+        <span class="stat-hint">últimos 30 dias</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats-loading" *ngIf="isLoadingStats">
+    <i class="pi pi-spin pi-spinner"></i> Carregando métricas...
+  </div>
+
+  <!-- Query Box -->
+  <div class="query-card">
+    <div class="query-box" [class.active]="userInput.length > 0">
+      <i class="pi pi-search"></i>
+      <input
+        type="text"
+        [(ngModel)]="userInput"
+        (keyup.enter)="ask()"
+        placeholder='Tente: "Qual meu faturamento?" ou "Quantos agendamentos tenho?"'
+      />
+      <button class="query-btn" [class.ready]="userInput.trim()" [disabled]="!userInput.trim() || isQuerying" (click)="ask()">
+        <i class="pi pi-arrow-right" *ngIf="!isQuerying"></i>
+        <i class="pi pi-spin pi-spinner" *ngIf="isQuerying"></i>
+      </button>
+    </div>
+
+    <div class="suggestions">
+      Tente perguntar:
+      <button class="chip" (click)="userInput='Quantos agendamentos tenho?'; ask()">Quantos agendamentos?</button>
+      <button class="chip" (click)="userInput='Qual meu faturamento?'; ask()">Faturamento</button>
+      <button class="chip" (click)="userInput='Quantas faltas registradas?'; ask()">Faltas / No-shows</button>
+    </div>
+  </div>
+
+  <!-- Result Area -->
+  <div class="result-card" *ngIf="lastResult" [@fadeIn]>
+    <div class="ai-response">
+      <div class="ai-icon"><i class="pi pi-sparkles"></i></div>
+      <p>{{ lastResult.message }}</p>
+    </div>
+
+    <!-- Bar Chart -->
+    <div class="chart-section" *ngIf="lastResult.type === 'bar'">
+      <div class="bar-row" *ngFor="let lbl of lastResult.data?.labels; let i = index">
+        <span class="bar-label">{{ lbl }}</span>
+        <div class="bar-track">
+          <div class="bar-fill"
+            [style.background]="lastResult.data?.datasets[0].backgroundColor[i]"
+            [style.width]="(lastResult.data?.datasets[0].data[i] / 10 * 100) + '%'">
+          </div>
+        </div>
+        <span class="bar-val">{{ lastResult.data?.datasets[0].data[i] }}</span>
+      </div>
+    </div>
+
+    <!-- Pie Legend -->
+    <div class="pie-section" *ngIf="lastResult.type === 'pie'">
+      <div class="pie-item" *ngFor="let lbl of lastResult.data?.labels; let i = index">
+        <div class="pie-dot" [style.background]="lastResult.data?.datasets[0].backgroundColor[i]"></div>
+        <span>{{ lbl }}</span>
+        <strong>R$ {{ lastResult.data?.datasets[0].data[i] | number }}</strong>
+      </div>
+    </div>
+  </div>
+</div>

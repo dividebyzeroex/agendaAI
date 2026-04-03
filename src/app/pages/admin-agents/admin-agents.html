@@ -1,0 +1,94 @@
+<div class="ag-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <div>
+      <h2>Multi-Agent <span class="gradient-text">Swarm</span></h2>
+      <p>Coordinator orquestrando workers paralelos. Cada agente opera de forma autônoma e se reporta aqui.</p>
+    </div>
+    <button class="btn-run-all" [class.loading]="isRunningAll" (click)="runAll()" [disabled]="isRunningAll">
+      <i class="pi" [class.pi-send]="!isRunningAll" [class.pi-spin]="isRunningAll" [class.pi-spinner]="isRunningAll"></i>
+      {{ isRunningAll ? 'Executando...' : 'Run All Workers' }}
+    </button>
+  </div>
+
+  <!-- Active Tasks Panel -->
+  <div class="active-tasks-strip" *ngIf="activeTasks.length > 0">
+    <div class="task-pill" *ngFor="let task of activeTasks">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>{{ task.description | slice:0:40 }}...</span>
+      <span class="task-timer">{{ taskDuration(task) }}</span>
+      <button class="kill-btn" (click)="killTask(task.id)">✕</button>
+    </div>
+  </div>
+
+  <!-- Agent Cards Grid -->
+  <div class="agents-grid">
+    <div class="agent-card" *ngFor="let agent of agents" [class.running]="agent.isRunning" [class.busy]="isAgentBusy(agent.type)">
+      
+      <!-- Card Header -->
+      <div class="agent-card-top">
+        <div class="agent-icon" [style.background]="agent.color + '20'" [style.color]="agent.color">
+          <i class="pi" [class]="agent.icon"></i>
+        </div>
+        <div class="agent-toggle">
+          <div class="toggle-pill" [class.on]="agent.isRunning" (click)="toggleAgent(agent.type)">
+            <div class="knob"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <h3 class="agent-name">{{ agent.name }}</h3>
+      <p class="agent-desc">{{ agent.description }}</p>
+
+      <!-- Capabilities -->
+      <div class="capabilities">
+        <span class="cap-chip" *ngFor="let cap of agent.capabilities">{{ cap }}</span>
+      </div>
+
+      <!-- Status -->
+      <div class="agent-status" [class.active]="agent.isRunning" [class.busy]="isAgentBusy(agent.type)">
+        <span class="status-dot"></span>
+        <span *ngIf="isAgentBusy(agent.type)">Processando...</span>
+        <span *ngIf="!isAgentBusy(agent.type) && agent.isRunning">Online</span>
+        <span *ngIf="!agent.isRunning">Inativo</span>
+      </div>
+
+      <!-- Send Message (like SendMessageTool) -->
+      <div class="send-message" *ngIf="agent.isRunning">
+        <input type="text" [(ngModel)]="messageInput[agent.type]" (keyup.enter)="sendMessage(agent.type)"
+          [placeholder]="'Instruir ' + agent.name + '...'" />
+        <button class="send-btn" (click)="sendMessage(agent.type)" [disabled]="!messageInput[agent.type]?.trim()">
+          <i class="pi pi-send"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Activity Log -->
+  <div class="log-card">
+    <div class="log-header">
+      <h3><i class="pi pi-list"></i> Activity Log do Coordinator</h3>
+      <button class="clear-btn" (click)="clearLogs()">Limpar</button>
+    </div>
+
+    <div class="log-empty" *ngIf="logs.length === 0">
+      <i class="pi pi-clock"></i> Aguardando atividade dos agents...
+    </div>
+
+    <div class="log-list" *ngIf="logs.length > 0">
+      <div class="log-entry" *ngFor="let log of logs" [class]="'log-' + log.status">
+        <div class="log-icon"><i class="pi" [class]="logIcon(log.status)"></i></div>
+        <div class="log-body">
+          <div class="log-meta">
+            <span class="log-agent" [style.color]="agents_colorMap[log.agentType] || '#1a73e8'">{{ log.agentName }}</span>
+            <span class="log-time">{{ log.timestamp | date:'HH:mm:ss' }}</span>
+          </div>
+          <p class="log-msg">{{ log.message }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

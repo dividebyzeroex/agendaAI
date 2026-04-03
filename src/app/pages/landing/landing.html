@@ -1,0 +1,257 @@
+<div class="antigravity-layout scrollable">
+  
+  <!-- Ambient Orbs -->
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+
+  <nav class="ag-nav">
+    <div class="logo">
+      <span class="logo-mark">▲</span>
+      AgendaAi
+    </div>
+    <div class="nav-links">
+      <a href="#solucao">Solução</a>
+      <a href="#recursos">Recursos IA</a>
+      <a href="#precos">Preços</a>
+      <button class="btn-ghost" (click)="goToLogin()">Login</button>
+    </div>
+  </nav>
+
+  <main class="ag-content">
+    
+    <!-- HERO B2B SECTION -->
+    <section class="ag-hero">
+      <div class="hero-content">
+        <div class="badge">
+          <span class="badge-dot"></span> Agenda Automática Inteligente
+        </div>
+        
+        <h1 class="ag-title">
+          <span class="title-line">A primeira agenda</span><br>
+          <span class="title-line gradient-text">com Inteligência</span><br>
+          <span class="title-line gradient-text">Artificial nativa.</span>
+        </h1>
+        
+        <p class="ag-subtitle">
+          Deixe nossa IA responder clientes, encontrar horários e agendar automaticamente 24h por dia. <b>Lote sua clínica ou salão de forma mágica</b> enquanto você foca apenas em atender.
+        </p>
+
+        <div class="ag-actions">
+          <button class="btn-primary" (click)="goToLogin()">
+            Começar Grátis
+            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8.14645 3.14645C8.34171 2.95118 8.65829 2.95118 8.85355 3.14645L12.8536 7.14645C13.0488 7.34171 13.0488 7.65829 12.8536 7.85355L8.85355 11.8536C8.65829 12.0488 8.34171 12.0488 8.14645 11.8536C7.95118 11.6583 7.95118 11.3417 8.14645 11.1464L11.2929 8H2.5C2.22386 8 2 7.77614 2 7.5C2 7.22386 2.22386 7 2.5 7H11.2929L8.14645 3.85355C7.95118 3.65829 7.95118 3.34171 8.14645 3.14645Z" fill="currentColor"></path></svg>
+          </button>
+          <button class="btn-secondary" (click)="goToLogin()">
+            Falar com Vendas
+          </button>
+        </div>
+      </div>
+
+      <!-- Floating Eco System (Parallax Cards) -->
+      <div class="floating-eco">
+        <div class="eco-card card-1">
+          <div class="header">
+            <span style="font-size: 0.8rem; font-weight: 500; color: #5f6368">Notificação de Sistema</span>
+          </div>
+          <div class="body row">
+            <i class="pi pi-check-circle" style="color: #34a853; font-size: 1.2rem;"></i> 
+            <b>Juliana</b> agendou Corte de Cabelo amanhã às 14:00 sozinha via WhatsApp.
+          </div>
+        </div>
+        
+        <div class="eco-card card-2">
+           <div class="body text-center">
+              <i class="pi pi-sparkles" style="color: #fbbc04; font-size: 1.5rem; margin-bottom: 5px;"></i><br>
+              <b style="font-family:'Space Grotesk'; font-size: 1.1rem">+45% de Conversão</b>
+           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES B2B SECTION -->
+    <section class="ag-features" id="recursos">
+      <div class="section-header text-center">
+        <h2>Seu negócio, 10x mais inteligente.</h2>
+        <p>A única solução do mercado focada no futuro das operações comerciais de alto fluxo.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="f-icon"><i class="pi pi-whatsapp"></i></div>
+          <h3>Agentes Recepcionistas 24/7</h3>
+          <p>O AgendaAi atende seus clientes mesmo à 1h da manhã, negocia horários disponíveis e adiciona no calendário automaticamente.</p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="f-icon purple"><i class="pi pi-chart-line"></i></div>
+          <h3>Analytics Natural (NLP)</h3>
+          <p>Escreva "Qual o meu faturamento dessa semana?" no painel e veja o gráfico nascer magicamente, sem precisar cruzar planilhas.</p>
+        </div>
+
+        <div class="feature-card">
+          <div class="f-icon red"><i class="pi pi-bolt"></i></div>
+          <h3>Workflows e Lembretes (No-Show)</h3>
+          <p>Reduza as faltas em 80%. O sistema dispara lembretes antecipados sozinhos via SMS ou WhatsApp para o cliente confirmar se vai.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROPOSTA DE VALOR -->
+    <section class="ag-valor" id="solucao">
+      <div class="section-header text-center">
+        <div class="badge">💸 Por que o AgendaAi?</div>
+        <h2>O que você está perdendo agora</h2>
+        <p>Mais de 4 milhões de negócios de serviços no Brasil gerenciam agendamento por WhatsApp e perdem dinheiro todos os dias.</p>
+      </div>
+
+      <div class="valor-grid">
+        <div class="valor-card loss">
+          <div class="valor-icon">😓</div>
+          <h3>Sem AgendaAi</h3>
+          <ul class="valor-list">
+            <li><i class="pi pi-times-circle"></i> R$ 800/mês perdidos em no-shows</li>
+            <li><i class="pi pi-times-circle"></i> 3–4h/dia respondendo mensagens</li>
+            <li><i class="pi pi-times-circle"></i> Clientes indo para o concorrente à noite</li>
+            <li><i class="pi pi-times-circle"></i> Sem visibilidade do faturamento real</li>
+            <li><i class="pi pi-times-circle"></i> Agenda bagunçada em vários apps</li>
+          </ul>
+        </div>
+
+        <div class="valor-vs">VS</div>
+
+        <div class="valor-card gain">
+          <div class="valor-icon">🚀</div>
+          <h3>Com AgendaAi</h3>
+          <ul class="valor-list">
+            <li><i class="pi pi-check-circle"></i> Lembretes reduzem 80% das faltas</li>
+            <li><i class="pi pi-check-circle"></i> IA atende e agenda 24/7 automaticamente</li>
+            <li><i class="pi pi-check-circle"></i> Portal de agendamento online para clientes</li>
+            <li><i class="pi pi-check-circle"></i> Analytics em linguagem natural em segundos</li>
+            <li><i class="pi pi-check-circle"></i> Tudo em um só lugar, na nuvem</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="stats-row">
+        <div class="stat-pill">
+          <span class="stat-num">+45%</span>
+          <span class="stat-label">conversão média</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num">80%</span>
+          <span class="stat-label">menos no-shows</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num">3h</span>
+          <span class="stat-label">recuperadas por dia</span>
+        </div>
+        <div class="stat-pill">
+          <span class="stat-num">24/7</span>
+          <span class="stat-label">atendimento automático</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRICING TABLE -->
+    <section class="ag-pricing" id="precos">
+      <div class="section-header text-center">
+        <div class="badge">💳 Preços Transparentes</div>
+        <h2>Escolha o plano certo para o seu negócio</h2>
+        <p>Sem taxa de setup. Cancele quando quiser. Comece grátis por 30 dias.</p>
+      </div>
+
+      <div class="pricing-grid">
+
+        <!-- STARTER -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <span class="plan-badge">🥉 Starter</span>
+            <div class="plan-price">
+              <span class="price-amount">R$ 97</span>
+              <span class="price-period">/mês</span>
+            </div>
+            <p class="plan-subtitle">Ideal para profissionais individuais e autônomos.</p>
+          </div>
+          <ul class="plan-features">
+            <li><i class="pi pi-check"></i> Até 100 agendamentos/mês</li>
+            <li><i class="pi pi-check"></i> Portal de agendamento online</li>
+            <li><i class="pi pi-check"></i> Agente IA de Recepção 24/7</li>
+            <li><i class="pi pi-check"></i> 50 lembretes SMS/mês</li>
+            <li><i class="pi pi-check"></i> 1 usuário no painel</li>
+            <li class="disabled"><i class="pi pi-minus"></i> Analytics NLP</li>
+            <li class="disabled"><i class="pi pi-minus"></i> Multi-Agents</li>
+          </ul>
+          <button class="btn-plan outline" (click)="goToLogin()">Começar Grátis</button>
+        </div>
+
+        <!-- PRO -->
+        <div class="pricing-card featured">
+          <div class="featured-badge">⭐ Mais Popular</div>
+          <div class="plan-header">
+            <span class="plan-badge">🥈 Pro</span>
+            <div class="plan-price">
+              <span class="price-amount">R$ 197</span>
+              <span class="price-period">/mês</span>
+            </div>
+            <p class="plan-subtitle">Para salões, clínicas e negócios em crescimento.</p>
+          </div>
+          <ul class="plan-features">
+            <li><i class="pi pi-check"></i> Até 500 agendamentos/mês</li>
+            <li><i class="pi pi-check"></i> Portal de agendamento online</li>
+            <li><i class="pi pi-check"></i> Agente IA de Recepção 24/7</li>
+            <li><i class="pi pi-check"></i> 200 lembretes SMS/mês</li>
+            <li><i class="pi pi-check"></i> <strong>Analytics NLP</strong></li>
+            <li><i class="pi pi-check"></i> <strong>2 Multi-Agents ativos</strong></li>
+            <li><i class="pi pi-check"></i> 10 automações + 3 usuários</li>
+          </ul>
+          <button class="btn-plan primary" (click)="goToLogin()">Começar Grátis</button>
+        </div>
+
+        <!-- BUSINESS -->
+        <div class="pricing-card">
+          <div class="plan-header">
+            <span class="plan-badge">🥇 Business</span>
+            <div class="plan-price">
+              <span class="price-amount">R$ 397</span>
+              <span class="price-period">/mês</span>
+            </div>
+            <p class="plan-subtitle">Para redes, franquias e empresas de maior porte.</p>
+          </div>
+          <ul class="plan-features">
+            <li><i class="pi pi-check"></i> Agendamentos <strong>ilimitados</strong></li>
+            <li><i class="pi pi-check"></i> Portal de agendamento online</li>
+            <li><i class="pi pi-check"></i> Agente IA de Recepção 24/7</li>
+            <li><i class="pi pi-check"></i> 500 lembretes SMS/mês</li>
+            <li><i class="pi pi-check"></i> Analytics NLP completo</li>
+            <li><i class="pi pi-check"></i> <strong>Todos os 4 Multi-Agents</strong></li>
+            <li><i class="pi pi-check"></i> Ilimitado + 10 usuários</li>
+          </ul>
+          <button class="btn-plan outline" (click)="goToLogin()">Começar Grátis</button>
+        </div>
+
+      </div>
+
+      <div class="guarantee-bar">
+        <i class="pi pi-shield"></i>
+        <span>🔒 Garantia de 30 dias — Se não gostar, devolvemos 100% do valor pago. Sem perguntas.</span>
+      </div>
+    </section>
+
+    <!-- FOOTER CTA -->
+    <section class="ag-cta">
+      <h2>Pronto para lotar sua agenda?</h2>
+      <p>Crie sua conta em 30 segundos. Não precisamos do seu cartão de crédito.</p>
+      <button class="btn-primary large" (click)="goToLogin()">Criar Conta Gratuita Agora</button>
+    </section>
+  </main>
+
+  <footer class="ag-footer">
+    <div class="logo">
+      <span class="logo-mark">▲</span>
+      AgendaAi
+    </div>
+    <div class="copy">
+      © 2026 AgendaAi Labs Inc. Todos os direitos reservados.
+    </div>
+  </footer>
+</div>

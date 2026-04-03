@@ -1,0 +1,396 @@
+<div class="ag-page">
+
+  <!-- ── Page header ─────────────────────────── -->
+  <div class="page-header">
+    <div>
+      <h2>Profissionais <span class="gradient-text">da Equipe</span></h2>
+      <p>Gerencie sua equipe, disponibilidades e especializações.</p>
+    </div>
+    <div class="header-actions">
+      <div class="saved-toast" *ngIf="savedMsg">
+        <i class="pi pi-check-circle"></i> {{ savedMsg }}
+      </div>
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." />
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Banner: Migração SQL pendente ──────── -->
+  <div class="migration-banner" *ngIf="tabelasAusentes">
+    <div class="mig-icon">⚠️</div>
+    <div class="mig-text">
+      <strong>Migração necessária</strong>
+      <span>Execute <code>supabase-profissionais.sql</code> no SQL Editor para ativar este módulo.</span>
+    </div>
+    <a href="https://supabase.com/dashboard/project/vvanjarfwdxtzklogysy/sql/new"
+      target="_blank" class="mig-btn">
+      <i class="pi pi-external-link"></i> Abrir SQL Editor
+    </a>
+  </div>
+
+  <!-- ── Conteúdo principal ─────────────────── -->
+  <div class="main-layout" [class.panel-open]="panelAberto">
+
+
+    <!-- Lista de profissionais -->
+    <div class="prof-list-area">
+
+      <!-- Loading -->
+      <div class="loading-state" *ngIf="isLoading">
+        <div class="spin"></div>
+        <span>Carregando profissionais...</span>
+      </div>
+
+      <!-- Refined Empty State -->
+      <div class="empty-state-elite" *ngIf="!isLoading && profFiltrados.length === 0">
+        <div class="empty-visual">
+          <div class="pulse-ring"></div>
+          <i class="pi pi-users"></i>
+        </div>
+        <h3>Gestão de Talentos</h3>
+        <p>Sua equipe é o coração do negócio. Cadastre profissionais para delegar agendas, automatizar comissões e centralizar a performance.</p>
+        <button class="btn-primary-glow" (click)="abrirNovo()">
+          <i class="pi pi-user-plus"></i> Novo Colaborador
+        </button>
+      </div>
+
+      <!-- Grid de Profissionais (Elite Design) -->
+      <div class="prof-grid-elite" *ngIf="!isLoading && profFiltrados.length > 0">
+        <div class="prof-card-ent" *ngFor="let p of profFiltrados"
+          [class.opacity-inativo]="!p.ativo"
+          (click)="abrirEditar(p)">
+          
+          <div class="card-glass-reveal"></div>
+          
+          <!-- Top Row: Status & Badge -->
+          <div class="card-top-ent">
+            <span class="badge-role">{{ p.cargo || 'Profissional' }}</span>
+            <div class="status-indicator" [class.online]="p.ativo">
+              <span class="dot"></span>
+              {{ p.ativo ? 'Ativo' : 'Pausado' }}
+            </div>
+          </div>
+
+          <!-- Main Info: Avatar & Name -->
+          <div class="card-main-ent">
+            <div class="avatar-container-ent">
+              <div class="avatar-aura" [style.background]="p.cor_agenda || '#6366f1'"></div>
+              <div class="avatar-circle" [style.background]="p.cor_agenda || '#1e293b'">
+                <img *ngIf="p.foto_url" [src]="p.foto_url" alt="avatar" />
+                <span *ngIf="!p.foto_url">{{ initiais(p.nome) }}</span>
+              </div>
+            </div>
+            
+            <div class="info-content-ent">
+              <h4>{{ p.nome }}</h4>
+              <p>{{ p.especialidade || 'Incluso na equipe geral' }}</p>
+            </div>
+          </div>
+
+          <!-- Skills / Expertise Row -->
+          <div class="expertise-tags-ent">
+            <span class="skill-pill" *ngFor="let serv of p.servicos?.slice(0, 2)">
+              {{ serv.servicos?.emoji }} {{ serv.servicos?.titulo }}
+            </span>
+            <span class="skill-pill more" *ngIf="(p.servicos?.length || 0) > 2">
+              +{{ (p.servicos?.length || 0) - 2 }}
+            </span>
+            <span class="no-skills" *ngIf="!p.servicos || p.servicos.length === 0">Sem expertises vinculadas</span>
+          </div>
+
+          <!-- Metrics: Comissao & Valor/Hora -->
+          <div class="card-metrics-ent">
+            <div class="metric-box">
+              <label>Comissão</label>
+              <span>{{ p.comissao_padrao || 0 }}%</span>
+            </div>
+            <div class="metric-divider"></div>
+            <div class="metric-box">
+              <label>Vincular</label>
+              <span>{{ p.servicos?.length || 0 }} Itens</span>
+            </div>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="card-actions-ent" (click)="$event.stopPropagation()">
+            <div class="social-links-ent">
+              <i class="pi pi-instagram" *ngIf="p.instagram"></i>
+              <i class="pi pi-linkedin" *ngIf="p.linkedin"></i>
+            </div>
+            <div class="action-buttons-ent">
+              <button class="btn-icon-elite" (click)="toggleAtivo(p)" [title]="p.ativo ? 'Pausar' : 'Ativar'">
+                <i class="pi" [class.pi-eye]="p.ativo" [class.pi-eye-slash]="!p.ativo"></i>
+              </button>
+              <button class="btn-icon-elite danger" *ngIf="confirmarDelete !== p.id" (click)="deletarProfissional(p.id!)">
+                <i class="pi pi-trash"></i>
+              </button>
+              <div class="confirm-del-bubble" *ngIf="confirmarDelete === p.id">
+                 <button class="btn-yes" (click)="deletarProfissional(p.id!)">Sim</button>
+                 <button class="btn-no" (click)="cancelarDelete()">Não</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ Painel Lateral de Edição/Novo (Premium Glass) ══ -->
+    <aside class="edit-panel-glass" *ngIf="panelAberto">
+      
+      <!-- Cabeçalho Enterprise -->
+      <div class="panel-header-ent">
+        <div class="header-main">
+          <div class="nc-avatar-ring" [style.border-color]="profAtual.cor_agenda || '#1a73e8'">
+             <div class="nc-avatar" [style.background]="profAtual.cor_agenda || '#1a73e8'">
+               {{ profAtual.nome ? initiais(profAtual.nome) : '?' }}
+             </div>
+          </div>
+          <div class="header-text">
+             <h3>{{ isNovo ? 'Novo Profissional' : 'Editar Perfil' }}</h3>
+             <p>{{ isNovo ? 'Configuração inicial da conta' : 'Gestão de talentos e performance' }}</p>
+          </div>
+        </div>
+        <button class="close-btn-ent" (click)="fecharPainel()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <!-- Stepper de Navegação (Design Moderno) -->
+      <div class="panel-stepper">
+        <button class="step-btn" [class.active]="panelTab === 'dados'" (click)="setTab('dados')">
+          <span class="step-num">1</span> <span class="step-label">Perfil</span>
+        </button>
+        <div class="step-line"></div>
+        <button class="step-btn" [class.active]="panelTab === 'disponibilidade'" 
+                (click)="setTab('disponibilidade')" [disabled]="isNovo">
+          <span class="step-num">2</span> <span class="step-label">Agenda</span>
+        </button>
+        <div class="step-line"></div>
+        <button class="step-btn" [class.active]="panelTab === 'servicos'" 
+                (click)="setTab('servicos')" [disabled]="isNovo">
+          <span class="step-num">3</span> <span class="step-label">Expertise</span>
+        </button>
+        <div class="step-line"></div>
+        <button class="step-btn" [class.active]="panelTab === 'financeiro'" 
+                (click)="setTab('financeiro')" [disabled]="isNovo">
+          <span class="step-num">4</span> <span class="step-label">Financeiro</span>
+        </button>
+      </div>
+
+      <!-- ══ TAB: DADOS ══ -->
+      <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'dados'">
+        
+        <!-- Seção: Identidade Visual -->
+        <div class="form-section-ent first">
+          <div class="section-title">Marca & Cor na Agenda</div>
+          <div class="color-picker-grid">
+             <button *ngFor="let c of coresAgenda"
+               class="color-dot" [style.background]="c"
+               [class.active]="profAtual.cor_agenda === c"
+               (click)="profAtual.cor_agenda = c">
+               <i class="pi pi-check" *ngIf="profAtual.cor_agenda === c"></i>
+             </button>
+          </div>
+        </div>
+
+        <div class="form-section-ent">
+          <div class="section-title">Dados Básicos</div>
+          <div class="form-grid-premium">
+             <div class="field-premium">
+                <label>Nome Completo</label>
+                <div class="input-wrap">
+                   <i class="pi pi-user"></i>
+                   <input type="text" [(ngModel)]="profAtual.nome" placeholder="Ex: Carlos Santos" />
+                </div>
+             </div>
+             
+             <div class="field-premium">
+                <label>Cargo / Função</label>
+                <div class="input-wrap">
+                   <i class="pi pi-briefcase"></i>
+                   <input type="text" [(ngModel)]="profAtual.cargo" placeholder="Ex: Barbeiro Major" />
+                </div>
+             </div>
+
+             <div class="field-premium">
+                <label>Especialidade</label>
+                <div class="input-wrap">
+                   <i class="pi pi-tag"></i>
+                   <input type="text" [(ngModel)]="profAtual.especialidade" placeholder="Ex: Degradê, Barba" />
+                </div>
+             </div>
+
+             <div class="field-premium">
+                <label>WhatsApp</label>
+                <div class="input-wrap">
+                   <i class="pi pi-phone"></i>
+                   <input type="tel" [(ngModel)]="profAtual.telefone" placeholder="(11) 99999-9999" />
+                </div>
+             </div>
+
+             <div class="field-premium full">
+                <label>E-mail Corporativo</label>
+                <div class="input-wrap">
+                   <i class="pi pi-envelope"></i>
+                   <input type="email" [(ngModel)]="profAtual.email" placeholder="carlos@agenda.ai" />
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div class="form-section-ent">
+          <div class="section-title">Conexão Social</div>
+          <div class="form-grid-premium">
+             <div class="field-premium">
+                <label>Instagram</label>
+                <div class="input-wrap">
+                   <i class="pi pi-instagram"></i>
+                   <input type="text" [(ngModel)]="profAtual.instagram" placeholder="@seu-perfil" />
+                </div>
+             </div>
+             <div class="field-premium">
+                <label>LinkedIn</label>
+                <div class="input-wrap">
+                   <i class="pi pi-linkedin"></i>
+                   <input type="text" [(ngModel)]="profAtual.linkedin" placeholder="linkedin.com/..." />
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div class="form-section-ent">
+          <div class="section-title">Biografia Profissional</div>
+          <div class="field-premium full">
+            <textarea [(ngModel)]="profAtual.bio" rows="4" 
+                      placeholder="Descreva a jornada, experiência e diferenciais do profissional..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: DISPONIBILIDADE ══ -->
+      <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'disponibilidade'">
+        <div class="tab-intro">
+           <h4>Regras de Horário</h4>
+           <p>Defina as janelas de atendimento e pausas para o profissional.</p>
+        </div>
+
+        <div class="disp-cards-grid">
+          <div class="disp-card-premium" *ngFor="let d of disponibilidades" [class.off]="!d.ativo">
+             <div class="d-header">
+                <div class="d-info">
+                   <span class="d-name">{{ d.dia_nome }}</span>
+                   <span class="d-status">{{ d.ativo ? 'Em serviço' : 'Folga' }}</span>
+                </div>
+                <div class="d-toggle" [class.on]="d.ativo" (click)="d.ativo = !d.ativo">
+                   <div class="d-knob"></div>
+                </div>
+             </div>
+             
+             <div class="d-hours" *ngIf="d.ativo">
+                <div class="h-row">
+                  <div class="h-group">
+                     <label>Entrada</label>
+                     <input type="time" [(ngModel)]="d.hora_inicio" />
+                  </div>
+                  <div class="h-group">
+                     <label>Saída</label>
+                     <input type="time" [(ngModel)]="d.hora_fim" />
+                  </div>
+                </div>
+                <div class="i-group-premium">
+                   <div class="i-label"><i class="pi pi-coffee"></i> Intervalo / Almoço</div>
+                   <div class="i-inputs">
+                      <input type="time" [(ngModel)]="d.intervalo_inicio" />
+                      <span class="i-sep">até</span>
+                      <input type="time" [(ngModel)]="d.intervalo_fim" />
+                   </div>
+                </div>
+             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: SERVIÇOS ══ -->
+      <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'servicos'">
+        <div class="tab-intro">
+           <h4>Gestão de Expertises</h4>
+           <p>Vincule os serviços que este profissional está apto a realizar.</p>
+        </div>
+
+        <div class="add-expertise-box">
+           <div class="exp-field">
+             <label>Selecionar Serviço</label>
+             <select [(ngModel)]="servicoIdSelecionado">
+                <option value="">— Selecionar —</option>
+                <option *ngFor="let s of servicosDisponiveis()" [value]="s.id">{{ s.emoji }} {{ s.titulo }}</option>
+             </select>
+           </div>
+           <div class="exp-field">
+             <label>Preço Diferenciado (Opcional)</label>
+             <div class="price-input-ent">
+                <span>R$</span>
+                <input type="number" [(ngModel)]="valorProprio" placeholder="Padrão" />
+             </div>
+           </div>
+           <button class="btn-link-exp" (click)="adicionarServico()" [disabled]="!servicoIdSelecionado">
+             <i class="pi pi-plus"></i> Vincular Expertise
+           </button>
+        </div>
+
+        <div class="expertise-list-premium">
+           <div class="exp-card-premium" *ngFor="let sv of servicosVinculados()">
+              <div class="exp-icon">{{ sv.servicos?.emoji || '✂️' }}</div>
+              <div class="exp-main">
+                 <div class="exp-name">{{ sv.servicos?.titulo }}</div>
+                 <div class="exp-price" [class.custom]="!!sv.valor_proprio">
+                    {{ sv.valor_proprio ? 'R$ ' + sv.valor_proprio : 'R$ ' + sv.servicos?.preco + ' (Padrão)' }}
+                 </div>
+              </div>
+              <button class="exp-remove-btn" (click)="removerServico(sv.id)"><i class="pi pi-trash"></i></button>
+           </div>
+        </div>
+      </div>
+
+      <!-- ══ TAB: FINANCEIRO ══ -->
+      <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'financeiro'">
+        <div class="fin-hero-premium">
+           <div class="fin-icon-ring"><i class="pi pi-percentage"></i></div>
+           <h4>Gestão de Comissões</h4>
+           <p>Defina as regras de remuneração para este profissional.</p>
+        </div>
+
+        <div class="fin-form">
+           <div class="fin-field-premium">
+              <label>Comissão Operacional</label>
+              <div class="fin-input-group">
+                 <input type="number" [(ngModel)]="profAtual.comissao_padrao" />
+                 <span class="suffix">%</span>
+              </div>
+              <p class="field-hint">Percentual base aplicado sobre o valor de cada serviço realizado.</p>
+           </div>
+
+           <div class="fin-field-premium">
+              <label>Custo de Hora Técnica</label>
+              <div class="fin-input-group">
+                 <span class="prefix">R$</span>
+                 <input type="number" [(ngModel)]="profAtual.valor_hora" />
+              </div>
+              <p class="field-hint">Usado para cálculos de rateio e lucratividade corporativa.</p>
+           </div>
+        </div>
+      </div>
+
+      <!-- Rodapé Persistente -->
+      <div class="panel-footer-premium">
+        <button class="btn-cancel-premium" (click)="fecharPainel()">Cancelar</button>
+        <button class="btn-save-premium" [disabled]="isSaving" 
+                (click)="salvarAtual()">
+          <i class="pi" [class.pi-check]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></i>
+          <span>{{ isNovo && panelTab === 'dados' ? 'Próximo Passo' : (panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar Alterações') }}</span>
+        </button>
+      </div>
+
+    </aside>
+
+  </div>
+</div>

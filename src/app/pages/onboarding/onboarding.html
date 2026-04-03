@@ -1,0 +1,119 @@
+<div class="onboarding-root">
+  <div class="onboarding-container">
+
+    <!-- Progresso -->
+    <div class="on-steps" *ngIf="step !== 'conclusao'">
+      <div class="on-step" [class.active]="step === 'identidade'">1</div>
+      <div class="on-line"></div>
+      <div class="on-step" [class.active]="step === 'marca'">2</div>
+      <div class="on-line"></div>
+      <div class="on-step" [class.active]="step === 'contato'">3</div>
+    </div>
+
+    <!-- ══ PASSO 1: Identidade ═══════════════════ -->
+    <div class="on-card" *ngIf="step === 'identidade'">
+      <div class="on-hero">
+        <span class="emoji">🚀</span>
+        <h1>Vamos começar!</h1>
+        <p>Qual o nome do seu negócio?</p>
+      </div>
+
+      <div class="field">
+        <label>Nome do Estabelecimento *</label>
+        <input type="text" [(ngModel)]="form.nome" (ngModelChange)="onNameChange()"
+          placeholder="Ex: Barber Shop São Paulo" autofocus />
+      </div>
+
+      <div class="field">
+        <label>Link da sua Agenda (Slug)</label>
+        <div class="slug-wrap">
+           <span>agendaai.vercel.app/agendar/</span>
+           <input type="text" [(ngModel)]="form.slug" placeholder="seu-negocio" />
+        </div>
+        <p class="hint">Este será o link que você enviará para seus clientes.</p>
+      </div>
+
+      <button class="btn-next" [disabled]="!form.nome || !form.slug" (click)="next()">
+        Próximo Passo <i class="pi pi-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- ══ PASSO 2: Marca ════════════════════════ -->
+    <div class="on-card" *ngIf="step === 'marca'">
+      <div class="on-hero">
+         <span class="emoji">✨</span>
+         <h1>Identidade Visual</h1>
+         <p>Personalize conforme a sua marca.</p>
+      </div>
+
+      <div class="field">
+        <label>Cor de Destaque</label>
+        <div class="color-grid">
+           <button *ngFor="let c of suggestedColors" 
+             [style.background]="c" 
+             [class.active]="form.cor_primaria === c"
+             (click)="form.cor_primaria = c">
+             <i class="pi pi-check" *ngIf="form.cor_primaria === c"></i>
+           </button>
+           <input type="color" [(ngModel)]="form.cor_primaria" class="color-picker" />
+        </div>
+      </div>
+
+      <div class="field">
+        <label>URL do Logo (Opcional)</label>
+        <input type="text" [(ngModel)]="form.logo_url" placeholder="https://exemplo.com/logo.png" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-back" (click)="back()">Voltar</button>
+        <button class="btn-next" (click)="next()">Continuar</button>
+      </div>
+    </div>
+
+    <!-- ══ PASSO 3: Contato ══════════════════════ -->
+    <div class="on-card" *ngIf="step === 'contato'">
+      <div class="on-hero">
+         <span class="emoji">📍</span>
+         <h1>Localização e Contato</h1>
+         <p>Onde seus clientes podem te encontrar?</p>
+      </div>
+
+      <div class="field">
+        <label>Cidade</label>
+        <input type="text" [(ngModel)]="form.cidade" placeholder="Ex: São Paulo" />
+      </div>
+
+      <div class="field">
+        <label>Endereço Completo</label>
+        <input type="text" [(ngModel)]="form.endereco" placeholder="Rua das Acácias, 123" />
+      </div>
+
+      <div class="field">
+        <label>WhatsApp de Contato</label>
+        <input type="tel" [(ngModel)]="form.telefone" placeholder="(11) 99999-8888" />
+      </div>
+
+      <div class="btn-group">
+        <button class="btn-back" (click)="back()">Voltar</button>
+        <button class="btn-next" (click)="finalizar()">
+          Finalizar Configuração <i class="pi pi-check"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══ CONCLUSÃO ═════════════════════════════ -->
+    <div class="on-card conclusao" *ngIf="step === 'conclusao'">
+       <div class="loader-wrap">
+          <div class="pulse-circle"></div>
+          <div class="pulse-circle second"></div>
+          <i class="pi pi-sparkles"></i>
+       </div>
+       <h1>Quase tudo pronto!</h1>
+       <p>Estamos preparando o seu painel de gestão...</p>
+       <div class="progress-bar-mini">
+          <div class="bar-fill"></div>
+       </div>
+    </div>
+
+  </div>
+</div>

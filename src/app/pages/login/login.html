@@ -1,0 +1,51 @@
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="brand">
+      <span class="logo-mark">▲</span>
+      <h2>AgendaAi</h2>
+    </div>
+
+    <p-card styleClass="login-card">
+      <div class="login-header">
+        <h3>{{ isSignupMode ? 'Criar Conta Empresa' : 'Acesso Empresa' }}</h3>
+        <p>Gerencie seu negócio e equipe em um só lugar.</p>
+      </div>
+
+      <div class="login-form">
+        <!-- Error Box -->
+        <div class="error-box" *ngIf="errorMessage">
+          <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
+        </div>
+
+        <div class="field">
+          <label for="email">E-mail Corporativo</label>
+          <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full" placeholder="exemplo@clinica.com" />
+        </div>
+
+        <div class="field">
+          <label for="password">Senha Segura</label>
+          <input pInputText id="password" [(ngModel)]="password" type="password" class="w-full" placeholder="••••••••" />
+        </div>
+
+        <div class="forgot-password" *ngIf="!isSignupMode">
+          <a href="#">Esqueceu a senha?</a>
+        </div>
+
+        <!-- Action Button -->
+        <p-button 
+            [label]="isSignupMode ? 'Criar Minha Empresa' : 'Entrar no Painel'" 
+            styleClass="w-full btn-login-main" 
+            [loading]="isLoading"
+            (onClick)="submitForm()">
+        </p-button>
+      </div>
+    </p-card>
+
+    <div class="signup-link">
+      {{ isSignupMode ? 'Já tem uma conta empresarial?' : 'Quer levar o AgendaAi para seu negócio?' }} 
+      <a href="javascript:void(0)" (click)="toggleMode()">
+        {{ isSignupMode ? 'Faça o login' : 'Comece agora' }}
+      </a>
+    </div>
+  </div>
+</div>

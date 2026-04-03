@@ -1,0 +1,249 @@
+/* Multi-Agent Coordinator Dashboard */
+.gradient-text {
+  background: linear-gradient(135deg, #1a73e8, #a142f4);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Run All Button */
+.btn-run-all {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #202124;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 10px;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+.btn-run-all:hover:not(:disabled) { background: #1a73e8; transform: translateY(-1px); }
+.btn-run-all:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-run-all.loading { background: #5f6368; }
+
+/* Active Tasks Strip */
+.active-tasks-strip {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  background: #e8f0fe;
+  border: 1px solid rgba(26, 115, 232, 0.2);
+  border-radius: 12px;
+}
+.task-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: white;
+  border: 1px solid rgba(26, 115, 232, 0.2);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  color: #1a73e8;
+}
+.task-pill i { font-size: 0.8rem; }
+.task-timer { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: #9aa0a6; }
+.kill-btn {
+  background: none; border: none; cursor: pointer;
+  color: #ea4335; font-size: 0.85rem; padding: 0 2px;
+  line-height: 1;
+}
+
+/* Agent Cards Grid */
+.agents-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.agent-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 16px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s;
+  opacity: 0.65;
+}
+.agent-card.running { opacity: 1; }
+.agent-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+.agent-card.busy { border-color: #1a73e8; box-shadow: 0 0 0 3px rgba(26,115,232,0.1); }
+
+.agent-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.agent-icon {
+  width: 46px; height: 46px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.3rem;
+}
+
+/* Toggle */
+.toggle-pill {
+  width: 44px; height: 24px;
+  background: #dadce0;
+  border-radius: 24px;
+  position: relative;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+.toggle-pill.on { background: #34a853; }
+.knob {
+  width: 18px; height: 18px;
+  background: white;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px; left: 3px;
+  transition: left 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+.toggle-pill.on .knob { left: 23px; }
+
+.agent-name { margin: 0; font-size: 1rem; font-weight: 700; color: #202124; }
+.agent-desc { margin: 0; font-size: 0.85rem; color: #5f6368; line-height: 1.4; }
+
+/* Capabilities */
+.capabilities { display: flex; flex-wrap: wrap; gap: 6px; }
+.cap-chip {
+  background: #f1f3f4;
+  color: #5f6368;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+/* Status Badge */
+.agent-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #9aa0a6;
+  font-weight: 500;
+}
+.status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #dadce0;
+}
+.agent-status.active .status-dot { background: #34a853; box-shadow: 0 0 6px rgba(52,168,83,0.5); }
+.agent-status.busy .status-dot { background: #1a73e8; animation: pulse 1s ease-in-out infinite; }
+.agent-status.active { color: #34a853; }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Send Message Input */
+.send-message {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+.send-message input {
+  flex: 1;
+  border: 1px solid rgba(0,0,0,0.1);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  outline: none;
+  transition: border 0.2s;
+}
+.send-message input:focus { border-color: #1a73e8; }
+.send-btn {
+  width: 36px; height: 36px;
+  background: #1a73e8;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.send-btn:hover:not(:disabled) { background: #0d47a1; }
+.send-btn:disabled { background: #dadce0; cursor: not-allowed; }
+
+/* Log Card */
+.log-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.07);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+}
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  background: #f8f9fa;
+}
+.log-header h3 {
+  display: flex; align-items: center; gap: 8px;
+  margin: 0; font-size: 0.95rem; color: #202124;
+}
+.clear-btn {
+  background: none; border: 1px solid rgba(0,0,0,0.1);
+  color: #5f6368; padding: 5px 12px; border-radius: 6px;
+  cursor: pointer; font-family: inherit; font-size: 0.8rem;
+  transition: all 0.2s;
+}
+.clear-btn:hover { background: #f1f3f4; }
+
+.log-empty {
+  padding: 3rem;
+  text-align: center;
+  color: #9aa0a6;
+  font-size: 0.9rem;
+}
+
+.log-list {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.log-entry {
+  display: flex;
+  gap: 12px;
+  padding: 12px 1.5rem;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  transition: background 0.15s;
+}
+.log-entry:hover { background: #f8f9fa; }
+.log-entry:last-child { border-bottom: none; }
+
+.log-icon { width: 20px; flex-shrink: 0; padding-top: 2px; }
+.log-info .log-icon { color: #1a73e8; }
+.log-success .log-icon { color: #34a853; }
+.log-warning .log-icon { color: #f9ab00; }
+.log-error .log-icon { color: #ea4335; }
+
+.log-meta {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.log-agent { font-size: 0.8rem; font-weight: 700; }
+.log-time { font-family: 'Space Mono', monospace; font-size: 0.75rem; color: #9aa0a6; }
+.log-msg { margin: 0; font-size: 0.85rem; color: #5f6368; line-height: 1.4; }
