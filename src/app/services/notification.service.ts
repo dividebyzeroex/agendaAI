@@ -19,10 +19,22 @@ export interface AppNotification {
   action?: NotificationAction;
 }
 
+export interface ToastMessage {
+  id: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  icon?: string;
+  duration?: number;
+}
+
 @Injectable({ providedIn: 'root' })
 export class NotificationService {
   private notificationsSource = new BehaviorSubject<AppNotification[]>([]);
   notifications$ = this.notificationsSource.asObservable();
+
+  private toastsSource = new BehaviorSubject<ToastMessage[]>([]);
+  toasts$ = this.toastsSource.asObservable();
 
   constructor() {
     // Carrega notificações iniciais (mock)
@@ -66,5 +78,22 @@ export class NotificationService {
 
   remove(id: string) {
     this.notificationsSource.next(this.notifications.filter(n => n.id !== id));
+  }
+
+  // --- Toasts (Popup Toaster) ---
+
+  showToast(config: Omit<ToastMessage, 'id'>) {
+    const id = Math.random().toString(36).substring(2, 9);
+    const toast: ToastMessage = { ...config, id };
+    
+    this.toastsSource.next([...this.toastsSource.value, toast]);
+    
+    // Auto-remove after 7 seconds (as requested)
+    const duration = config.duration || 7000;
+    setTimeout(() => this.removeToast(id), duration);
+  }
+
+  removeToast(id: string) {
+    this.toastsSource.next(this.toastsSource.value.filter(t => t.id !== id));
   }
 }

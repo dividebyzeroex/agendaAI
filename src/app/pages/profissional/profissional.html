@@ -72,15 +72,10 @@
             <span>{{ agenda.length }} agendamentos</span>
          </div>
 
-         <!-- SKELETONS -->
-         <div class="skeleton-list" *ngIf="isLoading">
-            <div class="sk-item" *ngFor="let i of [1,2,3,4]">
-               <div class="ag-skeleton" style="width: 44px; height: 44px; border-radius: 12px;"></div>
-               <div class="sk-info">
-                  <div class="ag-skeleton" style="width: 70%; height: 16px; margin-bottom: 6px;"></div>
-                  <div class="ag-skeleton" style="width: 40%; height: 12px;"></div>
-               </div>
-            </div>
+         <!-- Elite Loader (Mini) -->
+         <div class="elite-loader-mini" *ngIf="isLoading" style="min-height: 100px; background: white; border-radius: 20px; box-shadow: none;">
+            <div class="elite-scissor-wrap"></div>
+            <div class="loader-text">Sincronizando sua agenda...</div>
          </div>
 
          <!-- ACTUAL LIST -->

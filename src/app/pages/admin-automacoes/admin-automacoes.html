@@ -6,9 +6,10 @@
     </div>
   </div>
 
-  <div class="loading-state" *ngIf="isLoading">
-    <i class="pi pi-spin pi-spinner"></i>
-    <p>Carregando workflows do Supabase...</p>
+  <!-- Elite Loader -->
+  <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 200px; background: white; border-radius: 20px;">
+    <div class="elite-scissor-wrap"></div>
+    <div class="loader-text">Sincronizando Workflows...</div>
   </div>
 
   <div *ngIf="!isLoading">

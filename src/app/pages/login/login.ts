@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
@@ -17,40 +17,55 @@ import { AuthService } from '../../services/auth.service';
 export class Login {
   isSignupMode = false;
   email = '';
-  password = '';
   isLoading = false;
   errorMessage = '';
+  isOtpSent = false;
+  successMessage = '';
 
   private router = inject(Router);
   private authService = inject(AuthService);
+  private cdr = inject(ChangeDetectorRef);
 
-  async submitForm() {
+  async submitEmail() {
     this.errorMessage = '';
+    this.successMessage = '';
     this.isLoading = true;
 
-    if (!this.email || !this.password) {
-      this.errorMessage = 'Preencha email e senha.';
+    if (!this.email) {
+      this.errorMessage = 'Por favor, insira o seu e-mail corporativo.';
       this.isLoading = false;
       return;
     }
 
     try {
       if (this.isSignupMode) {
-        await this.authService.signUpWithPassword(this.email, this.password);
-        this.router.navigate(['/onboarding']);
-      } else {
-        await this.authService.signIn(this.email, this.password);
-        this.router.navigate(['/admin']);
+         // Create stub logic - magic link acts as sign up if not user yet automatically!
       }
+      await this.authService.signInWithOtp(this.email);
+      this.isOtpSent = true;
+      this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
     } catch (error: any) {
-      this.errorMessage = error.message || 'Erro ao processar login.';
+      this.errorMessage = error.message || 'Houve um erro ao enviar o Magic Link.';
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  async loginComGoogle() {
+    this.isLoading = true;
+    try {
+      await this.authService.signInWithGoogle();
+    } catch(err: any) {
+      this.errorMessage = err.message || 'Erro ao autenticar com o Google.';
+      this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
   toggleMode() {
     this.isSignupMode = !this.isSignupMode;
     this.errorMessage = '';
+    this.cdr.detectChanges();
   }
 }

@@ -1,1 +1,52 @@
-<p>admin-agenda works!</p>
+<div class="agenda-wrapper">
+  <!-- Premium Header -->
+  <div class="agenda-header-premium">
+    <div class="header-text">
+      <h2>Gestão de <span class="gradient-text">Agenda</span></h2>
+      <p>Acompanhe todos os seus horários e gerencie encaixes rapidamente.</p>
+    </div>
+    <div class="header-stats">
+      <div class="stat-chip-premium">
+        <div class="chip-icon">
+          <i class="pi pi-calendar-clock"></i>
+        </div>
+        <div class="chip-info">
+          <span class="chip-label">Agendamentos Totais</span>
+          <span class="chip-num">{{ (agendaService.events$ | async)?.length || 0 }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="calendar-card-premium">
+    <!-- Elite Loader -->
+    <div *ngIf="agendaService.isLoading$ | async" class="elite-loader-container">
+      <div class="elite-scissor-wrap"></div>
+      <div class="loader-text">Sincronizando Agenda de Hoje...</div>
+    </div>
+
+    <!-- FULL CALENDAR INSTANCE -->
+    <full-calendar 
+      *ngIf="!(agendaService.isLoading$ | async)" 
+      [options]="calendarOptions" 
+      [events]="agendaService.events$ | async"
+    ></full-calendar>
+  </div>
+</div>
+
+<!-- Modal de novo agendamento -->
+<app-agendar-modal
+  *ngIf="showAgendarModal"
+  [startStr]="selectInfo?.startStr || ''"
+  [endStr]="selectInfo?.endStr || ''"
+  [allDay]="selectInfo?.allDay || false"
+  (confirmado)="onAgendamentoConfirmado()"
+  (cancelado)="fecharModais()">
+</app-agendar-modal>
+
+<!-- Modal de detalhe/exclusão do evento -->
+<app-evento-modal
+  *ngIf="showEventoModal"
+  [evento]="eventoSelecionado"
+  (fechado)="fecharModais()">
+</app-evento-modal>

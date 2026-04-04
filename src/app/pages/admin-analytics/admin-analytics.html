@@ -12,11 +12,11 @@
   <!-- KPI Cards -->
   <div class="stats-row" *ngIf="!isLoadingStats">
     <div class="stat-card">
-      <div class="stat-icon res"><i class="pi pi-calendar-plus"></i></div>
+      <div class="stat-icon cli"><i class="pi pi-users"></i></div>
       <div class="stat-content">
-        <span class="stat-label">Hoje</span>
-        <h3 class="stat-value">{{ stats.agendamentosHoje }}</h3>
-        <span class="stat-hint">agendamentos</span>
+        <span class="stat-label">Total de Clientes</span>
+        <h3 class="stat-value">{{ stats.clientesTotal }}</h3>
+        <span class="stat-hint">na base de dados</span>
       </div>
     </div>
     <div class="stat-card">
@@ -36,17 +36,19 @@
       </div>
     </div>
     <div class="stat-card">
-      <div class="stat-icon cli"><i class="pi pi-user-plus"></i></div>
+      <div class="stat-icon res"><i class="pi pi-calendar-check"></i></div>
       <div class="stat-content">
-        <span class="stat-label">Novos Clientes</span>
-        <h3 class="stat-value">{{ stats.clientesNovos }}</h3>
-        <span class="stat-hint">últimos 30 dias</span>
+        <span class="stat-label">Agendamentos do Dia</span>
+        <h3 class="stat-value">{{ stats.agendamentosHoje }}</h3>
+        <span class="stat-hint">para hoje</span>
       </div>
     </div>
   </div>
 
-  <div class="stats-loading" *ngIf="isLoadingStats">
-    <i class="pi pi-spin pi-spinner"></i> Carregando métricas...
+  <!-- Elite Loader -->
+  <div class="elite-loader-container" *ngIf="isLoadingStats" style="min-height: 200px; background: white; border-radius: 20px;">
+    <div class="elite-scissor-wrap"></div>
+    <div class="loader-text">Analisando métricas com IA...</div>
   </div>
 
   <!-- Query Box -->

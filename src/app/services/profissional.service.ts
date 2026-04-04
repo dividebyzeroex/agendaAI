@@ -208,6 +208,18 @@ export class ProfissionalService {
       .subscribe();
   }
 
+  // ─── Cadastro de Profissionais ─────────────────────────────────────────
+
+  async fetchProfissionais(): Promise<any[]> {
+    const { data, error } = await this.supabase
+      .from('profissionais')
+      .select('*')
+      .eq('ativo', true)
+      .order('nome');
+    if (error) throw error;
+    return data || [];
+  }
+
   // ─── Helpers ──────────────────────────────────────────────────────────
 
   formatHora(dt: string): string {

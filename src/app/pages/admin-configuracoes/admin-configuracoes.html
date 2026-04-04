@@ -95,7 +95,8 @@
         </div>
       </div>
       <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()">
-        <i class="pi" [class.pi-check]="!isSaving" [class.pi-spin]="isSaving" [class.pi-spinner]="isSaving"></i>
+        <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
+        <i class="pi pi-check" *ngIf="!isSaving"></i>
         {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
       </button>
     </div>
@@ -142,14 +143,11 @@
 
       <!-- Servicos List -->
       <div class="servicos-list">
-        <!-- Skeletons -->
+        <!-- Elite Loader (Mini) -->
         <ng-container *ngIf="isLoadingService.isLoading$ | async">
-          <div class="servico-row" *ngFor="let i of [1,2,3]">
-             <div class="ag-skeleton" style="width: 32px; height: 32px; border-radius: 8px;"></div>
-             <div class="s-info">
-               <div class="ag-skeleton" style="width: 140px; height: 16px; margin-bottom: 4px;"></div>
-               <div class="ag-skeleton" style="width: 200px; height: 12px;"></div>
-             </div>
+          <div class="elite-loader-mini" style="min-height: 100px; background: white; border-radius: 20px; box-shadow: none;">
+            <div class="elite-scissor-wrap"></div>
+            <div class="loader-text">Buscando Serviços...</div>
           </div>
         </ng-container>
 

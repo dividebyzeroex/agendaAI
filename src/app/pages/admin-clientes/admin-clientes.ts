@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
@@ -15,6 +15,7 @@ import { NovoClienteModalComponent } from '../../components/novo-cliente-modal/n
 export class AdminClientes implements OnInit {
   private clienteService = inject(ClienteService);
   private smsService     = inject(SmsService);
+  private cdr            = inject(ChangeDetectorRef);
 
   clientes: Cliente[] = [];
   filteredClientes: Cliente[] = [];
@@ -23,6 +24,7 @@ export class AdminClientes implements OnInit {
 
   // Modais
   showNovoClienteModal = false;
+  selectedCliente: Cliente | undefined;
   smsModal: { open: boolean; cliente: Cliente | null; mensagem: string; sending: boolean; result: string } = {
     open: false, cliente: null, mensagem: '', sending: false, result: ''
   };
@@ -32,19 +34,45 @@ export class AdminClientes implements OnInit {
       this.clientes = data;
       this.applyFilter();
       this.isLoading = false;
+      this.cdr.detectChanges();
     });
   }
 
   applyFilter() {
     const q = this.searchQuery.toLowerCase();
+    
+    // De-duplicação por telefone (Prioriza o primeiro encontrado)
+    const uniqueMap = new Map<string, Cliente>();
+    this.clientes.forEach(c => {
+      if (c.telefone && !uniqueMap.has(c.telefone)) {
+        uniqueMap.set(c.telefone, c);
+      } else if (!c.telefone) {
+        // Se sem telefone, permite como único temporário (ex: cadastro manual incompleto)
+        uniqueMap.set(`id-${c.id}`, c);
+      }
+    });
+
+    const deduped = Array.from(uniqueMap.values());
+
     this.filteredClientes = q
-      ? this.clientes.filter(c => c.nome.toLowerCase().includes(q) || c.telefone?.includes(q))
-      : [...this.clientes];
+      ? deduped.filter(c => c.nome.toLowerCase().includes(q) || c.telefone?.includes(q))
+      : deduped;
   }
 
   // --- Novo Cliente Modal ---
+  abrirNovo() {
+    this.selectedCliente = undefined;
+    this.showNovoClienteModal = true;
+  }
+
+  abrirEditar(cliente: Cliente) {
+    this.selectedCliente = cliente;
+    this.showNovoClienteModal = true;
+  }
+
   onClienteSalvo(cliente: Cliente) {
     this.showNovoClienteModal = false;
+    this.selectedCliente = undefined;
     this.searchQuery = '';
     this.applyFilter();
   }

@@ -6,38 +6,53 @@
     </div>
 
     <p-card styleClass="login-card">
-      <div class="login-header">
+      <div class="elite-loader-mini" *ngIf="isLoading" style="min-height: 250px; background: white; border-radius: 20px; box-shadow: none;">
+         <div class="elite-scissor-wrap"></div>
+         <div class="loader-text">{{ isSignupMode ? 'Criando sua conta...' : 'Validando Credenciais...' }}</div>
+      </div>
+
+      <div class="login-header" *ngIf="!isLoading">
         <h3>{{ isSignupMode ? 'Criar Conta Empresa' : 'Acesso Empresa' }}</h3>
         <p>Gerencie seu negócio e equipe em um só lugar.</p>
       </div>
 
-      <div class="login-form">
+      <div class="login-form" *ngIf="!isLoading">
         <!-- Error Box -->
         <div class="error-box" *ngIf="errorMessage">
           <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
         </div>
-
-        <div class="field">
-          <label for="email">E-mail Corporativo</label>
-          <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full" placeholder="exemplo@clinica.com" />
+        
+        <div class="success-box" *ngIf="successMessage">
+          <i class="pi pi-check-circle"></i> {{ successMessage }}
         </div>
 
-        <div class="field">
-          <label for="password">Senha Segura</label>
-          <input pInputText id="password" [(ngModel)]="password" type="password" class="w-full" placeholder="••••••••" />
-        </div>
+        <ng-container *ngIf="!isOtpSent">
+          <div class="field">
+            <label for="email">E-mail Corporativo</label>
+            <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full prime-input" placeholder="seu@email.com" />
+          </div>
 
-        <div class="forgot-password" *ngIf="!isSignupMode">
-          <a href="#">Esqueceu a senha?</a>
-        </div>
+          <!-- Action Button -->
+          <p-button 
+              [label]="isSignupMode ? 'Enviar Link Mágico' : 'Continuar com E-mail'" 
+              styleClass="w-full btn-login-main" 
+              [loading]="isLoading"
+              (onClick)="submitEmail()">
+          </p-button>
 
-        <!-- Action Button -->
-        <p-button 
-            [label]="isSignupMode ? 'Criar Minha Empresa' : 'Entrar no Painel'" 
-            styleClass="w-full btn-login-main" 
-            [loading]="isLoading"
-            (onClick)="submitForm()">
-        </p-button>
+          <div class="divider"><span>ou continue com</span></div>
+
+          <div class="sso-buttons">
+            <p-button icon="pi pi-google" label="Google" styleClass="btn-sso" (onClick)="loginComGoogle()"></p-button>
+            <p-button icon="pi pi-github" label="Github" styleClass="btn-sso" [disabled]="true"></p-button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="isOtpSent">
+          <button class="btn-back-auth" (click)="isOtpSent = false">
+            <i class="pi pi-arrow-left"></i> Voltar e usar outro e-mail
+          </button>
+        </ng-container>
       </div>
     </p-card>
 

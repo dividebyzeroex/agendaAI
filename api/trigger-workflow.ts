@@ -1,6 +1,6 @@
 /**
  * api/trigger-workflow.ts — Vercel Serverless
- * v2: + Unicode Sanitization + Workflow Classifier + Rate Limiting
+ * v3: + SEND_EMAIL with iCal + Professional Confirmation
  */
 import { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
@@ -15,7 +15,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
-  // ✅ 1. Sanitização profunda de todo o body
   const body = sanitizeDeep(req.body) as { trigger: string; payload: any };
   const { trigger, payload } = body;
 
@@ -30,7 +29,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const twilioFrom  = process.env['TWILIO_PHONE_FROM'];
   const twClient = (twilioSid && twilioToken) ? twilio(twilioSid, twilioToken) : null;
 
-  // Busca regras ativas para este trigger
   const { data: rules } = await supabase
     .from('workflows')
     .select('*')
@@ -44,15 +42,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const actions: string[] = [];
 
   for (const rule of rules) {
-    // ✅ 2. Classifier — valida trigger + action + payload antes de executar
     const classification = classifyWorkflowRequest(trigger, rule.action, payload);
     if (!classification.allowed) {
       actions.push(`BLOCKED [${rule.name}]: ${classification.reason}`);
-      console.warn(`[Classifier] Bloqueado: ${classification.reason}`);
       continue;
     }
-
-    console.log(`[Workflow] "${rule.name}" → ${rule.action} [risk: ${classification.risk}]`);
 
     if (rule.action === 'SEND_SMS') {
       const clienteId = payload?.cliente_id;
@@ -69,92 +63,95 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         nomeCliente = sanitizeText(cliente?.nome || 'cliente');
       }
 
-      if (!telefone) {
-        actions.push(`SEND_SMS skipped: cliente sem telefone.`);
-        continue;
-      }
-
-      // ✅ 3. Rate limiting para SMS
       const estabelecimentoId = payload?.estabelecimento_id;
       if (estabelecimentoId) {
         const quota = await checkAndIncrement(estabelecimentoId, 'sms');
         if (!quota.allowed) {
-          actions.push(`SEND_SMS BLOCKED: limite do plano ${quota.plan} atingido (${quota.current}/${quota.limit})`);
+          actions.push(`SEND_SMS BLOCKED: limite do plano ${quota.plan} atingido`);
           continue;
         }
       }
 
-      const horario = payload?.start
-        ? new Date(payload.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-        : '';
-      const servico = sanitizeText(payload?.title || 'Agendamento');
-
-      let msgBody = '';
-      if (trigger === 'ON_EVENT_CREATED') {
-        msgBody = `✅ Olá, ${nomeCliente}! Agendamento confirmado: *${servico}*${horario ? ` às ${horario}` : ''}. — AgendaAi`;
-      } else if (trigger === 'ON_EVENT_CANCELED') {
-        msgBody = `😔 Olá, ${nomeCliente}! Agendamento *${servico}* cancelado. Deseja reagendar? — AgendaAi`;
-      } else if (trigger === 'ON_REMINDER_DUE') {
-        msgBody = `⏰ Lembrete, ${nomeCliente}! Você tem *${servico}* ${horario ? `às ${horario}` : 'em breve'}. Responda CONFIRMAR ou CANCELAR. — AgendaAi`;
-      } else {
-        msgBody = sanitizeText(rule.message_template || `Olá, ${nomeCliente}! Mensagem do AgendaAi.`);
-      }
-
-      const toNormalized = sanitizePhone(telefone);
-
-      if (twClient && twilioFrom) {
+      if (telefone && twClient && twilioFrom) {
+        const horario = payload?.start ? new Date(payload.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }) : '';
+        const servico = sanitizeText(payload?.title || 'Agendamento');
+        let msgBody = trigger === 'ON_EVENT_CREATED' ? `✅ Olá, ${nomeCliente}! Agendamento confirmado: *${servico}*${horario ? ` às ${horario}` : ''}.` : `Olá, ${nomeCliente}! Agendamento ${servico} atualizado.`;
+        
         try {
-          const result = await twClient.messages.create({ body: msgBody, from: twilioFrom, to: toNormalized });
-          actions.push(`SEND_SMS → ${toNormalized} [SID: ${result.sid}]`);
+          await twClient.messages.create({ body: msgBody, from: twilioFrom, to: sanitizePhone(telefone) });
+          actions.push(`SEND_SMS → ${telefone}`);
         } catch (e: any) {
           actions.push(`SEND_SMS ERRO: ${e.message}`);
         }
-      } else {
-        actions.push(`SEND_SMS SIMULADO → ${toNormalized}`);
-        console.log(`[SMS SIMULADO] ${toNormalized}: ${msgBody}`);
+      }
+    }
+
+    if (rule.action === 'SEND_EMAIL') {
+      const { Resend } = require('resend');
+      const resend = new Resend(process.env['RESEND_API_KEY']);
+      
+      const profId = payload?.profissional_id;
+      if (profId) {
+        const { data: prof } = await supabase.from('profissionais').select('nome, email').eq('id', profId).single();
+        if (prof?.email) {
+          const start = new Date(payload.start);
+          const end   = new Date(payload.end || (start.getTime() + 60 * 60 * 1000));
+          const ics   = generateICS(payload.title, start, end, prof.nome);
+          const token = payload.token_confirmacao || '';
+          
+          const baseUrl = process.env['PROJECT_URL'] || `https://${req.headers.host}`;
+          const acceptUrl = `${baseUrl}/api/respond-appointment?token=${token}&action=aceitar`;
+          const denyUrl   = `${baseUrl}/api/respond-appointment?token=${token}&action=recusar`;
+
+          try {
+            await resend.emails.send({
+              from: 'AgendaAi <notificacoes@agendaai.com.br>',
+              to: prof.email,
+              subject: `✂️ Novo Serviço: ${payload.title}`,
+              html: `
+                <div style="font-family: sans-serif; padding: 20px; color: #1e293b;">
+                  <h2 style="color: #1a73e8;">Olá, ${prof.nome}!</h2>
+                  <p>Um novo agendamento foi atribuído a você:</p>
+                  <div style="background: #f1f5f9; padding: 15px; border-radius: 10px; margin: 20px 0;">
+                    <strong>${payload.title}</strong><br>
+                    📅 ${start.toLocaleString('pt-BR')}<br>
+                  </div>
+                  <p>Por favor, confirme ou recuse este atendimento:</p>
+                  <div style="margin-top: 20px;">
+                    <a href="${acceptUrl}" style="background: #1a73e8; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block;">ACEITAR</a>
+                    <a href="${denyUrl}" style="background: #ef4444; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; margin-left: 10px;">RECUSAR</a>
+                  </div>
+                </div>
+              `,
+              attachments: [{ filename: 'convite.ics', content: Buffer.from(ics).toString('base64') }],
+            });
+            actions.push(`SEND_EMAIL → ${prof.email}`);
+          } catch (e: any) {
+            actions.push(`SEND_EMAIL ERRO: ${e.message}`);
+          }
+        }
       }
     }
 
     if (rule.action === 'NOTIFY_ADMIN') {
-      // Registra na tabela agent_tasks para o painel de atividades
-      await supabase.from('agent_tasks').insert({
-        type: 'NOTIFY_ADMIN',
-        payload: { trigger, message: `Trigger "${trigger}" ativo para "${payload?.title}".` },
-        status: 'done',
-        agent_owner: 'system',
-        completed_at: new Date().toISOString(),
-      });
-      actions.push(`NOTIFY_ADMIN: "${trigger}" registrado.`);
-    }
-
-    if (rule.action === 'ADD_TAG') {
-      if (payload?.cliente_id && rule.tag_value) {
-        await supabase
-          .from('clientes')
-          .update({ tags: supabase.rpc('array_append', { arr: 'tags', val: rule.tag_value }) })
-          .eq('id', payload.cliente_id);
-        actions.push(`ADD_TAG: "${rule.tag_value}" → cliente ${payload.cliente_id}`);
-      }
+      await supabase.from('agent_tasks').insert({ type: 'NOTIFY_ADMIN', payload: { trigger, message: payload?.title }, status: 'done', agent_owner: 'system', completed_at: new Date().toISOString() });
+      actions.push(`NOTIFY_ADMIN registered.`);
     }
 
     if (rule.action === 'LOG_ACTIVITY') {
-      await supabase.from('agent_tasks').insert({
-        type: 'LOG',
-        payload: sanitizeDeep(payload),
-        status: 'done',
-        agent_owner: 'logger',
-        completed_at: new Date().toISOString(),
-      });
-      actions.push(`LOG_ACTIVITY: evento "${trigger}" registrado.`);
+      await supabase.from('agent_tasks').insert({ type: 'LOG', payload: sanitizeDeep(payload), status: 'done', agent_owner: 'logger', completed_at: new Date().toISOString() });
+      actions.push(`LOG_ACTIVITY registered.`);
     }
   }
 
-  return res.status(200).json({
-    success: true,
-    trigger,
-    rulesExecuted: rules.length,
-    actionsExecuted: actions.filter(a => !a.startsWith('BLOCKED')).length,
-    blocked: actions.filter(a => a.startsWith('BLOCKED')).length,
-    actions,
-  });
+  return res.status(200).json({ success: true, trigger, rulesExecuted: rules.length, actions });
+}
+
+function generateICS(title: string, start: Date, end: Date, prof: string) {
+  const formatDate = (date: Date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+  const now = formatDate(new Date());
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//AgendaAi//NONSGML v1.0//EN', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH',
+    'BEGIN:VEVENT', `DTSTAMP:${now}`, `UID:${now}-${Math.random().toString(36).substring(7)}`, `DTSTART:${formatDate(start)}`, `DTEND:${formatDate(end)}`, `SUMMARY:${title}`, 'DESCRIPTION:Agendamento via plataforma AgendaAi', `ORGANIZER;CN=${prof}:MAILTO:agenda@agendaai.com.br`, 'STATUS:CONFIRMED', 'SEQUENCE:0', 'END:VEVENT', 'END:VCALENDAR'
+  ].join('\r\n');
 }

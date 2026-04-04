@@ -48,7 +48,10 @@ create table if not exists public.agenda_events (
   "allDay" boolean default false,
   cliente_id uuid references public.clientes(id) on delete set null,
   servico_id uuid references public.servicos(id) on delete set null,
-  status text default 'confirmado' check (status in ('confirmado', 'pendente', 'cancelado', 'concluido')),
+  profissional_id uuid references public.profissionais(id) on delete set null,
+  status text default 'confirmado' check (status in ('confirmado', 'pendente', 'cancelado', 'concluido', 'noshow', 'em_atendimento')),
+  status_confirmacao text default 'pendente' check (status_confirmacao in ('pendente', 'aceito', 'recusado')),
+  token_confirmacao uuid default gen_random_uuid(),
   observacoes text,
   created_at timestamptz default now()
 );

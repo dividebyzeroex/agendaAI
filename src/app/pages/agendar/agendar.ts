@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -23,13 +23,16 @@ export class Agendar implements OnInit {
   private agendaSvc  = inject(AgendaEventService);
   private clientSvc  = inject(ClienteService);
   private smsSvc     = inject(SmsService);
+  private cdr        = inject(ChangeDetectorRef);
 
   // -- Master State --
   step: BookingStep = 'service';
   isLoading = true;
+  isTransitioning = false;
   isSaving  = false;
   notFound  = false;
   errorMsg  = '';
+  transitionMsg = '';
 
   // -- Fetched Data --
   estab: EstabelecimentoPublico | null = null;
@@ -60,36 +63,71 @@ export class Agendar implements OnInit {
     const slug = this.route.snapshot.paramMap.get('slug') || '';
     if (!slug) { this.notFound = true; this.isLoading = false; return; }
 
-    try {
-      const result = await this.pubService.getBySlug(slug);
-      if (!result.estabelecimento) {
-        this.notFound = true;
-      } else {
-        this.estab    = result.estabelecimento;
-        this.services = result.servicos;
-        this.schedule = result.horarios;
-        this.pros     = result.profissionais;
+    // Subscribe to changes (Realtime enabled)
+    this.pubService.data$.subscribe(data => {
+      if (data.estabelecimento) {
+        this.estab    = data.estabelecimento;
+        this.services = data.servicos;
+        this.schedule = data.horarios;
+        this.pros     = data.profissionais;
+        this.isLoading = false;
+        
+        // Auto-refresh related states
+        if (this.selectedService) {
+           this.prosForService = this.pros.filter(p => !p.servicos?.length || p.servicos.includes(this.selectedService!.id!));
+        }
+        if (this.step === 'time') this.refreshSlots();
+
+        this.cdr.detectChanges();
       }
+    });
+
+    // 10s Security Timeout
+    const timeout = setTimeout(() => {
+      if (this.isLoading) {
+        console.warn('[Agendar] Carregamento excedeu 10s. Forçando término.');
+        this.isLoading = false;
+        this.errorMsg  = 'O servidor está demorando para responder. Tente recarregar a página.';
+        this.cdr.detectChanges();
+      }
+    }, 10000);
+
+    try {
+      await this.pubService.getBySlug(slug);
+      clearTimeout(timeout);
     } catch (e) {
       this.errorMsg = 'Falha ao conectar com o servidor.';
-    } finally {
       this.isLoading = false;
     }
+  }
+
+  /** Premium transition between screens */
+  async goToStep(next: BookingStep, msg: string) {
+    this.transitionMsg = msg;
+    this.isTransitioning = true;
+    this.cdr.detectChanges();
+    
+    // Aesthetic delay for elite feeling
+    await new Promise(r => setTimeout(r, 800));
+    
+    this.step = next;
+    this.isTransitioning = false;
+    this.cdr.detectChanges();
   }
 
   // 1. Select Service
   pickService(s: Servico) {
     this.selectedService = s;
     this.prosForService = this.pros.filter(p => !p.servicos?.length || p.servicos.includes(s.id!));
-    this.step = 'pro';
+    this.goToStep('pro', 'Localizando especialistas disponíveis...');
   }
 
   // 2. Select Pro
   pickPro(p: ProfissionalPublico | null) {
     this.selectedPro = p;
-    this.step = 'time';
     if (!this.selectedDate) this.selectedDate = new Date().toISOString().split('T')[0];
     this.refreshSlots();
+    this.goToStep('time', 'Gerando grade de horários dinâmica...');
   }
 
   // 3. Select Time
@@ -102,24 +140,24 @@ export class Agendar implements OnInit {
     const dow = new Date(this.selectedDate + 'T12:00:00').getDay();
     const dayConfig = this.schedule.find(h => h.dia_semana === dow && h.ativo);
     
-    if (!dayConfig || !dayConfig.abre || !dayConfig.fecha) return;
+    // Fallback: Default to 08:00 - 18:00 if not configured
+    const abre  = dayConfig?.abre  || '08:00';
+    const fecha = dayConfig?.fecha || '18:00';
+
+    if (!abre || !fecha) return;
 
     // Fetch busy times
     let busy: string[] = [];
     try {
-      if (this.selectedPro) {
-        busy = await this.pubService.getEventosDoProfissionalNoDia(this.selectedPro.id, this.selectedDate);
-      } else {
-        busy = await this.pubService.getEventosDoDia(this.estab!.id!, this.selectedDate);
-      }
+      busy = await this.pubService.getEventosDoDia(this.estab!.id!, this.selectedDate);
     } catch (e) { console.warn('Busy check failed'); }
 
     // Build slots
-    const [hA, mA] = dayConfig.abre.split(':').map(Number);
-    const [hF, mF] = dayConfig.fecha.split(':').map(Number);
+    const [hA, mA] = abre.split(':').map(Number);
+    const [hF, mF] = fecha.split(':').map(Number);
     let current = hA * 60 + mA;
     const end = hF * 60 + mF;
-    const duration = this.selectedService?.duracao_min || 30;
+    const duration = 30; // Forced to 30min per request
 
     while (current + duration <= end) {
       const time = `${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
@@ -129,7 +167,9 @@ export class Agendar implements OnInit {
   }
 
   confirmTime() {
-    if (this.selectedDate && this.selectedTime) this.step = 'confirm';
+    if (this.selectedDate && this.selectedTime) {
+      this.goToStep('confirm', 'Preparando resumo da reserva...');
+    }
   }
 
   async finalize() {
@@ -142,26 +182,31 @@ export class Agendar implements OnInit {
     try {
       const { id: clienteId } = await this.clientSvc.upsertClienteByPhone(this.custName, this.custPhone);
       
-      const start = `${this.selectedDate}T${this.selectedTime}:00`;
-      const endDt = new Date(new Date(start).getTime() + (this.selectedService?.duracao_min || 30) * 60000);
+      const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00`);
+      const duration = this.selectedService?.duracao_min || 30;
+      const endDt = new Date(startDt.getTime() + duration * 60000);
       
       await this.agendaSvc.addEvent({
         title: `${this.selectedService?.emoji || '✂️'} ${this.custName} | ${this.selectedService?.titulo}`,
-        start, 
-        end: endDt.toISOString().slice(0, 19),
+        start: this.toLocalISO(startDt), 
+        end: this.toLocalISO(endDt),
         cliente_id: clienteId,
         servico_id: this.selectedService?.id,
-        profissional_id: this.selectedPro?.id,
         status: 'confirmado',
       });
 
       this.smsSvc.enviarConfirmacao(this.custPhone, this.custName, this.selectedService?.titulo!, this.selectedTime);
-      this.step = 'done';
+      this.goToStep('done', 'Finalizando seu agendamento...');
     } catch (err: any) {
       this.errorMsg = err.message || 'Erro ao criar agendamento.';
-    } finally {
       this.isSaving = false;
     }
+  }
+
+  private toLocalISO(d: Date): string {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    // Forcing Brasil/Sao_Paulo offset (-03:00) during string creation
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}-03:00`;
   }
 
   goBack() {

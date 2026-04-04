@@ -62,9 +62,16 @@ export class AdminProfissionais implements OnInit {
     this.svc.profissionais$.subscribe(data => {
       this.profissionais = data;
       this.isLoading = false;
+      this.cdr.detectChanges();
     });
-    this.svc.tabelasAusentes$.subscribe(v => (this.tabelasAusentes = v));
-    this.estabSvc.servicos$.subscribe(s => (this.catalogoServicos = s));
+    this.svc.tabelasAusentes$.subscribe(v => {
+      this.tabelasAusentes = v;
+      this.cdr.detectChanges();
+    });
+    this.estabSvc.servicos$.subscribe(s => {
+      this.catalogoServicos = s;
+      this.cdr.detectChanges();
+    });
   }
 
 
@@ -212,13 +219,19 @@ export class AdminProfissionais implements OnInit {
   }
 
   async salvarAtual() {
-    if (this.panelTab === 'dados') {
-      await this.salvarDados();
-    } else if (this.panelTab === 'disponibilidade') {
-      await this.salvarDisponibilidade();
-    } else if (this.panelTab === 'financeiro') {
-      await this.salvarDados();
-      this.fecharPainel();
+    this.erro = '';
+    try {
+      if (this.panelTab === 'dados') {
+        await this.salvarDados();
+      } else if (this.panelTab === 'disponibilidade') {
+        await this.salvarDisponibilidade();
+      } else if (this.panelTab === 'financeiro') {
+        await this.svc.atualizarProfissional(this.profAtual.id!, this.profAtual);
+        this.showSuccess('Dados financeiros salvos!');
+        setTimeout(() => this.fecharPainel(), 1000);
+      }
+    } catch (e: any) {
+      this.erro = 'Erro ao salvar: ' + e.message;
     }
   }
 }

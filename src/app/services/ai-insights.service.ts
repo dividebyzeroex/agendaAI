@@ -1,59 +1,100 @@
 import { Injectable, inject } from '@angular/core';
 import { NotificationService } from './notification.service';
+import { ClienteService } from './cliente.service';
+import { AgendaEventService } from './agenda-event.service';
 
 @Injectable({ providedIn: 'root' })
 export class AiInsightsService {
   private notifSvc = inject(NotificationService);
+  private clienteSvc = inject(ClienteService);
+  private agendaSvc = inject(AgendaEventService);
 
-  private insights = [
-    {
-      title: 'IA: Alta Ocupação Amanhã',
-      message: 'Sua agenda de amanhã atingiu 90% de ocupação. Deseja abrir um novo slot extra às 11h?',
-      actionLabel: 'Abrir Slot'
-    },
-    {
-      title: 'IA: Sugestão de Retenção',
-      message: 'O cliente "João Silva" não agenda há 45 dias. Enviar um cupom de 10% para reengajamento?',
-      actionLabel: 'Enviar Cupom'
-    },
-    {
-      title: 'IA: Desempenho da Equipe',
-      message: 'O profissional "Carlos" teve um aumento de 20% na produtividade esta semana. Excelente!',
-      actionLabel: 'Ver Relatório'
-    },
-    {
-      title: 'IA: Alerta de Conflito',
-      message: 'Detectamos um possível conflito de horário na Terça-feira entre dois profissionais. Quer revisar?',
-      actionLabel: 'Ver Conflito'
-    }
-  ];
+  private realInsights: any[] = [];
 
   constructor() {
-    // Inicia a "simulação" de insights após 15 segundos
-    setTimeout(() => this.triggerRandomInsight(), 15000);
+    // Inicia a análise real após carregar os dados iniciais
+    setTimeout(() => this.runRealAnalysis(), 8000);
   }
 
-  triggerRandomInsight() {
-    const random = this.insights[Math.floor(Math.random() * this.insights.length)];
+  private async runRealAnalysis() {
+    const events = this.agendaSvc.getEvents();
+    const clientes = this.clienteSvc.getClientes();
+    
+    this.realInsights = [];
+
+    // 1. Análise de Ocupação (Amanhã)
+    const amanhã = new Date();
+    amanhã.setDate(amanhã.getDate() + 1);
+    const amanhãStr = amanhã.toISOString().split('T')[0];
+    const agendamentosAmanhã = events.filter(e => e.start.startsWith(amanhãStr)).length;
+
+    if (agendamentosAmanhã >= 4) {
+      this.realInsights.push({
+        title: 'IA: Alta Demanda Amanhã',
+        message: `Sua agenda de amanhã já possui ${agendamentosAmanhã} compromissos. Deseja organizar os intervalos?`,
+        actionLabel: 'Ver Agenda',
+        link: '/admin/agenda'
+      });
+    }
+
+    // 2. Análise de Retenção (Clientes sumidos > 30 dias)
+    const trintaDiasAtras = new Date();
+    trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
+    
+    const clientesSumidos = clientes.filter(c => {
+      if (!c.ultima_visita) return false;
+      const ultima = new Date(c.ultima_visita);
+      return ultima < trintaDiasAtras;
+    });
+
+    if (clientesSumidos.length > 0) {
+      const c = clientesSumidos[0];
+      this.realInsights.push({
+        title: 'IA: Sugestão de Retenção',
+        message: `O cliente "${c.nome}" não agenda há mais de 30 dias. Que tal enviar um convite?`,
+        actionLabel: 'Enviar Whats',
+        command: () => window.open(`https://wa.me/${c.telefone}`, '_blank')
+      });
+    }
+
+    // 3. Análise de Performance Diária
+    const hojeStr = new Date().toISOString().split('T')[0];
+    const agendamentosHoje = events.filter(e => e.start.startsWith(hojeStr)).length;
+    if (agendamentosHoje > 5) {
+      this.realInsights.push({
+        title: 'IA: Desempenho em Alta',
+        message: `Hoje está sendo um dia produtivo com ${agendamentosHoje} atendimentos. Parabéns!`,
+        actionLabel: 'Ver Analytics',
+        link: '/admin/analytics'
+      });
+    }
+
+    // Dispara um insight se houver algum real
+    if (this.realInsights.length > 0) {
+      this.triggerInsight();
+    }
+
+    // Agenda próxima análise em 5 minutos
+    setTimeout(() => this.runRealAnalysis(), 300000);
+  }
+
+  private triggerInsight() {
+    const random = this.realInsights[Math.floor(Math.random() * this.realInsights.length)];
     
     this.notifSvc.addNotification({
       type: 'AI_INSIGHT',
-      title: random.title,
+      title: random.title || 'IA: Insight de Dados',
       message: random.message,
-      action: { label: random.actionLabel, command: () => console.log('Ação IA executada: ' + random.actionLabel) }
+      action: random.command ? { label: random.actionLabel, command: random.command } : { label: random.actionLabel, link: random.link }
     });
-
-    // Próximo insight entre 1 e 3 minutos para não ser irritante
-    const nextTime = (Math.random() * 120000) + 60000;
-    setTimeout(() => this.triggerRandomInsight(), nextTime);
   }
 
   generateInstantInsight(context: string) {
     this.notifSvc.addNotification({
       type: 'AI_INSIGHT',
-      title: 'IA: Insight Imediato',
-      message: `Baseado em ${context}, sugerimos otimizar a distribuição de serviços para maximizar a receita.`,
-      action: { label: 'Otimizar Agora' }
+      title: 'IA: Insight Contextual',
+      message: `Analisando ${context}... O volume de dados sugere uma oportunidade de otimização de horários.`,
+      action: { label: 'Otimizar' }
     });
   }
 }

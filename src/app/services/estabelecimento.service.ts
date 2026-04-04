@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { createSWRCache } from '../utils/memoize';
@@ -32,13 +32,16 @@ export interface Estabelecimento {
   cidade?: string;
   logo_url?: string;
   cor_primaria?: string;
-  plano?: 'starter' | 'pro' | 'business';
+  plano?: string;
+  plano_expires_at?: string;
+  trial_ends_at?: string;
   onboarding_completo?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
 export class EstabelecimentoService {
   private supabase = inject(SupabaseService).client;
+  private ngZone = inject(NgZone);
 
   servicos$        = new BehaviorSubject<Servico[]>([]);
   horarios$        = new BehaviorSubject<Horario[]>([]);
@@ -70,7 +73,9 @@ export class EstabelecimentoService {
       this.fetchServicos(),
       this.fetchHorarios(),
     ]);
-    this.isLoadingSubject.next(false);
+    this.ngZone.run(() => {
+      this.isLoadingSubject.next(false);
+    });
   }
 
   // ─── Estabelecimento ───────────────────────────────────────────────────────
@@ -88,7 +93,7 @@ export class EstabelecimentoService {
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) return;
     const data = await this._estabelecimentoCache.get(user.id);
-    if (data) this.estabelecimento$.next(data);
+    if (data) this.ngZone.run(() => this.estabelecimento$.next(data));
   }
 
   async updateEstabelecimento(changes: Partial<Estabelecimento>) {
@@ -101,7 +106,9 @@ export class EstabelecimentoService {
       .select()
       .single();
     if (error) throw error;
-    this.estabelecimento$.next(data);
+    this.ngZone.run(() => {
+      this.estabelecimento$.next(data);
+    });
     this._estabelecimentoCache.clear(); // invalida cache após update
   }
 
@@ -119,13 +126,15 @@ export class EstabelecimentoService {
 
   async fetchServicos() {
     const data = await this._servicosCache.get();
-    this.servicos$.next(data);
+    this.ngZone.run(() => this.servicos$.next(data));
   }
 
   async addServico(s: Omit<Servico, 'id'>) {
     const { data, error } = await this.supabase.from('servicos').insert([s]).select().single();
     if (error) throw error;
-    this.servicos$.next([...this.servicos$.value, data]);
+    this.ngZone.run(() => {
+      this.servicos$.next([...this.servicos$.value, data]);
+    });
     this._servicosCache.clear();
     return data;
   }
@@ -133,13 +142,17 @@ export class EstabelecimentoService {
   async updateServico(id: string, changes: Partial<Servico>) {
     const { data, error } = await this.supabase.from('servicos').update(changes).eq('id', id).select().single();
     if (error) throw error;
-    this.servicos$.next(this.servicos$.value.map(s => (s.id === id ? data : s)));
+    this.ngZone.run(() => {
+      this.servicos$.next(this.servicos$.value.map(s => (s.id === id ? data : s)));
+    });
     this._servicosCache.clear();
   }
 
   async deleteServico(id: string) {
     await this.supabase.from('servicos').update({ ativo: false }).eq('id', id);
-    this.servicos$.next(this.servicos$.value.filter(s => s.id !== id));
+    this.ngZone.run(() => {
+      this.servicos$.next(this.servicos$.value.filter(s => s.id !== id));
+    });
     this._servicosCache.clear();
   }
 
@@ -150,7 +163,11 @@ export class EstabelecimentoService {
       .from('horarios_funcionamento')
       .select('*')
       .order('dia_semana');
-    if (!error) this.horarios$.next(data || []);
+    if (!error) {
+      this.ngZone.run(() => {
+        this.horarios$.next(data || []);
+      });
+    }
   }
 
   async updateHorario(id: string, changes: Partial<Horario>) {
@@ -161,6 +178,8 @@ export class EstabelecimentoService {
       .select()
       .single();
     if (error) throw error;
-    this.horarios$.next(this.horarios$.value.map(h => (h.id === id ? data : h)));
+    this.ngZone.run(() => {
+      this.horarios$.next(this.horarios$.value.map(h => (h.id === id ? data : h)));
+    });
   }
 }

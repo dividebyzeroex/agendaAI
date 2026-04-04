@@ -11,9 +11,8 @@ import { AdminAgenda } from './pages/admin-agenda/admin-agenda';
 import { AdminClientes } from './pages/admin-clientes/admin-clientes';
 import { AdminConfiguracoes } from './pages/admin-configuracoes/admin-configuracoes';
 import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
-import { AdminAutomacoes } from './pages/admin-automacoes/admin-automacoes';
-import { AdminAgents } from './pages/admin-agents/admin-agents';
 import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
+import { AdminBilling } from './pages/admin-billing/admin-billing';
 import { authGuard } from './guards/auth.guard';
 
 export const routes: Routes = [
@@ -39,9 +38,8 @@ export const routes: Routes = [
       { path: 'clientes', component: AdminClientes },
       { path: 'configuracoes', component: AdminConfiguracoes },
       { path: 'analytics', component: AdminAnalytics },
-      { path: 'automacoes', component: AdminAutomacoes },
-      { path: 'agents', component: AdminAgents },
-      { path: 'profissionais', component: AdminProfissionais }
+      { path: 'profissionais', component: AdminProfissionais },
+      { path: 'billing', component: AdminBilling }
     ]
   },
   { path: '**', redirectTo: '' }

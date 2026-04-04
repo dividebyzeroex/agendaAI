@@ -75,9 +75,9 @@ export class WorkflowService {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ trigger: rule.trigger, payload })
         });
-        if (rule.action === 'SEND_SMS') this.costTracker.trackSms(1);
+        if (rule.action === 'SEND_SMS') this.costTracker.trackSms();
       } catch {
-        if (rule.action === 'SEND_SMS') this.costTracker.trackSms(1);
+        if (rule.action === 'SEND_SMS') this.costTracker.trackSms();
       }
     }
   }

@@ -255,3 +255,69 @@
 .signup-link a:hover {
   border-bottom-color: #4f46e5;
 }
+
+.success-box {
+  background: #f0fdf4;
+  color: #166534;
+  padding: 16px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid #dcfce7;
+  line-height: 1.5;
+}
+
+.success-box i {
+  font-size: 1.25rem;
+  margin-top: 2px;
+}
+
+.divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.5rem 0;
+}
+.divider::before, .divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid #e2e8f0;
+}
+.divider span {
+  padding: 0 10px;
+  color: #94a3b8;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.sso-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+::ng-deep .btn-sso {
+  flex: 1 !important;
+  background: white !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 14px !important;
+  padding: 12px !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  transition: all 0.2s !important;
+}
+
+::ng-deep .btn-sso:hover {
+  background: #f8fafc !important;
+  border-color: #94a3b8 !important;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+}
+
+::ng-deep .btn-sso i {
+  color: #475569 !important;
+  font-size: 1.1rem !important;
+}

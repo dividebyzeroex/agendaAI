@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Output, EventEmitter, inject, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
@@ -18,8 +18,8 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
              <div class="nc-avatar">{{ form.nome ? form.nome.charAt(0).toUpperCase() : '👤' }}</div>
           </div>
           <div>
-            <strong>Novo Cliente</strong>
-            <span>Cadastro Inteligente</span>
+            <strong>{{ isEdit ? 'Editar Cadastro' : 'Novo Cliente' }}</strong>
+            <span>{{ isEdit ? 'Atualização de Informações' : 'Cadastro Inteligente' }}</span>
           </div>
         </div>
         <button class="close-btn" (click)="cancelar()"><i class="pi pi-times"></i></button>
@@ -76,11 +76,11 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
           <label>Observações / Notas</label>
           <textarea [(ngModel)]="form.observacoes" 
             placeholder="Ex: Alérgico a produtos X, prefere atendimento em local silencioso..."
-            class="field-area" rows="3"></textarea>
+            class="field-area" rows="4"></textarea>
         </div>
  
         <!-- Info box -->
-        <div class="info-box-premium">
+        <div class="info-box-premium" *ngIf="!isEdit">
           <i class="pi pi-sparkles"></i>
           <span>O histórico será vinculado ao telefone e você poderá ver estatísticas no Analytics.</span>
         </div>
@@ -93,8 +93,8 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
       <div class="nc-footer">
         <button class="btn-cancel-glass" (click)="cancelar()">Cancelar</button>
         <button class="btn-save-premium" [disabled]="saving || !form.nome.trim()" (click)="confirmar()">
-          <i class="pi" [class.pi-user-plus]="!saving" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i>
-          {{ saving ? 'Cadastrando...' : 'Criar Cliente' }}
+          <i class="pi" [class.pi-user-plus]="!saving && !isEdit" [class.pi-check]="!saving && isEdit" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i>
+          {{ saving ? (isEdit ? 'Salvando...' : 'Cadastrando...') : (isEdit ? 'Salvar Alterações' : 'Criar Cliente') }}
         </button>
       </div>
     </div>
@@ -139,17 +139,17 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
     .nc-body { padding: 2rem; display: flex; flex-direction: column; gap: 1.2rem; overflow-y: auto; }
     .nc-section-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
     .nc-separator { height: 1px; background: #f1f5f9; margin: 0.5rem 0; }
-
+ 
     .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .fields-grid .full { grid-column: span 2; }
-
+ 
     .field-group { display: flex; flex-direction: column; gap: 7px; }
     label { font-size: .8rem; font-weight: 700; color: #475569; }
     .req { color: #f43f5e; }
  
     .input-wrap { position: relative; display: flex; align-items: center; }
     .input-wrap .pi { position: absolute; left: 14px; color: #94a3b8; font-size: 0.9rem; }
-
+ 
     .field-input, .field-area {
       width: 100%; padding: 12px 14px 12px 40px; border: 2px solid #f1f5f9; border-radius: 12px;
       font-family: inherit; font-size: 0.95rem; outline: none; transition: all .2s;
@@ -179,12 +179,13 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
     }
     .btn-save-premium:hover:not(:disabled) { background: #0f172a; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: translateY(-1px); }
     .btn-save-premium:disabled { opacity: .4; cursor: not-allowed; }
-
+ 
     .custom-scroll::-webkit-scrollbar { width: 5px; }
     .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
   `]
 })
-export class NovoClienteModalComponent {
+export class NovoClienteModalComponent implements OnInit {
+  @Input() cliente?: Cliente;
   @Output() salvo    = new EventEmitter<Cliente>();
   @Output() cancelado = new EventEmitter<void>();
 
@@ -193,6 +194,20 @@ export class NovoClienteModalComponent {
   form = { nome: '', telefone: '', email: '', nascimento: '', observacoes: '' };
   saving = false;
   erro   = '';
+  isEdit = false;
+
+  ngOnInit() {
+    if (this.cliente) {
+      this.isEdit = true;
+      this.form = {
+        nome:       this.cliente.nome || '',
+        telefone:   this.cliente.telefone || '',
+        email:      this.cliente.email || '',
+        nascimento: (this.cliente as any).nascimento || '',
+        observacoes: (this.cliente as any).observacoes || ''
+      };
+    }
+  }
 
   async confirmar() {
     if (!this.form.nome.trim()) return;
@@ -200,17 +215,30 @@ export class NovoClienteModalComponent {
     this.erro   = '';
 
     try {
-      const novo = await this.clienteService.addCliente({
-        nome:     this.form.nome.trim(),
-        telefone: this.form.telefone.trim() || undefined,
-        email:    this.form.email.trim()    || undefined,
-        nascimento: this.form.nascimento || undefined,
-        observacoes: this.form.observacoes.trim() || undefined,
-        ultima_visita: new Date().toISOString().split('T')[0],
-      });
-      this.salvo.emit(novo);
+      if (this.isEdit && this.cliente?.id) {
+        // Modo Edição
+        const atualizado = await this.clienteService.updateCliente(this.cliente.id, {
+          nome:       this.form.nome.trim(),
+          telefone:   this.form.telefone.trim() || undefined,
+          email:      this.form.email.trim()    || undefined,
+          nascimento: this.form.nascimento || undefined,
+          observacoes: this.form.observacoes.trim() || undefined
+        } as any);
+        this.salvo.emit(atualizado);
+      } else {
+        // Modo Novo
+        const novo = await this.clienteService.addCliente({
+          nome:       this.form.nome.trim(),
+          telefone:   this.form.telefone.trim() || undefined,
+          email:      this.form.email.trim()    || undefined,
+          nascimento: this.form.nascimento || undefined,
+          observacoes: this.form.observacoes.trim() || undefined,
+          ultima_visita: new Date().toISOString().split('T')[0],
+        });
+        this.salvo.emit(novo);
+      }
     } catch (e: any) {
-      this.erro = e.message || 'Erro ao cadastrar cliente.';
+      this.erro = e.message || 'Erro ao processar cadastro.';
     } finally {
       this.saving = false;
     }

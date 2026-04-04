@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 
@@ -59,6 +59,7 @@ const DIAS_SEMANA: Omit<ProfissionalDisponibilidade, 'profissional_id'>[] = [
 @Injectable({ providedIn: 'root' })
 export class ProfissionaisService {
   private supabase = inject(SupabaseService).client;
+  private ngZone = inject(NgZone);
 
   profissionais$  = new BehaviorSubject<ProfissionalCompleto[]>([]);
   isLoading$      = new BehaviorSubject<boolean>(false);
@@ -67,6 +68,22 @@ export class ProfissionaisService {
 
   constructor() {
     this.fetchAll();
+    this.subscribeRealtime();
+  }
+
+  private subscribeRealtime() {
+    this.supabase
+      .channel('profissionais_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profissionais' }, () => {
+        this.ngZone.run(() => this.fetchAll());
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profissional_disponibilidades' }, () => {
+        this.ngZone.run(() => this.fetchAll());
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profissional_servicos' }, () => {
+        this.ngZone.run(() => this.fetchAll());
+      })
+      .subscribe();
   }
 
   // ─── Fetch principal ───────────────────────────────────────────────────
@@ -76,53 +93,63 @@ export class ProfissionaisService {
     this.tabelasAusentes$.next(false);
 
     try {
-      // 1ª tentativa: JOIN completo (funciona quando schema cache está atualizado)
-      const { data, error } = await this.supabase
-        .from('profissionais')
-        .select('*, profissional_disponibilidades(*), profissional_servicos(*)')
-        .order('nome');
+      // Estratégia Desacoplada (Resolvendo PGRST204 definitivamente): 
+      // Buscamos as tabelas separadamente e montamos o objeto no Frontend.
+      
+      // 1. Profissionais
+      const { data: profs, error: profErr } = await this.supabase
+        .from('profissionais').select('*').order('nome');
 
-      if (!error && data) {
-        // Enriquece servicos com os dados do catálogo (query separada simples)
-        const servicoIds = [...new Set(
-          data.flatMap((p: any) => (p.profissional_servicos || []).map((s: any) => s.servico_id))
-        )];
-
-        let catalogoMap: Record<string, any> = {};
-        if (servicoIds.length > 0) {
-          const { data: cat } = await this.supabase
-            .from('servicos')
-            .select('id, titulo, emoji, preco')
-            .in('id', servicoIds);
-          (cat || []).forEach((s: any) => (catalogoMap[s.id] = s));
-        }
-
-        this.profissionais$.next(
-          data.map((p: any) => ({
-            ...p,
-            disponibilidades: p.profissional_disponibilidades || [],
-            servicos: (p.profissional_servicos || []).map((s: any) => ({
-              ...s,
-              servicos: catalogoMap[s.servico_id] || null,
-            })),
-          }))
-        );
+      if (profErr) throw profErr;
+      if (!profs) {
+        this.ngZone.run(() => this.profissionais$.next([]));
         return;
       }
 
-      // 2ª tentativa: queries 100% separadas, sem nenhum JOIN
-      console.warn('[ProfissionaisService] JOIN falhou, usando queries separadas:', error?.message);
-      await this.fetchSeparado();
+      // 2. Disponibilidades e Vínculos de Serviço (Paralelo para performance)
+      const [dispsRes, pServsRes] = await Promise.all([
+        this.supabase.from('profissional_disponibilidades').select('*'),
+        this.supabase.from('profissional_servicos').select('*')
+      ]);
+
+      const disps = dispsRes.data || [];
+      const pServs = pServsRes.data || [];
+
+      // 3. Enriquecer com dados do catálogo de serviços
+      const servicoIds = [...new Set(pServs.map((s: any) => s.servico_id))];
+      let catalogoMap: Record<string, any> = {};
+      if (servicoIds.length > 0) {
+        const { data: cat } = await this.supabase
+          .from('servicos').select('id, titulo, emoji, preco').in('id', servicoIds);
+        (cat || []).forEach((s: any) => (catalogoMap[s.id] = s));
+      }
+
+      // 4. Montar o Objeto Completo
+      const completo: ProfissionalCompleto[] = profs.map((p: any) => ({
+        ...p,
+        disponibilidades: disps.filter((d: any) => d.profissional_id === p.id),
+        servicos: pServs
+          .filter((s: any) => s.profissional_id === p.id)
+          .map((s: any) => ({
+            ...s,
+            servicos: catalogoMap[s.servico_id] || null
+          }))
+      }));
+
+      this.ngZone.run(() => {
+        this.profissionais$.next(completo);
+      });
 
     } catch (err: any) {
-      // Tabelas provavelmente não existem — migração SQL pendente
+      console.error('[ProfissionaisService] Falha na sincronização:', err.message);
       const msg = err?.message || '';
       if (msg.includes('does not exist') || msg.includes('schema cache') || msg.includes('PGRST')) {
         this.tabelasAusentes$.next(true);
       }
-      this.profissionais$.next([]);
     } finally {
-      this.isLoading$.next(false);
+      this.ngZone.run(() => {
+        this.isLoading$.next(false);
+      });
     }
   }
 
@@ -137,8 +164,10 @@ export class ProfissionaisService {
 
     if (profErr) {
       // Tabela não existe
-      this.tabelasAusentes$.next(true);
-      this.profissionais$.next([]);
+      this.ngZone.run(() => {
+        this.tabelasAusentes$.next(true);
+        this.profissionais$.next([]);
+      });
       return;
     }
 
@@ -159,15 +188,17 @@ export class ProfissionaisService {
       (cat || []).forEach((s: any) => (catalogoMap[s.id] = s));
     }
 
-    this.profissionais$.next(
-      (profs || []).map((p: any) => ({
-        ...p,
-        disponibilidades: (disps || []).filter((d: any) => d.profissional_id === p.id),
-        servicos: (pServs || [])
-          .filter((s: any) => s.profissional_id === p.id)
-          .map((s: any) => ({ ...s, servicos: catalogoMap[s.servico_id] || null })),
-      }))
-    );
+    this.ngZone.run(() => {
+      this.profissionais$.next(
+        (profs || []).map((p: any) => ({
+          ...p,
+          disponibilidades: (disps || []).filter((d: any) => d.profissional_id === p.id),
+          servicos: (pServs || [])
+            .filter((s: any) => s.profissional_id === p.id)
+            .map((s: any) => ({ ...s, servicos: catalogoMap[s.servico_id] || null })),
+        }))
+      );
+    });
   }
 
   // ─── CRUD ──────────────────────────────────────────────────────────────

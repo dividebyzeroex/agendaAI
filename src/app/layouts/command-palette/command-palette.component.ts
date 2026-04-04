@@ -124,15 +124,30 @@ export class CommandPaletteComponent implements AfterViewInit {
   agendaService = inject(AgendaEventService);
 
   commands: CommandItem[] = [
-    { name: 'Dashboard', icon: 'pi-home', category: 'Navigation', action: () => this.goto('/admin') },
-    { name: 'Minha Agenda', icon: 'pi-calendar', category: 'Navigation', action: () => this.goto('/admin/agenda') },
-    { name: 'Gerenciar Clientes', icon: 'pi-users', category: 'Navigation', action: () => this.goto('/admin/clientes') },
-    { name: 'Configurações', icon: 'pi-cog', category: 'Navigation', action: () => this.goto('/admin/configuracoes') },
+    // ─── NAVEGAÇÃO ───────────────────────────────────────────────────────────
+    { name: 'Ir para Dashboard', icon: 'pi-home', category: 'Navegação', action: () => this.goto('/admin') },
+    { name: 'Ir para Minha Agenda', icon: 'pi-calendar', category: 'Navegação', action: () => this.goto('/admin/agenda') },
+    { name: 'Ir para Gestão de Clientes', icon: 'pi-users', category: 'Navegação', action: () => this.goto('/admin/clientes') },
+    { name: 'Ir para Equipe / Profissionais', icon: 'pi-user-edit', category: 'Navegação', action: () => this.goto('/admin/profissionais') },
+    { name: 'Ir para Analytics / Inteligência AI', icon: 'pi-chart-bar', category: 'Navegação', action: () => this.goto('/admin/analytics') },
+    { name: 'Ir para Financeiro / Faturamento', icon: 'pi-wallet', category: 'Navegação', action: () => this.goto('/admin/billing') },
+    { name: 'Ir para Configurações', icon: 'pi-cog', category: 'Navegação', action: () => this.goto('/admin/configuracoes') },
     
-    { name: 'Novo Agendamento Rápido', icon: 'pi-plus-circle', category: 'Actions', action: () => this.createQuickEvent() },
-    { name: 'Acessar Página Pública', icon: 'pi-globe', category: 'Actions', action: () => this.goto('/') },
-    { name: 'Logout', icon: 'pi-sign-out', category: 'System', action: () => this.goto('/login') }
+    // ─── AÇÕES RÁPIDAS ───────────────────────────────────────────────────────
+    { name: 'Novo Agendamento Rápido', icon: 'pi-plus-circle', category: 'Ações Rápidas', action: () => this.createQuickEvent() },
+    { name: 'Cadastrar Novo Cliente', icon: 'pi-user-plus', category: 'Ações Rápidas', action: () => this.goto('/admin/clientes') },
+    { name: 'Cadastrar Novo Profissional', icon: 'pi-id-card', category: 'Ações Rápidas', action: () => this.goto('/admin/profissionais') },
+    
+    // ─── SISTEMA ─────────────────────────────────────────────────────────────
+    { name: 'Visualizar Página Pública (Agendamento)', icon: 'pi-external-link', category: 'Sistema', action: () => this.goto('/') },
+    { name: 'Atendimento e Suporte', icon: 'pi-question-circle', category: 'Sistema', action: () => alert('Suporte AgendaAi: contato@agenda.ai') },
+    { name: 'Sair / Logout', icon: 'pi-sign-out', category: 'Sistema', action: () => this.logout() }
   ];
+
+  logout() {
+    localStorage.removeItem('ag-mock-user');
+    this.goto('/login');
+  }
 
   flatFilteredCommands: CommandItem[] = [];
   groupedCommands: Record<string, CommandItem[]> = {};

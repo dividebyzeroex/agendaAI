@@ -14,6 +14,11 @@
         <i class="pi pi-search"></i>
         <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." />
       </div>
+      <!-- Botão Novo Profissional -->
+      <button class="btn-novo-prof-header" (click)="abrirNovo()">
+        <i class="pi pi-user-plus"></i>
+        Novo Profissional
+      </button>
     </div>
   </div>
 
@@ -37,10 +42,10 @@
     <!-- Lista de profissionais -->
     <div class="prof-list-area">
 
-      <!-- Loading -->
-      <div class="loading-state" *ngIf="isLoading">
-        <div class="spin"></div>
-        <span>Carregando profissionais...</span>
+      <!-- Elite Loader -->
+      <div class="elite-loader-container" *ngIf="isLoading">
+        <div class="elite-scissor-wrap"></div>
+        <div class="loader-text">Sincronizando Profissionais...</div>
       </div>
 
       <!-- Refined Empty State -->
@@ -58,62 +63,57 @@
 
       <!-- Grid de Profissionais (Elite Design) -->
       <div class="prof-grid-elite" *ngIf="!isLoading && profFiltrados.length > 0">
-        <div class="prof-card-ent" *ngFor="let p of profFiltrados"
+        <div class="prof-card-ent" *ngFor="let p of profFiltrados; let i = index"
+          [style.animation-delay]="(i * 0.1) + 's'"
           [class.opacity-inativo]="!p.ativo"
           (click)="abrirEditar(p)">
           
           <div class="card-glass-reveal"></div>
           
-          <!-- Top Row: Status & Badge -->
           <div class="card-top-ent">
-            <span class="badge-role">{{ p.cargo || 'Profissional' }}</span>
+            <span class="badge-role">{{ p.cargo || 'Especialista' }}</span>
             <div class="status-indicator" [class.online]="p.ativo">
               <span class="dot"></span>
-              {{ p.ativo ? 'Ativo' : 'Pausado' }}
+              {{ p.ativo ? 'Em Atividade' : 'Pausa' }}
             </div>
           </div>
 
-          <!-- Main Info: Avatar & Name -->
           <div class="card-main-ent">
             <div class="avatar-container-ent">
-              <div class="avatar-aura" [style.background]="p.cor_agenda || '#6366f1'"></div>
-              <div class="avatar-circle" [style.background]="p.cor_agenda || '#1e293b'">
+              <div class="avatar-circle" [style.background]="p.cor_agenda || '#6366f1'">
                 <img *ngIf="p.foto_url" [src]="p.foto_url" alt="avatar" />
                 <span *ngIf="!p.foto_url">{{ initiais(p.nome) }}</span>
               </div>
+              <div class="avatar-aura" [style.background]="p.cor_agenda || '#6366f1'"></div>
             </div>
             
             <div class="info-content-ent">
               <h4>{{ p.nome }}</h4>
-              <p>{{ p.especialidade || 'Incluso na equipe geral' }}</p>
+              <p>{{ p.especialidade || 'Membro da Equipe' }}</p>
             </div>
           </div>
 
-          <!-- Skills / Expertise Row -->
           <div class="expertise-tags-ent">
-            <span class="skill-pill" *ngFor="let serv of p.servicos?.slice(0, 2)">
+            <span class="skill-pill" *ngFor="let serv of p.servicos?.slice(0, 3)">
               {{ serv.servicos?.emoji }} {{ serv.servicos?.titulo }}
             </span>
-            <span class="skill-pill more" *ngIf="(p.servicos?.length || 0) > 2">
-              +{{ (p.servicos?.length || 0) - 2 }}
+            <span class="skill-pill more" *ngIf="(p.servicos?.length || 0) > 3">
+              +{{ (p.servicos?.length || 0) - 3 }}
             </span>
-            <span class="no-skills" *ngIf="!p.servicos || p.servicos.length === 0">Sem expertises vinculadas</span>
           </div>
 
-          <!-- Metrics: Comissao & Valor/Hora -->
           <div class="card-metrics-ent">
             <div class="metric-box">
-              <label>Comissão</label>
-              <span>{{ p.comissao_padrao || 0 }}%</span>
+              <label>Agenda</label>
+              <span>{{ diasAtivos(p) }}</span>
             </div>
             <div class="metric-divider"></div>
             <div class="metric-box">
-              <label>Vincular</label>
-              <span>{{ p.servicos?.length || 0 }} Itens</span>
+              <label>Valor/h</label>
+              <span>R$ {{ p.valor_hora || 0 | number:'1.0-0' }}</span>
             </div>
           </div>
 
-          <!-- Bottom Actions -->
           <div class="card-actions-ent" (click)="$event.stopPropagation()">
             <div class="social-links-ent">
               <i class="pi pi-instagram" *ngIf="p.instagram"></i>
@@ -123,7 +123,7 @@
               <button class="btn-icon-elite" (click)="toggleAtivo(p)" [title]="p.ativo ? 'Pausar' : 'Ativar'">
                 <i class="pi" [class.pi-eye]="p.ativo" [class.pi-eye-slash]="!p.ativo"></i>
               </button>
-              <button class="btn-icon-elite danger" *ngIf="confirmarDelete !== p.id" (click)="deletarProfissional(p.id!)">
+              <button class="btn-icon-elite danger" (click)="deletarProfissional(p.id!)">
                 <i class="pi pi-trash"></i>
               </button>
               <div class="confirm-del-bubble" *ngIf="confirmarDelete === p.id">
@@ -385,7 +385,8 @@
         <button class="btn-cancel-premium" (click)="fecharPainel()">Cancelar</button>
         <button class="btn-save-premium" [disabled]="isSaving" 
                 (click)="salvarAtual()">
-          <i class="pi" [class.pi-check]="!isSaving" [class.pi-spinner]="isSaving" [class.pi-spin]="isSaving"></i>
+          <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
+          <i class="pi pi-check" *ngIf="!isSaving"></i>
           <span>{{ isNovo && panelTab === 'dados' ? 'Próximo Passo' : (panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar Alterações') }}</span>
         </button>
       </div>

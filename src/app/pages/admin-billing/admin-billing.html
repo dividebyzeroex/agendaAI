@@ -1,0 +1,191 @@
+<div class="ag-page elite">
+  
+  <!-- VERIFYING STATE -->
+  <div class="verifying-container" *ngIf="isVerifying">
+    <div class="v-spinner">
+      <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: var(--p-primary-color)"></i>
+    </div>
+    <h3>Processando sua compra...</h3>
+    <p>Aguarde um momento enquanto confirmamos seu pagamento e adicionamos sua assinatura.</p>
+  </div>
+
+  <ng-container *ngIf="!isVerifying">
+    <!-- CONFETTI OVERLAY -->
+    <div class="confetti-overlay" *ngIf="showConfetti"></div>
+
+  <div class="page-header">
+    <div>
+      <h2>Central de <span class="gradient-text">Planos</span></h2>
+      <p>Gerencie sua infraestrutura, consumo de IA e faturamentos ativos.</p>
+    </div>
+    <div class="header-actions-right">
+      <div class="active-pill" *ngIf="currentPlan$ | async as plan">
+        <i class="pi pi-shield"></i>
+        <span>{{ plan.name }} Active</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="trial-info-banner glass" *ngIf="isTrialActive$ | async">
+    <div class="t-icon">⏳</div>
+    <div class="t-msg">
+      <strong>Você está no Período de Teste!</strong>
+      <span>Aproveite todos os recursos do plano Starter por mais {{ trialDaysRemaining$ | async }} dias.</span>
+    </div>
+    <button class="btn-elite-upgrade mini" (click)="openUpgrade(plans[0])">Escolher Plano Agora</button>
+  </div>
+
+  <div class="success-banner" *ngIf="successMsg">
+    <div class="s-icon">🎉</div>
+    <span>{{ successMsg }}</span>
+  </div>
+
+  <!-- USAGE DASHBOARD (ELITE GLASS) -->
+  <div class="usage-dashboard" *ngIf="usage$ | async as usage">
+    <div class="usage-card glass">
+      <div class="u-head">
+        <i class="pi pi-sparkles"></i>
+        <strong>Tokens de IA</strong>
+      </div>
+      <div class="u-progress">
+        <div class="p-bar" [style.width.%]="(usage.tokensUsed / usage.tokensLimit) * 100"></div>
+      </div>
+      <div class="u-footer">
+        <span>{{ usage.tokensUsed | number }} usados</span>
+        <span>Limite: {{ usage.tokensLimit | number }}</span>
+      </div>
+    </div>
+
+    <div class="usage-card glass">
+      <div class="u-head">
+        <i class="pi pi-comments"></i>
+        <strong>Mensagens SMS</strong>
+      </div>
+      <div class="u-progress sms">
+        <div class="p-bar sms" [style.width.%]="(usage.smsUsed / usage.smsLimit) * 100"></div>
+      </div>
+      <div class="u-footer">
+        <span>{{ usage.smsUsed }} enviadas</span>
+        <span>Limite: {{ usage.smsLimit }}</span>
+      </div>
+    </div>
+
+    <div class="usage-card mini-callout">
+      <p>Próxima renovação em <strong>25 de Maio</strong></p>
+      <button class="btn-manage" (click)="manageCycle()">Gerenciar Ciclo <i class="pi pi-chevron-right"></i></button>
+    </div>
+  </div>
+
+  <div class="billing-content">
+    
+    <!-- PREMIUM PLAN GRID -->
+    <div class="plans-grid">
+      <div class="plan-card elite-card" *ngFor="let plan of plans" 
+           [class.highlight]="plan.highlight" 
+           [class.active]="(currentPlan$ | async)?.id === plan.id">
+        
+        <div class="p-glow"></div>
+        <div class="p-header">
+          <div class="p-name">{{ plan.name }}</div>
+          <div class="p-price">
+            <span class="p-currency">R$</span>
+            <span class="p-amount">{{ plan.price | number:'1.2-2' }}</span>
+            <span class="p-period" *ngIf="plan.months === 1">/mês</span>
+            <span class="p-period" *ngIf="plan.months > 1">/total</span>
+          </div>
+          <div class="p-tag" *ngIf="plan.highlight">RECOMENDADO</div>
+        </div>
+
+        <div class="p-features">
+          <div class="f-item" *ngFor="let f of plan.features" [class.disabled]="!f.included">
+            <div class="f-icon-wrap">
+              <i class="pi" [class.pi-check]="f.included" [class.pi-times]="!f.included"></i>
+            </div>
+            <span>{{ f.text }}</span>
+          </div>
+        </div>
+
+        <div class="p-footer">
+          <button class="btn-elite-upgrade" 
+                  (click)="openUpgrade(plan)" 
+                  [disabled]="(currentPlan$ | async)?.id === plan.id">
+            <span *ngIf="(currentPlan$ | async)?.id === plan.id">Plano Atual</span>
+            <span *ngIf="(currentPlan$ | async)?.id !== plan.id">Ativar {{ plan.name }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN BILLING INFO -->
+    <div class="billing-sections">
+      
+
+
+      <!-- INVOICE HISTORY (MODAL STYLE TABLE) -->
+      <section class="billing-section full elite-section">
+        <div class="section-header">
+          <h3>Histórico de Faturamentos</h3>
+        </div>
+        <div class="elite-table-wrap">
+          <table class="elite-table">
+            <thead>
+              <tr>
+                <th>Emissão</th>
+                <th>Identificação</th>
+                <th>Montante</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let inv of invoices$ | async">
+                <td>{{ inv.date }}</td>
+                <td class="mono-id">{{ inv.id }}</td>
+                <td class="price-cell">R$ {{ inv.amount }},00</td>
+                <td>
+                  <span class="st-pill" [class.paid]="inv.status === 'Paga'">{{ inv.status }}</span>
+                </td>
+                <td>
+                  <button class="btn-download" title="Ver Recibo" (click)="successMsg = 'Baixando fatura ' + inv.id + '...'">
+                    <i class="pi pi-file-pdf"></i>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+      <!-- REMOVIDO CHECKOUT OVERLAY (Agora integrado com Mercado Pago redirect) -->
+    </div>
+  </ng-container>
+
+  <!-- MERCADOPAGO CONFIRM POPUP (JustaClausula style) -->
+  <div class="checkout-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+    <div class="pme-checkout-modal" (click)="$event.stopPropagation()">
+      <div class="pme-header">
+        <div class="pme-logo">
+           <strong>🛒 Confirmar Compra</strong>
+        </div>
+        <button class="btn-close" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
+      </div>
+
+      <div class="pme-order" style="text-align: center; margin: 2rem 0;">
+         <div class="o-info" style="margin-bottom: 1rem;">
+            <strong style="font-size: 1.25rem;">{{ selectedPlan?.name }}</strong>
+            <div style="font-size: 0.9rem; color: var(--p-text-muted);">Assinatura por {{ selectedPlan?.months }} mês(es)</div>
+         </div>
+         <div class="o-price" style="font-size: 2rem;">R$ {{ selectedPlan?.price | number:'1.2-2' }}</div>
+      </div>
+
+      <div class="pme-footer" style="display: flex; flex-direction: column; gap: 1rem;">
+        <div class="sec-text" style="justify-content: center;"><i class="pi pi-lock"></i> Seu pagamento será processado com segurança pelo Mercado Pago</div>
+        <button class="btn-pme-pay" style="width: 100%; justify-content: center; background: #009ee3; color: white;" 
+                (click)="processMercadoPagoCheckout()" [disabled]="isProcessing">
+          <i *ngIf="isProcessing" class="pi pi-spin pi-spinner"></i>
+          {{ isProcessing ? 'Abrindo Checkout...' : 'Ir para o Pagamento' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

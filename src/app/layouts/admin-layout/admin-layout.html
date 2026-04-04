@@ -27,29 +27,19 @@
       <a routerLink="/admin/analytics" routerLinkActive="active">
         <i class="pi pi-chart-bar"></i><span>Analytics IA</span>
       </a>
-      <a routerLink="/admin/agents" routerLinkActive="active">
-        <i class="pi pi-share-alt"></i><span>Multi-Agents</span>
-      </a>
-      <a routerLink="/admin/automacoes" routerLinkActive="active">
-        <i class="pi pi-bolt"></i><span>Automações</span>
-      </a>
       <a routerLink="/admin/configuracoes" routerLinkActive="active">
         <i class="pi pi-cog"></i><span>Configurações</span>
+      </a>
+      <a routerLink="/admin/billing" routerLinkActive="active">
+        <i class="pi pi-credit-card"></i><span>Planos</span>
+        <span class="trial-badge" *ngIf="billing.isTrialActive() | async as active">
+           {{ billing.getTrialDaysRemaining() | async }}d restantes
+        </span>
       </a>
     </nav>
 
     <!-- Cost Tracker at bottom of sidebar -->
     <div class="sidebar-footer" *ngIf="costTracker.quota$ | async as quota">
-      <div class="cost-row">
-        <i class="pi pi-sparkles"></i>
-        <div class="cost-bar-wrap">
-          <div class="cost-label">Tokens IA</div>
-          <div class="cost-track">
-            <div class="cost-fill" [style.width]="((quota.tokensUsed / quota.tokensLimit) * 100) + '%'"></div>
-          </div>
-          <div class="cost-nums">{{ quota.tokensUsed | number }} / {{ quota.tokensLimit | number }}</div>
-        </div>
-      </div>
       <div class="cost-row">
         <i class="pi pi-comments"></i>
         <div class="cost-bar-wrap">
@@ -77,7 +67,10 @@
             (click)="isNotifOpen = !isNotifOpen"></p-button>
           <span class="notif-badge" *ngIf="notifService.unreadCount > 0">{{ notifService.unreadCount }}</span>
         </div>
-        <div class="user-avatar">A</div>
+        <div class="user-avatar-wrap" (click)="menu.toggle($event)">
+          <p-avatar label="A" shape="circle" styleClass="premium-avatar"></p-avatar>
+        </div>
+        <p-menu #menu [model]="userMenuItems" [popup]="true" styleClass="premium-menu"></p-menu>
       </div>
     </header>
 
@@ -91,9 +84,11 @@
   </div>
 
   <app-command-palette></app-command-palette>
-  <app-ai-assistant></app-ai-assistant>
 
   <!-- Onboarding Modal — shown only once per user -->
   <app-onboarding-modal *ngIf="showOnboarding"></app-onboarding-modal>
+
+  <!-- Popup Toasts -->
+  <app-toast-container></app-toast-container>
 
 </div>

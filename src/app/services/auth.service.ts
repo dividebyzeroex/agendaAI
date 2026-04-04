@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone, inject } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
@@ -12,6 +12,8 @@ export class AuthService {
   
   public user$: Observable<User | null> = this.currentUserSubject.asObservable();
 
+  private ngZone = inject(NgZone);
+
   constructor() {
     this.initSupabase();
   }
@@ -23,10 +25,19 @@ export class AuthService {
         
         // Listen to auth state changes
         this.supabase.auth.onAuthStateChange((event, session) => {
-          this.currentUserSubject.next(session?.user || null);
+          this.ngZone.run(() => {
+            this.currentUserSubject.next(session?.user || null);
+          });
         });
       } else {
         console.warn('⚠️ [Supabase Auth] Chaves provisórias detectadas. Modo Mock (Local) Ativado.');
+        // Load mock user from session
+        const saved = localStorage.getItem('ag-mock-user');
+        if (saved) {
+          try {
+            this.currentUserSubject.next(JSON.parse(saved));
+          } catch (e) { localStorage.removeItem('ag-mock-user'); }
+        }
       }
     } catch (e) {
       console.error('Failed to init Supabase auth', e);
@@ -35,6 +46,29 @@ export class AuthService {
 
   get isAuthed_Sync(): boolean {
     return !!this.currentUserSubject.value;
+  }
+
+  async checkSession(): Promise<boolean> {
+    // If we already have a user in memory (or mock), it's authed
+    if (this.isAuthed_Sync) return true;
+
+    if (!this.supabase) {
+      // Check local storage for mock session
+      const saved = localStorage.getItem('ag-mock-user');
+      if (saved) {
+        this.currentUserSubject.next(JSON.parse(saved));
+        return true;
+      }
+      return false;
+    }
+
+    // O getSession await aguarda o parse de #access_token da URL após redirects do Magic Link
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (session) {
+      this.currentUserSubject.next(session.user);
+      return true;
+    }
+    return false;
   }
 
   // --- Real Auth Flow ---
@@ -54,8 +88,9 @@ export class AuthService {
   async signIn(email: string, password: string) {
     if (!this.supabase) {
       // Mock Bypass for local dev
-      const mockAdmin: unknown = { id: 'test-admin', email };
-      this.currentUserSubject.next(mockAdmin as User);
+      const mockAdmin: User = { id: 'test-admin', email } as User;
+      this.currentUserSubject.next(mockAdmin);
+      localStorage.setItem('ag-mock-user', JSON.stringify(mockAdmin));
       return { data: { user: mockAdmin }, error: null };
     }
     
@@ -67,10 +102,42 @@ export class AuthService {
     return data;
   }
 
+  async signInWithOtp(email: string) {
+    if (!this.supabase) throw new Error('Supabase not initialized.');
+    
+    const { data, error } = await this.supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: window.location.origin + '/admin'
+      }
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async signInWithGoogle() {
+    if (!this.supabase) throw new Error('Supabase not initialized.');
+    const { data, error } = await this.supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + '/admin'
+      }
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async getSessionToken(): Promise<string> {
+    if (!this.supabase) return '';
+    const { data } = await this.supabase.auth.getSession();
+    return data.session?.access_token || '';
+  }
+
   async logout() {
     if (this.supabase) {
       await this.supabase.auth.signOut();
     }
+    localStorage.removeItem('ag-mock-user');
     this.currentUserSubject.next(null);
   }
 }

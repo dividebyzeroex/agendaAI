@@ -1,0 +1,270 @@
+<div class="ag-page elite chatbots">
+  
+  <div class="page-header">
+    <div>
+      <h2>Central de <span class="gradient-text">Chatbots</span></h2>
+      <p>Gerencie integrações, monitore logs e interaja em tempo real.</p>
+    </div>
+    <div class="header-actions">
+      <div class="active-status" *ngIf="integrations$ | async as integrations">
+         <span class="dot active"></span>
+         {{ (integrations['whatsapp'] ? 1 : 0) + (integrations['facebook'] ? 1 : 0) + (integrations['instagram'] ? 1 : 0) }} Canais Ativos
+      </div>
+    </div>
+  </div>
+
+  <div class="chatbot-layout glass">
+    
+    <!-- SIDE NAV (Tabs & Conversations) -->
+    <div class="chatbot-sidebar">
+      <div class="sidebar-tabs">
+        <button [class.active]="activeTab === 'channels'" (click)="activeTab = 'channels'">
+          <i class="pi pi-th-large"></i> Canais
+        </button>
+        <button [class.active]="activeTab === 'history'" (click)="activeTab = 'history'">
+          <i class="pi pi-history"></i> Histórico
+        </button>
+        <button [class.active]="activeTab === 'live'" (click)="activeTab = 'live'">
+          <i class="pi pi-bolt"></i> Ao Vivo
+        </button>
+      </div>
+
+      <div class="conversation-list" *ngIf="activeTab !== 'channels'">
+        <div class="search-wrap">
+          <i class="pi pi-search"></i>
+          <input type="text" placeholder="Buscar conversas..." />
+        </div>
+        
+        <div class="conv-item" *ngFor="let conv of conversations$ | async" 
+             [class.active]="(activeConversation$ | async)?.id === conv.id"
+             (click)="selectConversation(conv.id)">
+          <div class="conv-avatar">
+             {{ conv.customerName.charAt(0) }}
+             <i class="channel-badge" [class]="getChannelIcon(conv.channel)"></i>
+          </div>
+          <div class="conv-details">
+            <div class="conv-h">
+              <strong>{{ conv.customerName }}</strong>
+              <span class="time">{{ conv.lastUpdate | date:'HH:mm' }}</span>
+            </div>
+            <p>{{ conv.lastMessage }}</p>
+          </div>
+          <div class="status-indicator" [class]="conv.status"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MAIN CHAT AREA -->
+    <div class="chatbot-main">
+
+      <!-- TAB 1: INTEGRATIONS -->
+      <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
+        <div *ngIf="integrations$ | async as integrations">
+          <div class="section-title">Aumente sua conversão conectando novos canais</div>
+          
+          <div class="channels-grid">
+           <!-- WhatsApp -->
+           <div class="channel-card elite-compact-card" [class.active]="integrations['whatsapp']">
+             <div class="card-accent-bar" [style.background]="'var(--wa-green)'"></div>
+             <div class="card-content">
+               <div class="brand-header">
+                 <i class="pi pi-whatsapp icon-wa"></i>
+                 <div class="brand-details">
+                   <h3>WhatsApp</h3>
+                   <span class="status-pill-small" [class.active]="integrations['whatsapp']">
+                     {{ integrations['whatsapp'] ? 'Ativo' : 'Inativo' }}
+                   </span>
+                 </div>
+               </div>
+               <button class="btn-elite-action" (click)="openOnboarding('whatsapp')">
+                 Configurar <i class="pi pi-angle-right"></i>
+               </button>
+             </div>
+           </div>
+
+           <!-- Facebook -->
+           <div class="channel-card elite-compact-card" [class.active]="integrations['facebook']">
+             <div class="card-accent-bar" [style.background]="'var(--fb-blue)'"></div>
+             <div class="card-content">
+               <div class="brand-header">
+                 <i class="pi pi-facebook icon-fb"></i>
+                 <div class="brand-details">
+                   <h3>Messenger</h3>
+                   <span class="status-pill-small" [class.active]="integrations['facebook']">
+                     {{ integrations['facebook'] ? 'Ativo' : 'Inativo' }}
+                   </span>
+                 </div>
+               </div>
+               <button class="btn-elite-action" (click)="openOnboarding('facebook')">
+                 Configurar <i class="pi pi-angle-right"></i>
+               </button>
+             </div>
+           </div>
+
+           <!-- Instagram -->
+           <div class="channel-card elite-compact-card" [class.active]="integrations['instagram']">
+             <div class="card-accent-bar" [style.background]="'var(--ig-grad)'"></div>
+             <div class="card-content">
+               <div class="brand-header">
+                 <i class="pi pi-instagram icon-ig"></i>
+                 <div class="brand-details">
+                   <h3>Instagram</h3>
+                   <span class="status-pill-small" [class.active]="integrations['instagram']">
+                     {{ integrations['instagram'] ? 'Ativo' : 'Inativo' }}
+                   </span>
+                 </div>
+               </div>
+               <button class="btn-elite-action" (click)="openOnboarding('instagram')">
+                 Configurar <i class="pi pi-angle-right"></i>
+               </button>
+             </div>
+           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: HISTORY (List Mode) -->
+    <div class="tab-content history" *ngIf="activeTab === 'history'">
+          <!-- Detailed table or list of logs -->
+          <div class="history-table glass">
+             <table>
+                <thead><tr><th>Cliente / Canal</th><th>Última Mensagem</th><th>Status</th><th>Ações</th></tr></thead>
+                <tbody>
+                   <tr *ngFor="let conv of conversations$ | async">
+                      <td class="td-user">
+                        <div class="user-brand-meta">
+                          <i [class]="getChannelIcon(conv.channel)" class="conv-channel-icon"></i>
+                          <div class="user-info-text">
+                            <strong>{{ conv.customerName }}</strong>
+                            <span>{{ conv.customerPhone }}</span>
+                          </div>
+                        </div>
+                      </td>
+                      <td class="td-msg">{{ conv.lastMessage }}</td>
+                      <td><span class="st-pill" [class]="conv.status">{{ conv.status | titlecase }}</span></td>
+                      <td><button class="btn-view" (click)="selectConversation(conv.id)">Ver Log</button></td>
+                   </tr>
+                </tbody>
+             </table>
+          </div>
+      </div>
+
+      <!-- TAB 3: LIVE (Chat View) -->
+      <div class="tab-content live" *ngIf="activeTab === 'live'">
+        <div *ngIf="(activeConversation$ | async) as conv">
+          <div class="chat-header">
+           <div class="user-info">
+             <strong>{{ conv.customerName }}</strong>
+             <span>{{ conv.customerPhone }} via {{ conv.channel }}</span>
+           </div>
+           <div class="chat-actions">
+              <button class="btn-client"><i class="pi pi-user"></i> Ver Cliente</button>
+              <button class="btn-takeover">Assumir Controle <i class="pi pi-user-edit"></i></button>
+           </div>
+        </div>
+
+        <div class="messages-container" #scrollMe [scrollTop]="scrollMe.scrollHeight">
+           <div class="message-wrapper" *ngFor="let m of conv.messages" [class.bot]="m.sender === 'bot'" [class.user]="m.sender === 'user'">
+              <div class="msg-bubble">{{ m.text }}</div>
+              <div class="msg-time">{{ m.timestamp | date:'HH:mm' }}</div>
+           </div>
+        </div>
+
+        <div class="input-container glass">
+           <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Digite sua mensagem (Bot ativo)..." />
+           <button class="btn-send" (click)="sendMessage()"><i class="pi pi-send"></i></button>
+        </div>
+        </div>
+      </div>
+
+      <div class="no-selection" *ngIf="activeTab === 'live' && !(activeConversation$ | async)">
+        <i class="pi pi-users"></i>
+        <h3>Selecione uma conversa para monitorar.</h3>
+      </div>
+    </div>
+
+  </div>
+  <!-- ONBOARDING MODAL STEPPER -->
+  <div class="modal-overlay" *ngIf="showOnboarding">
+    <div class="onboarding-modal glass-modal">
+      <button class="btn-close-modal" (click)="closeOnboarding()"><i class="pi pi-times"></i></button>
+      
+      <div class="modal-body">
+        <!-- STEP 1: WELCOME -->
+        <div class="step-content fadeIn" *ngIf="onboardingStep === 1">
+          <div class="step-icon">
+            <i [class]="getChannelIcon(targetChannel!)" [ngClass]="'icon-' + targetChannel"></i>
+          </div>
+          <h2>Conectar {{ targetChannel | titlecase }}</h2>
+          <p>Potencialize seu estabelecimento com agendamentos automáticos 24h por dia, 7 dias por semana.</p>
+          <ul class="benefit-list">
+             <li><i class="pi pi-check-circle"></i> Redução de 80% no tempo de resposta</li>
+             <li><i class="pi pi-check-circle"></i> Agendamento direto na sua grade</li>
+             <li><i class="pi pi-check-circle"></i> Confirmação automática via SMS</li>
+          </ul>
+          <button class="btn-next-elite" (click)="nextStep()">Iniciar Configuração <i class="pi pi-arrow-right"></i></button>
+        </div>
+
+        <!-- STEP 2: CONFIGURATION (REAL AUTH) -->
+        <div class="step-content fadeIn" *ngIf="onboardingStep === 2">
+          <h2>Conexão Segura</h2>
+          <p>Siga as instruções para vincular sua conta oficial ao AgendaAi.</p>
+          
+          <!-- WHATSAPP CLOUD API FORM -->
+          <div class="onboarding-form" *ngIf="targetChannel === 'whatsapp'">
+            <div class="input-field-elite">
+              <label>Phone Number ID (Meta Cloud API)</label>
+              <div class="input-wrap">
+                <i class="pi pi-phone"></i>
+                <input type="text" [(ngModel)]="whatsappConfig.phoneId" placeholder="Ex: 531234567890123">
+              </div>
+            </div>
+            <div class="input-field-elite">
+              <label>Link de Verificação / Token de Acesso</label>
+              <div class="input-wrap">
+                <i class="pi pi-lock"></i>
+                <input type="password" [(ngModel)]="whatsappConfig.token" placeholder="EAAW...">
+              </div>
+            </div>
+          </div>
+
+          <!-- FB/IG OAUTH BUTTON -->
+          <div class="oauth-container" *ngIf="targetChannel === 'facebook' || targetChannel === 'instagram'">
+             <div class="oauth-box">
+                <i class="pi pi-facebook-messenger" *ngIf="targetChannel === 'facebook'" style="color: #1877F2; font-size: 3rem; margin-bottom: 20px;"></i>
+                <i class="pi pi-instagram" *ngIf="targetChannel === 'instagram'" style="color: #E1306C; font-size: 3rem; margin-bottom: 20px;"></i>
+                <p>Clique abaixo para autorizar o AgendaAi a enviar mensagens em seu nome via Meta Business.</p>
+                <button class="btn-next-elite" (click)="authenticateViaOAuth()">
+                  <i class="pi pi-facebook"></i> Conectar com Facebook
+                </button>
+             </div>
+          </div>
+
+          <div class="step-actions">
+            <button class="btn-back-elite" (click)="onboardingStep = 1">Voltar</button>
+            <button class="btn-next-elite" *ngIf="targetChannel === 'whatsapp'" (click)="nextStep()" [disabled]="!whatsappConfig.phoneId || !whatsappConfig.token || isVerifying">
+              <span *ngIf="!isVerifying">Verificar e Conectar</span>
+              <span *ngIf="isVerifying"><i class="pi pi-spin pi-spinner"></i> Autenticando...</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- STEP 3: SUCCESS -->
+        <div class="step-content fadeIn success-step" *ngIf="onboardingStep === 3">
+          <div class="success-anim">
+            <div class="check-draw"></div>
+          </div>
+          <h2>Conexão Estabelecida!</h2>
+          <p>O {{ targetChannel | titlecase }} agora está vinculado à sua conta Elite. Seu assistente virtual começará a responder imediatamente.</p>
+          <button class="btn-next-elite success" (click)="finishOnboarding()">Concluir e Ir para o Painel</button>
+        </div>
+      </div>
+
+      <div class="modal-stepper">
+        <div class="dot" [class.active]="onboardingStep >= 1"></div>
+        <div class="dot" [class.active]="onboardingStep >= 2"></div>
+        <div class="dot" [class.active]="onboardingStep >= 3"></div>
+      </div>
+    </div>
+  </div>
+</div>
