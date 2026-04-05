@@ -24,6 +24,7 @@ const PLAN_LIMITS: Record<string, any> = {
 export class CostTrackerService {
   private supabase = inject(SupabaseService).client;
   private estabService = inject(EstabelecimentoService);
+  private usageChannel: any = null;
 
   private quotaSubject = new BehaviorSubject<UsageQuota>({
     tokensUsed: 0,
@@ -74,8 +75,13 @@ export class CostTrackerService {
   }
 
   private subscribeUsageChanges(estabId: string) {
-    this.supabase
-      .channel('usage-counts')
+    // Limpa subscrição anterior se existir
+    if (this.usageChannel) {
+      this.supabase.removeChannel(this.usageChannel);
+    }
+
+    this.usageChannel = this.supabase
+      .channel(`usage-counts-${estabId}`) // Nome único por estabelecimento
       .on('postgres_changes', 
         { event: '*', schema: 'public', table: 'usage_quotas', filter: `estabelecimento_id=eq.${estabId}` }, 
         () => {
