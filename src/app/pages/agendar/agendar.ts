@@ -61,16 +61,22 @@ export class Agendar implements OnInit {
 
   async ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('slug') || '';
-    if (!slug) { this.notFound = true; this.isLoading = false; return; }
+    if (!slug) { 
+      console.warn('[Agendar] Slug ausente na URL.');
+      this.notFound = true; 
+      this.isLoading = false; 
+      return; 
+    }
 
     // Subscribe to changes (Realtime enabled)
     this.pubService.data$.subscribe(data => {
-      if (data.estabelecimento) {
+      if (data && data.estabelecimento) {
         this.estab    = data.estabelecimento;
         this.services = data.servicos;
         this.schedule = data.horarios;
         this.pros     = data.profissionais;
         this.isLoading = false;
+        this.notFound  = false;
         
         // Auto-refresh related states
         if (this.selectedService) {
@@ -93,9 +99,23 @@ export class Agendar implements OnInit {
     }, 10000);
 
     try {
-      await this.pubService.getBySlug(slug);
+      console.log(`[Agendar] Sincronizando: ${slug}...`);
+      const data = await this.pubService.getBySlug(slug);
       clearTimeout(timeout);
-    } catch (e) {
+      
+      // FINAL VALIDATION: Stop loading anyway
+      this.isLoading = false;
+      
+      if (!data || !data.estabelecimento) {
+        console.warn(`[Agendar] Estabelecimento não encontrado para o slug: ${slug}`);
+        this.notFound = true;
+      } else {
+        this.notFound = false;
+      }
+      
+      this.cdr.detectChanges();
+    } catch (e: any) {
+      console.error('[Agendar] Falha na sincronização:', e);
       this.errorMsg = 'Falha ao conectar com o servidor.';
       this.isLoading = false;
     }

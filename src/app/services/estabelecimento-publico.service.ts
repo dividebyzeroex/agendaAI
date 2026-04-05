@@ -71,13 +71,19 @@ export class EstabelecimentoPublicoService {
     const fallback = { estabelecimento: null, servicos: [], horarios: [], profissionais: [] };
 
     try {
+      console.log(`[PubService] Iniciando getBySlug: ${slug}`);
+      
       // 1. Resolve Establishment by Slug via RPC (POST)
       const { data: estab, error: eErr } = await this.supabase
         .rpc('get_public_estabelecimento_by_slug', { p_slug: slug })
         .maybeSingle<EstabelecimentoPublico>();
       
-      if (eErr || !estab) return fallback;
+      if (eErr || !estab) {
+        console.warn(`[PubService] Estabelecimento não encontrado para slug: ${slug}`, eErr);
+        return fallback;
+      }
 
+      console.log(`[PubService] Estabelecimento localizado ID: ${estab.id}`);
       const estId = estab.id!;
 
       // 2. Fetch related data via RPCs (POST)
@@ -86,6 +92,8 @@ export class EstabelecimentoPublicoService {
         this.supabase.rpc('get_horarios_by_estab', { p_estab_id: estId }),
         this.supabase.rpc('get_profissionais_by_estab', { p_estab_id: estId }),
       ]);
+
+      console.log(`[PubService] Carga de dados - Servicos: ${sRes.data?.length}, Horarios: ${hRes.data?.length}, Profissionais: ${pRes.data?.length}`);
 
       const profs = pRes.data as any[] || [];
       const profIds = profs.map(p => p.id);
