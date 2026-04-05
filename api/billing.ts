@@ -40,6 +40,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function handleCheckout(req: VercelRequest, res: VercelResponse, stripe: Stripe, sbUrl?: string, sbKey?: string) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
   const { estabelecimentoId, planId, price, months, title } = req.body;
+  console.log('[Billing API] Checkout Attempt Body:', req.body);
 
   if (!estabelecimentoId || !planId || !price || !months) {
     return res.status(400).json({ error: 'Parâmetros insuficientes para criar checkout.' });

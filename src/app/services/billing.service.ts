@@ -96,7 +96,7 @@ export class BillingService {
     if (cycleMonths === 6) discount = 10;
     if (cycleMonths === 12) discount = 20;
 
-    const totalPrice = (plan.basePrice * cycleMonths) * (1 - discount / 100);
+    const totalPrice = Math.round(((plan.price || 0) * cycleMonths) * (1 - discount / 100));
     
     return {
       ...plan,
