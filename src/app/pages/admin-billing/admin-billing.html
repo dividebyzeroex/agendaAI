@@ -89,30 +89,48 @@
 
   <div class="billing-content">
     
+    <!-- Billing Cycle Switcher [NEW] -->
+    <div class="cycle-switcher glass">
+      <button *ngFor="let c of cycles" 
+              [class.active]="selectedCycle === c.months"
+              (click)="setCycle(c.months)">
+        {{ c.label }}
+        <span class="c-discount" *ngIf="c.discount > 0">-{{ c.discount }}%</span>
+      </button>
+    </div>
+
     <!-- PREMIUM PLAN GRID -->
     <div class="plans-grid">
-      <div class="plan-card elite-card" *ngFor="let plan of plans" 
+      <div class="plan-card elite-card" *ngFor="let plan of currentCyclePlans" 
            [class.highlight]="plan.highlight" 
-           [class.active]="(currentPlan$ | async)?.id === plan.id">
+           [class.active]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.months === plan.months">
         
         <div class="p-glow"></div>
         <div class="p-header">
           <div class="p-name">{{ plan.name }}</div>
           <div class="p-price">
             <span class="p-currency">R$</span>
-            <span class="p-amount">{{ plan.price | number:'1.2-2' }}</span>
-            <span class="p-period" *ngIf="plan.months === 1">/mês</span>
-            <span class="p-period" *ngIf="plan.months > 1">/total</span>
+            <span class="p-amount">{{ plan.basePrice * (1 - (plan.discount || 0)/100) | number:'1.2-2' }}</span>
+            <span class="p-period">/mês*</span>
           </div>
-          <div class="p-tag" *ngIf="plan.highlight">RECOMENDADO</div>
+          <div class="p-total-cycle" *ngIf="plan.months > 1">
+            Total: R$ {{ plan.price | number:'1.2-2' }} ({{ plan.months }} meses)
+          </div>
+          <div class="p-tag" *ngIf="plan.highlight">MAIS POPULAR</div>
+          <div class="p-tag discount" *ngIf="plan.discount">ECONOMIZE {{ plan.discount }}%</div>
         </div>
 
         <div class="p-features">
           <div class="f-item" *ngFor="let f of plan.features" [class.disabled]="!f.included">
-            <div class="f-icon-wrap">
-              <i class="pi" [class.pi-check]="f.included" [class.pi-times]="!f.included"></i>
+            <div class="f-icon-wrap" [class.enterprise-icon]="plan.id === 'premium'">
+              <i class="pi" [class.pi-check]="f.included" [class.pi-times]="!f.included" 
+                 [class.pi-star-fill]="plan.id === 'premium' && f.included"></i>
             </div>
             <span>{{ f.text }}</span>
+          </div>
+          <div class="f-item usage-cap">
+            <i class="pi pi-bolt"></i>
+            <span>{{ plan.smsLimit | number }} SMS + IA Premium</span>
           </div>
         </div>
 

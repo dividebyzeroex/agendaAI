@@ -82,6 +82,46 @@
 .elite-card.highlight { border-width: 2px; border-color: var(--primary-color); }
 .elite-card.active { box-shadow: inset 0 0 0 3px #10b981; }
 
+/* CYCLE SWITCHER [NEW] */
+.cycle-switcher {
+  display: inline-flex;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  padding: 8px;
+  border-radius: 16px;
+  border: 1px solid var(--glass-border);
+  margin-bottom: 3.5rem;
+  gap: 8px;
+  box-shadow: var(--elite-shadow);
+}
+.cycle-switcher button {
+  background: transparent;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 12px;
+  color: var(--text-muted);
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.cycle-switcher button.active {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+.c-discount {
+  font-size: 0.65rem;
+  background: #10b981;
+  color: white;
+  padding: 2px 6px;
+  border-radius: 6px;
+  font-weight: 900;
+}
+
 .p-glow { 
   position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; 
   background: radial-gradient(circle, rgba(99,102,241,0.05) 0%, transparent 70%); 
@@ -95,10 +135,15 @@
 .p-currency { font-size: 1.5rem; font-weight: 800; color: var(--text-main); }
 .p-amount { font-size: 3.5rem; font-weight: 900; color: var(--text-main); letter-spacing: -2px; }
 .p-period { color: var(--text-muted); font-size: 0.9rem; font-weight: 600; }
+.p-total-cycle { font-size: 0.85rem; font-weight: 800; color: var(--text-muted); margin-top: 4px; }
 .p-tag { 
   position: absolute; top: 1.5rem; right: -2rem; background: var(--primary-color); color: white; 
   font-size: 0.7rem; font-weight: 900; padding: 5px 30px; transform: rotate(45deg); 
   box-shadow: 0 5px 15px rgba(99,102,241,0.3);
+}
+.p-tag.discount {
+  top: auto; bottom: 1.5rem; right: 1rem; transform: none; border-radius: 8px;
+  background: #10b981; padding: 6px 12px; font-size: 0.8rem;
 }
 
 .p-features { display: flex; flex-direction: column; gap: 15px; margin-bottom: 3.5rem; flex: 1; }
@@ -107,6 +152,8 @@
   width: 22px; height: 22px; border-radius: 50%; background: #dcfce7; color: #10b981; 
   display: flex; align-items: center; justify-content: center; font-size: 0.7rem; 
 }
+.enterprise-icon { background: #faf5ff; color: #9333ea; }
+.f-item.usage-cap { margin-top: 10px; color: var(--primary-color); font-weight: 800; border-top: 1px solid var(--glass-border); padding-top: 10px; }
 .f-item.disabled { color: var(--text-muted); opacity: 0.5; }
 .f-item.disabled .f-icon-wrap { background: var(--active-bg); color: var(--text-muted); }
 

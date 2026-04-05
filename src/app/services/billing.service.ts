@@ -12,12 +12,14 @@ export interface PlanFeature {
 export interface BillingPlan {
   id: string;
   name: string;
-  price: number;
-  months: number;
+  basePrice: number; // Monthly base price
+  months: number;    // Selected cycle
   highlight?: boolean;
   features: PlanFeature[];
   tokensLimit: number;
   smsLimit: number;
+  price?: number;     // Total price with discount
+  discount?: number;  // % off
 }
 
 export interface Invoice {
@@ -41,63 +43,70 @@ export class BillingService {
 
   plans: BillingPlan[] = [
     {
-      id: '1_month',
-      name: '1 Mês',
-      price: 49,
+      id: 'basico',
+      name: 'Starter',
+      basePrice: 69,
       months: 1,
       tokensLimit: 250000,
-      smsLimit: 500,
+      smsLimit: 50,
       features: [
-        { text: 'Acesso Completo', included: true },
-        { text: 'Agenda Online Ilimitada', included: true },
-        { text: 'Base de Clientes + CRM', included: true },
-        { text: '500 Lembretes SMS/Mês', included: true },
-        { text: 'Analytics Avançado IA', included: true },
+        { text: 'Agenda Online Completa', included: true },
+        { text: '1 Profissional', included: true },
+        { text: 'Insights de IA Essenciais', included: true },
+        { text: 'Base de Clientes', included: true },
+        { text: 'SMS incluídos conforme ciclo', included: true },
       ]
     },
     {
-      id: '3_months',
-      name: '3 Meses (5% OFF)',
-      price: 139.65,
-      months: 3,
-      tokensLimit: 750000,
-      smsLimit: 1500,
-      features: [
-        { text: 'Sua assinatura por 90 dias', included: true },
-        { text: 'Todas as vantagens do plano Mensal', included: true },
-        { text: 'Proteção contra reajustes', included: true },
-      ]
-    },
-    {
-      id: '6_months',
-      name: '6 Meses (10% OFF)',
-      price: 264.60,
-      months: 6,
-      tokensLimit: 1500000,
-      smsLimit: 3000,
+      id: 'completo',
+      name: 'Business Pro',
+      basePrice: 149,
+      months: 1,
       highlight: true,
+      tokensLimit: 1500000,
+      smsLimit: 200,
       features: [
-        { text: 'Sua assinatura por 180 dias', included: true },
-        { text: 'Todas as vantagens do plano Mensal', included: true },
-        { text: 'Maior desconto a médio prazo', included: true },
-        { text: 'Atendimento Prioritário', included: true },
+        { text: 'Até 5 Profissionais', included: true },
+        { text: 'Marketing de IA Ativo', included: true },
+        { text: 'SMS incluídos conforme ciclo', included: true },
+        { text: 'Suporte Prioritário', included: true },
+        { text: 'IA Proativa Integrada', included: false },
       ]
     },
     {
-      id: '12_months',
-      name: '12 Meses (15% OFF)',
-      price: 499.80,
-      months: 12,
-      tokensLimit: 3000000,
-      smsLimit: 6000,
+      id: 'premium',
+      name: 'Elite Enterprise',
+      basePrice: 349,
+      months: 1,
+      tokensLimit: 10000000,
+      smsLimit: 1000,
       features: [
-        { text: 'Sua assinatura por 365 dias', included: true },
-        { text: 'Desconto máximo de plano', included: true },
-        { text: 'Congela valor por 1 ano', included: true },
-        { text: 'Acesso antecipado a Novidades', included: true },
+        { text: 'Profissionais Ilimitados', included: true },
+        { text: 'IA Proativa (Sócio Digital)', included: true },
+        { text: 'SMS incluídos conforme ciclo', included: true },
+        { text: 'Gestão Multi-unidade', included: true },
+        { text: 'Suporte VIP 24/7 Dedicado', included: true },
       ]
     }
   ];
+
+  calculatePlanForCycle(plan: BillingPlan, cycleMonths: number): BillingPlan {
+    let discount = 0;
+    if (cycleMonths === 3) discount = 5;
+    if (cycleMonths === 6) discount = 10;
+    if (cycleMonths === 12) discount = 20;
+
+    const totalPrice = (plan.basePrice * cycleMonths) * (1 - discount / 100);
+    
+    return {
+      ...plan,
+      months: cycleMonths,
+      price: totalPrice, // Adding dynamic property for checkout
+      discount,
+      tokensLimit: plan.tokensLimit * cycleMonths,
+      smsLimit: plan.smsLimit * cycleMonths
+    } as any;
+  }
 
   private invoicesSubject = new BehaviorSubject<Invoice[]>([]);
   invoices$ = this.invoicesSubject.asObservable();

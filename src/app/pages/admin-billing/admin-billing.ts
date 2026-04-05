@@ -36,10 +36,27 @@ export class AdminBilling implements OnInit {
   successMsg = '';
   showConfetti = false;
 
+  // Multi-cycle Pricing
+  selectedCycle = 1; // Default: Monthly
+  cycles = [
+    { months: 1, label: 'Mensal', discount: 0 },
+    { months: 3, label: 'Trimestral', discount: 5 },
+    { months: 6, label: 'Semestral', discount: 10 },
+    { months: 12, label: 'Anual', discount: 20 },
+  ];
+
   ngOnInit() {
     window.scrollTo(0, 0);
     this.checkPaymentCallback();
     this.billing.refreshInvoices();
+  }
+
+  get currentCyclePlans(): BillingPlan[] {
+    return this.plans.map(p => this.billing.calculatePlanForCycle(p, this.selectedCycle));
+  }
+
+  setCycle(months: number) {
+    this.selectedCycle = months;
   }
 
   async checkPaymentCallback() {

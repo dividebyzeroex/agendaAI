@@ -51,10 +51,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Map planIds to Stripe Price IDs
     const priceMap: Record<string, string | undefined> = {
-      '1_month': process.env.STRIPE_PRICE_ID_1_MONTH,
-      '3_months': process.env.STRIPE_PRICE_ID_3_MONTHS,
-      '6_months': process.env.STRIPE_PRICE_ID_6_MONTHS,
-      '12_months': process.env.STRIPE_PRICE_ID_12_MONTHS,
+      'basico': process.env.STRIPE_PRICE_ID_BASICO,
+      'completo': process.env.STRIPE_PRICE_ID_COMPLETO,
+      'premium': process.env.STRIPE_PRICE_ID_PREMIUM,
     };
 
     const stripePriceId = priceMap[planId];
