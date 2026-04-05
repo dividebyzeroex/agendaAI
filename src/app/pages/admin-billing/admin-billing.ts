@@ -74,7 +74,7 @@ export class AdminBilling implements OnInit {
         particleCount: 150,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ffffff']
+        colors: ['#6366f1', '#10b981', '#f8fafc', '#818cf8']
       });
     }
     setTimeout(() => this.showConfetti = false, 8000);
@@ -99,7 +99,7 @@ export class AdminBilling implements OnInit {
         const result = await this.billing.verifySession(sessionId);
         if (result.status === 'success') {
           this.celebrate();
-          this.successMsg = `Assinatura ativada com sucesso! Bem-vindo ao time Elite.`;
+          this.successMsg = `Assinatura ativada com sucesso! Seu acesso Premium está liberado.`;
           window.history.replaceState({}, document.title, window.location.pathname);
           setTimeout(() => this.successMsg = '', 6000);
         } else {
@@ -151,7 +151,7 @@ export class AdminBilling implements OnInit {
 
 
   async confirmCancel() {
-    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você manterá o acesso Elite até o fim do período já pago.')) return;
+    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você manterá o acesso Premium até o fim do período já pago.')) return;
     
     this.isProcessing = true;
     try {
