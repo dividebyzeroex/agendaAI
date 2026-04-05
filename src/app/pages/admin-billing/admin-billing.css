@@ -425,3 +425,75 @@
   .u-divider { display: none; }
   .c-footer { grid-template-columns: 1fr; }
 }
+
+/* --- GRACE PERIOD BANNER --- */
+.grace-period-banner {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 20px;
+  padding: 1.5rem 2rem;
+  margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  box-shadow: 0 15px 35px rgba(245, 158, 11, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  animation: pulse-border 2s infinite alternate;
+}
+
+@keyframes pulse-border {
+  from { border-color: rgba(255, 255, 255, 0.1); }
+  to { border-color: rgba(255, 255, 255, 0.4); }
+}
+
+.g-icon {
+  font-size: 2.5rem;
+  color: white;
+  animation: bounce-suttle 1.5s infinite;
+}
+
+@keyframes bounce-suttle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+.g-content h4 {
+  margin: 0 0 4px;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: white;
+}
+
+.g-content p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.btn-renew-now {
+  background: white;
+  color: #b45309;
+  border: none;
+  padding: 0.75rem 1.75rem;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+}
+
+.btn-renew-now:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+}
+
+.cycle-tab.disabled-tab {
+  opacity: 0.4;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}
+
+.cycle-tab.disabled-tab:hover {
+  background: transparent;
+}

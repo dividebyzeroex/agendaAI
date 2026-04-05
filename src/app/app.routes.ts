@@ -14,6 +14,7 @@ import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
 import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
 import { AdminBilling } from './pages/admin-billing/admin-billing';
 import { authGuard } from './guards/auth.guard';
+import { billingGuard } from './guards/billing.guard';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
@@ -31,7 +32,7 @@ export const routes: Routes = [
   { 
     path: 'admin', 
     component: AdminLayout,
-    canActivate: [authGuard],
+    canActivate: [authGuard, billingGuard],
     children: [
       { path: '', component: Admin, pathMatch: 'full' },
       { path: 'agenda', component: AdminAgenda },

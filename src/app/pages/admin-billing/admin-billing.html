@@ -20,6 +20,18 @@
       <button class="s-close-btn" (click)="successMsg = ''"><i class="pi pi-times"></i></button>
     </div>
 
+    <!-- GRACE PERIOD ALARM -->
+    <div class="grace-period-banner" *ngIf="(subscriptionStatus$ | async) === 'GRACE_PERIOD'">
+      <div class="g-icon"><i class="pi pi-exclamation-triangle"></i></div>
+      <div class="g-content">
+        <h4>Plano Expirado: Acesso Cortesia Ativo</h4>
+        <p>Sua assinatura expirou, mas você ainda tem <b>{{ graceDaysRemaining$ | async }} dias</b> de acesso para renovar antes do bloqueio.</p>
+      </div>
+      <div class="g-action">
+        <button class="btn-renew-now" (click)="setCycle(1)">Renovar Agora</button>
+      </div>
+    </div>
+
     <!-- CONFETTI OVERLAY -->
     <div class="confetti-overlay" *ngIf="showConfetti"></div>
 
@@ -95,7 +107,8 @@
         <div class="cycle-tabs">
           <button *ngFor="let c of cycles" 
                   [class.active]="selectedCycle === c.months"
-                  (click)="setCycle(c.months)"
+                  (click)="(subscriptionStatus$ | async) !== 'ACTIVE' && setCycle(c.months)"
+                  [class.disabled-tab]="(subscriptionStatus$ | async) === 'ACTIVE'"
                   class="cycle-tab">
             {{ c.label }}
             <span class="save-badge" *ngIf="c.discount > 0">ECONOMIZE {{ c.discount }}%</span>
@@ -133,7 +146,7 @@
           <div class="p-pro-footer">
             <button class="btn-pro-action" 
                     (click)="openUpgrade(plan)" 
-                    [disabled]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
+                    [disabled]="(subscriptionStatus$ | async) === 'ACTIVE'">
               <span *ngIf="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
                 Plano em Uso
               </span>

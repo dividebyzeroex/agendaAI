@@ -2,51 +2,59 @@
 
 :root {
   --primary-color: #3b82f6;
-  --bg-color: #f1f5f9;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --glass-bg: white;
-  --glass-border: rgba(0,0,0,0.06);
+  --bg-color: hsl(210, 40%, 98%);
+  --text-main: hsl(222, 47%, 11%);
+  --text-muted: hsl(215, 16%, 47%);
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.06);
   --glass-blur: 0px;
-  --active-bg: rgba(59, 130, 246, 0.08); /* Soft blue for active items */
+  --active-bg: rgba(59, 130, 246, 0.08);
   --bg-image: none;
   --elite-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
   --elite-hover-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  --text-shadow: none;
+  --glass-edge: rgba(255, 255, 255, 0.4);
 }
 
 .theme-claro {
-  --bg-color: #f1f5f9;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
+  --bg-color: hsl(210, 40%, 98%);
+  --text-main: hsl(222, 47%, 11%);
+  --text-muted: hsl(215, 16%, 47%);
   --glass-bg: #ffffff;
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-blur: 0px;
   --active-bg: rgba(59, 130, 246, 0.12);
   --bg-image: none;
+  --text-shadow: none;
+  --glass-edge: rgba(255, 255, 255, 0.6);
 }
 
 .theme-escuro {
-  --bg-color: #0f172a;
-  --text-main: #f8fafc;
-  --text-muted: #94a3b8;
-  --glass-bg: #1e293b;
-  --glass-border: rgba(255, 255, 255, 0.1);
+  --bg-color: hsl(222, 47%, 4%);
+  --text-main: hsl(210, 40%, 98%);
+  --text-muted: hsl(215, 20%, 65%);
+  --glass-bg: hsl(222, 47%, 9%);
+  --glass-border: rgba(255, 255, 255, 0.08);
   --glass-blur: 0px;
   --active-bg: rgba(255, 255, 255, 0.08);
   --bg-image: none;
+  --text-shadow: none;
+  --glass-edge: rgba(255, 255, 255, 0.05);
 }
 
 .theme-translucido {
-  --bg-color: #0f172a;
-  --text-main: #f8fafc;
-  --text-muted: #cbd5e1;
+  --bg-color: hsl(222, 47%, 4%);
+  --text-main: #ffffff;
+  --text-muted: hsl(214, 32%, 72%);
   --bg-image: url('/universal_bg.png');
-  --glass-bg: rgba(15, 23, 42, 0.4);
+  --glass-bg: rgba(15, 23, 42, 0.65);
   --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-blur: 28px;
+  --glass-blur: 32px;
   --active-bg: rgba(255, 255, 255, 0.12);
-  --elite-shadow: 0 12px 60px rgba(0, 0, 0, 0.3);
-  --elite-hover-shadow: 0 20px 80px rgba(0, 0, 0, 0.5);
+  --elite-shadow: 0 12px 60px rgba(0, 0, 0, 0.4);
+  --elite-hover-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+  --glass-edge: rgba(255, 255, 255, 0.1);
 }
 
 @keyframes eliteSlideIn {

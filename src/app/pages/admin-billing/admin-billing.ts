@@ -29,6 +29,8 @@ export class AdminBilling implements OnInit {
   
   isTrialActive$     = this.billing.isTrialActive();
   trialDaysRemaining$ = this.billing.getTrialDaysRemaining();
+  subscriptionStatus$ = this.billing.getSubscriptionStatus();
+  graceDaysRemaining$ = this.billing.getGraceDaysRemaining();
 
   // UI State
   showConfirmModal = false;

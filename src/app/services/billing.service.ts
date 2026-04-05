@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable } from 'rxjs';
-import { EstabelecimentoService } from './estabelecimento.service';
+import { BehaviorSubject, map, Observable, of } from 'rxjs';
+import { EstabelecimentoService, Estabelecimento } from './estabelecimento.service';
 import { SupabaseService } from './supabase.service';
 import { CostTrackerService, UsageQuota } from './cost-tracker.service';
 
@@ -250,9 +250,64 @@ export class BillingService {
     }
   }
 
+  /**
+   * Status de Assinatura com Regra de 5 dias de Carência
+   */
+  getSubscriptionStatus(): Observable<'ACTIVE' | 'GRACE_PERIOD' | 'TRIAL' | 'EXPIRED'> {
+    return this.estabService.estabelecimento$.pipe(
+      map((e: Estabelecimento | null) => {
+        if (!e) return 'EXPIRED';
+
+        const now = new Date();
+
+        // 1. Paid Plan Logic
+        if (e.plano_expires_at) {
+          const expires = new Date(e.plano_expires_at);
+          const graceEnd = new Date(expires);
+          graceEnd.setDate(graceEnd.getDate() + 5);
+
+          if (now <= expires) return 'ACTIVE';
+          if (now > expires && now <= graceEnd) return 'GRACE_PERIOD';
+          return 'EXPIRED';
+        }
+
+        // 2. Trial Logic
+        if (e.trial_ends_at) {
+          const ends = new Date(e.trial_ends_at);
+          if (now <= ends) return 'TRIAL';
+        }
+
+        return 'EXPIRED';
+      })
+    );
+  }
+
+  getGraceDaysRemaining(): Observable<number> {
+    return this.estabService.estabelecimento$.pipe(
+      map((e: Estabelecimento | null) => {
+        if (!e?.plano_expires_at) return 0;
+        const now = new Date();
+        const expires = new Date(e.plano_expires_at);
+        const graceEnd = new Date(expires);
+        graceEnd.setDate(graceEnd.getDate() + 5);
+
+        if (now <= expires) return 5; // Hasn't started grace period yet
+        
+        const diff = graceEnd.getTime() - now.getTime();
+        return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+      })
+    );
+  }
+
+  canAccessAdmin(): Observable<boolean> {
+    return this.getSubscriptionStatus().pipe(
+      map(status => status !== 'EXPIRED')
+    );
+  }
+
   getCurrentPlan(): Observable<BillingPlan | undefined> {
     return this.estabService.estabelecimento$.pipe(
-      map(e => {
+      map((e: Estabelecimento | null) => {
         if (!e) return undefined;
         
         // 1. Check if user has an active paid plan based on plano_expires_at
@@ -281,7 +336,7 @@ export class BillingService {
 
   getTrialDaysRemaining(): Observable<number> {
     return this.estabService.estabelecimento$.pipe(
-      map(e => {
+      map((e: Estabelecimento | null) => {
         if (!e?.trial_ends_at) return 0;
         const now = new Date().getTime();
         const ends = new Date(e.trial_ends_at).getTime();
@@ -293,7 +348,7 @@ export class BillingService {
 
   isTrialActive(): Observable<boolean> {
     return this.estabService.estabelecimento$.pipe(
-      map(e => !!e?.trial_ends_at && !e.plano && new Date(e.trial_ends_at) > new Date())
+      map((e: Estabelecimento | null) => !!e?.trial_ends_at && !e.plano && new Date(e.trial_ends_at) > new Date())
     );
   }
 
