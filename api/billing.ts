@@ -125,8 +125,7 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
     plano: planId,
     plano_expires_at: currentExpires.toISOString(),
     stripe_subscription_id: stripeSubscriptionId,
-    stripe_customer_id: session.customer as string,
-    status_assinatura: 'ativo'
+    stripe_customer_id: session.customer as string
   }).eq('id', estabelecimentoId);
 
   if (updateError) throw updateError;
