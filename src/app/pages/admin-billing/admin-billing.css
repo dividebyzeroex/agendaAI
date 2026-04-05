@@ -337,15 +337,39 @@
 
 /* --- INVOICE SECTION COMPACT --- */
 .simple-section {
-  padding: 2rem;
+  padding: 2.5rem;
   border-radius: 24px;
   margin-top: 4rem;
+  background: rgba(30, 41, 59, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.sec-head {
+  margin-bottom: 2rem;
 }
 
 .sec-head h3 { font-size: 1.1rem; font-weight: 700; color: white; margin: 0 0 4px; }
-.sec-head p { font-size: 0.85rem; color: #64748b; margin-bottom: 1.5rem; }
+.sec-head p { font-size: 0.85rem; color: #64748b; margin-bottom: 0; }
 
-.simple-table { width: 100%; border-collapse: collapse; }
+.simple-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.3);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(99, 102, 241, 0.3) transparent;
+}
+
+.simple-table-wrap::-webkit-scrollbar {
+  height: 6px;
+}
+
+.simple-table-wrap::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.3);
+  border-radius: 10px;
+}
+
+.simple-table { width: 100%; border-collapse: collapse; min-width: 600px; }
 .simple-table th { text-align: left; padding: 0.75rem; font-size: 0.7rem; color: #475569; text-transform: uppercase; }
 .simple-table td { padding: 1rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.03); color: #94a3b8; font-size: 0.85rem; }
 

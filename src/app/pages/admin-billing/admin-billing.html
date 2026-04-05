@@ -131,8 +131,15 @@
           </div>
 
           <div class="p-pro-footer">
-            <button class="btn-pro-action" (click)="openUpgrade(plan)" [disabled]="(currentPlan$ | async)?.id === plan.id">
-              {{ (currentPlan$ | async)?.id === plan.id ? 'Seu Plano Atual' : 'Migrar para ' + plan.name }}
+            <button class="btn-pro-action" 
+                    (click)="openUpgrade(plan)" 
+                    [disabled]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
+              <span *ngIf="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
+                Plano em Uso
+              </span>
+              <span *ngIf="(currentPlan$ | async)?.id !== plan.id || (estabService.estabelecimento$ | async)?.['months'] !== plan.months">
+                Selecionar {{ plan.name }}
+              </span>
             </button>
           </div>
         </div>

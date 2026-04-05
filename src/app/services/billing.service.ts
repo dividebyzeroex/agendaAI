@@ -119,8 +119,15 @@ export class BillingService {
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) return;
     
-    try {
-      const response = await fetch(`/api/billing?action=invoices&estabelecimentoId=${current.id}`);
+  try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const response = await fetch(`/api/billing?action=invoices&estabelecimentoId=${current.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const data = await response.json();
       if (data.invoices) {
         this.invoicesSubject.next(data.invoices);

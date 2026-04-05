@@ -95,20 +95,29 @@ export class AdminBilling implements OnInit {
 
     if (sessionId && !this.isVerifying) {
       this.isVerifying = true;
+      
+      // Safety check: wait for establishment to be available
+      if (!this.estabService.estabelecimento$.value) {
+        setTimeout(() => this.checkPaymentCallback(), 800);
+        return;
+      }
+
       try {
         const result = await this.billing.verifySession(sessionId);
         if (result.status === 'success') {
           setTimeout(() => this.celebrate(), 500);
-          this.successMsg = `Seu estabelecimento agora é Premium! Desfrute de todos os recursos avançados de IA e gestão.`;
+          this.successMsg = `Plano ${result.planId.toUpperCase()} ativado com sucesso! Sua infraestrutura agora é Premium.`;
           window.history.replaceState({}, document.title, window.location.pathname);
-          // Auto-hide after 15s to be premium but not intrusive
           setTimeout(() => this.successMsg = '', 15000);
         } else {
           this.successMsg = 'Erro ao verificar pagamento: ' + (result.error || 'Tente novamente.');
         }
       } catch (e: any) {
         console.error('Error verifying Stripe session:', e);
-        this.successMsg = 'Erro ao processar ativação: ' + e.message;
+        // Only set error if not successful to avoid false positives
+        if (!this.successMsg) {
+          this.successMsg = 'Erro ao processar ativação: ' + e.message;
+        }
       } finally {
         this.isVerifying = false;
       }
