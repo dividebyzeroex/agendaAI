@@ -3,222 +3,216 @@
   <!-- VERIFYING STATE -->
   <div class="verifying-container" *ngIf="isVerifying">
     <div class="v-spinner">
-      <i class="pi pi-spin pi-spinner" style="font-size: 3rem; color: var(--p-primary-color)"></i>
+      <div class="elite-loader-card"></div>
     </div>
-    <h3>Processando sua compra...</h3>
-    <p>Aguarde um momento enquanto confirmamos seu pagamento e adicionamos sua assinatura.</p>
+    <h3>Processando sua ativação Elite...</h3>
+    <p>Aguarde um momento enquanto o Stripe confirma sua transação.</p>
   </div>
 
   <ng-container *ngIf="!isVerifying">
     <!-- CONFETTI OVERLAY -->
     <div class="confetti-overlay" *ngIf="showConfetti"></div>
 
-  <div class="page-header">
-    <div>
-      <h2>Central de <span class="gradient-text">Planos</span></h2>
-      <p>Gerencie sua infraestrutura, consumo de IA e faturamentos ativos.</p>
-    </div>
-    <div class="header-actions-right">
-      <div class="active-pill" *ngIf="currentPlan$ | async as plan">
-        <i class="pi pi-shield"></i>
-        <span>{{ plan.name }} Active</span>
+    <div class="page-header">
+      <div>
+        <h2>Elite <span class="gradient-text">Membership</span></h2>
+        <p>Gerencie sua infraestrutura de agendamentos e IA de alta performance.</p>
       </div>
-    </div>
-  </div>
-
-  <div class="trial-info-banner glass" *ngIf="isTrialActive$ | async">
-    <div class="t-icon">⏳</div>
-    <div class="t-msg">
-      <strong>Você está no Período de Teste!</strong>
-      <span>Aproveite todos os recursos do plano Starter por mais {{ trialDaysRemaining$ | async }} dias.</span>
-    </div>
-    <button class="btn-elite-upgrade mini" (click)="openUpgrade(plans[0])">Escolher Plano Agora</button>
-  </div>
-
-  <div class="success-banner" *ngIf="successMsg" [class.error-banner]="successMsg.includes('Erro')">
-    <div class="s-icon">{{ successMsg.includes('Erro') ? '⚠️' : '🎉' }}</div>
-    <span>{{ successMsg }}</span>
-  </div>
-
-  <!-- USAGE DASHBOARD (ELITE GLASS) -->
-  <div class="usage-dashboard" *ngIf="usage$ | async as usage">
-    <div class="usage-card glass">
-      <div class="u-head">
-        <i class="pi pi-sparkles"></i>
-        <strong>Tokens de IA</strong>
-      </div>
-      <div class="u-progress">
-        <div class="p-bar" [style.width.%]="(usage.tokensUsed / usage.tokensLimit) * 100"></div>
-      </div>
-      <div class="u-footer">
-        <span>{{ usage.tokensUsed | number }} usados</span>
-        <span>Limite: {{ usage.tokensLimit | number }}</span>
+      <div class="header-actions-right" *ngIf="currentPlan$ | async as plan">
+        <div class="active-membership-pill">
+          <div class="p-pulse"></div>
+          <i class="pi pi-verified"></i>
+          <span>{{ plan.name }} Active</span>
+        </div>
       </div>
     </div>
 
-    <div class="usage-card glass">
-      <div class="u-head">
-        <i class="pi pi-comments"></i>
-        <strong>Mensagens SMS</strong>
-      </div>
-      <div class="u-progress sms">
-        <div class="p-bar sms" [style.width.%]="(usage.smsUsed / usage.smsLimit) * 100"></div>
-      </div>
-      <div class="u-footer">
-        <span>{{ usage.smsUsed }} enviadas</span>
-        <span>Limite: {{ usage.smsLimit }}</span>
+    <!-- ELITE MEMBERSHIP CARD -->
+    <div class="membership-hero" *ngIf="usage$ | async as usage">
+      <div class="m-card-glow"></div>
+      <div class="m-card-content glass-heavy">
+        <div class="m-card-top">
+          <div class="m-brand">
+            <div class="m-logo">A</div>
+            <span>AGENDA.AI <b>ELITE</b></span>
+          </div>
+          <div class="m-chip"></div>
+        </div>
+
+        <div class="m-card-main">
+          <div class="m-stats">
+            <div class="m-stat-group">
+              <label>CRÉDITOS DE IA (TOKENS)</label>
+              <div class="m-progress-wrap">
+                <div class="m-progress-bar" [style.width.%]="(usage.tokensUsed / usage.tokensLimit) * 100"></div>
+              </div>
+              <div class="m-values">
+                <span>{{ usage.tokensUsed | number }} / {{ usage.tokensLimit | number }}</span>
+                <span class="m-perc">{{ ((usage.tokensUsed / usage.tokensLimit) * 100) | number:'1.0-0' }}%</span>
+              </div>
+            </div>
+
+            <div class="m-stat-group">
+              <label>MENSAGENS SMS (RESERVA)</label>
+              <div class="m-progress-wrap sms">
+                <div class="m-progress-bar" [style.width.%]="(usage.smsUsed / usage.smsLimit) * 100"></div>
+              </div>
+              <div class="m-values">
+                <span>{{ usage.smsUsed }} / {{ usage.smsLimit }}</span>
+                <span class="m-perc">{{ ((usage.smsUsed / usage.smsLimit) * 100) | number:'1.0-0' }}%</span>
+              </div>
+            </div>
+          </div>
+          
+          <div class="m-owner" *ngIf="estabService.estabelecimento$ | async as estab">
+            <div class="o-label">ESTABELECIMENTO</div>
+            <div class="o-name">{{ estab.nome }}</div>
+            <div class="o-expiry" *ngIf="estab.plano_expires_at">
+              Expira em: {{ estab.plano_expires_at | date:'dd/MM/yyyy' }}
+            </div>
+            <div class="o-expiry trial" *ngIf="!estab.plano_expires_at && (isTrialActive$ | async)">
+              Trial: ends in {{ trialDaysRemaining$ | async }} days
+            </div>
+          </div>
+        </div>
+
+        <div class="m-card-footer">
+          <div class="m-tier-badge" [attr.data-tier]="(currentPlan$ | async)?.id || 'free'">
+            {{ (currentPlan$ | async)?.name || 'Basic Access' }}
+          </div>
+          <div class="m-actions">
+            <button class="btn-m-action" (click)="manageCycle()">Histórico</button>
+            <button class="btn-m-action cancel" *ngIf="(currentPlan$ | async)" (click)="confirmCancel()">Sair do Plano</button>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="usage-card mini-callout" *ngIf="estabService.estabelecimento$ | async as estab">
-      <p *ngIf="estab.plano_expires_at">
-        Próxima renovação em <strong>{{ estab.plano_expires_at | date:'dd/MM/yyyy' }}</strong>
-      </p>
-      <p *ngIf="!estab.plano_expires_at && (isTrialActive$ | async)">
-        Período de Teste: <strong>{{ trialDaysRemaining$ | async }} dias restantes</strong>
-      </p>
+    <div class="billing-content">
       
-      <div class="callout-actions">
-        <button class="btn-manage" (click)="manageCycle()">Gerenciar Ciclo <i class="pi pi-chevron-right"></i></button>
-        <button class="btn-cancel-link" *ngIf="estab.plano" (click)="confirmCancel()">
-          <i class="pi pi-times"></i> Cancelar Assinatura
+      <!-- ELITE CYCLE SELECTOR -->
+      <div class="cycle-selector-elite glass">
+        <div class="c-indicator" [style.left.px]="(selectedCycle === 1 ? 0 : (selectedCycle === 3 ? 120 : (selectedCycle === 6 ? 240 : 360)))"></div>
+        <button *ngFor="let c of cycles" 
+                [class.active]="selectedCycle === c.months"
+                (click)="setCycle(c.months)">
+          <span class="c-label">{{ c.label }}</span>
+          <span class="c-badge" *ngIf="c.discount > 0">-{{ c.discount }}%</span>
         </button>
       </div>
-    </div>
-  </div>
 
-  <div class="billing-content">
-    
-    <!-- Billing Cycle Switcher [NEW] -->
-    <div class="cycle-switcher glass">
-      <button *ngFor="let c of cycles" 
-              [class.active]="selectedCycle === c.months"
-              (click)="setCycle(c.months)">
-        {{ c.label }}
-        <span class="c-discount" *ngIf="c.discount > 0">-{{ c.discount }}%</span>
-      </button>
-    </div>
-
-    <!-- PREMIUM PLAN GRID -->
-    <div class="plans-grid">
-      <div class="plan-card elite-card" *ngFor="let plan of currentCyclePlans" 
-           [class.highlight]="plan.highlight" 
-           [class.active]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
-        
-        <div class="p-glow"></div>
-        <div class="p-header">
-          <div class="p-name">{{ plan.name }}</div>
-          <div class="p-price">
-            <span class="p-currency">R$</span>
-            <span class="p-amount">{{ plan.basePrice * (1 - (plan.discount || 0)/100) | number:'1.2-2' }}</span>
-            <span class="p-period">/mês*</span>
-          </div>
-          <div class="p-total-cycle" *ngIf="plan.months > 1">
-            Total: R$ {{ plan.price | number:'1.2-2' }} ({{ plan.months }} meses)
-          </div>
-          <div class="p-tag" *ngIf="plan.highlight">MAIS POPULAR</div>
-          <div class="p-tag discount" *ngIf="plan.discount">ECONOMIZE {{ plan.discount }}%</div>
-        </div>
-
-        <div class="p-features">
-          <div class="f-item" *ngFor="let f of plan.features" [class.disabled]="!f.included">
-            <div class="f-icon-wrap" [class.enterprise-icon]="plan.id === 'premium'">
-              <i class="pi" [class.pi-check]="f.included" [class.pi-times]="!f.included" 
-                 [class.pi-star-fill]="plan.id === 'premium' && f.included"></i>
+      <!-- PRICING CARDS -->
+      <div class="plans-grid-elite">
+        <div class="plan-card-premium" *ngFor="let plan of currentCyclePlans" 
+             [class.featured]="plan.highlight" 
+             [class.active]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
+          
+          <div class="p-accent"></div>
+          <div class="p-content">
+            <div class="p-header">
+              <h3>{{ plan.name }}</h3>
+              <div class="p-price-wrap">
+                <span class="p-cur">R$</span>
+                <span class="p-val">{{ plan.basePrice * (1 - (plan.discount || 0)/100) | number:'1.2-2' }}</span>
+                <span class="p-per">/mês*</span>
+              </div>
+              <p class="p-sub" *ngIf="plan.months > 1">Total ciclo: R$ {{ plan.price | number:'1.2-2' }}</p>
             </div>
-            <span>{{ f.text }}</span>
-          </div>
-          <div class="f-item usage-cap">
-            <i class="pi pi-bolt"></i>
-            <span>{{ plan.smsLimit | number }} SMS + IA Premium</span>
-          </div>
-        </div>
 
-        <div class="p-footer">
-          <button class="btn-elite-upgrade" 
-                  (click)="openUpgrade(plan)" 
-                  [disabled]="(currentPlan$ | async)?.id === plan.id">
-            <span *ngIf="(currentPlan$ | async)?.id === plan.id">Plano Atual</span>
-            <span *ngIf="(currentPlan$ | async)?.id !== plan.id">Ativar {{ plan.name }}</span>
-          </button>
+            <div class="p-features-list">
+              <div class="f-row" *ngFor="let f of plan.features" [class.off]="!f.included">
+                <i class="pi" [class.pi-check-circle]="f.included" [class.pi-times]="!f.included"></i>
+                <span>{{ f.text }}</span>
+              </div>
+              <div class="f-row quota">
+                <i class="pi pi-bolt"></i>
+                <span>{{ plan.tokensLimit | number }} Tokens + {{ plan.smsLimit | number }} SMS</span>
+              </div>
+            </div>
+
+            <button class="btn-p-activate" (click)="openUpgrade(plan)" [disabled]="(currentPlan$ | async)?.id === plan.id">
+              {{ (currentPlan$ | async)?.id === plan.id ? 'Membro Ativo' : 'Escolher ' + plan.name }}
+            </button>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- MAIN BILLING INFO -->
-    <div class="billing-sections">
-      
+    <!-- INVOICE HISTORY TABLE -->
+    <section class="invoice-section glass">
+      <div class="s-header">
+        <h3>Histórico de Faturamentos</h3>
+        <i class="pi pi-history"></i>
+      </div>
+      <div class="table-container custom-scroll">
+        <table class="elite-table">
+          <thead>
+            <tr>
+              <th>DATA</th>
+              <th>IDENTIFICAÇÃO</th>
+              <th>VALOR</th>
+              <th>STATUS</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let inv of invoices$ | async">
+              <td>{{ inv.date | date:'dd/MM/yyyy' }}</td>
+              <td class="mono">{{ inv.id }}</td>
+              <td class="bold">R$ {{ inv.amount | number:'1.2-2' }}</td>
+              <td><span class="pill-status" [attr.data-status]="inv.status">{{ inv.status }}</span></td>
+              <td>
+                <button class="btn-table-action" *ngIf="inv.pdfUrl" (click)="downloadInvoice(inv.pdfUrl)">
+                  <i class="pi pi-external-link"></i>
+                </button>
+              </td>
+            </tr>
+            <tr *ngIf="(invoices$ | async)?.length === 0">
+              <td colspan="5" class="empty-td">Nenhum faturamento registrado ainda.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
-
-      <!-- INVOICE HISTORY (MODAL STYLE TABLE) -->
-      <section class="billing-section full elite-section">
-        <div class="section-header">
-          <h3>Histórico de Faturamentos</h3>
-        </div>
-        <div class="elite-table-wrap">
-          <table class="elite-table">
-            <thead>
-              <tr>
-                <th>Emissão</th>
-                <th>Identificação</th>
-                <th>Montante</th>
-                <th>Status</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let inv of invoices$ | async">
-                <td>{{ inv.date }}</td>
-                <td class="mono-id">{{ inv.id }}</td>
-                <td class="price-cell">R$ {{ inv.amount }},00</td>
-                <td>
-                  <span class="st-pill" [class.paid]="inv.status === 'Paga'">{{ inv.status }}</span>
-                </td>
-                <td>
-                  <button class="btn-download" *ngIf="inv.pdfUrl" title="Baixar Recibo oficial no Stripe" (click)="downloadInvoice(inv.pdfUrl)">
-                    <i class="pi pi-file-pdf"></i>
-                  </button>
-                  <span *ngIf="!inv.pdfUrl" class="text-muted" title="Recibo em geração...">
-                    <i class="pi pi-hourglass"></i>
-                  </span>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </section>
-    </div>
-      <!-- REMOVIDO CHECKOUT OVERLAY (Agora integrado com Mercado Pago redirect) -->
-    </div>
   </ng-container>
 
-  <!-- STRIPE CONFIRM POPUP (JustaClausula style) -->
-  <div class="checkout-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
-    <div class="pme-checkout-modal" (click)="$event.stopPropagation()">
-      <div class="pme-header">
-        <div class="pme-logo">
-           <i class="pi pi-credit-card" style="color: #6366f1; font-size: 1.5rem;"></i>
-           <strong>Finalizar Assinatura</strong>
-        </div>
-        <button class="btn-close" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
+  <!-- ELITE ORDER SUMMARY MODAL -->
+  <div class="checkout-modal-overlay" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
+    <div class="order-summary-box glass-heavy" (click)="$event.stopPropagation()">
+      <div class="os-header">
+        <div class="os-brand">Elite Checkout</div>
+        <button class="os-close" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
       </div>
 
-      <div class="pme-order" style="text-align: center; margin: 2rem 0;">
-         <div class="o-info" style="margin-bottom: 1rem;">
-            <strong style="font-size: 1.25rem;">{{ selectedPlan?.name }}</strong>
-            <div style="font-size: 0.9rem; color: var(--p-text-muted);">Assinatura por {{ selectedPlan?.months }} mês(es)</div>
-         </div>
-         <div class="o-price" style="font-size: 2rem;">R$ {{ selectedPlan?.price | number:'1.2-2' }}</div>
+      <div class="os-body" *ngIf="orderSummary as summary">
+        <div class="os-plan-detail">
+          <div class="os-icon"><i class="pi pi-verified"></i></div>
+          <div class="os-text">
+            <h4>Assinatura {{ summary.planName }}</h4>
+            <p>Ciclo: {{ summary.months }} Mês(es)</p>
+          </div>
+          <div class="os-price">R$ {{ summary.total | number:'1.2-2' }}</div>
+        </div>
+
+        <div class="os-benefits">
+          <div class="b-item"><i class="pi pi-check"></i> {{ summary.tokens | number }} Tokens IA incluídos</div>
+          <div class="b-item"><i class="pi pi-check"></i> {{ summary.sms | number }} Mensagens SMS</div>
+          <div class="b-item savings" *ngIf="summary.savings > 0">
+            <i class="pi pi-gift"></i> Você está economizando <b>R$ {{ summary.savings | number:'1.2-2' }}</b>
+          </div>
+        </div>
+
+        <div class="os-security">
+          <i class="pi pi-lock"></i> Pagamento processado com segurança pelo <b>Stripe</b>.
+        </div>
       </div>
 
-      <div class="pme-footer" style="display: flex; flex-direction: column; gap: 1rem;">
-        <div class="sec-text" style="justify-content: center; font-size: 0.8rem; color: #64748b;">
-          <i class="pi pi-shield" style="color: #10b981;"></i> Pagamento 100% seguro processado pelo <b>Stripe</b>
-        </div>
-        <button class="btn-pme-pay" style="width: 100%; justify-content: center; background: #6366f1; color: white;" 
-                (click)="processStripeCheckout()" [disabled]="isProcessing">
+      <div class="os-footer">
+        <button class="btn-cancel" (click)="closeConfirmModal()">Voltar</button>
+        <button class="btn-confirm-elite" (click)="processStripeCheckout()" [disabled]="isProcessing">
+          <span *ngIf="!isProcessing">Confirmar & Pagar</span>
           <i *ngIf="isProcessing" class="pi pi-spin pi-spinner"></i>
-          {{ isProcessing ? 'Abrindo Checkout Seguro...' : 'Confirmar e Pagar' }}
         </button>
       </div>
     </div>

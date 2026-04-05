@@ -7,6 +7,8 @@ import { CostTrackerService, UsageQuota } from '../../services/cost-tracker.serv
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { Observable } from 'rxjs';
 
+declare var confetti: any;
+
 @Component({
   selector: 'app-admin-billing',
   standalone: true,
@@ -49,6 +51,33 @@ export class AdminBilling implements OnInit {
     window.scrollTo(0, 0);
     this.checkPaymentCallback();
     this.billing.refreshInvoices();
+  }
+
+  get orderSummary() {
+    if (!this.selectedPlan) return null;
+    const plan = this.billing.calculatePlanForCycle(this.selectedPlan, this.selectedCycle);
+    const savings = (this.selectedPlan.basePrice * this.selectedCycle) - (plan.price || 0);
+    return {
+      planName: plan.name,
+      total: plan.price,
+      months: plan.months,
+      savings: savings > 0 ? savings : 0,
+      tokens: plan.tokensLimit,
+      sms: plan.smsLimit
+    };
+  }
+
+  celebrate() {
+    this.showConfetti = true;
+    if (typeof confetti !== 'undefined') {
+      confetti({
+        particleCount: 150,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: ['#3b82f6', '#10b981', '#f59e0b', '#ffffff']
+      });
+    }
+    setTimeout(() => this.showConfetti = false, 8000);
   }
 
   get currentCyclePlans(): BillingPlan[] {
@@ -120,9 +149,6 @@ export class AdminBilling implements OnInit {
     }
   }
 
-  private celebrate() {
-    this.showConfetti = true;
-  }
 
   async confirmCancel() {
     if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você manterá o acesso Elite até o fim do período já pago.')) return;
