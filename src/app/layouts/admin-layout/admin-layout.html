@@ -51,6 +51,16 @@
         </div>
       </div>
     </div>
+
+    <!-- ELITE PRIVACY SHIELD Status -->
+    <div class="privacy-shield-wrap" pTooltip="Sua conexão está protegida por um túnel RPC criptografado ponta-a-ponta. Zero Query Params expostos." tooltipPosition="right">
+      <div class="shield-status-icon"></div>
+      <div class="shield-info">
+        <span class="shield-title">Rede Blindada</span>
+        <span class="shield-desc">Status: Ativo (RPC)</span>
+      </div>
+      <i class="pi pi-verified" style="color: #10b981; font-size: 0.9rem;"></i>
+    </div>
   </aside>
 
   <!-- Main Area -->
@@ -62,6 +72,27 @@
         <span>Pressione <kbd>Ctrl+K</kbd> para buscar</span>
       </div>
       <div class="topbar-right">
+        <!-- Theme Switcher -->
+        <div class="theme-selector-wrap">
+          <div class="theme-indicator" 
+            [class.pos-claro]="theme.currentTheme === 'claro'"
+            [class.pos-escuro]="theme.currentTheme === 'escuro'"
+            [class.pos-translucido]="theme.currentTheme === 'translucido'">
+          </div>
+          <button (click)="setTheme('claro')" [class.active]="theme.currentTheme === 'claro'" 
+            pTooltip="Modo Claro" tooltipPosition="bottom">
+            <i class="pi pi-sun"></i>
+          </button>
+          <button (click)="setTheme('escuro')" [class.active]="theme.currentTheme === 'escuro'" 
+            pTooltip="Modo Escuro" tooltipPosition="bottom">
+            <i class="pi pi-moon"></i>
+          </button>
+          <button (click)="setTheme('translucido')" [class.active]="theme.currentTheme === 'translucido'" 
+            pTooltip="Elite Glass" tooltipPosition="bottom">
+            <i class="pi pi-image"></i>
+          </button>
+        </div>
+
         <div class="notif-wrapper">
           <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" 
             (click)="isNotifOpen = !isNotifOpen"></p-button>

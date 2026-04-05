@@ -107,33 +107,42 @@ export class BillingService {
   invoices$ = this.invoicesSubject.asObservable();
 
   /** 
-   * Simulate a realistic Pagar.me Transparent Checkout
-   * 1. Get encryption key
-   * 2. Encrypt card data to card_hash
-   * 3. Send to server (simulated)
+   * Official Stripe Checkout Integration
    */
-  async processPagarMePayment(cardData: any, planId: BillingPlan['id']): Promise<boolean> {
-    console.log('[Pagar.Me] Encrypting card data with key:', this.ENCRYPTION_KEY);
-    
-    // In a real Pagar.me integration:
-    // const client = await pagarme.client.connect({ encryption_key: this.ENCRYPTION_KEY });
-    // const card_hash = await client.security.encrypt({ ...cardData });
-    
-    await new Promise(r => setTimeout(r, 2500)); // Hashing emulation
+  async processStripeCheckout(planId: string): Promise<string | undefined> {
+    const current = this.estabService.estabelecimento$.value;
+    if (!current?.id) return undefined;
+
+    const plan = this.plans.find(p => p.id === planId);
+    if (!plan) return undefined;
 
     try {
-      await this.estabService.updateEstabelecimento({ plano: planId });
-      
-      const newInv: Invoice = {
-        id: `INV-${Math.floor(Math.random() * 9000) + 1000}`,
-        date: new Date().toISOString().split('T')[0],
-        amount: this.plans.find(p => p.id === planId)?.price || 0,
-        status: 'Paga'
-      };
-      this.invoicesSubject.next([newInv, ...this.invoicesSubject.value]);
-      return true;
+      // Fetch session token securely via Auth
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) return undefined;
+
+      const response = await fetch('/api/checkout', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          estabelecimentoId: current.id,
+          planId: plan.id,
+          price: plan.price,
+          months: plan.months,
+          title: plan.name
+        })
+      });
+
+      const data = await response.json();
+      return data.init_point; // Stripe Checkout URL
     } catch (err) {
-      return false;
+      console.error('[Stripe Billing] Error creating checkout:', err);
+      return undefined;
     }
   }
 

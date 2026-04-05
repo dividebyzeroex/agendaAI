@@ -71,41 +71,40 @@ export class EstabelecimentoPublicoService {
     const fallback = { estabelecimento: null, servicos: [], horarios: [], profissionais: [] };
 
     try {
-      // 1. Resolve Establishment by Slug or Id (if provided)
-      const { data: estabs, error: eErr } = await this.supabase
-        .from('estabelecimento')
-        .select('id, nome, cidade, endereco, telefone') // removed slug
-        .limit(20);
+      // 1. Resolve Establishment by Slug via RPC (POST)
+      const { data: estab, error: eErr } = await this.supabase
+        .rpc('get_public_estabelecimento_by_slug', { p_slug: slug })
+        .maybeSingle<EstabelecimentoPublico>();
       
-      if (eErr || !estabs || estabs.length === 0) return fallback;
+      if (eErr || !estab) return fallback;
 
-      // Local slug match (most reliable if Supabase collation varies)
-      const estab = estabs.find(e => EstabelecimentoPublicoService.slugify(e.nome) === slug) || estabs[0];
-      if (!estab) return fallback;
+      const estId = estab.id!;
 
-      // 2. Fetch related data (assuming single-tenant or global tables for now)
+      // 2. Fetch related data via RPCs (POST)
       const [sRes, hRes, pRes] = await Promise.all([
-        this.supabase.from('servicos').select('*').eq('ativo', true).order('created_at'),
-        this.supabase.from('horarios_funcionamento').select('*').order('dia_semana'),
-        this.supabase.from('profissionais').select('*').eq('ativo', true),
+        this.supabase.rpc('get_servicos_by_estab', { p_estab_id: estId }),
+        this.supabase.rpc('get_horarios_by_estab', { p_estab_id: estId }),
+        this.supabase.rpc('get_profissionais_by_estab', { p_estab_id: estId }),
       ]);
 
-      const profIds = (pRes.data || []).map((p: any) => p.id);
+      const profs = pRes.data as any[] || [];
+      const profIds = profs.map(p => p.id);
+      
       let dResData: any[] = [];
       let svResData: any[] = [];
 
-      // 3. Fetch relational data for THESE professionals only
+      // 3. Relational data for professionals via RPCs (POST)
       if (profIds.length > 0) {
         const [dRes, svRes] = await Promise.all([
-          this.supabase.from('profissional_disponibilidades').select('*').in('profissional_id', profIds).eq('ativo', true),
-          this.supabase.from('profissional_servicos').select('*').in('profissional_id', profIds),
+          this.supabase.rpc('get_profissional_disponibilidades_by_estab', { p_estab_id: estId }),
+          this.supabase.rpc('get_profissional_servicos_by_estab', { p_estab_id: estId }),
         ]);
-        dResData = dRes.data || [];
-        svResData = svRes.data || [];
+        dResData = dRes.data as any[] || [];
+        svResData = svRes.data as any[] || [];
       }
 
       // 4. Map professionals
-      const profissionais: ProfissionalPublico[] = (pRes.data || []).map((p: any) => ({
+      const profissionais: ProfissionalPublico[] = profs.map((p: any) => ({
         ...p,
         disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
         servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
@@ -129,11 +128,12 @@ export class EstabelecimentoPublicoService {
 
   async getEventosDoDia(estabelecimentoId: string, date: string): Promise<string[]> {
     const { data } = await this.supabase
-      .from('agenda_events')
-      .select('start')
-      .gte('start', `${date}T00:00:00`)
-      .lte('start', `${date}T23:59:59`);
-    return (data || []).map((e: any) => e.start.substring(11, 16));
+      .rpc('get_public_events_by_day', { 
+        p_estab_id: estabelecimentoId, 
+        p_date_start: `${date}T00:00:00`, 
+        p_date_end: `${date}T23:59:59` 
+      });
+    return (data as any[] || []).map((e: any) => e.start.substring(11, 16));
   }
 
   async getEventosDoProfissionalNoDia(profId: string, date: string): Promise<string[]> {

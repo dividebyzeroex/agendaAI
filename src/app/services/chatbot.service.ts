@@ -60,23 +60,19 @@ export class ChatbotService {
     const { data: { user } } = await this.supabase.client.auth.getUser();
     if (!user) return;
 
-    // Get establishment ID (simplified assumption: 1 establishment per user)
-    const { data: est } = await this.supabase.client
-      .from('estabelecimento')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    // Get establishment ID using safe RPC
+    const { data: ests } = await this.supabase.client
+      .rpc('get_estabelecimento_by_user', { p_user_id: user.id });
 
+    const est = (ests as any)?.[0];
     if (!est) return;
 
     const { data: integrations } = await this.supabase.client
-      .from('chatbot_integrations')
-      .select('channel, status')
-      .eq('establishment_id', est.id);
+      .rpc('get_chatbot_integrations_by_estab', { p_estab_id: est.id });
 
     if (integrations) {
       const state: Record<string, boolean> = { whatsapp: false, facebook: false, instagram: false };
-      integrations.forEach(inc => {
+      (integrations as any[]).forEach((inc: any) => {
         state[inc.channel] = inc.status === 'active';
       });
       this.integrationsSubject.next(state);
@@ -90,23 +86,22 @@ export class ChatbotService {
     const { data: { user } } = await this.supabase.client.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 
-    const { data: est } = await this.supabase.client
-      .from('estabelecimento')
-      .select('id')
-      .eq('user_id', user.id)
-      .single();
+    // Get establishment ID using safe RPC
+    const { data: ests } = await this.supabase.client
+      .rpc('get_estabelecimento_by_user', { p_user_id: user.id });
 
+    const est = (ests as any)?.[0];
     if (!est) throw new Error('Establishment not found');
 
     const { error } = await this.supabase.client
-      .from('chatbot_integrations')
-      .upsert({
-        establishment_id: est.id,
-        channel,
-        status: 'active',
-        config,
-        updated_at: new Date()
-      }, { onConflict: 'establishment_id,channel' });
+      .rpc('upsert_chatbot_integration_safe', {
+        p_data: {
+          establishment_id: est.id,
+          channel,
+          status: 'active',
+          config
+        }
+      });
 
     if (error) throw error;
     

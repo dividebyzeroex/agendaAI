@@ -68,32 +68,25 @@ export class AgentMailboxService implements OnDestroy {
     );
   }
 
-  /** Escreve uma mensagem na mailbox de um agente. */
+  /** Escreve uma mensagem na mailbox de um agente via RPC (POST). */
   async writeToMailbox(to: string, message: Omit<AgentMessage, 'id' | 'read' | 'timestamp'>): Promise<void> {
-    await this.supabase.from('agent_mailbox').insert({
-      ...message,
-      to,
-      read: false,
-      timestamp: new Date().toISOString(),
+    await this.supabase.rpc('create_mailbox_message_safe', {
+      p_data: {
+        ...message,
+        to
+      }
     });
   }
 
-  /** Lê todas as mensagens (lidas e não lidas) de um agente. */
+  /** Lê todas as mensagens via RPC (POST) para ocultar agentId da URL. */
   async readMailbox(agentId: string): Promise<AgentMessage[]> {
-    const { data } = await this.supabase
-      .from('agent_mailbox')
-      .select('*')
-      .eq('to', agentId)
-      .order('timestamp', { ascending: true });
+    const { data } = await this.supabase.rpc('get_agent_mailbox_by_to', { p_to: agentId });
     return (data as AgentMessage[]) ?? [];
   }
 
-  /** Marca uma mensagem como lida. */
+  /** Marca uma mensagem como lida via RPC (POST). */
   async markRead(messageId: string): Promise<void> {
-    await this.supabase
-      .from('agent_mailbox')
-      .update({ read: true })
-      .eq('id', messageId);
+    await this.supabase.rpc('mark_mailbox_read_safe', { p_id: messageId });
   }
 
   /**
@@ -112,15 +105,9 @@ export class AgentMailboxService implements OnDestroy {
 
   // ─── Task Claim System ────────────────────────────────────────────────────
 
-  /**
-   * Cria uma tarefa na fila de agentes.
-   */
+  /** Cria uma tarefa na fila via RPC (POST). */
   async createTask(task: Omit<AgentTask, 'id' | 'created_at' | 'status'>): Promise<AgentTask | null> {
-    const { data, error } = await this.supabase
-      .from('agent_tasks')
-      .insert({ ...task, status: 'pending', created_at: new Date().toISOString() })
-      .select()
-      .single();
+    const { data, error } = await this.supabase.rpc('create_agent_task_safe', { p_data: task });
     if (error) { console.error('[Mailbox] createTask:', error.message); return null; }
     return data as AgentTask;
   }
@@ -132,52 +119,33 @@ export class AgentMailboxService implements OnDestroy {
    * O UPDATE com .eq('status', 'pending') garante atomicidade:
    * se dois agentes tentam ao mesmo tempo, só um vence.
    */
+  /** Claim atômico via RPC (POST) — 100% thread-safe e blindado. */
   async claimTask(taskId: string, agentId: string): Promise<boolean> {
-    const { error, count } = await this.supabase
-      .from('agent_tasks')
-      .update({ status: 'running', agent_owner: agentId })
-      .eq('id', taskId)
-      .eq('status', 'pending') // ← condição atômica
-      .eq('agent_owner', null);
-
-    return !error && (count ?? 0) > 0;
+    const { data, error } = await this.supabase.rpc('claim_agent_task_atomic', { 
+      p_id: taskId, 
+      p_agent_id: agentId 
+    });
+    return !error && !!data;
   }
 
-  /**
-   * Marca uma tarefa como concluída.
-   */
+  /** Marca uma tarefa como concluída via RPC (POST). */
   async completeTask(taskId: string, status: 'done' | 'failed' = 'done'): Promise<void> {
-    await this.supabase
-      .from('agent_tasks')
-      .update({ status, completed_at: new Date().toISOString() })
-      .eq('id', taskId);
+    await this.supabase.rpc('complete_agent_task_safe', { p_id: taskId, p_status: status });
   }
 
   /** Lista tarefas pendentes (sem dono). */
+  /** Lista tarefas pendentes sem expor IDs na URL (POST via RPC). */
   async getPendingTasks(estabelecimentoId?: string): Promise<AgentTask[]> {
-    let query = this.supabase
-      .from('agent_tasks')
-      .select('*')
-      .eq('status', 'pending')
-      .is('agent_owner', null)
-      .order('created_at', { ascending: true });
-
-    if (estabelecimentoId) {
-      query = query.eq('estabelecimento_id', estabelecimentoId);
-    }
-
-    const { data } = await query;
+    const { data } = await this.supabase.rpc('get_agent_tasks_safe', { 
+      p_status: 'pending', 
+      p_estab_id: estabelecimentoId || null 
+    });
     return (data as AgentTask[]) ?? [];
   }
 
-  /** Lista tarefas ativas (running) para exibir no painel. */
+  /** Lista tarefas ativas via RPC (POST). */
   async getRunningTasks(): Promise<AgentTask[]> {
-    const { data } = await this.supabase
-      .from('agent_tasks')
-      .select('*')
-      .eq('status', 'running')
-      .order('created_at', { ascending: false })
-      .limit(10);
+    const { data } = await this.supabase.rpc('get_agent_tasks_safe', { p_status: 'running' });
     return (data as AgentTask[]) ?? [];
   }
 

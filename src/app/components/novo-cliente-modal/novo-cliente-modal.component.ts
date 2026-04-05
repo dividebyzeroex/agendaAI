@@ -137,51 +137,51 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
  
     /* Body */
     .nc-body { padding: 2rem; display: flex; flex-direction: column; gap: 1.2rem; overflow-y: auto; }
-    .nc-section-title { font-size: 0.75rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
-    .nc-separator { height: 1px; background: #f1f5f9; margin: 0.5rem 0; }
+    .nc-section-title { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
+    .nc-separator { height: 1px; background: var(--glass-border); margin: 0.5rem 0; }
  
     .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     .fields-grid .full { grid-column: span 2; }
  
     .field-group { display: flex; flex-direction: column; gap: 7px; }
-    label { font-size: .8rem; font-weight: 700; color: #475569; }
+    label { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
     .req { color: #f43f5e; }
  
     .input-wrap { position: relative; display: flex; align-items: center; }
-    .input-wrap .pi { position: absolute; left: 14px; color: #94a3b8; font-size: 0.9rem; }
+    .input-wrap .pi { position: absolute; left: 14px; color: var(--text-muted); font-size: 0.9rem; }
  
     .field-input, .field-area {
-      width: 100%; padding: 12px 14px 12px 40px; border: 2px solid #f1f5f9; border-radius: 12px;
+      width: 100%; padding: 12px 14px 12px 40px; border: 2px solid var(--glass-border); border-radius: 12px;
       font-family: inherit; font-size: 0.95rem; outline: none; transition: all .2s;
-      color: #1e293b; background: #f8fafc;
+      color: var(--text-main); background: var(--active-bg);
     }
     .field-area { padding-left: 14px; resize: none; font-family: inherit; }
-    .field-input:focus, .field-area:focus { border-color: #1a73e8; background: white; box-shadow: 0 0 0 4px rgba(26,115,232,0.1); }
+    .field-input:focus, .field-area:focus { border-color: var(--primary-color); background: var(--glass-bg); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
  
     .info-box-premium {
       display: flex; align-items: center; gap: 10px;
-      background: #f0f7ff; border: 1px solid rgba(26,115,232,.1); border-radius: 12px;
-      padding: 12px 16px; color: #1a73e8; font-size: .85rem; font-weight: 500;
+      background: var(--active-bg); border: 1px solid var(--glass-border); border-radius: 12px;
+      padding: 12px 16px; color: var(--primary-color); font-size: .85rem; font-weight: 500;
     }
-    .info-box-premium .pi { color: #1a73e8; font-size: 1rem; }
+    .info-box-premium .pi { color: var(--primary-color); font-size: 1rem; }
  
     .error-box { padding: 12px 16px; border-radius: 12px; background: #fff1f2; color: #e11d48; font-size: .9rem; font-weight: 600; }
  
     /* Footer */
-    .nc-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 1.5rem 2rem; background: #ffffff; border-top: 1px solid #f1f5f9; }
-    .btn-cancel-glass { background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-cancel-glass:hover { background: #f1f5f9; border-color: #cbd5e1; }
+    .nc-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 1.5rem 2rem; background: var(--active-bg); border-top: 1px solid var(--glass-border); }
+    .btn-cancel-glass { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
+    .btn-cancel-glass:hover { background: var(--active-bg); border-color: var(--text-muted); }
     .btn-save-premium {
       display: flex; align-items: center; gap: 8px;
-      background: #1e293b; color: white; border: none;
+      background: var(--primary-color); color: white; border: none;
       padding: 12px 28px; border-radius: 12px; font-weight: 700; font-size: .95rem;
       cursor: pointer; transition: all .3s;
     }
-    .btn-save-premium:hover:not(:disabled) { background: #0f172a; box-shadow: 0 10px 25px rgba(0,0,0,0.15); transform: translateY(-1px); }
+    .btn-save-premium:hover:not(:disabled) { background: #2563eb; box-shadow: 0 10px 25px rgba(37,99,235,0.25); transform: translateY(-1px); }
     .btn-save-premium:disabled { opacity: .4; cursor: not-allowed; }
  
     .custom-scroll::-webkit-scrollbar { width: 5px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
   `]
 })
 export class NovoClienteModalComponent implements OnInit {

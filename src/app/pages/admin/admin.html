@@ -29,8 +29,8 @@
 
   <div class="dashboard-grid">
     
-    <!-- MAIN: TODAY'S TIMELINE + NO-SHOW ALERTS -->
-    <div class="elite-section">
+    <!-- MAIN: TODAY'S TIMELINE (BENTO RADAR) -->
+    <div class="bento-radar">
       
       <!-- 🚨 NO-SHOW ALERT CARD (REAL-TIME) -->
       <div class="no-show-alert-card" *ngIf="noShowEvents.length > 0">
@@ -83,8 +83,24 @@
       </div>
     </div>
 
-    <!-- SIDE: AI INSIGHTS FEED -->
-    <div class="ai-feed-ent">
+    <!-- SIDE: AI INSIGHTS & AGENT ACTIVITY (BENTO AI) -->
+    <div class="bento-ai">
+      
+      <!-- Real-Time Agent Activity [NEW] -->
+      <div class="bento-card" style="padding: 1.25rem;">
+         <h4 style="font-size: 0.8rem; font-weight: 800; color: #10b981; margin-bottom: 1rem; display:flex; align-items:center; gap:8px;">
+           <span class="shield-status-icon" style="width: 8px; height: 8px;"></span> AGENTES EM OPERAÇÃO
+         </h4>
+         <div style="display:flex; flex-direction:column; gap:8px;">
+            <div style="font-size: 0.75rem; color: var(--text-muted); background: var(--active-bg); padding: 8px; border-radius: 8px;">
+              <i class="pi pi-check" style="color:#10b981;"></i> <b>Agent Júlia:</b> Confirmou 5 horários.
+            </div>
+            <div style="font-size: 0.75rem; color: var(--text-muted); background: var(--active-bg); padding: 8px; border-radius: 8px;">
+              <i class="pi pi-spin pi-spinner" style="font-size: 0.6rem;"></i> <b>Agent Ricardo:</b> Analisando churn...
+            </div>
+         </div>
+      </div>
+
       <div class="ai-insight-card" *ngFor="let suggestion of aiSuggestions">
         <div class="ai-head">
           <i class="pi pi-sparkles"></i>
@@ -100,7 +116,7 @@
       </div>
 
       <!-- Quick Tips -->
-      <div class="elite-section mini" style="padding: 1.5rem;">
+      <div class="bento-card" style="padding: 1.5rem; background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.2);">
          <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
            <i class="pi pi-bolt" style="color: #f59e0b"></i> Dica do Dia
          </h4>

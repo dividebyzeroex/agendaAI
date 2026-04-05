@@ -1,117 +1,163 @@
 <div class="onboarding-root">
   <div class="onboarding-container">
 
-    <!-- Progresso -->
-    <div class="on-steps" *ngIf="step !== 'conclusao'">
-      <div class="on-step" [class.active]="step === 'identidade'">1</div>
-      <div class="on-line"></div>
-      <div class="on-step" [class.active]="step === 'marca'">2</div>
-      <div class="on-line"></div>
-      <div class="on-step" [class.active]="step === 'contato'">3</div>
+    <!-- Timeline 4 Etapas (Invisível pro cliente, mas perceptível pelo preenchimento) -->
+    <div class="on-timeline" *ngIf="step !== 'conclusao'">
+      <div class="t-step" [class.active]="getStepIndex() >= 0">1</div>
+      <div class="t-line" [class.active]="getStepIndex() >= 1"></div>
+      <div class="t-step" [class.active]="getStepIndex() >= 1">2</div>
+      <div class="t-line" [class.active]="getStepIndex() >= 2"></div>
+      <div class="t-step" [class.active]="getStepIndex() >= 2">3</div>
+      <div class="t-line" [class.active]="getStepIndex() >= 3"></div>
+      <div class="t-step" [class.active]="getStepIndex() >= 3">4</div>
     </div>
 
-    <!-- ══ PASSO 1: Identidade ═══════════════════ -->
-    <div class="on-card" *ngIf="step === 'identidade'">
-      <div class="on-hero">
-        <span class="emoji">🚀</span>
-        <h1>Vamos começar!</h1>
-        <p>Qual o nome do seu negócio?</p>
-      </div>
+    <!-- Contêiner 3D da Revolução -->
+    <div class="on-scene" *ngIf="step !== 'conclusao'">
+      <div class="on-card-3d" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
+        
+        <!-- FRENTE (Steps Pares na lógica do giro: Overview: 0deg, Identidade: -360deg...) -->
+        <div class="on-face on-front">
+          
+          <!-- PASSO 1: Empresa, CNPJ & Segmento -->
+          <ng-container *ngIf="step === 'overview'">
+            <div class="on-hero">
+              <span class="emoji">🏢</span>
+              <h1>Perfil da Empresa</h1>
+              <p>Dados mínimos para análise de faturamento e penetração.</p>
+            </div>
+            <div class="field">
+              <input type="text" [(ngModel)]="form.nome" (ngModelChange)="onNameChange()" placeholder="Nome do Estabelecimento" autofocus class="super-input" />
+            </div>
+            <div class="field">
+              <input type="text" [(ngModel)]="form.cnpj" placeholder="CNPJ (Somente números)" class="super-input" maxlength="14" />
+              <p class="hint"><i class="pi pi-shield"></i> Exigimos CNPJ para garantir a seriedade da plataforma.</p>
+            </div>
+            <div class="field">
+              <label>Segmento de Mercado</label>
+              <div class="chip-grid">
+                <div class="m-chip" *ngFor="let s of segmentOptions" [class.active]="form.segmento === s.value" (click)="form.segmento = s.value">
+                  <span class="c-icon">{{s.icon}}</span>
+                  <span class="c-label">{{s.label}}</span>
+                </div>
+              </div>
+            </div>
+            <div class="btn-group-single">
+              <button class="btn-next" [disabled]="!form.nome || !form.cnpj || !form.segmento" (click)="next()">Próximo <i class="pi pi-arrow-right"></i></button>
+            </div>
+          </ng-container>
 
-      <div class="field">
-        <label>Nome do Estabelecimento *</label>
-        <input type="text" [(ngModel)]="form.nome" (ngModelChange)="onNameChange()"
-          placeholder="Ex: Barber Shop São Paulo" autofocus />
-      </div>
+          <!-- PASSO 3: Identidade (Contato + Cor) -->
+          <ng-container *ngIf="step === 'identidade'">
+            <div class="on-hero">
+              <span class="emoji">📱</span>
+              <h1>Contato & Branding</h1>
+              <p>Onde os clientes e nós podemos te encontrar.</p>
+            </div>
+            <div class="field">
+              <input type="tel" [(ngModel)]="form.telefone" placeholder="WhatsApp (Ex: 11 99999-9999)" class="super-input" />
+            </div>
+            <div class="field">
+              <input type="email" [(ngModel)]="form.email" placeholder="E-mail Corporativo" class="super-input" disabled />
+            </div>
+            <div class="field">
+              <label>Cor de Destaque</label>
+              <div class="color-grid">
+                 <button *ngFor="let c of suggestedColors" 
+                   [style.background]="c" 
+                   [class.active]="form.cor_primaria === c"
+                   (click)="form.cor_primaria = c">
+                   <i class="pi pi-check" *ngIf="form.cor_primaria === c"></i>
+                 </button>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn-back" (click)="back()"><i class="pi pi-arrow-left"></i></button>
+              <button class="btn-next" [disabled]="!form.telefone" (click)="next()">Próximo <i class="pi pi-arrow-right"></i></button>
+            </div>
+          </ng-container>
 
-      <div class="field">
-        <label>Link da sua Agenda (Slug)</label>
-        <div class="slug-wrap">
-           <span>agendaai.vercel.app/agendar/</span>
-           <input type="text" [(ngModel)]="form.slug" placeholder="seu-negocio" />
         </div>
-        <p class="hint">Este será o link que você enviará para seus clientes.</p>
-      </div>
 
-      <button class="btn-next" [disabled]="!form.nome || !form.slug" (click)="next()">
-        Próximo Passo <i class="pi pi-arrow-right"></i>
-      </button>
-    </div>
+        <!-- COSTAS (Steps Ímpares na lógica do giro: Operação: -180deg, Link: -540deg...) -->
+        <div class="on-face on-back">
+          
+          <!-- PASSO 2: Operação (Volume e Local) -->
+          <ng-container *ngIf="step === 'operacao'">
+            <div class="on-hero">
+              <span class="emoji">📍</span>
+              <h1>Sua Base</h1>
+              <p>Precisamos do endereço para análise de penetração local.</p>
+            </div>
+            <div class="field">
+              <input type="text" [(ngModel)]="form.endereco_completo" placeholder="Endereço Completo (Rua, Número, Bairro)" class="super-input" />
+            </div>
+            <div class="field">
+              <input type="text" [(ngModel)]="form.cidade" placeholder="Cidade" class="super-input" />
+            </div>
+            <div class="field">
+              <label>Volume Estimado (Clientes/Mês)</label>
+              <div class="chip-grid volume">
+                <div class="m-chip" *ngFor="let v of volumeOptions" [class.active]="form.volume_clientes === v.value" (click)="form.volume_clientes = v.value">
+                  <span class="c-label bold">{{v.label}}</span>
+                  <span class="c-desc">{{v.desc}}</span>
+                </div>
+              </div>
+            </div>
+            <div class="btn-group">
+              <button class="btn-back" (click)="back()"><i class="pi pi-arrow-left"></i></button>
+              <button class="btn-next" [disabled]="!form.endereco_completo || !form.cidade || !form.volume_clientes" (click)="next()">Próximo <i class="pi pi-arrow-right"></i></button>
+            </div>
+          </ng-container>
 
-    <!-- ══ PASSO 2: Marca ════════════════════════ -->
-    <div class="on-card" *ngIf="step === 'marca'">
-      <div class="on-hero">
-         <span class="emoji">✨</span>
-         <h1>Identidade Visual</h1>
-         <p>Personalize conforme a sua marca.</p>
-      </div>
+          <!-- PASSO 4: Link Mágico -->
+          <ng-container *ngIf="step === 'link'">
+            <div class="on-hero">
+              <span class="emoji">🔗</span>
+              <h1>Seu Link Mágico</h1>
+              <p>Este é o link que os clientes acessarão para agendar 24/7.</p>
+            </div>
+            <div class="field magic-link-field">
+              <div class="slug-wrap">
+                 <span>agendaai.app/</span>
+                 <input type="text" [(ngModel)]="form.slug" placeholder="seu-negocio" />
+              </div>
+              <p class="hint"><i class="pi pi-info-circle"></i> Você pode enviar este link no Instagram ou WhatsApp.</p>
+            </div>
+            <div class="btn-group">
+              <button class="btn-back" (click)="back()"><i class="pi pi-arrow-left"></i></button>
+              <button class="btn-next final" [disabled]="!form.slug" (click)="finalizar()">
+                <i class="pi pi-bolt"></i> Criar Infraestrutura
+              </button>
+            </div>
+          </ng-container>
 
-      <div class="field">
-        <label>Cor de Destaque</label>
-        <div class="color-grid">
-           <button *ngFor="let c of suggestedColors" 
-             [style.background]="c" 
-             [class.active]="form.cor_primaria === c"
-             (click)="form.cor_primaria = c">
-             <i class="pi pi-check" *ngIf="form.cor_primaria === c"></i>
-           </button>
-           <input type="color" [(ngModel)]="form.cor_primaria" class="color-picker" />
         </div>
       </div>
-
-      <div class="field">
-        <label>URL do Logo (Opcional)</label>
-        <input type="text" [(ngModel)]="form.logo_url" placeholder="https://exemplo.com/logo.png" />
-      </div>
-
-      <div class="btn-group">
-        <button class="btn-back" (click)="back()">Voltar</button>
-        <button class="btn-next" (click)="next()">Continuar</button>
-      </div>
     </div>
 
-    <!-- ══ PASSO 3: Contato ══════════════════════ -->
-    <div class="on-card" *ngIf="step === 'contato'">
-      <div class="on-hero">
-         <span class="emoji">📍</span>
-         <h1>Localização e Contato</h1>
-         <p>Onde seus clientes podem te encontrar?</p>
-      </div>
-
-      <div class="field">
-        <label>Cidade</label>
-        <input type="text" [(ngModel)]="form.cidade" placeholder="Ex: São Paulo" />
-      </div>
-
-      <div class="field">
-        <label>Endereço Completo</label>
-        <input type="text" [(ngModel)]="form.endereco" placeholder="Rua das Acácias, 123" />
-      </div>
-
-      <div class="field">
-        <label>WhatsApp de Contato</label>
-        <input type="tel" [(ngModel)]="form.telefone" placeholder="(11) 99999-8888" />
-      </div>
-
-      <div class="btn-group">
-        <button class="btn-back" (click)="back()">Voltar</button>
-        <button class="btn-next" (click)="finalizar()">
-          Finalizar Configuração <i class="pi pi-check"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- ══ CONCLUSÃO ═════════════════════════════ -->
+    <!-- ══ CONCLUSÃO MÁGICA & VERIFICAÇÃO ═════════════════════════════ -->
     <div class="on-card conclusao" *ngIf="step === 'conclusao'">
-       <div class="loader-wrap">
+       <div class="loader-wrap" *ngIf="isSaving">
           <div class="pulse-circle"></div>
           <div class="pulse-circle second"></div>
-          <i class="pi pi-sparkles"></i>
+          <i class="pi pi-sparkles loader-icon"></i>
        </div>
-       <h1>Quase tudo pronto!</h1>
-       <p>Estamos preparando o seu painel de gestão...</p>
-       <div class="progress-bar-mini">
-          <div class="bar-fill"></div>
+       
+       <div class="final-message" *ngIf="!isSaving">
+          <div class="success-icon-wrap"><i class="pi pi-envelope"></i></div>
+          <h1 class="glow-text">Verifique seu E-mail</h1>
+          <p>Enviamos um **Link Mágico** para o e-mail informado. <br> Clique nele para validar seus dados e soltar a IA no seu negócio.</p>
+          <div class="email-badge">{{form.email}}</div>
+          <button class="btn-next" (click)="step = 'link'">Voltar e corrigir e-mail</button>
+       </div>
+
+       <div *ngIf="isSaving">
+         <h1 class="glow-text">Validando Perfil...</h1>
+         <p>Processando CNPJ e preparando a infraestrutura da sua nova Agenda.</p>
+         <div class="progress-bar-mini">
+            <div class="bar-fill loader-anim"></div>
+         </div>
        </div>
     </div>
 

@@ -35,14 +35,6 @@ export class AdminBilling implements OnInit {
   isVerifying = false;
   successMsg = '';
   showConfetti = false;
-  
-  // Card Form (simulated card hash production)
-  card = {
-    number: '',
-    name: '',
-    expiry: '',
-    cvc: ''
-  };
 
   ngOnInit() {
     window.scrollTo(0, 0);
@@ -97,7 +89,7 @@ export class AdminBilling implements OnInit {
     this.selectedPlan = null;
   }
 
-  async processMercadoPagoCheckout() {
+  async processStripeCheckout() {
     if (!this.selectedPlan) return;
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) {
@@ -107,28 +99,12 @@ export class AdminBilling implements OnInit {
 
     this.isProcessing = true;
     try {
-      // Fetch session token securely
-      const token = await this.authService.getSessionToken();
-
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          estabelecimentoId: current.id,
-          planId: this.selectedPlan.id,
-          price: this.selectedPlan.price,
-          months: this.selectedPlan.months,
-          title: this.selectedPlan.name
-        })
-      });
-      const data = await response.json();
-      if (data.init_point) {
-        window.location.href = data.init_point;
+      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id);
+      
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
       } else {
-        throw new Error(data.error || 'Failed to create checkout');
+        throw new Error('Não foi possível gerar a sessão de pagamento. Verifique sua conexão.');
       }
     } catch (e: any) {
        this.successMsg = 'Erro ao iniciar pagamento: ' + e.message;

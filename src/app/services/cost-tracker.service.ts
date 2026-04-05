@@ -55,13 +55,13 @@ export class CostTrackerService {
     const limits = PLAN_LIMITS[plano] || PLAN_LIMITS['starter'];
 
     const { data } = await this.supabase
-      .from('usage_quotas')
-      .select('resource, count')
-      .eq('estabelecimento_id', estabId)
-      .eq('month', monthKey);
+      .rpc('get_usage_quotas_by_estab', { 
+        p_estab_id: estabId, 
+        p_month: monthKey 
+      });
 
     const usageMap: Record<string, number> = {};
-    (data || []).forEach(row => usageMap[row.resource] = row.count);
+    (data as any[] || []).forEach((row: any) => usageMap[row.resource] = row.count);
 
     this.quotaSubject.next({
       tokensUsed: usageMap['tokens'] || 0,

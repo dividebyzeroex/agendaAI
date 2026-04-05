@@ -3,22 +3,17 @@
 :root {
   --primary: #4f46e5;
   --primary-light: #e0e7ff;
-  --bg: #f8fafc;
-  --card-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-dim: #64748b;
-  --border: rgba(0,0,0,0.06);
   --radius: 20px;
-  --shadow-elite: 0 10px 40px rgba(0,0,0,0.04);
 }
 
 .ag-root { 
-  background: var(--bg); 
+  background: var(--bg-color); 
   min-height: 100vh; 
   font-family: 'Space Grotesk', system-ui, sans-serif; 
   color: var(--text-main); 
   display: flex;
   justify-content: center;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ag-app { 
@@ -28,8 +23,9 @@
   flex-direction: column; 
   min-height: 100vh; 
   position: relative; 
-  background: white;
-  box-shadow: 0 0 80px rgba(0,0,0,0.03);
+  background: var(--glass-bg);
+  box-shadow: var(--elite-shadow);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Header */
@@ -37,10 +33,11 @@
   padding: 1.5rem; 
   position: sticky; 
   top: 0; 
-  background: rgba(255, 255, 255, 0.8); 
+  background: var(--glass-bg); 
   backdrop-filter: blur(12px); 
   z-index: 50; 
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--glass-border);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .h-inner { display: flex; align-items: center; gap: 12px; }
@@ -61,7 +58,7 @@
 
 .h-title { display: flex; flex-direction: column; }
 .h-title strong { font-size: 1.1rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
-.h-title span { font-size: 0.8rem; color: var(--text-dim); font-weight: 500; }
+.h-title span { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
 
 /* Progress */
 .ag-progress { height: 4px; background: #f1f5f9; position: sticky; top: 93px; z-index: 50; overflow: hidden; }
@@ -84,22 +81,22 @@
 }
 
 .v-hero { margin-bottom: 2rem; }
-.v-hero h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 0.5rem; line-height: 1.1; }
-.v-hero p { font-size: 1rem; color: var(--text-dim); font-weight: 500; }
+.v-hero h2 { font-size: 1.8rem; font-weight: 800; letter-spacing: -0.8px; margin-bottom: 0.5rem; line-height: 1.1; color: var(--text-main); }
+.v-hero p { font-size: 1rem; color: var(--text-muted); font-weight: 500; }
 
 /* Cards */
 .v-list { display: flex; flex-direction: column; gap: 12px; }
 
 .c-card-elite {
-  background: white;
-  border: 1.5px solid #f1f5f9;
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
   border-radius: var(--radius);
   padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 16px;
   text-align: left;
-  transition: all 0.25s ease;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   width: 100%;
   position: relative;
@@ -138,7 +135,7 @@
 
 .c-info-elite { flex: 1; min-width: 0; }
 .c-info-elite strong { display: block; font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
-.c-info-elite span { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; }
+.c-info-elite span { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; }
 
 .c-meta-elite {
   text-align: right;
@@ -156,17 +153,19 @@
 
 /* Time Step */
 .calendar-elite {
-  background: #f8fafc;
+  background: var(--glass-bg);
   padding: 1.5rem;
   border-radius: var(--radius);
   margin-bottom: 1.5rem;
+  border: 1px solid var(--glass-border);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .calendar-elite label {
   display: block;
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--text-dim);
+  color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 1px;
   margin-bottom: 12px;
@@ -175,15 +174,15 @@
 .ag-date-elite {
   width: 100%;
   padding: 14px;
-  border: 2px solid white;
+  border: 2px solid var(--glass-border);
   border-radius: 12px;
   font-size: 1.1rem;
   font-weight: 700;
   color: var(--text-main);
-  background: white;
+  background: var(--active-bg);
   box-shadow: 0 4px 10px rgba(0,0,0,0.02);
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .ag-date-elite:focus {
@@ -199,14 +198,14 @@
 }
 
 .slot-btn-elite {
-  background: white;
-  border: 1.5px solid #f1f5f9;
+  background: var(--glass-bg);
+  border: 1.5px solid var(--glass-border);
   border-radius: 12px;
   padding: 16px 8px;
   font-size: 1rem;
   font-weight: 800;
   color: var(--text-main);
-  transition: all 0.2s;
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
 }
 
@@ -310,7 +309,7 @@
 .btn-back-elite {
   background: none;
   border: none;
-  color: var(--text-dim);
+  color: var(--text-muted);
   font-size: 0.95rem;
   font-weight: 700;
   margin-bottom: 1.5rem;
@@ -319,7 +318,7 @@
   align-items: center;
   gap: 8px;
   padding: 0;
-  transition: color 0.2s;
+  transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .btn-back-elite:hover { color: var(--primary); }

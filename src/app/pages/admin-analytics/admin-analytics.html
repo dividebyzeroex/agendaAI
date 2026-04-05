@@ -46,7 +46,7 @@
   </div>
 
   <!-- Elite Loader -->
-  <div class="elite-loader-container" *ngIf="isLoadingStats" style="min-height: 200px; background: white; border-radius: 20px;">
+  <div class="elite-loader-container" *ngIf="isLoadingStats" style="min-height: 200px; background: var(--active-bg); border-radius: 20px; border: 1px solid var(--glass-border);">
     <div class="elite-scissor-wrap"></div>
     <div class="loader-text">Analisando métricas com IA...</div>
   </div>
@@ -62,7 +62,7 @@
         placeholder='Tente: "Qual meu faturamento?" ou "Quantos agendamentos tenho?"'
       />
       <button class="query-btn" [class.ready]="userInput.trim()" [disabled]="!userInput.trim() || isQuerying" (click)="ask()">
-        <i class="pi pi-arrow-right" *ngIf="!isQuerying"></i>
+        <i class="pi pi-sparkles" *ngIf="!isQuerying"></i>
         <i class="pi pi-spin pi-spinner" *ngIf="isQuerying"></i>
       </button>
     </div>

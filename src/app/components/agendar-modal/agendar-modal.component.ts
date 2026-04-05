@@ -178,48 +178,51 @@ export interface AgendamentoForm {
     }
  
     .modal-box {
-      background: white; border-radius: 20px; width: 100%; max-width: 520px;
-      box-shadow: 0 32px 80px rgba(0,0,0,0.22);
+      background: var(--glass-bg); border-radius: 20px; width: 100%; max-width: 520px;
+      box-shadow: var(--elite-shadow);
       display: flex; flex-direction: column;
       max-height: 90vh; overflow: hidden;
+      backdrop-filter: blur(var(--glass-blur));
+      border: 1px solid var(--glass-border);
     }
  
     .modal-header {
       display: flex; justify-content: space-between; align-items: center;
-      padding: 1.5rem; border-bottom: 1px solid rgba(0,0,0,0.07);
-      background: #fafafa;
+      padding: 1.5rem; border-bottom: 1px solid var(--glass-border);
+      background: var(--active-bg);
     }
     .modal-header-info { display: flex; align-items: center; gap: 12px; }
     .modal-icon { font-size: 1.8rem; }
-    .modal-header-info strong { display: block; font-size: 1rem; color: #202124; font-weight: 700; }
-    .modal-date { font-size: 0.82rem; color: #9aa0a6; font-family: 'Space Mono', monospace; }
+    .modal-header-info strong { display: block; font-size: 1rem; color: var(--text-main); font-weight: 700; }
+    .modal-date { font-size: 0.82rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
     
-    .close-btn { background: none; border: none; cursor: pointer; color: #9aa0a6; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-    .close-btn:hover { background: #f1f3f4; color: #202124; }
+    .close-btn { background: none; border: none; cursor: pointer; color: var(--text-muted); width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
+    .close-btn:hover { background: var(--active-bg); color: var(--text-main); }
  
     .modal-body { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; }
     .custom-scroll::-webkit-scrollbar { width: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+    .custom-scroll::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
 
     .field-group { display: flex; flex-direction: column; gap: 8px; }
-    label { font-size: 0.8rem; font-weight: 700; color: #5f6368; text-transform: uppercase; letter-spacing: .4px; }
+    label { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; }
     .req { color: #ea4335; }
 
     .field-input, .field-textarea {
-      width: 100%; padding: 10px 12px; border: 1.5px solid #e8eaed; border-radius: 10px;
+      width: 100%; padding: 10px 12px; border: 1.5px solid var(--glass-border); border-radius: 10px;
       font-family: inherit; font-size: .92rem; outline: none; transition: border .2s;
-      color: #202124; background: #fafafa; box-sizing: border-box;
+      color: var(--text-main); background: var(--active-bg); box-sizing: border-box;
     }
-    .field-input:focus, .field-textarea:focus { border-color: #1a73e8; background: white; }
+    .field-input:focus, .field-textarea:focus { border-color: var(--primary-color); background: var(--glass-bg); }
 
     .client-dropdown {
       position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
-      background: white; border: 1px solid rgba(0,0,0,0.1); border-radius: 12px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.12); overflow: hidden;
+      background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px;
+      box-shadow: var(--elite-shadow); overflow: hidden;
+      backdrop-filter: blur(var(--glass-blur));
     }
     .client-option { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; font-size: .9rem; }
-    .client-option:hover { background: #f8f9fa; }
-    .client-option.new-client { color: #1a73e8; font-weight: 600; border-top: 1px solid rgba(0,0,0,0.06); }
+    .client-option:hover { background: var(--active-bg); }
+    .client-option.new-client { color: var(--primary-color); font-weight: 600; border-top: 1px solid var(--glass-border); }
 
     .client-avatar-sm {
       width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
@@ -227,8 +230,8 @@ export interface AgendamentoForm {
       color: white; display: flex; align-items: center; justify-content: center;
       font-weight: 700; font-size: .8rem;
     }
-    .c-nome { display: block; font-weight: 600; font-size: .88rem; color: #202124; }
-    .c-tel  { display: block; font-size: .78rem; color: #9aa0a6; }
+    .c-nome { display: block; font-weight: 600; font-size: .88rem; color: var(--text-main); }
+    .c-tel  { display: block; font-size: .78rem; color: var(--text-muted); }
 
     .selected-tag {
       display: inline-flex; align-items: center; gap: 8px;
@@ -238,17 +241,18 @@ export interface AgendamentoForm {
     .selected-tag button { background: none; border: none; cursor: pointer; color: #1a73e8; padding: 0; line-height: 1; }
 
     .inline-phone { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-    .inline-phone .pi { color: #9aa0a6; font-size: .85rem; }
+    .inline-phone .pi { color: var(--text-muted); font-size: .85rem; }
 
     .servico-grid, .profissionais-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
     
     .servico-chip, .prof-chip {
       display: flex; align-items: center; gap: 10px; padding: 10px;
-      border: 1.5px solid #e8eaed; border-radius: 10px; background: white;
+      border: 1.5px solid var(--glass-border); border-radius: 10px; background: var(--glass-bg);
       cursor: pointer; transition: all .2s; text-align: left;
+      color: var(--text-main);
     }
     .servico-chip { flex-direction: column; align-items: flex-start; }
-    .servico-chip.active, .prof-chip.active { border-color: #1a73e8; background: #e8f0fe; }
+    .servico-chip.active, .prof-chip.active { border-color: var(--primary-color); background: var(--active-bg); color: var(--primary-color); }
 
     .prof-avatar { width: 28px; height: 28px; border-radius: 8px; overflow: hidden; }
     .prof-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -256,14 +260,14 @@ export interface AgendamentoForm {
     .prof-name { font-size: .85rem; font-weight: 600; }
 
     .status-wrap { display: flex; gap: 8px; }
-    .status-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border: 1.5px solid #e8eaed; border-radius: 10px; background: white; cursor: pointer; font-weight: 600; font-size: .88rem; transition: all .2s; }
-    .status-btn.active { border-color: #34a853; background: #e6f4ea; color: #34a853; }
-    .status-btn.pending.active { border-color: #f9ab00; background: #fef9e7; color: #b06000; }
+    .status-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; padding: 10px; border: 1.5px solid var(--glass-border); border-radius: 10px; background: var(--glass-bg); cursor: pointer; font-weight: 600; font-size: .88rem; transition: all .2s; color: var(--text-muted); }
+    .status-btn.active { border-color: #34a853; background: rgba(52, 168, 83, 0.1); color: #34a853; }
+    .status-btn.pending.active { border-color: #f9ab00; background: rgba(249, 171, 0, 0.1); color: #b06000; }
 
-    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 1rem 1.5rem; border-top: 1px solid rgba(0,0,0,0.07); }
-    .btn-cancel { background: none; border: 1px solid #e8eaed; color: #5f6368; padding: 10px 18px; border-radius: 10px; cursor: pointer; }
-    .btn-confirm { background: #202124; color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; }
-    .btn-confirm:hover:not(:disabled) { background: #1a73e8; }
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; padding: 1rem 1.5rem; border-top: 1px solid var(--glass-border); }
+    .btn-cancel { background: none; border: 1px solid var(--glass-border); color: var(--text-muted); padding: 10px 18px; border-radius: 10px; cursor: pointer; }
+    .btn-confirm { background: var(--primary-color); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+    .btn-confirm:hover:not(:disabled) { background: #2563eb; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(37,99,235,0.2); }
   `]
 })
 export class AgendarModalComponent implements OnInit {

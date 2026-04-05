@@ -145,7 +145,7 @@
       <div class="servicos-list">
         <!-- Elite Loader (Mini) -->
         <ng-container *ngIf="isLoadingService.isLoading$ | async">
-          <div class="elite-loader-mini" style="min-height: 100px; background: white; border-radius: 20px; box-shadow: none;">
+          <div class="elite-loader-mini" style="min-height: 100px; background: var(--active-bg); border-radius: 20px; box-shadow: none; border: 1px solid var(--glass-border);">
             <div class="elite-scissor-wrap"></div>
             <div class="loader-text">Buscando Serviços...</div>
           </div>

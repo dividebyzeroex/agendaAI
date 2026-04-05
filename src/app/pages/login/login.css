@@ -4,17 +4,240 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: #f8fafc;
-  background-image: radial-gradient(#e2e8f0 0.5px, transparent 0.5px);
-  background-size: 24px 24px;
+  background-color: var(--bg-color, #f1f5f9);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(99, 102, 241, 0.12), transparent 40%),
+    radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.12), transparent 40%),
+    radial-gradient(var(--glass-border) 0.5px, transparent 0.5px);
+  background-size: 100% 100%, 100% 100%, 24px 24px;
   padding: 2rem;
   font-family: 'Outfit', 'Inter', sans-serif;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Adicionando Bolha Orgânica Oculta ao Fundo para efeito de refração 3D */
+.login-wrapper::before {
+  content: '';
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  background: var(--primary-color, #4f46e5);
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.15;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  animation: eliteFloat 15s ease-in-out infinite alternate;
+}
+@keyframes eliteFloat {
+  0% { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-30%, -70%) scale(1.1); }
 }
 
 .login-container {
   width: 100%;
-  max-width: 420px;
+  max-width: 460px; /* Levemente maior para acomodar onboarding */
   animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ===== SISTEMA 3D PARA FUSÃO UI ===== */
+.on-scene {
+  width: 100%;
+  perspective: 2000px;
+  position: relative;
+  min-height: 520px; /* Reduzido para ficar mais compacto */
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+
+.on-card-3d {
+  width: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.on-face {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: block;
+}
+
+.on-back {
+  transform: rotateY(180deg);
+}
+
+/* Timeline Interna ao Card */
+.on-timeline {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  gap: 8px;
+}
+.t-step {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: #f8fafc; border: 2px solid #e2e8f0;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.75rem; color: #94a3b8;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+.t-step.active {
+  background: #6366f1; border-color: #6366f1; color: white;
+  box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+  transform: scale(1.1);
+}
+.t-line {
+  width: 30px; height: 3px; background: #e2e8f0; border-radius: 10px;
+}
+.t-line.active { background: #6366f1; box-shadow: 0 0 10px rgba(99, 102, 241, 0.2); }
+
+/* Hero e Emojis no Onboarding */
+.on-hero { text-align: center; margin-bottom: 1.25rem; }
+.on-hero .emoji { font-size: 2rem; margin-bottom: 0.4rem; display: block; filter: drop-shadow(0 5px 10px rgba(0,0,0,0.1)); }
+.on-hero h1 { font-size: 1.3rem; font-weight: 950; letter-spacing: -1px; margin: 0 0 4px 0; color: #0f172a; }
+.on-hero p { color: #64748b; font-size: 0.8rem; line-height: 1.3; font-weight: 500; }
+
+/* Chips e Seletores Premium - VISIBILIDADE MAXIMA */
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 1.2rem 0;
+}
+.m-chip {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02), inset 0 1px 0 rgba(255,255,255,1);
+}
+.m-chip:hover { 
+  border-color: #6366f1;
+  background: #f5f3ff;
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(99, 102, 241, 0.08);
+}
+.m-chip.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3);
+}
+.m-chip .c-label { 
+  font-weight: 800; 
+  font-size: 0.9rem; 
+  color: #475569;
+  transition: color 0.3s;
+}
+.m-chip.active .c-label { color: white; }
+
+/* Color Grid Onboarding */
+.color-grid {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin: 1.5rem 0;
+}
+.color-grid button {
+  width: 38px; height: 38px; border-radius: 12px; border: 3px solid #f1f5f9;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  display: flex; align-items: center; justify-content: center; color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+.color-grid button:hover { transform: scale(1.2) rotate(8deg); }
+.color-grid button.active { border-color: #6366f1; transform: scale(1.15); box-shadow: 0 0 15px rgba(99, 102, 241, 0.4); }
+
+/* Slug Wrapper Login */
+.slug-wrap-login {
+  display: flex; align-items: center; gap: 8px;
+  background: #f8fafc; border: 2px solid #e2e8f0;
+  border-radius: 18px; padding: 0 20px; transition: all 0.3s;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+}
+.slug-wrap-login:focus-within { border-color: #6366f1; background: #ffffff; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+.slug-wrap-login span { font-size: 0.95rem; color: #64748b; font-weight: 700; white-space: nowrap; }
+.slug-wrap-login input { border: none !important; background: transparent !important; padding: 16px 0 !important; font-size: 1rem !important; flex: 1; font-weight: 800; color: #0f172a; }
+
+.btn-group-row { display: flex; gap: 12px; align-items: center; margin-top: 2rem; }
+
+/* Conclusão Final Message */
+.final-message-login {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem 0;
+  animation: slideUp .6s cubic-bezier(.2, .8, .2, 1);
+}
+.final-message-login h3 { font-size: 2.2rem; font-weight: 950; letter-spacing: -2px; margin: 0; }
+
+.success-icon-wrap {
+  width: 80px; height: 80px;
+  background: #f0fdf4; color: #22c55e;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem;
+  box-shadow: 0 15px 30px rgba(34, 197, 94, 0.15);
+  margin-bottom: 0.5rem;
+}
+
+.email-badge {
+  background: #f8fafc;
+  color: #1e293b;
+  padding: 10px 24px;
+  border-radius: 100px;
+  font-weight: 900;
+  font-size: 1rem;
+  border: 2px solid #e2e8f0;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+}
+
+.glow-text {
+  background: linear-gradient(135deg, #0f172a, #6366f1);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Estilos para inputs específicos do Onboarding dentro do card */
+.super-input { margin-bottom: 0.8rem !important; }
+
+/* Botão Próximo com Gradiente Real */
+::ng-deep .btn-login-main .p-button {
+  background: linear-gradient(135deg, #6366f1, #9333ea) !important;
+  border: none !important;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3) !important;
+  font-weight: 800 !important;
+  font-size: 1.1rem !important;
+  padding: 18px !important;
+  border-radius: 18px !important;
+  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+}
+
+::ng-deep .btn-login-main .p-button:not(:disabled):hover {
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45) !important;
+  filter: brightness(1.1) !important;
+}
+
+::ng-deep .btn-login-main .p-button:disabled {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  box-shadow: none !important;
+  opacity: 0.7 !important;
 }
 
 @keyframes fadeInDown {
@@ -53,15 +276,24 @@
 }
 
 ::ng-deep .login-card {
-  background: white !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  backdrop-filter: blur(40px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(40px) saturate(180%) !important;
   border-radius: 32px !important;
-  border: 1px solid rgba(0,0,0,0.05) !important;
-  box-shadow: 0 40px 100px rgba(0,0,0,0.08) !important;
-  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.8) !important;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.6) !important;
+  overflow: visible !important;
+}
+
+:host-context(.theme-escuro) ::ng-deep .login-card,
+:host-context(.theme-translucido) ::ng-deep .login-card {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 40px 100px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.05) !important;
 }
 
 ::ng-deep .login-card .p-card-body {
-  padding: 2.5rem !important;
+  padding: 2rem !important;
 }
 
 /* Role Selector (Segmented Control) */
@@ -74,34 +306,34 @@
 ::ng-deep .role-selector .p-selectbutton {
   display: flex !important;
   width: 100% !important;
-  background: #f1f5f9 !important;
+  background: var(--active-bg) !important;
   border-radius: 16px !important;
   padding: 4px !important;
   gap: 4px !important;
-  border: none !important;
+  border: 1px solid var(--glass-border) !important;
 }
 
 ::ng-deep .role-selector .p-button {
   flex: 1 !important;
   background: transparent !important;
   border: none !important;
-  color: #64748b !important;
+  color: var(--text-muted) !important;
   font-size: 0.85rem !important;
   font-weight: 700 !important;
   border-radius: 12px !important;
   padding: 12px 4px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
   box-shadow: none !important;
 }
 
 ::ng-deep .role-selector .p-button.p-highlight {
-  background: white !important;
-  color: #4f46e5 !important;
+  background: var(--glass-bg) !important;
+  color: var(--primary-color) !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.08) !important;
 }
 
 ::ng-deep .role-selector .p-button:not(.p-highlight):hover {
-  background: rgba(255,255,255,0.5) !important;
+  background: var(--active-bg) !important;
 }
 
 .login-header {
@@ -112,13 +344,13 @@
 .login-header h3 {
   font-size: 1.5rem;
   font-weight: 800;
-  color: #1e293b;
+  color: var(--text-main);
   margin-bottom: 0.5rem;
   letter-spacing: -0.5px;
 }
 
 .login-header p {
-  color: #64748b;
+  color: var(--text-muted);
   font-size: 0.95rem;
   line-height: 1.5;
 }
@@ -138,7 +370,7 @@
 .field label {
   font-size: 0.85rem;
   font-weight: 700;
-  color: #475569;
+  color: var(--text-muted);
   padding-left: 4px;
 }
 
@@ -146,18 +378,31 @@
   width: 100% !important;
   padding: 14px 18px !important;
   border-radius: 16px !important;
-  border: 2px solid #f1f5f9 !important;
-  background: #f8fafc !important;
+  border: 2px solid rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.5) !important;
   font-size: 1rem !important;
-  color: #1e293b !important;
-  transition: all 0.2s !important;
+  color: var(--text-main) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  backdrop-filter: blur(10px) !important;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.02) !important;
 }
 
 ::ng-deep .field input:focus {
-  background: white !important;
+  background: rgba(255, 255, 255, 0.8) !important;
   border-color: #6366f1 !important;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15) !important;
   outline: none !important;
+}
+
+:host-context(.theme-escuro) ::ng-deep .field input,
+:host-context(.theme-translucido) ::ng-deep .field input {
+  background: rgba(15, 23, 42, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #f8fafc !important;
+}
+:host-context(.theme-escuro) ::ng-deep .field input:focus,
+:host-context(.theme-translucido) ::ng-deep .field input:focus {
+  background: rgba(15, 23, 42, 0.8) !important;
 }
 
 .otp-field {
@@ -199,22 +444,32 @@
   75% { transform: translateX(5px); }
 }
 
+::ng-deep .btn-login-main {
+  width: 100%;
+  display: block;
+}
+
 ::ng-deep .btn-login-main .p-button {
   width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
   padding: 16px !important;
   border-radius: 18px !important;
-  background: #0f172a !important;
+  background: linear-gradient(135deg, var(--primary-color, #4f46e5), #9333ea) !important;
   border: none !important;
+  color: white !important;
   font-weight: 800 !important;
-  font-size: 1rem !important;
-  transition: all 0.3s !important;
+  font-size: 1.05rem !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
   margin-top: 1rem !important;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25) !important;
 }
 
 ::ng-deep .btn-login-main .p-button:hover {
-  background: #1e293b !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+  transform: translateY(-2px) scale(1.02) !important;
+  filter: brightness(1.1) !important;
+  box-shadow: 0 16px 35px rgba(99, 102, 241, 0.4) !important;
 }
 
 .btn-back-auth {
@@ -288,7 +543,7 @@
 }
 .divider span {
   padding: 0 10px;
-  color: #94a3b8;
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 500;
 }
@@ -299,25 +554,45 @@
 }
 
 ::ng-deep .btn-sso {
-  flex: 1 !important;
-  background: white !important;
-  color: #334155 !important;
-  border: 1px solid #cbd5e1 !important;
+  width: 100% !important;
+  display: block;
+}
+
+::ng-deep .btn-sso .p-button {
+  width: 100% !important;
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(10px) !important;
+  color: var(--text-main) !important;
+  border: 1px solid rgba(255, 255, 255, 0.6) !important;
   border-radius: 14px !important;
   padding: 12px !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   font-size: 0.95rem !important;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
-  transition: all 0.2s !important;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
-::ng-deep .btn-sso:hover {
-  background: #f8fafc !important;
-  border-color: #94a3b8 !important;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05) !important;
+:host-context(.theme-escuro) ::ng-deep .btn-sso .p-button,
+:host-context(.theme-translucido) ::ng-deep .btn-sso .p-button {
+  background: rgba(30, 41, 59, 0.5) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
 }
 
-::ng-deep .btn-sso i {
-  color: #475569 !important;
+::ng-deep .btn-sso .p-button:hover {
+  background: rgba(255, 255, 255, 0.8) !important;
+  border-color: rgba(255, 255, 255, 0.9) !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+}
+:host-context(.theme-escuro) ::ng-deep .btn-sso .p-button:hover,
+:host-context(.theme-translucido) ::ng-deep .btn-sso .p-button:hover {
+  background: rgba(30, 41, 59, 0.8) !important;
+}
+
+::ng-deep .btn-sso .p-button i {
+  color: var(--text-main) !important;
   font-size: 1.1rem !important;
 }

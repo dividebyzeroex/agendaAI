@@ -1,6 +1,10 @@
-import { MercadoPagoConfig, Preference } from 'mercadopago';
+import Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2023-10-16' as any,
+});
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') {
@@ -14,77 +18,75 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Parâmetros insuficientes para criar checkout.' });
     }
 
-    // JWT Security Guard (Claude-inspired API security)
+    // JWT Security Guard
     const authHeader = req.headers.authorization;
     if (!authHeader) {
       return res.status(401).json({ error: 'Acesso negado: Missing Authorization Bearer token.' });
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const sbUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-    const sbKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     
-    if (sbUrl && sbKey && sbUrl !== 'REPLACE_WITH_YOUR_SUPABASE_URL') {
+    if (sbUrl && sbKey) {
       const supabase = createClient(sbUrl, sbKey);
       const { data: { user }, error: authError } = await supabase.auth.getUser(token);
       
       if (authError || !user) {
-        console.error('JWT verification failed:', authError);
         return res.status(401).json({ error: 'Token de sessão inválido ou expirado.' });
       }
-    } else {
-      console.warn('⚠️ [API Security] Bypass JWT guard in local mock dev.');
     }
-
-    if (!process.env.MERCADOPAGO_ACCESS_TOKEN) {
-      console.error("MERCADOPAGO_ACCESS_TOKEN não está configurado.");
-      return res.status(500).json({ error: 'Configuração do Mercado Pago ausente no servidor.' });
-    }
-
-    const client = new MercadoPagoConfig({
-      accessToken: process.env.MERCADOPAGO_ACCESS_TOKEN,
-    });
-
-    const preference = new Preference(client);
 
     const appUrl = process.env.NEXT_PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:4200');
     const baseUrl = `${appUrl}/admin/billing`;
 
-    const externalReferencePayload = {
-      estabelecimentoId,
-      planId,
-      months,
-      type: 'saas_subscription'
+    // Map planIds to Stripe Price IDs (Placeholders or provided via ENV)
+    const priceMap: Record<string, string | undefined> = {
+      '1_month': process.env.STRIPE_PRICE_ID_1_MONTH,
+      '3_months': process.env.STRIPE_PRICE_ID_3_MONTHS,
+      '6_months': process.env.STRIPE_PRICE_ID_6_MONTHS,
+      '12_months': process.env.STRIPE_PRICE_ID_12_MONTHS,
     };
 
-    const result = await preference.create({
-      body: {
-        items: [
-          {
-            id: planId,
-            title: title || `Assinatura SaaS - ${months} Mes(es)`,
-            description: `Acesso à plataforma por ${months} mês(es).`,
-            quantity: 1,
-            unit_price: Number(price),
-            currency_id: 'BRL',
-          },
-        ],
-        back_urls: {
-          success: baseUrl,
-          failure: baseUrl,
-          pending: baseUrl,
-        },
-        auto_return: 'approved',
-        external_reference: JSON.stringify(externalReferencePayload),
+    const stripePriceId = priceMap[planId];
+
+    const sessionData: any = {
+      payment_method_types: ['card'],
+      line_items: stripePriceId 
+        ? [{ price: stripePriceId, quantity: 1 }]
+        : [
+            {
+              price_data: {
+                currency: 'brl',
+                product_data: {
+                  name: title || `Assinatura SaaS - ${months} Mes(es)`,
+                  description: `Acesso à plataforma por ${months} mês(es).`,
+                },
+                unit_amount: Math.round(price * 100), // Convert to cents
+                recurring: { interval: 'month', interval_count: months },
+              },
+              quantity: 1,
+            },
+          ],
+      mode: 'subscription',
+      success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${baseUrl}`,
+      client_reference_id: estabelecimentoId,
+      metadata: {
+        estabelecimentoId,
+        planId,
+        months: months.toString(),
       },
-    });
+    };
+
+    const session = await stripe.checkout.sessions.create(sessionData);
 
     return res.status(200).json({
-      preferenceId: result.id,
-      init_point: result.init_point,
+      sessionId: session.id,
+      init_point: session.url,
     });
   } catch (error: any) {
-    console.error('Erro no checkout Mercado Pago:', error);
+    console.error('Erro no checkout Stripe:', error);
     return res.status(500).json({ error: error.message || 'Erro ao gerar checkout' });
   }
 }
