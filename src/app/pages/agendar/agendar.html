@@ -8,23 +8,22 @@
   </div>
 
   <!-- PORTAL -->
-  <div class="ag-app shadow-elite" *ngIf="!notFound">
-    
-    <!-- HEADER -->
+  <div class="ag-app" *ngIf="!notFound">
+    <!-- Elite Header WOW -->
     <header class="ag-header">
-      <div class="h-inner" *ngIf="!isLoading">
-        <div class="h-logo-wrap">
-          {{ estab?.nome?.charAt(0) || 'A' }}
+      <div class="h-inner">
+        <div class="h-logo-wrap" [style.background]="estab?.cor_primaria || 'linear-gradient(135deg, #4f46e5, #9333ea)'">
+          <img *ngIf="estab?.logo_url" [src]="estab?.logo_url" [alt]="estab?.nome" class="h-logo-img">
+          <span *ngIf="!estab?.logo_url" class="h-logo-initials">{{ getInitials(estab?.nome) }}</span>
         </div>
         <div class="h-title">
-          <strong>{{ estab?.nome }}</strong>
-          <span>{{ estab?.cidade || 'Agenda Online' }}</span>
+          <strong class="text-gradient">{{ estab?.nome || 'Conectando...' }}</strong>
+          <span>{{ estab?.cidade }} - {{ estab?.estado }}</span>
         </div>
       </div>
     </header>
 
-    <!-- PROGRESS -->
-    <div class="ag-progress" *ngIf="step !== 'done' && !isLoading">
+    <div class="ag-progress">
       <div class="p-fill" [style.width.%]="progress"></div>
     </div>
 

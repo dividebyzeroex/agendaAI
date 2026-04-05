@@ -229,6 +229,15 @@ export class Agendar implements OnInit {
     return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}-03:00`;
   }
 
+  getInitials(name?: string): string {
+    if (!name) return 'AI';
+    const parts = name.split(' ').filter(p => p.length > 0);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return parts[0].substring(0, 2).toUpperCase();
+  }
+
   goBack() {
     if (this.step === 'pro') this.step = 'service';
     else if (this.step === 'time') this.step = 'pro';
