@@ -133,12 +133,15 @@ export class BillingService {
   /** 
    * Official Stripe Checkout Integration
    */
-  async processStripeCheckout(planId: string): Promise<string | undefined> {
+  async processStripeCheckout(planId: string, months: number): Promise<string | undefined> {
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) return undefined;
 
-    const plan = this.plans.find(p => p.id === planId);
+    let plan = this.plans.find(p => p.id === planId);
     if (!plan) return undefined;
+
+    // Recalculate with chosen cycle before sending to Stripe!
+    plan = this.calculatePlanForCycle(plan, months);
 
     try {
       // Fetch session token securely via Auth

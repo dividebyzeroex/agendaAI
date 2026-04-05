@@ -105,7 +105,7 @@ export class AdminBilling implements OnInit {
 
     this.isProcessing = true;
     try {
-      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id);
+      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id, this.selectedCycle);
       
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
