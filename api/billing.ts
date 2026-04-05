@@ -157,7 +157,7 @@ async function handleInvoices(req: VercelRequest, res: VercelResponse, stripe: S
   if (!sbUrl || !sbKey) return res.status(500).json({ error: 'Supabase Error' });
   const supabase = createClient(sbUrl, sbKey);
 
-  const { data: estab } = await supabase.from('estabelecimentos').select('stripe_customer_id').eq('id', estabelecimentoId).single();
+  const { data: estab } = await supabase.from('estabelecimento').select('stripe_customer_id').eq('id', estabelecimentoId).single();
   if (!estab?.stripe_customer_id) return res.status(200).json({ invoices: [] });
 
   const invoices = await stripe.invoices.list({ customer: estab.stripe_customer_id, limit: 10 });
