@@ -24,6 +24,9 @@
   min-height: 100vh; 
   position: relative; 
   background: var(--glass-bg);
+  backdrop-filter: blur(30px);
+  border-left: 1px solid var(--glass-border);
+  border-right: 1px solid var(--glass-border);
   box-shadow: var(--elite-shadow);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -89,14 +92,14 @@
 
 .c-card-elite {
   background: var(--glass-bg);
-  border: 1.5px solid var(--glass-border);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius);
-  padding: 1.25rem;
+  padding: 1.5rem;
   display: flex;
   align-items: center;
   gap: 16px;
   text-align: left;
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   width: 100%;
   position: relative;
@@ -105,9 +108,21 @@
 
 .c-card-elite:hover {
   border-color: var(--primary);
-  background: rgba(79, 70, 229, 0.01);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.04);
+  background: white;
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0,0,0,0.06);
+}
+
+.c-card-elite::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; width: 4px; height: 0;
+  background: linear-gradient(to bottom, var(--primary), #9333ea);
+  transition: height 0.3s ease;
+}
+
+.c-card-elite:hover::after {
+  height: 100%;
 }
 
 .c-card-elite.active {
@@ -198,64 +213,83 @@
 }
 
 .slot-btn-elite {
-  background: var(--glass-bg);
-  border: 1.5px solid var(--glass-border);
-  border-radius: 12px;
-  padding: 16px 8px;
-  font-size: 1rem;
+  background: white;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  padding: 18px 8px;
+  font-size: 1.05rem;
   font-weight: 800;
   color: var(--text-main);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.slot-btn-elite:hover:not(:disabled) {
+  border-color: var(--primary);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
 }
 
 .slot-btn-elite:disabled {
-  background: #f1f5f9;
+  background: #f8fafc;
   color: #cbd5e1;
-  opacity: 0.6;
+  border-color: #f1f5f9;
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .slot-btn-elite.active {
-  background: #1e1b4b; /* Deep Elite Navy */
-  color: #818cf8; /* High Contrast Indigo */
-  border-color: #4f46e5;
-  transform: scale(1.05);
-  box-shadow: 0 10px 25px rgba(30, 27, 75, 0.2);
-  font-weight: 800;
+  background: var(--primary);
+  color: white;
+  border-color: var(--primary);
+  transform: scale(1.1);
+  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.3);
+  z-index: 10;
 }
 
 /* Review Card */
 .review-card-elite {
-  background: #0f172a;
+  background: #0f172a; /* Slate 900 Deep */
   color: white;
-  padding: 2rem;
-  border-radius: 24px;
+  padding: 2.5rem 2rem;
+  border-radius: 28px;
   margin-bottom: 2rem;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255,255,255,0.05);
 }
 
 .review-card-elite::before {
   content: '';
   position: absolute;
-  top: -50px; right: -50px;
-  width: 150px; height: 150px;
-  background: var(--primary);
-  filter: blur(80px);
-  opacity: 0.4;
+  top: -80px; right: -80px;
+  width: 200px; height: 200px;
+  background: radial-gradient(circle, var(--primary) 0%, transparent 70%);
+  filter: blur(40px);
+  opacity: 0.3;
 }
 
-.rv-title { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; letter-spacing: 1.5px; margin-bottom: 1.5rem; }
+.rv-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 2px; margin-bottom: 2rem; }
 
-.rv-row { display: flex; justify-content: space-between; margin-bottom: 12px; align-items: baseline; }
-.rv-row span { font-size: 0.9rem; color: #94a3b8; font-weight: 500; }
-.rv-row strong { font-size: 1.1rem; color: white; font-weight: 700; text-align: right; }
+.rv-row { display: flex; justify-content: space-between; margin-bottom: 16px; align-items: baseline; }
+.rv-row span { font-size: 0.95rem; color: #94a3b8; font-weight: 500; }
+.rv-row strong { font-size: 1.15rem; color: white; font-weight: 800; text-align: right; }
 
-.rv-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 1.5rem 0; }
+.rv-divider { height: 1px; background: linear-gradient(90deg, rgba(255,255,255,0.1) 0%, transparent 100%); margin: 2rem 0; }
 
-.rv-total-label { font-size: 1.1rem; font-weight: 700; }
-.rv-total-price { font-size: 1.8rem; font-weight: 800; color: #818cf8; letter-spacing: -1px; }
+.rv-total-label { font-size: 1.25rem; font-weight: 800; color: white; }
+.rv-total-price { 
+  font-size: 2.2rem; 
+  font-weight: 900; 
+  background: linear-gradient(135deg, #818cf8, #c084fc);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: #818cf8; /* Fallback */
+  letter-spacing: -1.5px; 
+}
 
 /* Form */
 .confirm-form-elite { display: flex; flex-direction: column; gap: 16px; margin-bottom: 2rem; }

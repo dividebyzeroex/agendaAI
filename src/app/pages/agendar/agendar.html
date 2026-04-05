@@ -46,7 +46,7 @@
       <!-- VIEW: SERVICE -->
       <div class="view-step" *ngIf="step === 'service' && !isLoading && !isTransitioning">
         <div class="v-hero">
-           <h2>Escolha um <span class="gradient-text">Serviço</span></h2>
+           <h2>Escolha um <span class="gradient-text" style="font-weight: 800;">Serviço</span></h2>
            <p>Selecione o que você deseja realizar hoje.</p>
         </div>
         <div class="v-list">
@@ -67,8 +67,8 @@
       <!-- VIEW: PRO -->
       <div class="view-step" *ngIf="step === 'pro' && !isTransitioning">
         <button class="btn-back-elite" (click)="goBack()"><i class="pi pi-arrow-left"></i> Voltar</button>
-        <div class="v-hero">
-           <h2>Com <span class="gradient-text">quem?</span></h2>
+        <div class="v-hero" style="margin-top: 1rem;">
+           <h2>Com <span class="gradient-text" style="font-weight: 800;">quem?</span></h2>
            <p>Escolha seu profissional de preferência.</p>
         </div>
         <div class="v-list">
