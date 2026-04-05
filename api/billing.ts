@@ -5,17 +5,17 @@ import { createClient } from '@supabase/supabase-js';
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   const { action } = req.query;
 
-  if (!process.env.STRIPE_SECRET_KEY) {
+  if (!process.env['STRIPE_SECRET_KEY']) {
     return res.status(500).json({ error: 'Configuração do Stripe ausente.' });
   }
 
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+  const stripe = new Stripe(process.env['STRIPE_SECRET_KEY'], {
     apiVersion: '2023-10-16' as any,
   });
 
-  const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-  const sbKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const sbAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  const sbUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'] || process.env['SUPABASE_URL'];
+  const sbKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
+  const sbAnonKey = process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'] || process.env['SUPABASE_ANON_KEY'];
 
   try {
     switch (action) {
@@ -61,9 +61,9 @@ async function handleCheckout(req: VercelRequest, res: VercelResponse, stripe: S
   const baseUrl = `${appUrl}/admin/billing`;
 
   const priceMap: Record<string, string | undefined> = {
-    'basico': process.env.STRIPE_PRICE_ID_BASICO,
-    'completo': process.env.STRIPE_PRICE_ID_COMPLETO,
-    'premium': process.env.STRIPE_PRICE_ID_PREMIUM,
+    'basico': process.env['STRIPE_PRICE_ID_BASICO'],
+    'completo': process.env['STRIPE_PRICE_ID_COMPLETO'],
+    'premium': process.env['STRIPE_PRICE_ID_PREMIUM'],
   };
 
   const stripePriceId = priceMap[planId];
@@ -100,7 +100,7 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
   if (!session_id) return res.status(400).json({ error: 'Missing session_id' });
 
   const session = await stripe.checkout.sessions.retrieve(session_id as string);
-  const estabelecimentoId = session.metadata?.estabelecimentoId;
+  const estabelecimentoId = session.metadata?.['estabelecimentoId'];
   
   if (!estabelecimentoId) {
     return res.status(400).json({ error: 'ID do estabelecimento não encontrado nos metadados da sessão.' });
@@ -111,8 +111,8 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
   if (!sbUrl || !sbKey) return res.status(500).json({ error: 'Supabase Error' });
   const supabase = createClient(sbUrl, sbKey);
 
-  const planId = session.metadata?.planId;
-  const months = parseInt(session.metadata?.months || '1');
+  const planId = session.metadata?.['planId'];
+  const months = parseInt(session.metadata?.['months'] || '1');
   const stripeSubscriptionId = session.subscription as string;
 
   const now = new Date();
