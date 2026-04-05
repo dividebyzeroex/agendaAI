@@ -40,7 +40,7 @@
   --bg-color: #0f172a;
   --text-main: #f8fafc;
   --text-muted: #cbd5e1;
-  --bg-image: url('/luxury_barbershop_bg.png');
+  --bg-image: url('assets/universal_bg.png');
   --glass-bg: rgba(15, 23, 42, 0.4);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-blur: 28px;
@@ -111,13 +111,13 @@ body {
 }
 
 .elite-scissor-wrap::before {
-  content: "✂️";
+  content: "📅";
   opacity: 0.15;
   filter: grayscale(1);
 }
 
 .elite-scissor-wrap::after {
-  content: "✂️";
+  content: "📅";
   position: absolute;
   left: 0; top: 0; 
   height: 100%; width: 100%;
@@ -136,8 +136,8 @@ body {
 }
 
 @keyframes eliteScissorCut {
-  0%, 100% { transform: rotate(0deg); }
-  50% { transform: rotate(-12deg); }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px) scale(1.05); }
 }
 
 .loader-text {
@@ -171,6 +171,8 @@ body {
   animation: floatScissor 0.6s ease-in-out infinite alternate;
   font-size: 1.1rem;
 }
+
+/* Note: ✂️ was replaced by 📅 in component logic or parent styles if necessary */
 
 @keyframes floatScissor {
   from { transform: rotate(-5deg) translateY(0); }
