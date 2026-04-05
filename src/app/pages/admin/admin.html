@@ -30,7 +30,7 @@
   <div class="dashboard-grid">
     
     <!-- MAIN: TODAY'S TIMELINE (BENTO RADAR) -->
-    <div class="bento-radar">
+    <div class="bento-radar bento-card">
       
       <!-- 🚨 NO-SHOW ALERT CARD (REAL-TIME) -->
       <div class="no-show-alert-card" *ngIf="noShowEvents.length > 0">
@@ -56,7 +56,7 @@
 
       <div class="sec-header">
         <h3>Radar de Atendimentos</h3>
-        <p-button icon="pi pi-plus" label="+ Novo Agendamento" styleClass="p-button-rounded p-button-sm shadow-2" (click)="abrirAgenda()"></p-button>
+        <p-button icon="pi pi-plus" label="Novo Agendamento" styleClass="p-button-rounded p-button-sm shadow-2" (click)="abrirAgenda()"></p-button>
       </div>
 
       <div *ngIf="todayAppointments.length === 0" class="empty-state">
