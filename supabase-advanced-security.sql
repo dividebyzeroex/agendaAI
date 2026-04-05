@@ -39,7 +39,7 @@ create or replace function get_or_create_establishment_key(p_establishment_id uu
 returns text
 language plpgsql
 security definer
-set search_path = public, vault
+set search_path = public, vault, extensions
 as $$
 declare
   v_key text;
@@ -53,7 +53,7 @@ begin
   select secret into v_key from vault.secrets where name = 'est_key_' || p_establishment_id;
 
   if v_key is null then
-    v_key := encode(gen_random_bytes(32), 'base64');
+    v_key := encode(extensions.gen_random_bytes(32), 'base64');
     insert into vault.secrets (name, secret, description)
     values ('est_key_' || p_establishment_id, v_key, 'Chave mestra Zero-Knowledge para o estabelecimento ' || p_establishment_id);
   end if;

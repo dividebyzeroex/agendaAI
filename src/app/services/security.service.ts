@@ -34,8 +34,9 @@ export class SecurityService {
     });
 
     if (error || !b64Key) {
-      console.error('[SecurityService] Falha ao recuperar chave do Vault:', error);
-      throw new Error('Falha crítica de segurança: Chave não encontrada no Vault.');
+      const msg = error?.message || 'Chave não encontrada no Vault.';
+      console.warn(`[SecurityService] Falha ao recuperar chave (Pode ser um erro de infraestrutura SQL): ${msg}`);
+      throw new Error(`Falha de segurança: ${msg}`);
     }
 
     // Importar a chave Base64 para o formato de CryptoKey do navegador
@@ -100,8 +101,10 @@ export class SecurityService {
       const decoder = new TextDecoder();
       return decoder.decode(decrypted);
     } catch (e) {
-      // Se falhar, retorna o original (pode ser dado antigo não criptografado)
-      console.warn('[SecurityService] Falha na descriptografia. Retornando raw:', e);
+      // Se falhar, retorna o original (pode ser dado novo ainda não provisionado ou erro SQL)
+      if (typeof cipherText === 'string' && cipherText.length > 50) {
+        console.warn('[SecurityService] Falha na descriptografia de dado longo. Verifique extensões SQL:', e);
+      }
       return cipherText;
     }
   }
