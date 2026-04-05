@@ -39,6 +39,7 @@ export class AdminBilling implements OnInit {
   ngOnInit() {
     window.scrollTo(0, 0);
     this.checkPaymentCallback();
+    this.billing.refreshInvoices();
   }
 
   async checkPaymentCallback() {
@@ -123,6 +124,12 @@ export class AdminBilling implements OnInit {
       setTimeout(() => this.successMsg = '', 4000);
     } finally {
       this.isProcessing = false;
+    }
+  }
+
+  downloadInvoice(pdfUrl: string) {
+    if (pdfUrl) {
+      window.open(pdfUrl, '_blank');
     }
   }
 

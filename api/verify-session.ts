@@ -65,6 +65,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         plano: planId,
         plano_expires_at: currentExpires.toISOString(),
         stripe_subscription_id: stripeSubscriptionId,
+        stripe_customer_id: session.customer as string,
         status_assinatura: 'ativo'
       })
       .eq('id', estabelecimentoId);

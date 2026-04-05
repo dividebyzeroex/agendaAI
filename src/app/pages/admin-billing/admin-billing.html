@@ -157,9 +157,12 @@
                   <span class="st-pill" [class.paid]="inv.status === 'Paga'">{{ inv.status }}</span>
                 </td>
                 <td>
-                  <button class="btn-download" title="Ver Recibo" (click)="successMsg = 'Baixando fatura ' + inv.id + '...'">
+                  <button class="btn-download" *ngIf="inv.pdfUrl" title="Baixar Recibo oficial no Stripe" (click)="downloadInvoice(inv.pdfUrl)">
                     <i class="pi pi-file-pdf"></i>
                   </button>
+                  <span *ngIf="!inv.pdfUrl" class="text-muted" title="Recibo em geração...">
+                    <i class="pi pi-hourglass"></i>
+                  </span>
                 </td>
               </tr>
             </tbody>

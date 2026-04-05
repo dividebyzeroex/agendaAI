@@ -99,12 +99,27 @@ export class BillingService {
     }
   ];
 
-  private invoicesSubject = new BehaviorSubject<Invoice[]>([
-    { id: 'INV-3420', date: '2024-03-01', amount: 99, status: 'Paga' },
-    { id: 'INV-3211', date: '2024-02-01', amount: 99, status: 'Paga' },
-    { id: 'INV-2980', date: '2024-01-01', amount: 49, status: 'Paga' },
-  ]);
+  private invoicesSubject = new BehaviorSubject<Invoice[]>([]);
   invoices$ = this.invoicesSubject.asObservable();
+
+  constructor() {
+    this.refreshInvoices();
+  }
+
+  async refreshInvoices() {
+    const current = this.estabService.estabelecimento$.value;
+    if (!current?.id) return;
+    
+    try {
+      const response = await fetch(`/api/get-invoices?estabelecimentoId=${current.id}`);
+      const data = await response.json();
+      if (data.invoices) {
+        this.invoicesSubject.next(data.invoices);
+      }
+    } catch (err) {
+      console.error('[BillingService] Failed to fetch invoices:', err);
+    }
+  }
 
   /** 
    * Official Stripe Checkout Integration
@@ -161,6 +176,9 @@ export class BillingService {
         // Refresh local establishment data (Bypass cache)
         (this.estabService as any)._estabelecimentoCache.clear();
         await this.estabService.fetchEstabelecimento();
+        
+        // Refresh Invoices [NEW]
+        await this.refreshInvoices();
       }
       
       return data;
