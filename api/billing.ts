@@ -116,12 +116,12 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
   const stripeSubscriptionId = session.subscription as string;
 
   const now = new Date();
-  const { data: estab } = await supabase.from('estabelecimentos').select('plano_expires_at').eq('id', estabelecimentoId).single();
+  const { data: estab } = await supabase.from('estabelecimento').select('plano_expires_at').eq('id', estabelecimentoId).single();
   let currentExpires = (estab?.plano_expires_at) ? new Date(estab.plano_expires_at) : now;
   if (currentExpires < now) currentExpires = now;
   currentExpires.setMonth(currentExpires.getMonth() + months);
 
-  const { error: updateError } = await supabase.from('estabelecimentos').update({
+  const { error: updateError } = await supabase.from('estabelecimento').update({
     plano: planId,
     plano_expires_at: currentExpires.toISOString(),
     stripe_subscription_id: stripeSubscriptionId,
@@ -142,11 +142,11 @@ async function handleCancel(req: VercelRequest, res: VercelResponse, stripe: Str
   if (!sbUrl || !sbKey) return res.status(500).json({ error: 'Supabase Error' });
   const supabase = createClient(sbUrl, sbKey);
 
-  const { data: estab } = await supabase.from('estabelecimentos').select('stripe_subscription_id').eq('id', estabelecimentoId).single();
+  const { data: estab } = await supabase.from('estabelecimento').select('stripe_subscription_id').eq('id', estabelecimentoId).single();
   if (!estab?.stripe_subscription_id) return res.status(400).json({ error: 'No subscription found' });
 
   await stripe.subscriptions.update(estab.stripe_subscription_id, { cancel_at_period_end: true });
-  await supabase.from('estabelecimentos').update({ status_assinatura: 'cancelado' }).eq('id', estabelecimentoId);
+  await supabase.from('estabelecimento').update({ status_assinatura: 'cancelado' }).eq('id', estabelecimentoId);
 
   return res.status(200).json({ status: 'cancelled' });
 }
