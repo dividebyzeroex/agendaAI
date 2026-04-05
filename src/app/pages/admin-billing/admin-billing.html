@@ -103,7 +103,7 @@
     <div class="plans-grid">
       <div class="plan-card elite-card" *ngFor="let plan of currentCyclePlans" 
            [class.highlight]="plan.highlight" 
-           [class.active]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.months === plan.months">
+           [class.active]="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
         
         <div class="p-glow"></div>
         <div class="p-header">

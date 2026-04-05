@@ -40,7 +40,7 @@
   --bg-color: #0f172a;
   --text-main: #f8fafc;
   --text-muted: #cbd5e1;
-  --bg-image: url('./assets/universal_bg.png');
+  --bg-image: url('/universal_bg.png');
   --glass-bg: rgba(15, 23, 42, 0.4);
   --glass-border: rgba(255, 255, 255, 0.15);
   --glass-blur: 28px;
