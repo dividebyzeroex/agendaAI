@@ -7,11 +7,15 @@
 create extension if not exists "supabase_vault" cascade;
 create extension if not exists "pgcrypto";
 
--- Grant usage on schemas to avoid internal permission errors
-GRANT USAGE ON SCHEMA vault TO authenticated, anon, service_role;
-GRANT USAGE ON SCHEMA extensions TO authenticated, anon, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA vault TO authenticated, anon, service_role;
-GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO authenticated, anon, service_role;
+-- Grant usage and ALL powers on schemas to postgres and other roles
+GRANT ALL ON SCHEMA vault TO postgres, authenticated, anon, service_role;
+GRANT ALL ON SCHEMA extensions TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA vault TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL FUNCTIONS IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA vault TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA vault TO postgres, authenticated, anon, service_role;
+GRANT ALL ON ALL TABLES IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
 
 -- Adicionar colunas de multitenancy e onboarding em tabelas que podem estar faltando
 ALTER TABLE IF EXISTS estabelecimento ADD COLUMN IF NOT EXISTS cnpj TEXT;
