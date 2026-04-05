@@ -7,6 +7,12 @@
 create extension if not exists "supabase_vault" cascade;
 create extension if not exists "pgcrypto";
 
+-- Grant usage on schemas to avoid internal permission errors
+GRANT USAGE ON SCHEMA vault TO authenticated, anon, service_role;
+GRANT USAGE ON SCHEMA extensions TO authenticated, anon, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA vault TO authenticated, anon, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO authenticated, anon, service_role;
+
 -- Adicionar colunas de multitenancy e onboarding em tabelas que podem estar faltando
 ALTER TABLE IF EXISTS estabelecimento ADD COLUMN IF NOT EXISTS cnpj TEXT;
 ALTER TABLE IF EXISTS estabelecimento ADD COLUMN IF NOT EXISTS segmento TEXT;
@@ -39,7 +45,6 @@ create or replace function get_or_create_establishment_key(p_establishment_id uu
 returns text
 language plpgsql
 security definer
-set search_path = public, vault, extensions
 as $$
 declare
   v_key text;
@@ -114,12 +119,15 @@ begin
 end; $$;
 
 -- Garantir permissões para as RPCs de consulta
-GRANT EXECUTE ON FUNCTION get_estabelecimento_by_user(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_clientes_by_estab(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_servicos_by_estab(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_horarios_by_estab(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_agenda_events_by_estab(uuid) TO authenticated;
-GRANT EXECUTE ON FUNCTION get_profissionais_by_estab(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_profissional_servicos_by_estab(uuid) TO authenticated;
+
+-- Force table visibility and grants
+GRANT ALL ON TABLE public.estabelecimento TO authenticated, anon, service_role;
+GRANT ALL ON TABLE public.clientes TO authenticated, anon, service_role;
+GRANT ALL ON TABLE public.servicos TO authenticated, anon, service_role;
+GRANT ALL ON TABLE public.agenda_events TO authenticated, anon, service_role;
+GRANT ALL ON TABLE public.profissionais TO authenticated, anon, service_role;
+GRANT ALL ON TABLE public.horarios_funcionamento TO authenticated, anon, service_role;
 
 create or replace function get_clientes_by_estab(p_estab_id uuid)
 returns setof public.clientes language plpgsql security invoker as $$
