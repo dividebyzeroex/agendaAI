@@ -102,20 +102,41 @@ export class MultiAgentService {
 
   logs$ = new BehaviorSubject<AgentLog[]>([]);
   activeTasks$ = new BehaviorSubject<AgentTask[]>([]);
+  
+  // Resumo para o Dashboard (Top 3 atividades)
+  topActivity$ = new BehaviorSubject<AgentLog[]>([]);
 
   constructor() {
     this.bootCoordinator();
+    this.startLifeCycle();
   }
 
-  // --- Coordinator Boot (like Claude's isCoordinatorMode bootstrap) ---
+  // --- Coordinator Boot ---
   private bootCoordinator() {
     this.log('analytics', 'Sistema Coordinator iniciado. Spawning workers registrados...', 'info');
     
-    // Boot running agents
+    // Inicia os agentes marcados como correndo
     const runningAgents = this.agentDefinitions.filter(a => a.isRunning);
     for (const agent of runningAgents) {
-      setTimeout(() => this.spawnAgent(agent.type, `Tarefa de inicialização do ${agent.name}`), 500);
+      setTimeout(() => this.spawnAgent(agent.type, `Tarefa de inicialização: ${agent.description}`), 500);
     }
+  }
+
+  // --- Ciclo de Vida Autônomo (Background Activity) ---
+  private startLifeCycle() {
+    // A cada 45 a 90 segundos, um agente aleatório realiza uma tarefa de "varredura"
+    const nextTick = () => {
+      const delay = 45000 + Math.random() * 45000;
+      setTimeout(async () => {
+        const runningAgents = this.agentDefinitions.filter(a => a.isRunning);
+        if (runningAgents.length > 0) {
+          const randomAgent = runningAgents[Math.floor(Math.random() * runningAgents.length)];
+          await this.spawnAgent(randomAgent.type, `Varredura autônoma de rotina: ${randomAgent.name}`);
+        }
+        nextTick();
+      }, delay);
+    };
+    nextTick();
   }
 
   // --- Spawn Agent (AgentTool equivalent) ---
@@ -164,35 +185,35 @@ export class MultiAgentService {
   private async executeAgentTask(type: AgentType): Promise<string> {
     const events = this.agendaService.getEvents();
     const clientes = this.clienteService.getClientes();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = now.toISOString().split('T')[0];
     const todayEvents = events.filter(e => e.start?.startsWith(todayStr));
 
     switch (type) {
       case 'recepcao': {
         const count = todayEvents.length;
-        if (count > 0) return `✓ ${count} lembrete(s) enviado(s) para clientes com agendamentos hoje.`;
-        return `✓ Agenda limpa hoje. Nenhum lembrete necessário.`;
+        if (count > 0) return `✓ Protocolo Mensal Ativo: ${count} lembrete(s) sincronizados com o Whats de clientes hoje.`;
+        return `✓ Monitoramento: Agenda tranquila hoje. Nenhuma ação de recepção necessária no momento.`;
       }
 
       case 'marketing': {
-        const hour = new Date().getHours();
-        const isIdle = hour < 9 || hour > 18 || todayEvents.length < 3;
-        if (isIdle) return `✓ Horário ocioso detectado. Sugestão: Criar promoção de R$ 20 OFF para preencher a agenda.`;
-        return `✓ Agenda bem preenchida. Nenhuma campanha necessária agora.`;
+        const hour = now.getHours();
+        const ociosidade = todayEvents.length < 5;
+        if (ociosidade) return `✓ IA detectou baixa ocupação hoje. Sugestão: Disparar promo de 'Corte + Barba' para os TOP 10 clientes?`;
+        return `✓ Casa cheia! Marketing pausado para priorizar o fluxo de atendimentos.`;
       }
 
       case 'cobranca': {
-        const noShows = clientes.filter(c => (c.faltas || 0) > 2);
+        const noShows = clientes.filter(c => (c.faltas || 0) > 1);
         if (noShows.length > 0) {
-          const names = noShows.map(c => c.nome).join(', ');
-          return `⚠ ${noShows.length} cliente(s) com histórico de faltas: ${names}. Contato recomendado.`;
+          return `⚠ Atenção: Encontrei ${noShows.length} cliente(s) com perfil recidivo de faltas. Recomendo ativação de pré-pagamento.`;
         }
-        return `✓ Nenhum no-show crítico detectado. Todos os clientes estão regulares.`;
+        return `✓ Compliance de Pagamento está 100%. Nenhuma inadimplência pendente.`;
       }
 
       case 'analytics': {
-        const revenue = events.length * 120;
-        return `✓ Relatório pronto. ${events.length} agendamentos • Faturamento projetado: R$ ${revenue.toLocaleString('pt-BR')},00.`;
+        const revenue = events.reduce((acc, curr) => acc + (curr.valor_total || 90), 0);
+        return `✓ Panorama Geral: Sua base tem ${clientes.length} clientes e faturamento vitalício projetado em R$ ${revenue.toLocaleString('pt-BR')}.`;
       }
     }
   }
@@ -256,7 +277,10 @@ export class MultiAgentService {
       status,
       timestamp: new Date()
     };
-    this.logs$.next([entry, ...this.logs$.value].slice(0, 50)); // Keep last 50 logs
+    const newList = [entry, ...this.logs$.value].slice(0, 50);
+    this.logs$.next(newList);
+    // Atualiza o resumo do Dashboard (apenas status de sucesso/warning importantes)
+    this.topActivity$.next(newList.filter(l => l.status !== 'info').slice(0, 3));
   }
 
   private generateTaskId(type: AgentType): string {

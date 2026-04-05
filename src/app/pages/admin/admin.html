@@ -86,17 +86,21 @@
     <!-- SIDE: AI INSIGHTS & AGENT ACTIVITY (BENTO AI) -->
     <div class="bento-ai">
       
-      <!-- Real-Time Agent Activity [NEW] -->
+      <!-- Real-Time Agent Activity [DYNAMIC] -->
       <div class="bento-card" style="padding: 1.25rem;">
          <h4 style="font-size: 0.8rem; font-weight: 800; color: #10b981; margin-bottom: 1rem; display:flex; align-items:center; gap:8px;">
            <span class="shield-status-icon" style="width: 8px; height: 8px;"></span> AGENTES EM OPERAÇÃO
          </h4>
-         <div style="display:flex; flex-direction:column; gap:8px;">
-            <div style="font-size: 0.75rem; color: var(--text-muted); background: var(--active-bg); padding: 8px; border-radius: 8px;">
-              <i class="pi pi-check" style="color:#10b981;"></i> <b>Agent Júlia:</b> Confirmou 5 horários.
+         <div style="display:flex; flex-direction:column; gap:8px;" *ngIf="(agentActivity$ | async) as activity">
+            <div *ngIf="activity.length === 0" style="font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 10px;">
+              Aguardando telemetria dos agentes...
             </div>
-            <div style="font-size: 0.75rem; color: var(--text-muted); background: var(--active-bg); padding: 8px; border-radius: 8px;">
-              <i class="pi pi-spin pi-spinner" style="font-size: 0.6rem;"></i> <b>Agent Ricardo:</b> Analisando churn...
+            <div *ngFor="let log of activity" 
+                 style="font-size: 0.75rem; color: var(--text-muted); background: var(--active-bg); padding: 10px; border-radius: 12px; border-left: 3px solid;"
+                 [style.border-left-color]="log.status === 'warning' ? '#f59e0b' : '#10b981'">
+               <i class="pi" [class.pi-check]="log.status === 'success'" [class.pi-exclamation-triangle]="log.status === 'warning'" 
+                  [style.color]="log.status === 'warning' ? '#f59e0b' : '#10b981'"></i> 
+               <b>{{ log.agentName }}:</b> {{ log.message }}
             </div>
          </div>
       </div>

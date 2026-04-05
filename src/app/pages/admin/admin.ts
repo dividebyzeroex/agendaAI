@@ -6,6 +6,7 @@ import { TableModule } from 'primeng/table';
 import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.service';
 import { ClienteService } from '../../services/cliente.service';
 import { NotificationService } from '../../services/notification.service';
+import { MultiAgentService } from '../../services/multi-agent.service';
 import { map, Subscription, interval } from 'rxjs';
 
 @Component({
@@ -19,9 +20,12 @@ export class Admin implements OnInit, OnDestroy {
   private agendaService = inject(AgendaEventService);
   private clienteService = inject(ClienteService);
   private notifService = inject(NotificationService);
+  private agentService = inject(MultiAgentService);
 
   todayAppointments: AgendaEvent[] = [];
   noShowEvents: AgendaEvent[] = [];
+  
+  agentActivity$ = this.agentService.topActivity$;
   
   totalToday = 0;
   totalClientes = 0;

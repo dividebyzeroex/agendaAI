@@ -37,7 +37,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:4200');
+    const appUrl = process.env.NEXT_PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://agenda-ai-xi.vercel.app');
     const baseUrl = `${appUrl}/admin/billing`;
 
     // Map planIds to Stripe Price IDs (Placeholders or provided via ENV)

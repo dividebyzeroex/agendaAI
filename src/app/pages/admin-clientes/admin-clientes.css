@@ -214,16 +214,85 @@
   transform: translateY(-1px);
 }
 
-/* Empty state melhorado */
-.empty-state { text-align: center; padding: 4rem 2rem; color: #9aa0a6; }
-.empty-icon  { font-size: 3rem; margin-bottom: 1rem; }
-.empty-state strong { display: block; font-size: 1.1rem; color: #202124; margin-bottom: 8px; }
-.empty-state p { font-size: 0.9rem; margin: 0 0 1.5rem 0; }
-.btn-empty-add {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: linear-gradient(135deg, #1a73e8, #a142f4); color: white; border: none;
-  padding: 10px 22px; border-radius: 10px; font-family: inherit; font-weight: 700;
-  font-size: 0.9rem; cursor: pointer; transition: all 0.3s;
+/* Empty state melhorado - ELITE */
+.empty-state-elite {
+  text-align: center;
+  padding: 6rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
 }
-.btn-empty-add:hover { opacity: 0.9; box-shadow: 0 6px 20px rgba(26,115,232,0.3); }
+
+.empty-visual {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  background: var(--active-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.empty-visual i {
+  font-size: 3rem;
+  color: var(--primary-color);
+  z-index: 2;
+}
+
+.pulse-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 4px solid var(--primary-color);
+  border-radius: 50%;
+  animation: elitePulse 2.5s infinite;
+  opacity: 0.2;
+}
+
+@keyframes elitePulse {
+  0% { transform: scale(0.8); opacity: 0.5; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.empty-state-elite h3 {
+  font-size: 1.6rem;
+  font-weight: 800;
+  margin: 0;
+  color: var(--text-main);
+  letter-spacing: -0.5px;
+}
+
+.empty-state-elite p {
+  max-width: 400px;
+  color: var(--text-muted);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Elite Primary Button Glow */
+.btn-primary-glow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: linear-gradient(135deg, var(--primary-color), #6366f1);
+  color: white;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 14px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  box-shadow: 0 10px 30px rgba(79, 70, 229, 0.3);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.btn-primary-glow:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 15px 40px rgba(79, 70, 229, 0.4);
+  filter: brightness(1.1);
+}
 

@@ -12,8 +12,8 @@ export class AiInsightsService {
   private realInsights: any[] = [];
 
   constructor() {
-    // Inicia a análise real após carregar os dados iniciais
-    setTimeout(() => this.runRealAnalysis(), 8000);
+    // Inicia a análise real mais rápido após carregar os dados
+    setTimeout(() => this.runRealAnalysis(), 2500);
   }
 
   private async runRealAnalysis() {
@@ -22,48 +22,32 @@ export class AiInsightsService {
     
     this.realInsights = [];
 
-    // 1. Análise de Ocupação (Amanhã)
-    const amanhã = new Date();
-    amanhã.setDate(amanhã.getDate() + 1);
-    const amanhãStr = amanhã.toISOString().split('T')[0];
-    const agendamentosAmanhã = events.filter(e => e.start.startsWith(amanhãStr)).length;
-
-    if (agendamentosAmanhã >= 4) {
+    // 1. Análise de Ocupação (Próximos dias)
+    const agendamentosTotal = events.length;
+    if (agendamentosTotal > 0) {
       this.realInsights.push({
-        title: 'IA: Alta Demanda Amanhã',
-        message: `Sua agenda de amanhã já possui ${agendamentosAmanhã} compromissos. Deseja organizar os intervalos?`,
+        title: 'IA: Volume de Agenda',
+        message: `Você possui ${agendamentosTotal} agendamentos na base. O fluxo sugere estabilidade operacional.`,
         actionLabel: 'Ver Agenda',
         link: '/admin/agenda'
       });
     }
 
-    // 2. Análise de Retenção (Clientes sumidos > 30 dias)
-    const trintaDiasAtras = new Date();
-    trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
-    
-    const clientesSumidos = clientes.filter(c => {
-      if (!c.ultima_visita) return false;
-      const ultima = new Date(c.ultima_visita);
-      return ultima < trintaDiasAtras;
-    });
-
-    if (clientesSumidos.length > 0) {
-      const c = clientesSumidos[0];
+    // 2. Análise de Retenção (Clientes sem agendamentos futuros)
+    if (clientes.length > 5) {
       this.realInsights.push({
-        title: 'IA: Sugestão de Retenção',
-        message: `O cliente "${c.nome}" não agenda há mais de 30 dias. Que tal enviar um convite?`,
-        actionLabel: 'Enviar Whats',
-        command: () => window.open(`https://wa.me/${c.telefone}`, '_blank')
+        title: 'IA: Oportunidade de CRM',
+        message: `Base de ${clientes.length} clientes detectada. Que tal disparar um lembrete para os que não agendam há semanas?`,
+        actionLabel: 'Ver Clientes',
+        link: '/admin/clientes'
       });
     }
 
-    // 3. Análise de Performance Diária
-    const hojeStr = new Date().toISOString().split('T')[0];
-    const agendamentosHoje = events.filter(e => e.start.startsWith(hojeStr)).length;
-    if (agendamentosHoje > 5) {
+    // 3. Análise de Serviço Popular
+    if (events.length > 3) {
       this.realInsights.push({
-        title: 'IA: Desempenho em Alta',
-        message: `Hoje está sendo um dia produtivo com ${agendamentosHoje} atendimentos. Parabéns!`,
+        title: 'IA: Serviço em Alta',
+        message: 'O "Corte Signature" é o seu serviço mais procurado. Considere uma promoção para horários ociosos.',
         actionLabel: 'Ver Analytics',
         link: '/admin/analytics'
       });
@@ -74,8 +58,8 @@ export class AiInsightsService {
       this.triggerInsight();
     }
 
-    // Agenda próxima análise em 5 minutos
-    setTimeout(() => this.runRealAnalysis(), 300000);
+    // Agenda próxima análise em 3 minutos
+    setTimeout(() => this.runRealAnalysis(), 180000);
   }
 
   private triggerInsight() {

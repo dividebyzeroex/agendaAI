@@ -60,7 +60,8 @@
               "buildTarget": "agenda-app:build:production"
             },
             "development": {
-              "buildTarget": "agenda-app:build:development"
+              "buildTarget": "agenda-app:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"
