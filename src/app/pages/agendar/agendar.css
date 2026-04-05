@@ -281,13 +281,13 @@
   cursor: not-allowed;
 }
 
-.slot-btn-elite.active {
-  background: linear-gradient(135deg, var(--primary), #9333ea);
-  color: white;
-  border-color: var(--primary);
-  transform: scale(1.1);
-  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.3);
-  z-index: 10;
+.slot-btn-elite.active { 
+  background: linear-gradient(135deg, var(--primary, #4f46e5), #9333ea); 
+  color: #ffffff !important; 
+  border-color: transparent; 
+  transform: translateY(-4px);
+  box-shadow: 0 12px 25px rgba(79, 70, 229, 0.35);
+  font-weight: 800;
 }
 
 /* Review Card */
