@@ -95,32 +95,40 @@ export class AdminBilling implements OnInit {
 
     if (sessionId && !this.isVerifying) {
       this.isVerifying = true;
+      let attempts = 0;
       
-      // Safety check: wait for establishment to be available
-      if (!this.estabService.estabelecimento$.value) {
-        setTimeout(() => this.checkPaymentCallback(), 800);
-        return;
-      }
+      const doCheck = async () => {
+        // Wait for establishment with a max of 5 attempts
+        if (!this.estabService.estabelecimento$.value && attempts < 5) {
+           attempts++;
+           setTimeout(() => doCheck(), 800);
+           return;
+        }
 
-      try {
-        const result = await this.billing.verifySession(sessionId);
-        if (result.status === 'success') {
-          setTimeout(() => this.celebrate(), 500);
-          this.successMsg = `Plano ${result.planId.toUpperCase()} ativado com sucesso! Sua infraestrutura agora é Premium.`;
-          window.history.replaceState({}, document.title, window.location.pathname);
-          setTimeout(() => this.successMsg = '', 15000);
-        } else {
-          this.successMsg = 'Erro ao verificar pagamento: ' + (result.error || 'Tente novamente.');
+        try {
+          const result = await this.billing.verifySession(sessionId);
+          if (result.status === 'success') {
+            setTimeout(() => this.celebrate(), 500);
+            this.successMsg = `Plano ${result.planId.toUpperCase()} ativado com sucesso! Sua infraestrutura agora é Premium.`;
+            window.history.replaceState({}, document.title, window.location.pathname);
+            setTimeout(() => this.successMsg = '', 15000);
+          } else {
+            this.successMsg = 'Erro ao verificar pagamento: ' + (result.error || 'Tente novamente.');
+          }
+        } catch (e: any) {
+          console.error('Error verifying Stripe session:', e);
+          // 403 Forbidden is common if RPC permissions are missing
+          if (e.message?.includes('403') || e.status === 403) {
+            this.successMsg = 'Falha de Permissão (403): Re-execute o script SQL de segurança no Supabase.';
+          } else if (!this.successMsg) {
+            this.successMsg = 'Erro ao processar ativação: ' + e.message;
+          }
+        } finally {
+          this.isVerifying = false;
         }
-      } catch (e: any) {
-        console.error('Error verifying Stripe session:', e);
-        // Only set error if not successful to avoid false positives
-        if (!this.successMsg) {
-          this.successMsg = 'Erro ao processar ativação: ' + e.message;
-        }
-      } finally {
-        this.isVerifying = false;
-      }
+      };
+
+      doCheck();
     }
   }
 

@@ -62,6 +62,10 @@ begin
 end;
 $$;
 
+-- Garantir permissões para a função de segurança
+GRANT EXECUTE ON FUNCTION get_or_create_establishment_key(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_or_create_establishment_key(uuid) TO service_role;
+
 -- 3. HABILITAR RLS (ROW LEVEL SECURITY)
 alter table estabelecimento enable row level security;
 alter table clientes enable row level security;
@@ -108,6 +112,14 @@ returns setof public.estabelecimento language plpgsql security invoker as $$
 begin
   return query select * from public.estabelecimento where user_id = p_user_id;
 end; $$;
+
+-- Garantir permissões para as RPCs de consulta
+GRANT EXECUTE ON FUNCTION get_estabelecimento_by_user(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_clientes_by_estab(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_servicos_by_estab(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_horarios_by_estab(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_agenda_events_by_estab(uuid) TO authenticated;
+GRANT EXECUTE ON FUNCTION get_profissionais_by_estab(uuid) TO authenticated;
 
 create or replace function get_clientes_by_estab(p_estab_id uuid)
 returns setof public.clientes language plpgsql security invoker as $$

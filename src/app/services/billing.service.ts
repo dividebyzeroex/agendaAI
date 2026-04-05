@@ -129,6 +129,10 @@ export class BillingService {
         }
       });
       const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || 'Erro ao carregar faturas');
+      }
+
       if (data.invoices) {
         this.invoicesSubject.next(data.invoices);
       }
@@ -190,6 +194,10 @@ export class BillingService {
     try {
       const response = await fetch(`/api/billing?action=verify&session_id=${sessionId}`);
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || `Erro de Servidor (${response.status})`);
+      }
       
       if (data.status === 'success') {
         // Refresh local establishment data (Bypass cache)
