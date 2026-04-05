@@ -120,7 +120,7 @@ export class BillingService {
     if (!current?.id) return;
     
     try {
-      const response = await fetch(`/api/get-invoices?estabelecimentoId=${current.id}`);
+      const response = await fetch(`/api/billing?action=invoices&estabelecimentoId=${current.id}`);
       const data = await response.json();
       if (data.invoices) {
         this.invoicesSubject.next(data.invoices);
@@ -147,7 +147,7 @@ export class BillingService {
 
       if (!token) return undefined;
 
-      const response = await fetch('/api/checkout', {
+      const response = await fetch('/api/billing?action=checkout', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ export class BillingService {
     if (!current?.id) throw new Error('Estabelecimento não encontrado.');
 
     try {
-      const response = await fetch(`/api/verify-session?session_id=${sessionId}&estabelecimentoId=${current.id}`);
+      const response = await fetch(`/api/billing?action=verify&session_id=${sessionId}&estabelecimentoId=${current.id}`);
       const data = await response.json();
       
       if (data.status === 'success') {
@@ -208,7 +208,7 @@ export class BillingService {
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
 
-      const response = await fetch('/api/cancel-subscription', {
+      const response = await fetch('/api/billing?action=cancel', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
