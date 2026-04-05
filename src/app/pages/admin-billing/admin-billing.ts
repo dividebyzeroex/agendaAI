@@ -44,34 +44,22 @@ export class AdminBilling implements OnInit {
   async checkPaymentCallback() {
     const params = new URLSearchParams(window.location.search);
     const status = params.get('status');
-    const extRefStr = params.get('external_reference');
-    const paymentId = params.get('payment_id');
+    const sessionId = params.get('session_id');
 
-    if (status === 'approved' && extRefStr && paymentId && !this.isVerifying) {
+    if (sessionId && !this.isVerifying) {
       this.isVerifying = true;
       try {
-        const extRef = JSON.parse(extRefStr);
-        if (extRef.type === 'saas_subscription') {
-          const current = this.estabService.estabelecimento$.value;
-          if (current) {
-               const now = new Date();
-               let currentExpires = current.plano_expires_at ? new Date(current.plano_expires_at) : now;
-               if (currentExpires < now) currentExpires = now;
-               
-               currentExpires.setMonth(currentExpires.getMonth() + Number(extRef.months));
-               
-               await this.estabService.updateEstabelecimento({
-                    plano: extRef.planId,
-                    plano_expires_at: currentExpires.toISOString()
-               });
-               
-               this.celebrate();
-               this.successMsg = `Assinatura de ${extRef.months} mes(es) ativada com sucesso! Pagamento ID: ${paymentId}`;
-               window.history.replaceState({}, document.title, window.location.pathname);
-          }
+        const result = await this.billing.verifySession(sessionId);
+        if (result.status === 'success') {
+          this.celebrate();
+          this.successMsg = `Assinatura ativada com sucesso! Bem-vindo ao time Elite.`;
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setTimeout(() => this.successMsg = '', 6000);
+        } else {
+          this.successMsg = 'Erro ao verificar pagamento: ' + (result.error || 'Tente novamente.');
         }
       } catch (e: any) {
-        console.error('Error processing callback:', e);
+        console.error('Error verifying Stripe session:', e);
         this.successMsg = 'Erro ao processar ativação: ' + e.message;
       } finally {
         this.isVerifying = false;
@@ -116,6 +104,26 @@ export class AdminBilling implements OnInit {
 
   private celebrate() {
     this.showConfetti = true;
+  }
+
+  async confirmCancel() {
+    if (!confirm('Tem certeza que deseja cancelar sua assinatura? Você manterá o acesso Elite até o fim do período já pago.')) return;
+    
+    this.isProcessing = true;
+    try {
+      const result = await this.billing.cancelSubscription();
+      if (result.status === 'cancelled') {
+        this.successMsg = 'Assinatura cancelada com sucesso. A renovação automática foi desativada.';
+        setTimeout(() => this.successMsg = '', 6000);
+      } else {
+        throw new Error(result.error || 'Erro ao cancelar.');
+      }
+    } catch (e: any) {
+      this.successMsg = 'Erro ao cancelar: ' + e.message;
+      setTimeout(() => this.successMsg = '', 4000);
+    } finally {
+      this.isProcessing = false;
+    }
   }
 
   manageCycle() {

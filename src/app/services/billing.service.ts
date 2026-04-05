@@ -146,6 +146,65 @@ export class BillingService {
     }
   }
 
+  /**
+   * Verify Session ID from Stripe Callback
+   */
+  async verifySession(sessionId: string): Promise<any> {
+    const current = this.estabService.estabelecimento$.value;
+    if (!current?.id) throw new Error('Estabelecimento não encontrado.');
+
+    try {
+      const response = await fetch(`/api/verify-session?session_id=${sessionId}&estabelecimentoId=${current.id}`);
+      const data = await response.json();
+      
+      if (data.status === 'success') {
+        // Refresh local establishment data (Bypass cache)
+        (this.estabService as any)._estabelecimentoCache.clear();
+        await this.estabService.fetchEstabelecimento();
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('[Stripe Billing] Error verifying session:', err);
+      throw err;
+    }
+  }
+
+  /**
+   * Cancel Subscription (End recursion at period end)
+   */
+  async cancelSubscription(): Promise<any> {
+    const current = this.estabService.estabelecimento$.value;
+    if (!current?.id) throw new Error('Estabelecimento não encontrado.');
+
+    try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const token = session?.access_token;
+
+      const response = await fetch('/api/cancel-subscription', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ estabelecimentoId: current.id })
+      });
+
+      const data = await response.json();
+      
+      if (data.status === 'cancelled') {
+        // Refresh local establishment data to show cancelled status
+        (this.estabService as any)._estabelecimentoCache.clear();
+        await this.estabService.fetchEstabelecimento();
+      }
+      
+      return data;
+    } catch (err) {
+      console.error('[Stripe Billing] Error cancelling subscription:', err);
+      throw err;
+    }
+  }
+
   getCurrentPlan(): Observable<BillingPlan | undefined> {
     return this.estabService.estabelecimento$.pipe(
       map(e => {

@@ -39,6 +39,8 @@ export interface Estabelecimento {
   plano?: string;
   plano_expires_at?: string;
   trial_ends_at?: string;
+  stripe_subscription_id?: string;
+  status_assinatura?: string;
   onboarding_completo?: boolean;
   user_id?: string;
 }

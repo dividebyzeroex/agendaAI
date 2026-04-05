@@ -35,8 +35,8 @@
     <button class="btn-elite-upgrade mini" (click)="openUpgrade(plans[0])">Escolher Plano Agora</button>
   </div>
 
-  <div class="success-banner" *ngIf="successMsg">
-    <div class="s-icon">🎉</div>
+  <div class="success-banner" *ngIf="successMsg" [class.error-banner]="successMsg.includes('Erro')">
+    <div class="s-icon">{{ successMsg.includes('Erro') ? '⚠️' : '🎉' }}</div>
     <span>{{ successMsg }}</span>
   </div>
 
@@ -70,9 +70,20 @@
       </div>
     </div>
 
-    <div class="usage-card mini-callout">
-      <p>Próxima renovação em <strong>25 de Maio</strong></p>
-      <button class="btn-manage" (click)="manageCycle()">Gerenciar Ciclo <i class="pi pi-chevron-right"></i></button>
+    <div class="usage-card mini-callout" *ngIf="estabService.estabelecimento$ | async as estab">
+      <p *ngIf="estab.plano_expires_at">
+        Próxima renovação em <strong>{{ estab.plano_expires_at | date:'dd/MM/yyyy' }}</strong>
+      </p>
+      <p *ngIf="!estab.plano_expires_at && (isTrialActive$ | async)">
+        Período de Teste: <strong>{{ trialDaysRemaining$ | async }} dias restantes</strong>
+      </p>
+      
+      <div class="callout-actions">
+        <button class="btn-manage" (click)="manageCycle()">Gerenciar Ciclo <i class="pi pi-chevron-right"></i></button>
+        <button class="btn-cancel-link" *ngIf="estab.plano" (click)="confirmCancel()">
+          <i class="pi pi-times"></i> Cancelar Assinatura
+        </button>
+      </div>
     </div>
   </div>
 
