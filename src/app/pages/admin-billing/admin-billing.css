@@ -498,8 +498,8 @@
   background: transparent;
 }
 
-/* --- LIGHT THEME OVERRIDES (Elite Vision 2.0) --- */
-.theme-claro .billing-v2 {
+/* --- LIGHT THEME OVERRIDES (Elite Vision 2.0 - FIX: Host Context) --- */
+:host-context(.theme-claro) .billing-v2 {
   --billing-card-bg: #ffffff;
   --billing-text-main: hsl(222, 47%, 10%); /* Deep Dark Blue */
   --billing-text-muted: hsl(215, 20%, 35%);
@@ -507,107 +507,107 @@
   --billing-accent: #3b82f6;
 }
 
-.theme-claro .billing-v2 h2,
-.theme-claro .billing-v2 h3,
-.theme-claro .billing-v2 h4,
-.theme-claro .billing-v2 strong,
-.theme-claro .billing-v2 label,
-.theme-claro .billing-v2 p,
-.theme-claro .billing-v2 span:not(.save-badge),
-.theme-claro .billing-v2 div:not(.u-bar-fill):not(.s-icon-wrap) {
+:host-context(.theme-claro) .billing-v2 h2,
+:host-context(.theme-claro) .billing-v2 h3,
+:host-context(.theme-claro) .billing-v2 h4,
+:host-context(.theme-claro) .billing-v2 strong,
+:host-context(.theme-claro) .billing-v2 label,
+:host-context(.theme-claro) .billing-v2 p,
+:host-context(.theme-claro) .billing-v2 span:not(.save-badge),
+:host-context(.theme-claro) .billing-v2 div:not(.u-bar-fill):not(.s-icon-wrap) {
   color: var(--billing-text-main) !important;
 }
 
-.theme-claro .billing-v2 .p-pro-header p,
-.theme-claro .billing-v2 .sec-head p,
-.theme-claro .billing-v2 .p-cycle,
-.theme-claro .billing-v2 .p-currency,
-.theme-claro .billing-v2 .security-note,
-.theme-claro .billing-v2 .p-info p {
+:host-context(.theme-claro) .billing-v2 .p-pro-header p,
+:host-context(.theme-claro) .billing-v2 .sec-head p,
+:host-context(.theme-claro) .billing-v2 .p-cycle,
+:host-context(.theme-claro) .billing-v2 .p-currency,
+:host-context(.theme-claro) .billing-v2 .security-note,
+:host-context(.theme-claro) .billing-v2 .p-info p {
   color: var(--billing-text-muted) !important;
 }
 
-.theme-claro .billing-v2 .usage-summary-bar,
-.theme-claro .billing-v2 .plan-card-pro,
-.theme-claro .billing-v2 .simple-section,
-.theme-claro .billing-v2 .simple-table-wrap,
-.theme-claro .billing-v2 .confirm-card,
-.theme-claro .billing-v2 .plan-preview {
+:host-context(.theme-claro) .billing-v2 .usage-summary-bar,
+:host-context(.theme-claro) .billing-v2 .plan-card-pro,
+:host-context(.theme-claro) .billing-v2 .simple-section,
+:host-context(.theme-claro) .billing-v2 .simple-table-wrap,
+:host-context(.theme-claro) .billing-v2 .confirm-card,
+:host-context(.theme-claro) .billing-v2 .plan-preview {
   background: var(--billing-card-bg) !important;
   border: 1px solid var(--billing-border) !important;
   backdrop-filter: none !important;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
 }
 
-.theme-claro .billing-v2 .usage-summary-bar i,
-.theme-claro .billing-v2 .plan-card-pro i:not(.pi-minus),
-.theme-claro .billing-v2 .success-banner-modern i {
-  color: #10b981 !important; /* Vivid Green for visibility */
+:host-context(.theme-claro) .billing-v2 .usage-summary-bar i,
+:host-context(.theme-claro) .billing-v2 .plan-card-pro i:not(.pi-minus),
+:host-context(.theme-claro) .billing-v2 .success-banner-modern i {
+  color: #10b981 !important;
 }
 
-.theme-claro .billing-v2 .u-progress-mini {
+:host-context(.theme-claro) .billing-v2 .u-progress-mini {
   background: rgba(0, 0, 0, 0.05) !important;
 }
 
-.theme-claro .billing-v2 .u-divider {
+:host-context(.theme-claro) .billing-v2 .u-divider {
   background: rgba(0, 0, 0, 0.08) !important;
 }
 
-.theme-claro .billing-v2 .cycle-tabs {
+:host-context(.theme-claro) .billing-v2 .cycle-tabs {
   background: rgba(0, 0, 0, 0.03) !important;
   border: 1px solid rgba(0, 0, 0, 0.05) !important;
   padding: 6px !important;
 }
 
-.theme-claro .billing-v2 .cycle-tab:not(.active) {
+:host-context(.theme-claro) .billing-v2 .cycle-tab:not(.active) {
   color: var(--billing-text-muted) !important;
 }
 
-.theme-claro .billing-v2 .btn-pro-action {
+:host-context(.theme-claro) .billing-v2 .btn-pro-action {
   border-color: var(--billing-border) !important;
   color: var(--billing-text-main) !important;
   font-weight: 700 !important;
 }
 
-.theme-claro .billing-v2 .btn-pro-action:hover:not(:disabled) {
+:host-context(.theme-claro) .billing-v2 .btn-pro-action:hover:not(:disabled) {
   background: var(--billing-text-main) !important;
   color: #ffffff !important;
 }
 
-.theme-claro .billing-v2 .featured .btn-pro-action {
+:host-context(.theme-claro) .billing-v2 .featured .btn-pro-action {
   background: var(--billing-accent) !important;
   color: #ffffff !important;
   border: none !important;
 }
 
-.theme-claro .billing-v2 .p-amount {
+:host-context(.theme-claro) .billing-v2 .p-amount {
   color: var(--billing-text-main) !important;
 }
 
-.theme-claro .billing-v2 .simple-table th {
+:host-context(.theme-claro) .billing-v2 .simple-table th {
   color: var(--billing-text-muted) !important;
   border-bottom: 2px solid rgba(0, 0, 0, 0.05) !important;
 }
 
-.theme-claro .billing-v2 .simple-table td {
+:host-context(.theme-claro) .billing-v2 .simple-table td {
   border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
   color: var(--billing-text-muted) !important;
 }
 
-.theme-claro .billing-v2 .val-cell {
+:host-context(.theme-claro) .billing-v2 .val-cell {
   color: var(--billing-text-main) !important;
 }
 
-.theme-claro .billing-v2 .btn-table-icon,
-.theme-claro .billing-v2 .btn-close {
+:host-context(.theme-claro) .billing-v2 .btn-table-icon,
+:host-context(.theme-claro) .billing-v2 .btn-close {
   color: var(--billing-text-muted) !important;
 }
 
-.theme-claro .billing-v2 .status-pill.active {
+:host-context(.theme-claro) .billing-v2 .status-pill.active {
   background: rgba(16, 185, 129, 0.08) !important;
 }
 
-.theme-claro .billing-v2 .btn-renew-now {
+:host-context(.theme-claro) .billing-v2 .btn-renew-now {
   background: #b45309 !important;
   color: #ffffff !important;
 }
