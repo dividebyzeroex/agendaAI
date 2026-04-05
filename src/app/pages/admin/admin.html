@@ -56,7 +56,7 @@
 
       <div class="sec-header">
         <h3>Radar de Atendimentos</h3>
-        <p-button icon="pi pi-plus" label="Novo Rapido" styleClass="p-button-rounded p-button-sm"></p-button>
+        <p-button icon="pi pi-plus" label="+ Novo Agendamento" styleClass="p-button-rounded p-button-sm shadow-2" (click)="abrirAgenda()"></p-button>
       </div>
 
       <div *ngIf="todayAppointments.length === 0" class="empty-state">

@@ -1,6 +1,7 @@
 import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NotificationService, AppNotification } from '../../services/notification.service';
+import { Router } from '@angular/router';
 import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
@@ -144,11 +145,17 @@ export class NotificationCenterComponent {
   @Output() close = new EventEmitter<void>();
 
   service = inject(NotificationService);
+  router  = inject(Router);
 
   executeAction(n: AppNotification) {
     if (n.action?.command) {
       n.action.command();
     }
+    
+    if (n.action?.link) {
+      this.router.navigate([n.action.link]);
+    }
+
     this.service.markAsRead(n.id);
     this.close.emit();
   }

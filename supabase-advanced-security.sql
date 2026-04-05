@@ -269,9 +269,9 @@ begin
     nome = coalesce(p_changes->>'nome', nome),
     telefone = coalesce(p_changes->>'telefone', telefone),
     email = coalesce(p_changes->>'email', email),
-    nascimento = coalesce(p_changes->>'nascimento', nascimento),
+    nascimento = coalesce((p_changes->>'nascimento')::date, nascimento),
     observacoes = coalesce(p_changes->>'observacoes', observacoes),
-    ultima_visita = coalesce(p_changes->>'ultima_visita', ultima_visita),
+    ultima_visita = coalesce((p_changes->>'ultima_visita')::timestamptz, ultima_visita),
     faltas = coalesce((p_changes->>'faltas')::integer, faltas)
   where id = p_id;
   return query select * from public.clientes where id = p_id;
@@ -283,10 +283,11 @@ begin
   update public.agenda_events 
   set 
     title = coalesce(p_changes->>'title', title),
-    start = coalesce(p_changes->>'start', start),
-    "end" = coalesce(p_changes->>'end', "end"),
+    start = coalesce((p_changes->>'start')::timestamptz, start),
+    "end" = coalesce((p_changes->>'end')::timestamptz, "end"),
     status = coalesce(p_changes->>'status', status),
-    observacoes = coalesce(p_changes->>'observacoes', observacoes)
+    observacoes = coalesce(p_changes->>'observacoes', observacoes),
+    profissional_id = coalesce((p_changes->>'profissional_id')::uuid, profissional_id)
   where id = p_id;
   return query select * from public.agenda_events where id = p_id;
 end; $$;

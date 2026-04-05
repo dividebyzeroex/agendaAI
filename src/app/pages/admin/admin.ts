@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -21,6 +22,7 @@ export class Admin implements OnInit, OnDestroy {
   private clienteService = inject(ClienteService);
   private notifService = inject(NotificationService);
   private agentService = inject(MultiAgentService);
+  private router = inject(Router);
 
   todayAppointments: AgendaEvent[] = [];
   noShowEvents: AgendaEvent[] = [];
@@ -133,6 +135,10 @@ export class Admin implements OnInit, OnDestroy {
     } catch {
       return '—';
     }
+  }
+
+  abrirAgenda() {
+    this.router.navigate(['/admin/agenda']);
   }
 }
 
