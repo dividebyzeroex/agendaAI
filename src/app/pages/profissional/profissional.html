@@ -47,63 +47,77 @@
   <!-- ══════════════ PORTAL SECTION ══════════════ -->
   <div class="pro-app" *ngIf="authState === 'ready'">
     
-    <!-- HEADER -->
-    <header class="pro-header">
+    <!-- HEADER ELITE -->
+    <header class="pro-header-elite">
        <div class="h-user">
           <div class="h-avatar" [style.background]="profile?.cor_agenda || '#1a73e8'">
              <img *ngIf="profile?.foto_url" [src]="profile?.foto_url" alt="" />
              <span *ngIf="!profile?.foto_url">{{ profile?.nome?.[0] }}</span>
           </div>
           <div class="h-info">
-             <strong>Olá, {{ profile?.nome?.split(' ')?.[0] }}!</strong>
+             <strong>{{ profile?.nome?.split(' ')?.[0] }}</strong>
              <span>{{ estabName }}</span>
           </div>
        </div>
-       <button (click)="logout()" class="btn-logout"><i class="pi pi-power-off"></i></button>
+       <button (click)="logout()" class="btn-logout-elite"><i class="pi pi-power-off"></i></button>
     </header>
+
+    <!-- PRO WALLET (RESUMO FINANCEIRO) -->
+    <div class="pro-wallet-elite">
+        <div class="pw-total">
+            <span class="label">Faturamento Hoje</span>
+            <h2 class="value">R$ {{ (totalRevenue || 0).toFixed(2).replace('.', ',') }}</h2>
+            <div class="pw-commission">
+                <span class="c-label">Minha Comissão</span>
+                <span class="c-value">R$ {{ (totalCommission || 0).toFixed(2).replace('.', ',') }}</span>
+            </div>
+        </div>
+    </div>
 
     <!-- CONTENT -->
     <main class="pro-main">
 
       <!-- VIEW: AGENDA -->
       <div class="view-agenda" *ngIf="view === 'agenda'">
-         <div class="vh-title">
-            <h3>Minha Agenda Hoje</h3>
-            <span>{{ agenda.length }} agendamentos</span>
+         <div class="vh-title-elite">
+            <h3>Minha Agenda</h3>
+            <span class="pill">{{ agenda.length }} Clientes</span>
          </div>
 
          <!-- Elite Loader (Mini) -->
-         <div class="elite-loader-mini" *ngIf="isLoading" style="min-height: 100px; background: white; border-radius: 20px; box-shadow: none;">
+         <div class="elite-loader-mini" *ngIf="isLoading">
             <div class="elite-scissor-wrap"></div>
-            <div class="loader-text">Sincronizando sua agenda...</div>
+            <div class="loader-text">Sincronizando Agenda...</div>
          </div>
 
-         <!-- ACTUAL LIST -->
-         <div class="agenda-list" *ngIf="!isLoading">
-            <div class="empty-agenda" *ngIf="agenda.length === 0">
-               <div class="e-icon">☕</div>
-               <h4>Nada por aqui agora</h4>
-               <p>Não há agendamentos para hoje.</p>
+         <!-- ACTUAL LIST BENTO -->
+         <div class="agenda-list-bento" *ngIf="!isLoading">
+            <div class="empty-agenda-elite" *ngIf="agenda.length === 0">
+               <div class="e-icon">✨</div>
+               <h4>Dia de Descanso?</h4>
+               <p>Não há atendimentos programados.</p>
             </div>
 
-            <div class="ev-card" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
-               <div class="ev-time">
+            <div class="ev-card-elite" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
+               <div class="ev-time-strip">
                   <strong>{{ fmtH(ev.start) }}</strong>
+                  <div class="line"></div>
                   <span>{{ fmtH(ev.end) }}</span>
                </div>
-               <div class="ev-body">
+               <div class="ev-body-elite">
                   <div class="ev-header">
-                     <strong>{{ ev?.clientes?.nome || 'Cliente' }}</strong>
-                     <span class="st-pill" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
+                     <span class="client-name">{{ ev?.clientes?.nome || 'Cliente' }}</span>
+                     <span class="st-pill-elite" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
                         {{ getStat(ev.status).label }}
                      </span>
                   </div>
-                  <p>{{ ev?.servicos?.titulo || 'Serviço' }}</p>
-               </div>
-               <div class="ev-actions" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado'">
-                  <button class="btn-action" [disabled]="isSaving" (click)="goAtendimento(ev)">
-                     {{ ev.status === 'em_atendimento' ? 'Continuar' : 'Atender' }}
-                  </button>
+                  <p class="service-name">{{ ev?.servicos?.titulo || 'Serviço' }}</p>
+                  <div class="ev-footer" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado'">
+                    <button class="btn-action-elite" [disabled]="isSaving" (click)="goAtendimento(ev)">
+                       <i class="pi" [class]="ev.status === 'em_atendimento' ? 'pi-play' : 'pi-check-circle'"></i>
+                       {{ ev.status === 'em_atendimento' ? 'Continuar' : 'Atender Cliente' }}
+                    </button>
+                  </div>
                </div>
             </div>
          </div>

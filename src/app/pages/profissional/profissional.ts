@@ -40,6 +40,8 @@ export class Profissional implements OnInit, OnDestroy {
   estabName = '';
   services: Servico[] = [];
   agenda: any[] = [];
+  totalRevenue = 0;
+  totalCommission = 0;
   
   // -- Active Atendimento --
   activeEvent: any = null;
@@ -124,6 +126,7 @@ export class Profissional implements OnInit, OnDestroy {
       this.subs.add(
         this.proService.agendaHoje$.subscribe(data => {
           this.agenda = data || [];
+          this.calculateEarnings();
           this.isLoading = false;
           console.log('[ProPortal] Agenda synced:', this.agenda.length);
         })
@@ -179,6 +182,23 @@ export class Profissional implements OnInit, OnDestroy {
       this.finishedItem = resp;
       this.view = 'sucesso';
     } finally { this.isSaving = false; }
+  }
+
+  // -- Internal --
+  private calculateEarnings() {
+    this.totalRevenue = 0;
+    this.totalCommission = 0;
+    
+    // Default commission if not specified (e.g. 50%)
+    const defaultRate = (this.profile?.comissao_padrao || 50) / 100;
+
+    this.agenda.forEach(ev => {
+      if (ev.status === 'finalizado' || ev.status === 'concluido' || ev.status === 'pago') {
+        const value = ev.valor_total || ev?.servicos?.preco || 0;
+        this.totalRevenue += value;
+        this.totalCommission += (value * defaultRate);
+      }
+    });
   }
 
   // -- Helpers --
