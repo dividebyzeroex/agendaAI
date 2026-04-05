@@ -9,7 +9,7 @@
     <p>Aguarde um instante enquanto validamos sua transação segura.</p>
   </div>
 
-  <ng-container *ngIf="!isVerifying">
+  <ng-container *ngIf="!isVerifying && (subscriptionStatus$ | async) as status">
     <!-- SUCCESS BANNER PREMIUM -->
     <div class="success-banner-modern" *ngIf="successMsg">
       <div class="s-icon-wrap"><i class="pi pi-check-circle"></i></div>
@@ -21,7 +21,7 @@
     </div>
 
     <!-- GRACE PERIOD ALARM -->
-    <div class="grace-period-banner" *ngIf="(subscriptionStatus$ | async) === 'GRACE_PERIOD'">
+    <div class="grace-period-banner" *ngIf="status === 'GRACE_PERIOD'">
       <div class="g-icon"><i class="pi pi-exclamation-triangle"></i></div>
       <div class="g-content">
         <h4>Plano Expirado: Acesso Cortesia Ativo</h4>
@@ -107,8 +107,8 @@
         <div class="cycle-tabs">
           <button *ngFor="let c of cycles" 
                   [class.active]="selectedCycle === c.months"
-                  (click)="(subscriptionStatus$ | async) !== 'ACTIVE' && setCycle(c.months)"
-                  [class.disabled-tab]="(subscriptionStatus$ | async) === 'ACTIVE'"
+                  (click)="status !== 'ACTIVE' && setCycle(c.months)"
+                  [class.disabled-tab]="status === 'ACTIVE'"
                   class="cycle-tab">
             {{ c.label }}
             <span class="save-badge" *ngIf="c.discount > 0">ECONOMIZE {{ c.discount }}%</span>
@@ -146,7 +146,7 @@
           <div class="p-pro-footer">
             <button class="btn-pro-action" 
                     (click)="openUpgrade(plan)" 
-                    [disabled]="(subscriptionStatus$ | async) === 'ACTIVE'">
+                    [disabled]="status === 'ACTIVE'">
               <span *ngIf="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
                 Plano em Uso
               </span>
