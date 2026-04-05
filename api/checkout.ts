@@ -3,21 +3,24 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
-
-  // Check for Secret Key early to avoid crash
-  if (!process.env.STRIPE_SECRET_KEY) {
-    console.error('CRITICAL: STRIPE_SECRET_KEY is missing in environment variables.');
-    return res.status(500).json({ error: 'Configuração do Stripe ausente no servidor. Verifique as env vars no Vercel.' });
-  }
-
-  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-    apiVersion: '2023-10-16' as any,
-  });
-
   try {
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method Not Allowed' });
+    }
+
+    // Check for Secret Key early to avoid crash
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('CRITICAL: STRIPE_SECRET_KEY is missing in environment variables.');
+      return res.status(200).json({ 
+        error: true, 
+        message: 'Configuração do Stripe (Secret Key) ausente nas variáveis de ambiente da Vercel. Por favor, adicione-a no painel do projeto.' 
+      });
+    }
+
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+      apiVersion: '2023-10-16' as any,
+    });
+
     const { estabelecimentoId, planId, price, months, title } = req.body;
 
     if (!estabelecimentoId || !planId || !price || !months) {
@@ -31,7 +34,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const sbUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+    const sbUrl = process.env.NEXT_PUBLIC_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
     const sbKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
     
     if (sbUrl && sbKey) {
@@ -43,10 +46,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://agenda-ai-xi.vercel.app');
+    const appUrl = (process.env.NEXT_PUBLIC_URL || (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'https://agenda-ai-xi.vercel.app')).replace(/\/$/, '');
     const baseUrl = `${appUrl}/admin/billing`;
 
-    // Map planIds to Stripe Price IDs (Placeholders or provided via ENV)
+    // Map planIds to Stripe Price IDs
     const priceMap: Record<string, string | undefined> = {
       '1_month': process.env.STRIPE_PRICE_ID_1_MONTH,
       '3_months': process.env.STRIPE_PRICE_ID_3_MONTHS,
@@ -92,7 +95,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       init_point: session.url,
     });
   } catch (error: any) {
-    console.error('Erro no checkout Stripe:', error);
-    return res.status(500).json({ error: error.message || 'Erro ao gerar checkout' });
+    console.error('FATAL API ERROR:', error);
+    return res.status(200).json({ 
+      error: true, 
+      message: `Erro de Runtime: ${error.message || 'Falha na inicialização da função'}. Verifique se todas as dependências (stripe, supabase-js) estão corretamente instaladas.` 
+    });
   }
 }
