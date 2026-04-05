@@ -20,6 +20,53 @@
   margin: 0;
 }
 
+/* --- SUCCESS BANNER MODERN --- */
+.success-banner-modern {
+  background: linear-gradient(90deg, #10b981, #059669);
+  color: white;
+  padding: 1.25rem 2rem;
+  border-radius: 16px;
+  margin-bottom: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+  animation: slide-in-top 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  position: relative;
+}
+
+@keyframes slide-in-top {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.s-icon-wrap {
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.s-info h4 { margin: 0 0 2px 0; font-size: 1.1rem; }
+.s-info p { margin: 0; font-size: 0.9rem; opacity: 0.9; }
+
+.s-close-btn {
+  background: transparent;
+  border: none;
+  color: white;
+  margin-left: auto;
+  font-size: 1.1rem;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: 0.2s;
+}
+
+.s-close-btn:hover { opacity: 1; }
+
 .status-pill.active {
   background: rgba(16, 185, 129, 0.1);
   border: 1px solid rgba(16, 185, 129, 0.2);

@@ -98,10 +98,11 @@ export class AdminBilling implements OnInit {
       try {
         const result = await this.billing.verifySession(sessionId);
         if (result.status === 'success') {
-          this.celebrate();
-          this.successMsg = `Assinatura ativada com sucesso! Seu acesso Premium está liberado.`;
+          setTimeout(() => this.celebrate(), 500);
+          this.successMsg = `Seu estabelecimento agora é Premium! Desfrute de todos os recursos avançados de IA e gestão.`;
           window.history.replaceState({}, document.title, window.location.pathname);
-          setTimeout(() => this.successMsg = '', 6000);
+          // Auto-hide after 15s to be premium but not intrusive
+          setTimeout(() => this.successMsg = '', 15000);
         } else {
           this.successMsg = 'Erro ao verificar pagamento: ' + (result.error || 'Tente novamente.');
         }

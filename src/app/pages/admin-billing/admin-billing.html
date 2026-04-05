@@ -10,6 +10,16 @@
   </div>
 
   <ng-container *ngIf="!isVerifying">
+    <!-- SUCCESS BANNER PREMIUM -->
+    <div class="success-banner-modern" *ngIf="successMsg">
+      <div class="s-icon-wrap"><i class="pi pi-check-circle"></i></div>
+      <div class="s-info">
+        <h4>Assinatura Premium Ativada!</h4>
+        <p>{{ successMsg }}</p>
+      </div>
+      <button class="s-close-btn" (click)="successMsg = ''"><i class="pi pi-times"></i></button>
+    </div>
+
     <!-- CONFETTI OVERLAY -->
     <div class="confetti-overlay" *ngIf="showConfetti"></div>
 
