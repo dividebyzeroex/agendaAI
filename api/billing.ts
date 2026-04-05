@@ -126,7 +126,6 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
     plano_expires_at: currentExpires.toISOString(),
     stripe_subscription_id: stripeSubscriptionId,
     stripe_customer_id: session.customer as string,
-    months: months,
     status_assinatura: 'ativo'
   }).eq('id', estabelecimentoId);
 
