@@ -17,16 +17,16 @@
 }
 
 .theme-claro {
-  --bg-color: hsl(210, 40%, 98%);
+  --bg-color: hsl(210, 40%, 94%); /* More contrast with pure white cards */
   --text-main: hsl(222, 47%, 11%);
-  --text-muted: hsl(215, 16%, 47%);
+  --text-muted: hsl(215, 16%, 35%);
   --glass-bg: #ffffff;
   --glass-border: rgba(0, 0, 0, 0.08);
   --glass-blur: 0px;
-  --active-bg: rgba(59, 130, 246, 0.12);
+  --active-bg: rgba(59, 130, 246, 0.1);
   --bg-image: none;
   --text-shadow: none;
-  --glass-edge: rgba(255, 255, 255, 0.6);
+  --glass-edge: rgba(0, 0, 0, 0.02);
 }
 
 .theme-escuro {
@@ -48,13 +48,13 @@
   --text-muted: hsl(214, 32%, 72%);
   --bg-image: url('/universal_bg.png');
   --glass-bg: rgba(15, 23, 42, 0.65);
-  --glass-border: rgba(255, 255, 255, 0.15);
-  --glass-blur: 32px;
-  --active-bg: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.12);
+  --glass-blur: 40px; /* Deeper blur for premium feel */
+  --active-bg: rgba(255, 255, 255, 0.08);
   --elite-shadow: 0 12px 60px rgba(0, 0, 0, 0.4);
   --elite-hover-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
-  --text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
-  --glass-edge: rgba(255, 255, 255, 0.1);
+  --text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  --glass-edge: rgba(255, 255, 255, 0.15); /* Vivid edge for glass separation */
 }
 
 @keyframes eliteSlideIn {
