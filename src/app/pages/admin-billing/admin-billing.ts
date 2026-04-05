@@ -17,7 +17,7 @@ import { Observable } from 'rxjs';
 export class AdminBilling implements OnInit {
   private billing = inject(BillingService);
   private tracker = inject(CostTrackerService);
-  private estabService = inject(EstabelecimentoService);
+  public  estabService = inject(EstabelecimentoService);
   private authService = inject(AuthService);
 
   plans: BillingPlan[] = this.billing.plans;

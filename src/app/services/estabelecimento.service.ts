@@ -42,6 +42,7 @@ export interface Estabelecimento {
   stripe_subscription_id?: string;
   status_assinatura?: string;
   onboarding_completo?: boolean;
+  months?: number;
   user_id?: string;
 }
 
