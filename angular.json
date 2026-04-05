@@ -26,7 +26,10 @@
             ],
             "styles": [
               "node_modules/primeicons/primeicons.css",
-              "src/styles.css"
+              "src/styles.css",
+              "src/styles/themes/light.css",
+              "src/styles/themes/dark.css",
+              "src/styles/themes/glass.css"
             ]
           },
           "configurations": {

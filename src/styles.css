@@ -5,20 +5,11 @@
 
 /* You can add global styles to this file, and also import other style files */
 
+
+/* Global Variable Fallbacks — Overridden by .theme-X classes on body */
 :root {
-  --primary-color: #3b82f6;
-  --bg-color: hsl(210, 40%, 98%);
-  --text-main: hsl(222, 47%, 11%);
-  --text-muted: hsl(215, 16%, 47%);
-  --glass-bg: rgba(255, 255, 255, 0.8);
-  --glass-border: rgba(0, 0, 0, 0.06);
-  --glass-blur: 0px;
-  --active-bg: rgba(59, 130, 246, 0.08);
-  --bg-image: none;
-  --elite-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
-  --elite-hover-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
-  --text-shadow: none;
-  --glass-edge: rgba(255, 255, 255, 0.4);
+  --primary-color: #3b82f6; /* Static brand color */
+  --p-border-radius: 12px;
 }
 
 
