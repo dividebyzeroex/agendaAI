@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
     }
 
-    const appUrl = (process.env.NEXT_PUBLIC_URL || 'https://agenda-ai-xi.vercel.app').replace(/\/$/, '');
+    const appUrl = 'https://agenda-ai-xi.vercel.app';
     const baseUrl = `${appUrl}/admin/billing`;
 
     // Map planIds to Stripe Price IDs
