@@ -95,10 +95,16 @@ async function handleCheckout(req: VercelRequest, res: VercelResponse, stripe: S
 
 // --- VERIFY SESSION LOGIC ---
 async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Stripe, sbUrl?: string, sbKey?: string) {
-  const { session_id, estabelecimentoId } = req.query;
-  if (!session_id || !estabelecimentoId) return res.status(400).json({ error: 'Missing params' });
+  const { session_id } = req.query;
+  if (!session_id) return res.status(400).json({ error: 'Missing session_id' });
 
   const session = await stripe.checkout.sessions.retrieve(session_id as string);
+  const estabelecimentoId = session.metadata?.estabelecimentoId;
+  
+  if (!estabelecimentoId) {
+    return res.status(400).json({ error: 'ID do estabelecimento não encontrado nos metadados da sessão.' });
+  }
+
   if (session.payment_status !== 'paid') return res.status(400).json({ status: 'unpaid' });
 
   if (!sbUrl || !sbKey) return res.status(500).json({ error: 'Supabase Error' });

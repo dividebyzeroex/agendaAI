@@ -178,7 +178,7 @@ export class BillingService {
     if (!current?.id) throw new Error('Estabelecimento não encontrado.');
 
     try {
-      const response = await fetch(`/api/billing?action=verify&session_id=${sessionId}&estabelecimentoId=${current.id}`);
+      const response = await fetch(`/api/billing?action=verify&session_id=${sessionId}`);
       const data = await response.json();
       
       if (data.status === 'success') {
