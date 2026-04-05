@@ -45,7 +45,7 @@ export class BillingService {
     {
       id: 'basico',
       name: 'Starter',
-      basePrice: 69,
+      basePrice: 97,
       months: 1,
       tokensLimit: 250000,
       smsLimit: 50,
@@ -53,24 +53,24 @@ export class BillingService {
         { text: 'Agenda Online Completa', included: true },
         { text: '1 Profissional', included: true },
         { text: 'Insights de IA Essenciais', included: true },
-        { text: 'Base de Clientes', included: true },
-        { text: 'SMS incluídos conforme ciclo', included: true },
+        { text: 'Base de Clientes Elite', included: true },
+        { text: 'Sincronização Cloud', included: true },
       ]
     },
     {
       id: 'completo',
       name: 'Business Pro',
-      basePrice: 149,
+      basePrice: 197,
       months: 1,
       highlight: true,
-      tokensLimit: 1500000,
+      tokensLimit: 1000000,
       smsLimit: 200,
       features: [
+        { text: 'Tudo do Starter', included: true },
         { text: 'Até 5 Profissionais', included: true },
-        { text: 'Marketing de IA Ativo', included: true },
-        { text: 'SMS incluídos conforme ciclo', included: true },
-        { text: 'Suporte Prioritário', included: true },
-        { text: 'IA Proativa Integrada', included: false },
+        { text: 'IA de Agendamento Autônomo', included: true },
+        { text: 'Relatórios de Gestão V2', included: true },
+        { text: 'Elite Visual Customization', included: true },
       ]
     },
     {
@@ -78,13 +78,13 @@ export class BillingService {
       name: 'Elite Enterprise',
       basePrice: 349,
       months: 1,
-      tokensLimit: 10000000,
+      tokensLimit: 5000000,
       smsLimit: 1000,
       features: [
+        { text: 'Tudo do Business Pro', included: true },
         { text: 'Profissionais Ilimitados', included: true },
-        { text: 'IA Proativa (Sócio Digital)', included: true },
-        { text: 'SMS incluídos conforme ciclo', included: true },
-        { text: 'Gestão Multi-unidade', included: true },
+        { text: 'IA Preditiva de Faturamento', included: true },
+        { text: 'API de Integração Direta', included: true },
         { text: 'Suporte VIP 24/7 Dedicado', included: true },
       ]
     }
@@ -96,7 +96,7 @@ export class BillingService {
     if (cycleMonths === 6) discount = 10;
     if (cycleMonths === 12) discount = 20;
 
-    const totalPrice = Math.round(((plan.price || 0) * cycleMonths) * (1 - discount / 100));
+    const totalPrice = Math.round(((plan.basePrice || plan.price || 0) * cycleMonths) * (1 - discount / 100));
     
     return {
       ...plan,
