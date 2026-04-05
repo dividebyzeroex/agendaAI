@@ -98,7 +98,7 @@
               {{ serv.servicos?.emoji }} {{ serv.servicos?.titulo }}
             </span>
             <span class="skill-pill more" *ngIf="(p.servicos?.length || 0) > 3">
-              +{{ (p.servicos?.length || 0) - 3 }}
+              +{{ ((p.servicos?.length || 0) - 3) }}
             </span>
           </div>
 
