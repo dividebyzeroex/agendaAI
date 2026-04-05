@@ -7,15 +7,9 @@
 create extension if not exists "supabase_vault" cascade;
 create extension if not exists "pgcrypto";
 
--- Grant usage and ALL powers on schemas to postgres and other roles
-GRANT ALL ON SCHEMA vault TO postgres, authenticated, anon, service_role;
-GRANT ALL ON SCHEMA extensions TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA vault TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL FUNCTIONS IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA vault TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL SEQUENCES IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA vault TO postgres, authenticated, anon, service_role;
-GRANT ALL ON ALL TABLES IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
+-- Grant usage on extensions schema
+GRANT USAGE ON SCHEMA extensions TO postgres, authenticated, anon, service_role;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA extensions TO postgres, authenticated, anon, service_role;
 
 -- Adicionar colunas de multitenancy e onboarding em tabelas que podem estar faltando
 ALTER TABLE IF EXISTS estabelecimento ADD COLUMN IF NOT EXISTS cnpj TEXT;
@@ -59,12 +53,12 @@ begin
     raise exception 'Acesso negado: Você não tem permissão para gerenciar as chaves deste estabelecimento.';
   end if;
 
-  select secret into v_key from vault.secrets where name = 'est_key_' || p_establishment_id;
-
+  select decrypted_secret into v_key from vault.decrypted_secrets where name = 'est_key_' || p_establishment_id;
+  
   if v_key is null then
     v_key := encode(extensions.gen_random_bytes(32), 'base64');
-    insert into vault.secrets (name, secret, description)
-    values ('est_key_' || p_establishment_id, v_key, 'Chave mestra Zero-Knowledge para o estabelecimento ' || p_establishment_id);
+    -- Usar a função oficial para criar segredos (Resolve erro de permissão _crypto_aead_det_encrypt)
+    perform vault.create_secret(v_key, 'est_key_' || p_establishment_id, 'Chave mestra Zero-Knowledge para o estabelecimento ' || p_establishment_id);
   end if;
 
   return v_key;
