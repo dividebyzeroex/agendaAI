@@ -144,7 +144,12 @@ async function handleCancel(req: VercelRequest, res: VercelResponse, stripe: Str
   if (!estab?.stripe_subscription_id) return res.status(400).json({ error: 'No subscription found' });
 
   await stripe.subscriptions.update(estab.stripe_subscription_id, { cancel_at_period_end: true });
-  await supabase.from('estabelecimento').update({ status_assinatura: 'cancelado' }).eq('id', estabelecimentoId);
+  
+  // Apenas marcamos que o faturamento recorrente vai parar ao fim do período
+  // O plano será revertido pelo webhooks ou manualmente depois
+  await supabase.from('estabelecimento').update({ 
+    plano: 'starter' 
+  }).eq('id', estabelecimentoId);
 
   return res.status(200).json({ status: 'cancelled' });
 }
