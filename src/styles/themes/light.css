@@ -1,0 +1,15 @@
+/* Clean Elite 2.0 — High Contrast & Depth */
+.theme-claro {
+  --bg-color: hsl(210, 40%, 95%); /* Ice Blue Contrast */
+  --text-main: hsl(222, 47%, 12%);
+  --text-muted: hsl(215, 20%, 40%);
+  --glass-bg: #ffffff;
+  --glass-border: rgba(0, 0, 0, 0.05);
+  --glass-blur: 0px;
+  --active-bg: rgba(59, 130, 246, 0.08); /* Soft primary tint */
+  --bg-image: none;
+  --elite-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
+  --elite-hover-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  --text-shadow: none;
+  --glass-edge: rgba(255, 255, 255, 0.8); /* Highlight edge on white cards */
+}

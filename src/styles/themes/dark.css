@@ -1,0 +1,15 @@
+/* Sleek Obsidian — Professional Dark Mode */
+.theme-escuro {
+  --bg-color: hsl(222, 47%, 5%); /* Deepest void */
+  --text-main: hsl(210, 40%, 98%);
+  --text-muted: hsl(215, 20%, 65%);
+  --glass-bg: hsl(222, 47%, 10%); /* Elevation 1 */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-blur: 0px;
+  --active-bg: rgba(255, 255, 255, 0.08);
+  --bg-image: none;
+  --elite-shadow: 0 12px 60px rgba(0, 0, 0, 0.4);
+  --elite-hover-shadow: 0 20px 80px rgba(0, 0, 0, 0.6);
+  --text-shadow: none;
+  --glass-edge: rgba(255, 255, 255, 0.02); /* Stealth highlight */
+}
