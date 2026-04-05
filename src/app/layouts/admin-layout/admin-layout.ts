@@ -3,7 +3,6 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CommandPaletteComponent } from '../command-palette/command-palette.component';
-import { AiAssistantComponent } from '../ai-assistant/ai-assistant.component';
 import { MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
@@ -31,7 +30,6 @@ import { EstabelecimentoService } from '../../services/estabelecimento.service';
     RouterModule,
     ButtonModule,
     CommandPaletteComponent,
-    AiAssistantComponent,
     OnboardingModalComponent,
     UpdateNotifierComponent,
     NotificationCenterComponent,
