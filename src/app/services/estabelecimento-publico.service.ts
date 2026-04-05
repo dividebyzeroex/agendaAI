@@ -7,6 +7,7 @@ export interface EstabelecimentoPublico extends Estabelecimento {
   slug?: string;
   descricao?: string;
   cor_primaria?: string;
+  estado?: string;
 }
 
 export interface ProfissionalPublico {
