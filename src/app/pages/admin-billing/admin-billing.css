@@ -497,3 +497,89 @@
 .cycle-tab.disabled-tab:hover {
   background: transparent;
 }
+
+/* --- LIGHT THEME OVERRIDES (Clean Elite) --- */
+.theme-claro .billing-v2 {
+  --billing-card-bg: #ffffff;
+  --billing-text: hsl(222, 47%, 12%);
+  --billing-muted: hsl(215, 20%, 45%);
+  --billing-border: rgba(0, 0, 0, 0.08);
+}
+
+.theme-claro .billing-v2 h2,
+.theme-claro .billing-v2 h3,
+.theme-claro .billing-v2 h4,
+.theme-claro .billing-v2 strong,
+.theme-claro .billing-v2 .p-amount,
+.theme-claro .billing-v2 .val-cell {
+  color: var(--billing-text) !important;
+}
+
+.theme-claro .billing-v2 p,
+.theme-claro .billing-v2 label,
+.theme-claro .billing-v2 span:not(.save-badge),
+.theme-claro .billing-v2 .p-currency,
+.theme-claro .billing-v2 .p-cycle,
+.theme-claro .billing-v2 .security-note {
+  color: var(--billing-muted) !important;
+}
+
+.theme-claro .billing-v2 .usage-summary-bar,
+.theme-claro .billing-v2 .plan-card-pro,
+.theme-claro .billing-v2 .simple-section,
+.theme-claro .billing-v2 .simple-table-wrap,
+.theme-claro .billing-v2 .plan-preview,
+.theme-claro .billing-v2 .confirm-card {
+  background: var(--billing-card-bg) !important;
+  border-color: var(--billing-border) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-claro .billing-v2 .f-pro-item span {
+  color: var(--billing-text) !important;
+}
+
+.theme-claro .billing-v2 .u-divider {
+  background: rgba(0, 0, 0, 0.08) !important;
+}
+
+.theme-claro .billing-v2 .cycle-tabs {
+  background: rgba(0, 0, 0, 0.04) !important;
+  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-claro .billing-v2 .btn-pro-action {
+  border-color: var(--billing-border) !important;
+  color: var(--billing-text) !important;
+}
+
+.theme-claro .billing-v2 .btn-pro-action:hover:not(:disabled) {
+  background: var(--billing-text) !important;
+  color: #ffffff !important;
+}
+
+.theme-claro .billing-v2 .featured .btn-pro-action {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+}
+
+.theme-claro .billing-v2 .btn-pro-action span {
+  color: inherit !important;
+}
+
+.theme-claro .billing-v2 .btn-close,
+.theme-claro .billing-v2 .btn-table-icon {
+  color: var(--billing-muted) !important;
+}
+
+.theme-claro .billing-v2 .u-progress-mini {
+  background: rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-claro .billing-v2 .simple-table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+.theme-claro .billing-v2 .status-pill.active {
+  background: rgba(16, 185, 129, 0.05) !important;
+}
