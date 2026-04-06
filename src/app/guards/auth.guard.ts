@@ -10,6 +10,15 @@ export const authGuard: CanActivateFn = async (route, state) => {
   const hasSession = await authService.checkSession();
   
   if (hasSession) {
+    const profile = authService.userProfileValue;
+    const isPrimeiroAcesso = profile?.primeiro_acesso || false;
+    const onboardingPendente = !profile?.onboarding_concluido;
+
+    // Se estiver em primeiro acesso ou onboarding pendente, e NÃO estiver na rota de primeiro-acesso
+    if ((isPrimeiroAcesso || onboardingPendente) && state.url !== '/primeiro-acesso') {
+      return router.parseUrl('/primeiro-acesso');
+    }
+
     return true;
   }
 

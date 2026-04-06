@@ -1,0 +1,74 @@
+<div class="pa-container">
+  <div class="glass-orb orb-1"></div>
+  <div class="glass-orb orb-2"></div>
+
+  <div class="pa-card-glass">
+    
+    <!-- HEADER -->
+    <div class="pa-header">
+      <div class="pa-logo">
+        <i class="pi pi-shield"></i>
+        <span>AgendaAi <small>Pro</small></span>
+      </div>
+      <h2>Boas-vindas, <span class="gradient-text">{{ userName }}!</span></h2>
+      <p>{{ fase === 'senha' ? 'Sua segurança vem em primeiro lugar. Vamos ativar sua credencial permanente.' : 'Falta pouco! Entenda como seu papel de ' + userRole + ' decola na plataforma.' }}</p>
+    </div>
+
+    <!-- FASE 1: DEFINIR SENHA -->
+    <div class="pa-content-fade" *ngIf="fase === 'senha'">
+      <div class="field-pa">
+        <label>Nova Senha</label>
+        <div class="input-pa">
+          <i class="pi pi-lock"></i>
+          <input type="password" [(ngModel)]="pass1" placeholder="Mínimo 6 caracteres" />
+        </div>
+      </div>
+      <div class="field-pa">
+        <label>Confirmar Senha</label>
+        <div class="input-pa">
+          <i class="pi pi-lock-open"></i>
+          <input type="password" [(ngModel)]="pass2" placeholder="Repita sua senha" />
+        </div>
+      </div>
+      
+      <div class="pa-error" *ngIf="erro">
+        <i class="pi pi-exclamation-circle"></i> {{ erro }}
+      </div>
+
+      <button class="btn-pa-primary" (click)="confirmarSenha()" [disabled]="isSaving">
+        <span *ngIf="!isSaving">Ativar Senha Permanente</span>
+        <span *ngIf="isSaving">Criptografando... <i class="pi pi-spin pi-spinner"></i></span>
+      </button>
+    </div>
+
+    <!-- FASE 2: TOUR DE ONBOARDING -->
+    <div class="pa-content-fade tour-area" *ngIf="fase === 'tour'">
+      
+      <!-- Linha do Tempo Numerada -->
+      <div class="pa-timeline">
+        <div class="tl-dot" *ngFor="let s of [1,2,3,4]" [class.active]="tourStep >= s" [class.current]="tourStep === s">
+          <span>{{ s }}</span>
+        </div>
+        <div class="tl-line">
+           <div class="tl-fill" [style.width]="((tourStep - 1) / 3 * 100) + '%'"></div>
+        </div>
+      </div>
+
+      <!-- Conteúdo Dinâmico -->
+      <div class="tour-card" [class.slide-in]="tourStep">
+        <h3>{{ getStepContent().t }}</h3>
+        <p>{{ getStepContent().d }}</p>
+      </div>
+
+      <!-- Ações do Tour -->
+      <div class="tour-actions">
+        <button class="btn-pa-ghost" (click)="voltar()" [disabled]="tourStep === 1">Anterior</button>
+        <button class="btn-pa-primary next" (click)="proximo()">
+          {{ tourStep === 4 ? 'Entrar no Sistema' : 'Avançar' }}
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+</div>

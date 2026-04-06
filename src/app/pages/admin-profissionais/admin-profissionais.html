@@ -74,9 +74,9 @@
             <span class="badge-role" [class]="p.role || 'barbeiro'">
               {{ (p.role === 'dono' ? 'Proprietário' : (p.role === 'financeiro' ? 'Financeiro' : (p.role === 'secretaria' ? 'Secretaria' : p.cargo || 'Especialista'))) }}
             </span>
-            <div class="status-indicator" [class.online]="p.ativo">
+            <div class="status-indicator" [class.online]="p.user_id" [class.pending]="p.convite_enviado && !p.user_id" [class.new]="!p.convite_enviado">
               <span class="dot"></span>
-              {{ p.ativo ? 'Em Atividade' : 'Pausa' }}
+              {{ p.user_id ? 'Ativo' : (p.convite_enviado ? 'Pendente' : 'Novo') }}
             </div>
           </div>
 
@@ -122,10 +122,18 @@
               <i class="pi pi-linkedin" *ngIf="p.linkedin"></i>
             </div>
             <div class="action-buttons-ent">
+              <!-- Botão de Convite / Reenvio -->
+              <button class="btn-icon-elite invite" 
+                      *ngIf="!p.user_id"
+                      (click)="enviarConvite(p)" 
+                      [title]="p.convite_enviado ? 'Reenviar Convite' : 'Enviar Convite'">
+                <i class="pi" [class.pi-send]="!p.convite_enviado" [class.pi-refresh]="p.convite_enviado"></i>
+              </button>
+              
               <button class="btn-icon-elite" (click)="toggleAtivo(p)" [title]="p.ativo ? 'Pausar' : 'Ativar'">
                 <i class="pi" [class.pi-eye]="p.ativo" [class.pi-eye-slash]="!p.ativo"></i>
               </button>
-              <button class="btn-icon-elite danger" (click)="deletarProfissional(p.id!)">
+              <button class="btn-icon-elite danger" (click)="confirmarDelete = p.id">
                 <i class="pi pi-trash"></i>
               </button>
               <div class="confirm-del-bubble" *ngIf="confirmarDelete === p.id">
@@ -244,13 +252,26 @@
                 </div>
              </div>
 
-             <div class="field-premium full">
+              <div class="field-premium full">
+                <label>Preferência de Acesso (Auth)</label>
+                <div class="auth-toggle-group">
+                   <button class="auth-btn" [class.active]="profAtual.auth_type === 'email'" (click)="profAtual.auth_type = 'email'">
+                      <i class="pi pi-envelope"></i> E-mail (Magic Link)
+                   </button>
+                   <button class="auth-btn" [class.active]="profAtual.auth_type === 'phone'" (click)="profAtual.auth_type = 'phone'">
+                      <i class="pi pi-phone"></i> Telefone (OTP)
+                   </button>
+                </div>
+                <p class="field-hint">Determine como este profissional realizará o login no sistema.</p>
+              </div>
+
+              <div class="field-premium full">
                 <label>E-mail Corporativo</label>
                 <div class="input-wrap">
                    <i class="pi pi-envelope"></i>
                    <input type="email" [(ngModel)]="profAtual.email" placeholder="carlos@agenda.ai" />
                 </div>
-             </div>
+              </div>
           </div>
         </div>
 

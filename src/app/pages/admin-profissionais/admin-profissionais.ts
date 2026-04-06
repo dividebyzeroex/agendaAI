@@ -100,6 +100,8 @@ export class AdminProfissionais implements OnInit {
       comissao_padrao: 0, instagram: '', linkedin: '',
       cor_agenda: '#1a73e8', valor_hora: 0, ativo: true,
       role: 'barbeiro',
+      auth_type: 'email',
+      convite_enviado: false,
       disponibilidades: [], servicos: [],
     };
     this.disponibilidades = this.svc.getDisponibilidadesPadrao();
@@ -223,12 +225,26 @@ export class AdminProfissionais implements OnInit {
     await this.svc.toggleAtivo(p.id!, !p.ativo);
   }
 
-  confirmarDelete: string | null = null;
+  confirmarDelete: string | null | undefined = null;
   async deletarProfissional(id: string) {
     if (this.confirmarDelete !== id) { this.confirmarDelete = id; return; }
     await this.svc.deletarProfissional(id);
     if (this.profAtual?.id === id) this.panelAberto = false;
     this.confirmarDelete = null;
+  }
+
+  async enviarConvite(p: ProfissionalCompleto) {
+    if (this.isSaving) return;
+    this.isSaving = true;
+    try {
+      await this.svc.enviarConvite(p.id!);
+      this.showSuccess(`Convite enviado para ${p.nome}!`);
+    } catch (e: any) {
+      this.erro = 'Falha ao enviar convite: ' + e.message;
+    } finally {
+      this.isSaving = false;
+      this.cdr.detectChanges();
+    }
   }
 
   cancelarDelete() { this.confirmarDelete = null; }

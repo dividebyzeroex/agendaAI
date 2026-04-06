@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { Landing } from './pages/landing/landing';
 import { Login } from './pages/login/login';
 import { LoginPro } from './pages/login-pro/login-pro';
+import { PrimeiroAcesso } from './pages/primeiro-acesso/primeiro-acesso';
 import { Agendar } from './pages/agendar/agendar';
 import { Profissional } from './pages/profissional/profissional';
 import { Onboarding } from './pages/onboarding/onboarding';
@@ -22,6 +23,7 @@ export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
   { path: 'login', component: Login },
   { path: 'login-pro', component: LoginPro },
+  { path: 'primeiro-acesso', component: PrimeiroAcesso },
   { path: 'onboarding', component: Onboarding, canActivate: [authGuard] },
   // Rota pública de agendamento — /agendar/:slug (ex: /agendar/barbearia-do-joao)
   { path: 'agendar/:slug', component: Agendar },

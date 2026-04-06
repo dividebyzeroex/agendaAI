@@ -9,7 +9,13 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private supabase: SupabaseClient | null = null;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  userProfileSubject = new BehaviorSubject<{nome: string, role: string} | null>(null);
+  userProfileSubject = new BehaviorSubject<{
+    id: string,
+    nome: string, 
+    role: string, 
+    primeiro_acesso: boolean, 
+    onboarding_concluido: boolean
+  } | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();
 
   get userProfileValue() {
@@ -88,7 +94,7 @@ export class AuthService {
     // 1. Tenta buscar pelo user_id (Conexão já estabelecida)
     let { data, error } = await this.supabase
       .from('profissionais')
-      .select('id, nome, role, email')
+      .select('id, nome, role, email, primeiro_acesso, onboarding_concluido')
       .eq('user_id', userId)
       .maybeSingle();
 
@@ -98,7 +104,7 @@ export class AuthService {
       if (user?.email) {
         const { data: profByEmail, error: emailErr } = await this.supabase
           .from('profissionais')
-          .select('id, nome, role, email')
+          .select('id, nome, role, email, primeiro_acesso, onboarding_concluido')
           .eq('email', user.email)
           .maybeSingle();
 
@@ -116,19 +122,31 @@ export class AuthService {
     }
 
     if (data) {
-      this.userProfileSubject.next({ nome: data.nome, role: data.role });
+      this.userProfileSubject.next({ 
+        id: data.id,
+        nome: data.nome, 
+        role: data.role,
+        primeiro_acesso: data.primeiro_acesso || false,
+        onboarding_concluido: data.onboarding_concluido || false
+      });
     } else {
       // 3. Fallback: Tenta buscar pelo Telefone do usuário autenticado
       const { data: { user } } = await this.supabase.auth.getUser();
       if (user?.phone) {
         const { data: profByPhone, error: phoneErr } = await this.supabase
           .from('profissionais')
-          .select('id, nome, role, telefone')
+          .select('id, nome, role, telefone, primeiro_acesso, onboarding_concluido')
           .eq('telefone', user.phone)
           .maybeSingle();
 
         if (profByPhone && !phoneErr) {
-          this.userProfileSubject.next({ nome: profByPhone.nome, role: profByPhone.role });
+          this.userProfileSubject.next({ 
+            id: profByPhone.id,
+            nome: profByPhone.nome, 
+            role: profByPhone.role,
+            primeiro_acesso: profByPhone.primeiro_acesso || false,
+            onboarding_concluido: profByPhone.onboarding_concluido || false
+          });
           // Linkage Automático
           await this.supabase.from('profissionais').update({ user_id: userId }).eq('id', profByPhone.id);
           return;
@@ -136,7 +154,13 @@ export class AuthService {
       }
 
       // Fallback para admin genérico se não for profissional listado
-      this.userProfileSubject.next({ nome: 'Admin', role: 'dono' });
+      this.userProfileSubject.next({ 
+        id: 'admin-legacy',
+        nome: 'Admin', 
+        role: 'dono',
+        primeiro_acesso: false,
+        onboarding_concluido: true
+      });
     }
   }
 

@@ -2,6 +2,7 @@ import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { EstabelecimentoService } from './estabelecimento.service';
+import { AuthService } from './auth.service';
 import { SecurityService } from './security.service';
 
 export interface Profissional {
@@ -23,6 +24,10 @@ export interface Profissional {
   role?: string;
   user_id?: string;
   ativo?: boolean;
+  auth_type?: 'email' | 'phone';
+  convite_enviado?: boolean;
+  primeiro_acesso?: boolean;
+  onboarding_concluido?: boolean;
   created_at?: string;
 }
 
@@ -68,6 +73,7 @@ export class ProfissionaisService {
   private supabase = inject(SupabaseService).client;
   private ngZone = inject(NgZone);
   private estService = inject(EstabelecimentoService);
+  private authService = inject(AuthService);
   private security = inject(SecurityService);
 
   profissionais$  = new BehaviorSubject<ProfissionalCompleto[]>([]);
@@ -251,6 +257,41 @@ export class ProfissionaisService {
     const { error } = await this.supabase.rpc('delete_profissional_safe', { p_id: id });
     if (error) throw error;
     await this.fetchAll();
+  }
+
+  async setAuthType(id: string, auth_type: 'email' | 'phone'): Promise<void> {
+    await this.atualizarProfissional(id, { auth_type });
+  }
+
+  async finalizarOnboarding(id: string): Promise<void> {
+    await this.atualizarProfissional(id, { onboarding_concluido: true, primeiro_acesso: false });
+  }
+
+  async atualizarSenha(password: string): Promise<void> {
+    const { error } = await this.supabase.auth.updateUser({ password });
+    if (error) throw error;
+  }
+
+  async enviarConvite(pId: string): Promise<void> {
+    const profs = this.profissionais$.value;
+    const p = profs.find(x => x.id === pId);
+    if (!p) return;
+
+    try {
+      if (p.auth_type === 'phone' && p.telefone) {
+        await this.authService.signInWithPhone(p.telefone);
+      } else if (p.email) {
+        await this.authService.signInWithOtp(p.email);
+      } else {
+        throw new Error('Profissional sem E-mail ou Telefone configurado.');
+      }
+
+      // Marcar como convidado
+      await this.atualizarProfissional(pId, { convite_enviado: true });
+    } catch (err: any) {
+      console.error('[ProfissionaisService] Erro ao enviar convite:', err.message);
+      throw err;
+    }
   }
 
   getDisponibilidadesPadrao(): ProfissionalDisponibilidade[] {
