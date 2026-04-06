@@ -10,7 +10,7 @@
         <i class="pi pi-shield"></i>
         <span>AgendaAi <small>Pro</small></span>
       </div>
-      <h2>Boas-vindas, <span class="gradient-text">{{ userName }}!</span></h2>
+      <h2>Bem-vindo, <span class="gradient-text">{{ displayName }}!</span></h2>
       <p>{{ fase === 'senha' ? 'Sua segurança vem em primeiro lugar. Vamos ativar sua credencial permanente.' : 'Falta pouco! Entenda como seu papel de ' + userRole + ' decola na plataforma.' }}</p>
     </div>
 
@@ -20,7 +20,7 @@
         <label>Seu Nome Completo</label>
         <div class="input-pa">
           <i class="pi pi-user"></i>
-          <input type="text" [(ngModel)]="nomeCorreto" placeholder="Ex: João Silva" />
+          <input type="text" [(ngModel)]="nomeCorreto" (ngModelChange)="onNameChange()" placeholder="Ex: João Silva" />
         </div>
       </div>
       <div class="field-pa">

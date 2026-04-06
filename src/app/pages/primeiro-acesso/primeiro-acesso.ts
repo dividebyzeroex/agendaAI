@@ -27,6 +27,9 @@ export class PrimeiroAcesso implements OnInit {
   tourStep = 1;
   userRole = '';
   userName = '';
+  displayName = '...';
+  private nameInterval: any;
+  private randomNames = ['Ricardo', 'Aline', 'Júlia', 'Marcos', 'Fernanda', 'Gabriel', 'Beatriz', 'Tiago', 'Rafael', 'Sofia'];
 
   ngOnInit() {
     this.auth.userProfile$.subscribe(profile => {
@@ -38,8 +41,13 @@ export class PrimeiroAcesso implements OnInit {
           this.userName = '';
           this.nomeCorreto = '';
         } else {
-          this.userName = profile.nome;
           this.nomeCorreto = profile.nome;
+          this.displayName = profile.nome;
+        }
+
+        // Se não houver nome (vazio ou criptografado), inicia o carrossel de nomes
+        if (!this.nomeCorreto) {
+          this.startNameCarousel();
         }
         
         // Se já concluiu e não é primeiro acesso, manda pro admin
@@ -130,4 +138,24 @@ export class PrimeiroAcesso implements OnInit {
 
   proximo() { if (this.tourStep < 4) this.tourStep++; else this.finalizarTour(); }
   voltar() { if (this.tourStep > 1) this.tourStep--; }
+
+  private startNameCarousel() {
+    let idx = 0;
+    this.nameInterval = setInterval(() => {
+      if (this.nomeCorreto) {
+        this.displayName = this.nomeCorreto;
+        clearInterval(this.nameInterval);
+      } else {
+        this.displayName = this.randomNames[idx];
+        idx = (idx + 1) % this.randomNames.length;
+      }
+    }, 150);
+  }
+
+  onNameChange() {
+    if (this.nomeCorreto) {
+      this.displayName = this.nomeCorreto;
+      if (this.nameInterval) clearInterval(this.nameInterval);
+    }
+  }
 }
