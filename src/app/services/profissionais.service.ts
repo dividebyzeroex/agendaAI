@@ -263,11 +263,16 @@ export class ProfissionaisService {
     await this.atualizarProfissional(id, { auth_type });
   }
 
-  async finalizarOnboarding(id: string): Promise<void> {
-    await this.atualizarProfissional(id, { onboarding_concluido: true, primeiro_acesso: false });
+  async finalizarOnboarding(id?: string): Promise<void> {
+    const targetId = id || this.authService.userProfileValue?.id;
+    if (!targetId) throw new Error('Identidade do profissional não localizada na sessão ativa.');
+    await this.atualizarProfissional(targetId, { onboarding_concluido: true, primeiro_acesso: false });
   }
 
   async atualizarSenha(password: string): Promise<void> {
+    const { data: { user } } = await this.supabase.auth.getUser();
+    if (!user) throw new Error('Sessão de segurança inválida ou expirada. Realize o login novamente.');
+    
     const { error } = await this.supabase.auth.updateUser({ password });
     if (error) throw error;
   }

@@ -101,14 +101,11 @@ export class PrimeiroAcesso implements OnInit {
   }
 
   async finalizarTour() {
-    const profile = this.auth.userProfileValue;
-    if (profile) {
-      try {
-        await this.profSvc.finalizarOnboarding(profile.id);
-        this.router.navigate(['/admin']);
-      } catch (e: any) {
-        this.erro = 'Erro ao finalizar: ' + e.message;
-      }
+    try {
+      await this.profSvc.finalizarOnboarding();
+      this.router.navigate(['/admin']);
+    } catch (e: any) {
+      this.erro = 'Erro ao finalizar: ' + e.message;
     }
   }
 
