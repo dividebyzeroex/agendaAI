@@ -29,7 +29,6 @@
     <full-calendar 
       *ngIf="!(agendaService.isLoading$ | async)" 
       [options]="calendarOptions" 
-      [events]="agendaService.events$ | async"
     ></full-calendar>
   </div>
 </div>

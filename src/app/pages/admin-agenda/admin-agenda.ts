@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions } from '@fullcalendar/core';
@@ -17,8 +17,9 @@ import { EventoModalComponent } from '../../components/evento-modal/evento-modal
   templateUrl: './admin-agenda.html',
   styleUrls: ['./admin-agenda.css'],
 })
-export class AdminAgenda {
-  agendaService = inject(AgendaEventService);
+export class AdminAgenda implements OnInit {
+  public agendaService = inject(AgendaEventService);
+  private cdr = inject(ChangeDetectorRef);
 
   showAgendarModal = false;
   showEventoModal  = false;
@@ -96,9 +97,19 @@ export class AdminAgenda {
     },
   };
 
+  ngOnInit() {
+    // Sincroniza a fonte de eventos do calendário com o stream do serviço
+    this.agendaService.events$.subscribe(events => {
+      this.calendarOptions = {
+        ...this.calendarOptions,
+        events: events
+      };
+      this.cdr.detectChanges();
+    });
+  }
+
   onAgendamentoConfirmado() {
     this.fecharModais();
-    // Calendar auto-refresca via Realtime do Supabase
   }
 
   fecharModais() {
