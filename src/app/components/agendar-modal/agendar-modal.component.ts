@@ -263,6 +263,24 @@ export interface AgendamentoForm {
       border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); overflow: hidden;
     }
     .dropdown-scroll { max-height: 250px; overflow-y: auto; padding: 8px; }
+    .active-client-chip {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: rgba(37, 99, 235, 0.1); color: var(--primary-color);
+      border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 14px;
+      padding: 10px 16px; font-weight: 700; font-size: 0.95rem;
+      margin-top: 12px; backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    
+    .remove-chip {
+      background: rgba(255, 255, 255, 0.1); border: none; cursor: pointer;
+      color: var(--primary-color); width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s; font-size: 0.7rem;
+    }
+    .remove-chip:hover { background: #ef4444; color: white; }
     .client-row {
       display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer;
       transition: background .2s; margin-bottom: 4px;
@@ -379,15 +397,13 @@ export class AgendarModalComponent implements OnInit {
   }
 
   async ngOnInit() {
+    // Forçar atualização do catálogo de serviços
+    await this.estabelecimento.fetchServicos();
+    
     this.estabelecimento.servicos$.subscribe(s => {
       this.servicos = s;
-      console.log('[AgendarModal] Servicos carregados:', s.length);
+      console.log('[AgendarModal] Servicos sincronizados:', s.length);
     });
-    
-    // Forçar carregamento se estiver vazio
-    if (this.servicos.length === 0) {
-      await this.estabelecimento.fetchServicos();
-    }
 
     const rawPros = await this.proService.fetchProfissionais();
     this.profissionais = await Promise.all(rawPros.map(async p => ({
