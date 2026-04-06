@@ -31,7 +31,7 @@ export interface AgendamentoForm {
           <div class="glass-icon-circle"><i class="pi pi-calendar-plus"></i></div>
           <div class="header-texts">
             <span class="header-subtitle">AgendaAi Management</span>
-            <h2 class="header-title">Agendamento de Elite</h2>
+            <h2 class="header-title">Novo Agendamento</h2>
             <span class="modal-date-tag"><i class="pi pi-clock"></i> {{ startLabel }}</span>
           </div>
         </div>
