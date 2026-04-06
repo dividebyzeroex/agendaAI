@@ -78,11 +78,12 @@
 .empty-state-elite p { max-width: 500px; color: var(--text-muted); font-size: 1rem; line-height: 1.6; margin-bottom: 32px; }
 
 /* ── GRID GLASS DE PROFISSIONAIS ─────────────── */
-.prof-grid-glass {
+.prof-grid-elite {
    display: grid;
    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
    gap: 20px;
    padding: 10px 0;
+   width: 100%;
 }
 
 .prof-card-ent {
