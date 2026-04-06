@@ -116,10 +116,17 @@
 
       <!-- Ações do Tour -->
       <div class="tour-actions">
-        <button class="btn-pa-ghost" (click)="voltar()" [disabled]="tourStep === 1">Anterior</button>
-        <button class="btn-pa-primary next" (click)="proximo()" [disabled]="isSaving">
-          <span *ngIf="!isSaving">{{ tourStep < 4 ? 'Avançar' : 'Entrar no Sistema' }}</span>
-          <span *ngIf="isSaving">Configurando Acesso... <i class="pi pi-spin pi-spinner"></i></span>
+        <button class="btn-pa-ghost" (click)="voltar()" [disabled]="tourStep === 1 || isSaving">Anterior</button>
+        
+        <!-- Botão de Avanço Normal -->
+        <button *ngIf="tourStep < 4" class="btn-pa-primary next" (click)="proximo()">
+          <span>Avançar</span> <i class="pi pi-arrow-right"></i>
+        </button>
+
+        <!-- Botão de Decolagem Final -->
+        <button *ngIf="tourStep === 4" class="btn-pa-primary next pulse-success" (click)="finalizarTour()" [disabled]="isSaving">
+          <span *ngIf="!isSaving">Entrar no Sistema</span>
+          <span *ngIf="isSaving">Decolando... <i class="pi pi-spin pi-spinner"></i></span>
         </button>
       </div>
 

@@ -111,11 +111,23 @@ export class PrimeiroAcesso implements OnInit {
   }
 
   async finalizarTour() {
+    console.log('[PrimeiroAcesso] Iniciando finalização de tour...');
+    if (this.isSaving) return;
+    
+    this.isSaving = true;
+    this.cdr.detectChanges();
+
     try {
       await this.profSvc.finalizarOnboarding();
-      this.router.navigate(['/admin']);
+      console.log('[PrimeiroAcesso] Sucesso no banco. Navegando para /admin...');
+      
+      // Força a navegação imediata
+      await this.router.navigateByUrl('/admin');
     } catch (e: any) {
-      this.erro = 'Erro ao finalizar: ' + e.message;
+      console.error('[PrimeiroAcesso] Erro fatal na decolagem:', e);
+      this.erro = 'Erro na decolagem: ' + e.message;
+      this.isSaving = false;
+      this.cdr.detectChanges();
     }
   }
 
@@ -145,7 +157,11 @@ export class PrimeiroAcesso implements OnInit {
     return (contents[role] || contents['barbeiro'])[this.tourStep - 1];
   }
 
-  proximo() { if (this.tourStep < 4) this.tourStep++; else this.finalizarTour(); }
+  proximo() { 
+    if (this.tourStep < 4) {
+      this.tourStep++; 
+    }
+  }
   voltar() { if (this.tourStep > 1) this.tourStep--; }
 
   private startNameCarousel() {
