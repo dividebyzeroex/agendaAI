@@ -40,7 +40,7 @@ export class AdminAgenda implements OnInit {
     slotMaxTime: '21:00:00',
     slotDuration: '00:30:00',
     snapDuration: '00:30:00',
-    allDaySlot: false,
+    allDaySlot: true,
     editable: true,
     selectable: true,
     selectMirror: true,
