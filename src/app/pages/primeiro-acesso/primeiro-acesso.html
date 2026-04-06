@@ -117,8 +117,9 @@
       <!-- Ações do Tour -->
       <div class="tour-actions">
         <button class="btn-pa-ghost" (click)="voltar()" [disabled]="tourStep === 1">Anterior</button>
-        <button class="btn-pa-primary next" (click)="proximo()">
-          {{ tourStep === 4 ? 'Entrar no Sistema' : 'Avançar' }}
+        <button class="btn-pa-primary next" (click)="proximo()" [disabled]="isSaving">
+          <span *ngIf="!isSaving">{{ tourStep < 4 ? 'Avançar' : 'Entrar no Sistema' }}</span>
+          <span *ngIf="isSaving">Configurando Acesso... <i class="pi pi-spin pi-spinner"></i></span>
         </button>
       </div>
 
