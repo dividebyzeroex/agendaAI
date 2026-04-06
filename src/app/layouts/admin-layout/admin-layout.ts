@@ -24,6 +24,8 @@ import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { ProfissionaisService } from '../../services/profissionais.service';
 import { AuthService } from '../../services/auth.service';
 import { map, Observable } from 'rxjs';
+import { PresenceService, OnlineUser } from '../../services/presence.service';
+
 
 @Component({
   selector: 'app-admin-layout',
@@ -56,12 +58,14 @@ export class AdminLayout implements OnInit {
   theme        = inject(ThemeService);
   estabService = inject(EstabelecimentoService);
   authService  = inject(AuthService);
-  profService  = inject(ProfissionaisService); // Novo injetor para o Dono Nato
+  profService  = inject(ProfissionaisService);
+  presence     = inject(PresenceService); // Monitor de Vida em Tempo Real
 
   showOnboarding = false;
   isNotifOpen = false;
   
   userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
+  onlineUsers$ = this.presence.onlineUsers$;
   userMenuItems: MenuItem[] | undefined;
 
   async ngOnInit() {

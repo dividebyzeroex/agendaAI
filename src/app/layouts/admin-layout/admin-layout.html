@@ -93,6 +93,20 @@
           </button>
         </div>
 
+        <!-- LIVE CREW (Presence Synchrony) -->
+        <div class="presence-stack" *ngIf="onlineUsers$ | async as users">
+           <div class="presence-avatars" *ngIf="users.length > 0">
+              <div class="p-avatar-item" *ngFor="let u of users | slice:0:3" 
+                   [pTooltip]="u.nome + ' (' + u.role + ')'" tooltipPosition="bottom">
+                 <div class="p-status-glow"></div>
+                 <p-avatar [label]="(u.nome[0] | uppercase)" shape="circle"></p-avatar>
+              </div>
+              <div class="p-avatar-more" *ngIf="users.length > 3" [pTooltip]="users.length - 3 + ' mais online'" tooltipPosition="bottom">
+                +{{ users.length - 3 }}
+              </div>
+           </div>
+        </div>
+
         <div class="notif-wrapper">
           <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" 
             (click)="isNotifOpen = !isNotifOpen"></p-button>
