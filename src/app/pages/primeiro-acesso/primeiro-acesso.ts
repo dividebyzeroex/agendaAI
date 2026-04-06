@@ -48,7 +48,7 @@ export class PrimeiroAcesso implements OnInit {
         }
 
         // Se não houver nome (vazio ou criptografado), inicia o carrossel de nomes
-        if (!this.nomeCorreto) {
+        if (!this.nomeCorreto && !this.nameInterval) {
           this.startNameCarousel();
         }
         
@@ -142,6 +142,7 @@ export class PrimeiroAcesso implements OnInit {
   voltar() { if (this.tourStep > 1) this.tourStep--; }
 
   private startNameCarousel() {
+    if (this.nameInterval) clearInterval(this.nameInterval);
     let idx = 0;
     this.nameInterval = setInterval(() => {
       if (this.nomeCorreto) {
