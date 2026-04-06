@@ -138,7 +138,7 @@ export interface AgendamentoForm {
         <!-- Seção: Profissional -->
         <div class="elite-section">
           <label><i class="pi pi-id-card"></i> Colaborador Designado</label>
-          <div class="professional-grid">
+          <div class="professional-grid custom-scroll-h">
             <div
                 *ngFor="let p of profissionais"
                 class="prof-card-glass"
@@ -312,11 +312,13 @@ export interface AgendamentoForm {
     .s-price { color: #34a853; }
     .check-mark { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
  
-    .professional-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px; }
+    .professional-grid { display: flex; gap: 12px; padding-bottom: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
     .prof-card-glass {
+      min-width: 130px;
       padding: 14px; border-radius: 18px; border: 1.5px solid var(--glass-border);
       background: rgba(255,255,255,0.02); cursor: pointer; text-align: center;
       transition: all .3s; position: relative; overflow: hidden;
+      scroll-snap-align: start;
     }
     .prof-card-glass.active { background: rgba(255,255,255,0.05); }
     .p-avatar-wrap { width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; position: relative; }
