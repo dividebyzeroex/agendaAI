@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { AuthService } from './auth.service';
+import { SecurityService } from './security.service';
 
 export interface OnlineUser {
   id: string;
@@ -14,6 +15,7 @@ export interface OnlineUser {
 export class PresenceService {
   private supabase = inject(SupabaseService).client;
   private auth = inject(AuthService);
+  private security = inject(SecurityService);
 
   private onlineUsersSubject = new BehaviorSubject<OnlineUser[]>([]);
   public onlineUsers$ = this.onlineUsersSubject.asObservable();
@@ -65,22 +67,28 @@ export class PresenceService {
       });
   }
 
-  private updateOnlineUsers(state: any) {
+  private async updateOnlineUsers(state: any) {
     const list: OnlineUser[] = [];
-    Object.keys(state).forEach(key => {
-      // Supabase Presence pode ter multiplas sessões para a mesma chave (ex: 2 abas)
-      // Pegamos apenas a informação da primeira sessão ativa
+    
+    // Mapeamos as chaves para promessas de descriptografia
+    const promises = Object.keys(state).map(async key => {
       const userState = state[key][0];
       if (userState) {
-        list.push({
+        const clearNome = await this.security.decryptData(userState.nome);
+        return {
           id: userState.id,
-          nome: userState.nome,
+          nome: clearNome,
           role: userState.role,
           last_active: userState.last_active
-        });
+        };
       }
+      return null;
     });
-    this.onlineUsersSubject.next(list);
+
+    const results = await Promise.all(promises);
+    const validUsers = results.filter(u => u !== null) as OnlineUser[];
+    
+    this.onlineUsersSubject.next(validUsers);
   }
 
   private leavePresence() {
