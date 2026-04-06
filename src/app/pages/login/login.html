@@ -36,18 +36,33 @@
                   <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
                 </div>
                 
-                <div class="success-box" *ngIf="successMessage">
-                  <i class="pi pi-check-circle"></i> {{ successMessage }}
-                </div>
-
-                <div class="field" *ngIf="!isOtpSent">
+                <!-- PASSO 1: E-MAIL -->
+                <div class="field" *ngIf="step === 'email' && !isOtpSent">
                   <label for="email">E-mail Profissional</label>
                   <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full prime-input" placeholder="seu@email.com" />
                 </div>
 
+                <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (SENHA) -->
+                <div class="field animate-in" *ngIf="step === 'auth' && authType === 'password' && !isOtpSent">
+                  <div class="field-info-row">
+                    <label for="password">Sua Senha</label>
+                    <a href="javascript:void(0)" (click)="resetSteps()" class="btn-change-email">Alterar e-mail</a>
+                  </div>
+                  <input pInputText id="password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="••••••••" />
+                </div>
+
+                <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (LINK MÁGICO / OTP) -->
+                <div class="auth-hint-box animate-in" *ngIf="step === 'auth' && authType !== 'password' && !isOtpSent">
+                   <div class="hint-icon"><i class="pi" [ngClass]="authType === 'email' ? 'pi-envelope' : 'pi-phone'"></i></div>
+                   <div class="hint-text">
+                      Utilizaremos <b>{{ authType === 'email' ? 'Magic Link' : 'SMS/OTP' }}</b> para seu acesso.<br>
+                      <a href="javascript:void(0)" (click)="resetSteps()">Alterar e-mail</a>
+                   </div>
+                </div>
+
                 <p-button 
                     *ngIf="!isOtpSent"
-                    [label]="isSignupMode ? 'Começar Cadastro' : 'Continuar com E-mail'" 
+                    [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar' : 'Entrar no Sistema')" 
                     styleClass="w-full btn-login-main" 
                     [loading]="isLoading"
                     (onClick)="submitEmail()">

@@ -199,12 +199,35 @@ export class ProfissionaisService {
     delete payload.disponibilidades;
     delete payload.servicos;
 
-    const encrypted = await this.security.encryptObject(payload, ['nome', 'bio', 'email', 'telefone', 'instagram', 'linkedin']);
+    // 1. Campos de Controle (Não PII) -> Persistência Direta e Absoluta
+    const controlFields: any = {};
+    if ('role' in payload) controlFields.role = payload.role;
+    if ('ativo' in payload) controlFields.ativo = payload.ativo;
+    if ('auth_type' in payload) controlFields.auth_type = payload.auth_type;
+    if ('primeiro_acesso' in payload) controlFields.primeiro_acesso = payload.primeiro_acesso;
+    if ('onboarding_concluido' in payload) controlFields.onboarding_concluido = payload.onboarding_concluido;
 
-    const { error } = await this.supabase
-      .rpc('update_profissional_safe', { p_id: id, p_changes: encrypted });
-    if (error) throw error;
+    if (Object.keys(controlFields).length > 0) {
+      const { error: ctrlErr } = await this.supabase
+        .from('profissionais')
+        .update(controlFields)
+        .eq('id', id);
+      if (ctrlErr) throw ctrlErr;
+    }
+
+    // 2. Campos Sensíveis (PII) -> Criptografia + RPC Safe
+    const piiFields = ['nome', 'bio', 'email', 'telefone', 'instagram', 'linkedin'];
+    const hasPii = Object.keys(payload).some(k => piiFields.includes(k));
+
+    if (hasPii) {
+      const encrypted = await this.security.encryptObject(payload, piiFields);
+      const { error } = await this.supabase
+        .rpc('update_profissional_safe', { p_id: id, p_changes: encrypted });
+      if (error) throw error;
+    }
+
     await this.fetchAll();
+    console.log('[ProfissionaisService] Profissional sincronizado com autoridade total.');
   }
 
   async salvarDisponibilidades(profissionalId: string, disps: ProfissionalDisponibilidade[]): Promise<void> {
@@ -259,8 +282,18 @@ export class ProfissionaisService {
     await this.fetchAll();
   }
 
-  async setAuthType(id: string, auth_type: 'email' | 'phone'): Promise<void> {
+  async setAuthType(id: string, auth_type: 'email' | 'phone' | 'password'): Promise<void> {
     await this.atualizarProfissional(id, { auth_type });
+  }
+
+  /**
+   * Identifica a preferência de autenticação (PÚBLICO)
+   * Nota: Como os emails são criptografados, esta RPC faz o match seguro.
+   */
+  async getAuthPreference(email: string): Promise<{ data: string | null, error: any }> {
+    return await this.supabase.rpc('get_auth_type_by_email_public', { 
+      p_email: email.trim().toLowerCase() 
+    });
   }
 
   async finalizarOnboarding(id?: string): Promise<void> {

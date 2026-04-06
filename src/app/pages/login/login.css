@@ -411,6 +411,80 @@
   font-weight: 800 !important;
   text-align: center !important;
 }
+/* --- LOGIN CAMALEÃO (Elite Adaptivity) --- */
+
+.animate-in {
+  animation: slideBottomFade 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes slideBottomFade {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.field-info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.btn-change-email {
+  font-size: 0.75rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s;
+  opacity: 0.8;
+}
+
+.btn-change-email:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.auth-hint-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(var(--primary-rgb), 0.1);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+}
+
+.hint-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.2rem;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
+}
+
+.hint-text {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.hint-text b {
+  color: var(--text-base);
+}
+
+.hint-text a {
+  display: inline-block;
+  margin-top: 0.25rem;
+  color: var(--primary-color);
+  text-decoration: none;
+  font-weight: 500;
+}
 
 .forgot-password {
   text-align: right;

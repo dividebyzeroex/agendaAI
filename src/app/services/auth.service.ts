@@ -196,16 +196,31 @@ export class AuthService {
   }
 
   async signInWithOtp(email: string) {
-    if (!this.supabase) throw new Error('Supabase not initialized.');
-    
-    const { data, error } = await this.supabase.auth.signInWithOtp({
+    if (!this.supabase) {
+      // Mock mode
+      console.log('Mock: OTP Sent to', email);
+      return;
+    }
+    const { error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: window.location.origin + '/admin'
       }
     });
     if (error) throw error;
-    return data;
+  }
+
+  async signInWithEmail(email: string, password: string) {
+    if (!this.supabase) {
+      // Mock mode
+      if (password === 'admin123') return;
+      throw new Error('Senha incorreta no modo simulado.');
+    }
+    const { error } = await this.supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    if (error) throw error;
   }
 
   async signInWithPhone(phone: string) {

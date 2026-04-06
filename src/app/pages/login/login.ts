@@ -7,6 +7,7 @@ import { Card } from 'primeng/card';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
+import { ProfissionaisService } from '../../services/profissionais.service';
 
 type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
 
@@ -27,7 +28,13 @@ export class Login {
 
   private router = inject(Router);
   private authService = inject(AuthService);
+  private profService = inject(ProfissionaisService);
   private cdr = inject(ChangeDetectorRef);
+
+  // Estados Camaleão
+  step: 'email' | 'auth' = 'email';
+  authType: 'email' | 'phone' | 'password' = 'email';
+  password = '';
 
   // Estados Onboarding Integrado (Elite Gatekeeper)
   isDoingOnboarding = false;
@@ -76,7 +83,6 @@ export class Login {
 
     try {
       if (this.isSignupMode) {
-         // Iniciamos a Fusão UI: O card de login vai virar para o onboarding
          this.isDoingOnboarding = true;
          this.onStep = 'overview';
          this.form.email = this.email;
@@ -84,12 +90,39 @@ export class Login {
          this.cdr.detectChanges();
          return;
       }
+
+      // LOGIN CAMALEÃO: Passo 1 - Identificar Preferência
+      if (this.step === 'email') {
+        const { data, error } = await this.profService.getAuthPreference(this.email);
+        if (error) {
+           // Se não achar, assume o padrão de link mágico (pode ser novo)
+           this.authType = 'email';
+        } else {
+           this.authType = (data as any) || 'email';
+        }
+        this.step = 'auth';
+        this.isLoading = false;
+        this.cdr.detectChanges();
+        return;
+      }
       
-      await this.authService.signInWithOtp(this.email);
-      this.isOtpSent = true;
-      this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
+      // LOGIN CAMALEÃO: Passo 2 - Autenticar de fato
+      if (this.authType === 'password') {
+        if (!this.password) {
+          throw new Error('Por favor, insira a sua senha.');
+        }
+        await this.authService.signInWithEmail(this.email, this.password);
+        this.router.navigateByUrl('/admin');
+      } else if (this.authType === 'phone') {
+        this.errorMessage = 'A autenticação por Telefone (OTP) será redirecionada para o seu WhatsApp cadastrado.';
+      } else {
+        await this.authService.signInWithOtp(this.email);
+        this.isOtpSent = true;
+        this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
+      }
+      
     } catch (error: any) {
-      this.errorMessage = error.message || 'Houve um erro ao enviar o Magic Link.';
+      this.errorMessage = error.message || 'Houve um erro na autenticação.';
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -139,27 +172,15 @@ export class Login {
     this.cdr.detectChanges();
 
     try {
-      // Sincronização robusta do e-mail (Segurança redundante)
       if (!this.form.email) {
         this.form.email = this.email;
       }
-      
-      console.log('[Gatekeeper] Finalizando onboarding. Disparando Magic Link para:', this.form.email);
-
-      // SALVAMENTO DIFERIDO: Dados fiscais e operacionais.
       localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-      
-      // DISPARO REAL DO MAGIC LINK
       await this.authService.signInWithOtp(this.form.email);
-      
-      console.log('[Gatekeeper] Magic Link disparado com sucesso.');
-
-      // Delay tátil 'WOW' reduzido para agilidade
       await new Promise(r => setTimeout(r, 1500));
       this.isLoading = false;
       this.cdr.detectChanges();
     } catch (err: any) {
-      console.error('[Onboarding Login] Erro Crítico no disparador:', err);
       this.errorMessage = err.message || 'Houve um problema ao processar seu cadastro.';
       this.isLoading = false;
       this.onStep = 'link';
@@ -182,6 +203,13 @@ export class Login {
   toggleMode() {
     this.isSignupMode = !this.isSignupMode;
     this.errorMessage = '';
+    this.cdr.detectChanges();
+  }
+
+  resetSteps() {
+    this.step = 'email';
+    this.authType = 'email';
+    this.password = '';
     this.cdr.detectChanges();
   }
 }
