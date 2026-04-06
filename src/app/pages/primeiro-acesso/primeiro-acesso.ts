@@ -20,6 +20,7 @@ export class PrimeiroAcesso implements OnInit {
   fase: 'senha' | 'tour' = 'senha';
   pass1 = '';
   pass2 = '';
+  nomeCorreto = '';
   isSaving = false;
   erro = '';
 
@@ -30,8 +31,16 @@ export class PrimeiroAcesso implements OnInit {
   ngOnInit() {
     this.auth.userProfile$.subscribe(profile => {
       if (profile) {
-        this.userName = profile.nome;
         this.userRole = profile.role;
+        
+        // Se o nome vier criptografado (base64 ou hash longo), limpamos para o usuário preencher
+        if (profile.nome && (profile.nome.length > 30 || profile.nome.includes('==') || profile.nome.includes('+'))) {
+          this.userName = '';
+          this.nomeCorreto = '';
+        } else {
+          this.userName = profile.nome;
+          this.nomeCorreto = profile.nome;
+        }
         
         // Se já concluiu e não é primeiro acesso, manda pro admin
         if (!profile.primeiro_acesso && profile.onboarding_concluido) {
@@ -55,17 +64,23 @@ export class PrimeiroAcesso implements OnInit {
       this.erro = 'As senhas não coincidem.';
       return;
     }
+    if (!this.nomeCorreto || this.nomeCorreto.trim().length < 3) {
+      this.erro = 'Por favor, informe seu nome real.';
+      return;
+    }
 
     this.isSaving = true;
     this.erro = '';
     try {
       await this.profSvc.atualizarSenha(this.pass1);
       
-      // Atualiza o flag de primeiro acesso
       const profile = this.auth.userProfileValue;
       if (profile) {
-        await this.profSvc.atualizarProfissional(profile.id, { primeiro_acesso: false });
-        // O loadUserProfile será disparado pelo realtime ou forçamos
+        const updateData: any = { primeiro_acesso: false };
+        if (this.nomeCorreto && this.nomeCorreto !== profile.nome) {
+          updateData.nome = this.nomeCorreto;
+        }
+        await this.profSvc.atualizarProfissional(profile.id, updateData);
         this.fase = 'tour';
       }
     } catch (e: any) {

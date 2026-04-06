@@ -17,6 +17,13 @@
     <!-- FASE 1: DEFINIR SENHA -->
     <div class="pa-content-fade" *ngIf="fase === 'senha'">
       <div class="field-pa">
+        <label>Seu Nome Completo</label>
+        <div class="input-pa">
+          <i class="pi pi-user"></i>
+          <input type="text" [(ngModel)]="nomeCorreto" placeholder="Ex: João Silva" />
+        </div>
+      </div>
+      <div class="field-pa">
         <label>Nova Senha</label>
         <div class="input-pa">
           <i class="pi pi-lock"></i>
