@@ -210,12 +210,17 @@ export class ProfissionalService {
 
   // ─── Cadastro de Profissionais ─────────────────────────────────────────
 
-  async fetchProfissionais(): Promise<any[]> {
-    const { data, error } = await this.supabase
+  async fetchProfissionais(establishmentId?: string): Promise<any[]> {
+    let query = this.supabase
       .from('profissionais')
       .select('*')
-      .eq('ativo', true)
-      .order('nome');
+      .eq('ativo', true);
+
+    if (establishmentId) {
+      query = query.eq('establishment_id', establishmentId);
+    }
+
+    const { data, error } = await query.order('nome');
     if (error) throw error;
     return data || [];
   }

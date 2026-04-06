@@ -399,16 +399,20 @@ export class AgendarModalComponent implements OnInit {
   async ngOnInit() {
     // Forçar atualização do catálogo de serviços
     await this.estabelecimento.fetchServicos();
-    
     this.estabelecimento.servicos$.subscribe(s => {
       this.servicos = s;
       console.log('[AgendarModal] Servicos sincronizados:', s.length);
     });
 
-    const rawPros = await this.proService.fetchProfissionais();
-    this.profissionais = await Promise.all(rawPros.map(async p => ({
+    const estId = this.estabelecimento.estabelecimento$.value?.id;
+    const rawPros = await this.proService.fetchProfissionais(estId || undefined);
+    
+    // Filtro de Unicidade (Distinct por ID) para erradicar duplicatas
+    const uniquePros = Array.from(new Map(rawPros.map(p => [p.id, p])).values());
+    
+    this.profissionais = await Promise.all(uniquePros.map(async p => ({
       ...p,
-      nome: await this.security.decryptData(p.nome)
+      nome: await this.security.decryptData(p.nome) || p.nome
     })));
 
     document.addEventListener('click', this._closeDropdown);
