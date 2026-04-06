@@ -32,12 +32,6 @@ export class PrimeiroAcesso implements OnInit {
   displayName = '...';
   private nameInterval: any;
   private randomNames = ['Ricardo', 'Aline', 'Júlia', 'Marcos', 'Fernanda', 'Gabriel', 'Beatriz', 'Tiago', 'Rafael', 'Sofia'];
-  private tourImages = [
-    'onboarding_step_1_vision_1775438457636.png',
-    'onboarding_step_2_strategy_1775438483587.png',
-    'onboarding_step_3_team_1775438497223.png',
-    'onboarding_step_4_success_1775438510413.png'
-  ];
 
   ngOnInit() {
     this.auth.userProfile$.subscribe(profile => {
@@ -149,10 +143,6 @@ export class PrimeiroAcesso implements OnInit {
 
     const role = (this.userRole === 'dono' || this.userRole === 'financeiro') ? this.userRole : 'barbeiro';
     return (contents[role] || contents['barbeiro'])[this.tourStep - 1];
-  }
-
-  getStepImage() {
-    return this.tourImages[this.tourStep - 1] || this.tourImages[0];
   }
 
   proximo() { if (this.tourStep < 4) this.tourStep++; else this.finalizarTour(); }

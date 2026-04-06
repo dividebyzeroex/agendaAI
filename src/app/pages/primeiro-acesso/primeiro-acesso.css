@@ -85,7 +85,64 @@
 .tour-actions { display: flex; gap: 16px; margin-top: 20px; }
 .btn-pa-ghost { flex:1; padding: 16px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.1); background: transparent; color: rgba(255,255,255,0.6); font-weight: 700; cursor: pointer; transition: all .3s; }
 .btn-pa-ghost:hover:not(:disabled) { background: rgba(255,255,255,0.05); color: white; border-color: white; }
-.btn-pa-ghost:disabled { opacity: 0.2; cursor: not-allowed; }
+.tour-visual {
+  width: 100%;
+  height: 280px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  perspective: 1500px;
+  margin-bottom: 2rem;
+}
+
+.visual-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* DNA: Mockup Chat */
+.mockup-chat { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 380px; }
+.m-bubble { padding: 14px 20px; border-radius: 20px; font-size: 0.9rem; font-weight: 600; line-height: 1.4; }
+.m-bubble.bot { background: linear-gradient(135deg, #4f46e5, #a142f4); color: white; border-bottom-left-radius: 4px; box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2); }
+.m-bubble.user { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.1); color: white; border-bottom-right-radius: 4px; align-self: flex-end; }
+
+/* DNA: Shield Pulse */
+.shield-pulse {
+  position: relative; width: 80px; height: 80px; background: rgba(16, 185, 129, 0.15);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 1.5rem;
+}
+.shield-pulse i { font-size: 2.2rem; color: #10b981; position: absolute; }
+.shield-pulse .unlock { opacity: 0; animation: unlockFade 4s infinite; }
+.shield-pulse .lock { opacity: 1; animation: lockFade 4s infinite; }
+
+@keyframes lockFade { 0%, 40% { opacity: 1; transform: scale(1); } 50%, 90% { opacity: 0; transform: scale(0.8); } }
+@keyframes unlockFade { 0%, 40% { opacity: 0; transform: scale(0.8); } 50%, 90% { opacity: 1; transform: scale(1.1); } }
+
+/* DNA: Mockup Chart */
+.mockup-chart { display: flex; align-items: flex-end; gap: 10px; height: 100px; width: 100%; max-width: 200px; margin: 0 auto 1.5rem; border-bottom: 2px solid rgba(255,255,255,0.1); padding-bottom: 8px; }
+.mockup-chart .bar { flex: 1; border-radius: 8px 8px 0 0; transform-origin: bottom; animation: barGrow 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.mockup-chart .bar.h-40 { height: 40%; background: rgba(255,255,255,0.2); }
+.mockup-chart .bar.h-70 { height: 70%; background: rgba(255,255,255,0.4); }
+.mockup-chart .bar.h-100 { height: 100%; background: #4f46e5; box-shadow: 0 0 30px rgba(79, 70, 229, 0.5); }
+@keyframes barGrow { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+
+/* DNA: Mockup Booking */
+.mockup-booking { display: flex; gap: 12px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); width: 100%; max-width: 380px; align-items: center; }
+.m-chip { background: rgba(255,255,255,0.1); padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9rem; color: rgba(255,255,255,0.6); }
+.m-chip.active { background: #4f46e5; color: white; box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4); transform: scale(1.05); }
+.m-btn { background: #10b981; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; margin-left: auto; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); }
+
+/* DNA: Eco Card Glass */
+.eco-card.glass {
+  background: rgba(255,255,255,0.03); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 28px; padding: 2.5rem; text-align: center; width: 100%; max-width: 320px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.3); animation: float 6s ease-in-out infinite alternate;
+}
+.eco-card p { font-size: 0.9rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; margin-top: 1rem; color: #4f46e5; }
 
 .btn-pa-primary.next { flex: 2; }
 

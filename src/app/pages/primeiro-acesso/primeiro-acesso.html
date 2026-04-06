@@ -61,14 +61,51 @@
         </div>
       </div>
 
-      <!-- Ilustração Digital Premium -->
+      <!-- Visual de Luxo Baseado na Landing Page (DNA CSS) -->
       <div class="tour-visual">
-        <img [src]="getStepImage()" class="tour-img-3d" [class.img-swap]="tourStep" alt="Premium Visual" />
-      </div>
+        <div class="visual-container" [ngSwitch]="tourStep">
+          
+          <!-- Passo 1: Visão (Escudo Blindado) -->
+          <div *ngSwitchCase="1" class="mockup-scene fade-in">
+            <div class="eco-card glass highlight">
+              <div class="shield-pulse">
+                <i class="pi pi-lock-open unlock"></i>
+                <i class="pi pi-lock lock"></i>
+              </div>
+              <p>Rede Blindada</p>
+            </div>
+          </div>
 
-      <!-- Ilustração Digital Premium -->
-      <div class="tour-visual">
-        <img [src]="getStepImage()" class="tour-img-3d" [class.img-swap]="tourStep" alt="Premium Visual" />
+          <!-- Passo 2: Estratégia (Gráficos) -->
+          <div *ngSwitchCase="2" class="mockup-scene fade-in">
+            <div class="eco-card glass">
+              <div class="mockup-chart alive">
+                <div class="bar h-40"></div>
+                <div class="bar h-70"></div>
+                <div class="bar h-100 green-highlight"></div>
+              </div>
+              <p>Escala de Lucro</p>
+            </div>
+          </div>
+
+          <!-- Passo 3: Equipe (Agente IA) -->
+          <div *ngSwitchCase="3" class="mockup-scene fade-in">
+            <div class="mockup-chat">
+              <div class="m-bubble bot">Agent Júlia: "Horário confirmado via Túnel Seguro."</div>
+              <div class="m-bubble user">Obrigado!</div>
+            </div>
+          </div>
+
+          <!-- Passo 4: Decolagem (Portal do Cliente) -->
+          <div *ngSwitchCase="4" class="mockup-scene fade-in">
+            <div class="mockup-booking">
+              <div class="m-chip">14:00</div>
+              <div class="m-chip active">15:00 <i class="pi pi-check"></i></div>
+              <div class="m-btn">Agendado</div>
+            </div>
+          </div>
+
+        </div>
       </div>
 
       <!-- Conteúdo Dinâmico -->
