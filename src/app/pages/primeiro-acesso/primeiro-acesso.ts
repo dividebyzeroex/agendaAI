@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -16,6 +16,7 @@ export class PrimeiroAcesso implements OnInit {
   private auth = inject(AuthService);
   private profSvc = inject(ProfissionaisService);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   fase: 'senha' | 'tour' = 'senha';
   pass1 = '';
@@ -144,10 +145,12 @@ export class PrimeiroAcesso implements OnInit {
     this.nameInterval = setInterval(() => {
       if (this.nomeCorreto) {
         this.displayName = this.nomeCorreto;
+        this.cdr.detectChanges();
         clearInterval(this.nameInterval);
       } else {
         this.displayName = this.randomNames[idx];
         idx = (idx + 1) % this.randomNames.length;
+        this.cdr.detectChanges();
       }
     }, 150);
   }
