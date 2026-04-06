@@ -267,11 +267,20 @@ export class ProfissionaisService {
     const targetId = id || this.authService.userProfileValue?.id;
     if (!targetId) throw new Error('Identidade do profissional não localizada na sessão ativa.');
     
-    // 1. Atualiza no Banco
-    await this.atualizarProfissional(targetId, { onboarding_concluido: true, primeiro_acesso: false });
+    // 1. Atualiza no Banco (Diretamente, sem passar pela RPC de PII)
+    const { error } = await this.supabase
+      .from('profissionais')
+      .update({ onboarding_concluido: true, primeiro_acesso: false })
+      .eq('id', targetId);
+      
+    if (error) {
+      console.error('[ProfissionaisService] Falha grave ao persistir onboarding:', error);
+      throw error;
+    }
     
-    // 2. Atualiza Localmente no AuthService (Evita bloqueio de Guard)
+    // 2. Atualiza Localmente no AuthService (Garante que o Guard libere o acesso)
     this.authService.updateUserProfileLocal({ onboarding_concluido: true, primeiro_acesso: false });
+    console.log('[ProfissionaisService] Onboarding persistido com sucesso absoluto.');
   }
 
   async atualizarSenha(password: string): Promise<void> {
