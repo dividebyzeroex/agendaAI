@@ -47,8 +47,8 @@
   <!-- ══════════════ PORTAL SECTION ══════════════ -->
   <div class="pro-app" *ngIf="authState === 'ready'">
     
-    <!-- HEADER ELITE -->
-    <header class="pro-header-elite">
+    <!-- HEADER PREMIUM -->
+    <header class="pro-header-glass">
        <div class="h-user">
           <div class="h-avatar" [style.background]="profile?.cor_agenda || '#1a73e8'">
              <img *ngIf="profile?.foto_url" [src]="profile?.foto_url" alt="" />
@@ -59,11 +59,11 @@
              <span>{{ estabName }}</span>
           </div>
        </div>
-       <button (click)="logout()" class="btn-logout-elite"><i class="pi pi-power-off"></i></button>
+       <button (click)="logout()" class="btn-logout-glass"><i class="pi pi-power-off"></i></button>
     </header>
 
     <!-- PRO WALLET (RESUMO FINANCEIRO) -->
-    <div class="pro-wallet-elite">
+    <div class="pro-wallet-glass">
         <div class="pw-total">
             <span class="label">Faturamento Hoje</span>
             <h2 class="value">R$ {{ (totalRevenue || 0).toFixed(2).replace('.', ',') }}</h2>
@@ -98,22 +98,22 @@
                <p>Não há atendimentos programados.</p>
             </div>
 
-            <div class="ev-card-elite" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
+            <div class="ev-card-glass" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
                <div class="ev-time-strip">
                   <strong>{{ fmtH(ev.start) }}</strong>
                   <div class="line"></div>
                   <span>{{ fmtH(ev.end) }}</span>
                </div>
-               <div class="ev-body-elite">
+               <div class="ev-body-glass">
                   <div class="ev-header">
                      <span class="client-name">{{ ev?.clientes?.nome || 'Cliente' }}</span>
-                     <span class="st-pill-elite" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
+                     <span class="st-pill-glass" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
                         {{ getStat(ev.status).label }}
                      </span>
                   </div>
                   <p class="service-name">{{ ev?.servicos?.titulo || 'Serviço' }}</p>
                   <div class="ev-footer" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado'">
-                    <button class="btn-action-elite" [disabled]="isSaving" (click)="goAtendimento(ev)">
+                    <button class="btn-action-glass" [disabled]="isSaving" (click)="goAtendimento(ev)">
                        <i class="pi" [class]="ev.status === 'em_atendimento' ? 'pi-play' : 'pi-check-circle'"></i>
                        {{ ev.status === 'em_atendimento' ? 'Continuar' : 'Atender Cliente' }}
                     </button>

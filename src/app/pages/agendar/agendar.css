@@ -171,24 +171,13 @@
   background: var(--primary-light);
 }
 
-.c-icon-elite {
-  width: 52px;
-  height: 52px;
-  background: var(--active-bg);
-  border: 1px solid var(--glass-border);
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  transition: all 0.2s;
+.c-icon-glass {
+   width: 48px; height: 48px; border-radius: 12px;
+   background: var(--primary-light); color: var(--primary);
+   display: flex; align-items: center; justify-content: center;
+   font-size: 1.25rem; transition: all 0.3s;
 }
-
-.c-card-elite:hover .c-icon-elite {
-  background: var(--bg-soft);
-  transform: scale(1.05);
-}
+.c-card-glass:hover .c-icon-glass { background: var(--primary); color: white; transform: rotate(10deg); }
 
 .c-info-elite { flex: 1; min-width: 0; }
 .c-info-elite strong { display: block; font-size: 1.05rem; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
@@ -336,6 +325,15 @@
 /* Form */
 .confirm-form-elite { display: flex; flex-direction: column; gap: 16px; margin-bottom: 2rem; }
 .input-group-elite label { display: block; font-size: 0.85rem; font-weight: 800; color: var(--text-dim); margin-bottom: 8px; text-transform: uppercase; }
+
+.c-card-glass {
+   display: flex; align-items: center; gap: 16px; 
+   background: var(--glass-bg); padding: 16px; border-radius: 16px;
+   border: 1px solid var(--glass-border); cursor: pointer;
+   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+   position: relative; overflow: hidden;
+}
+.c-card-glass:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 12px 24px rgba(0,0,0,0.06); }
 
 .ag-input-elite {
   width: 100%;

@@ -49,14 +49,14 @@
            <p>Selecione o que você deseja realizar hoje.</p>
         </div>
         <div class="v-list">
-          <button class="c-card-elite" *ngFor="let s of services" (click)="pickService(s)">
-            <div class="c-icon-elite">{{ s.emoji || '✂️' }}</div>
-            <div class="c-info-elite">
+          <button class="c-card-glass" *ngFor="let s of services" (click)="pickService(s)">
+            <div class="c-icon-glass">{{ s.emoji || '✂️' }}</div>
+            <div class="c-info-glass">
                <strong>{{ s.titulo }}</strong>
                <span>{{ s.duracao_min }} minutos</span>
             </div>
-            <div class="c-meta-elite">
-              <div class="c-price-elite">R$ {{ s.preco }}</div>
+            <div class="c-meta-glass">
+              <div class="c-price-glass">R$ {{ s.preco }}</div>
               <i class="pi pi-chevron-right" style="font-size: 0.7rem; color: #cbd5e1; margin-top: 4px;"></i>
             </div>
           </button>
@@ -71,7 +71,7 @@
            <p>Escolha seu profissional de preferência.</p>
         </div>
         <div class="v-list">
-           <button class="c-card-elite" [class.active]="!selectedPro" (click)="pickPro(null)">
+           <button class="c-card-glass" [class.active]="!selectedPro" (click)="pickPro(null)">
              <div class="c-icon-elite" style="background: #e0e7ff; color: #4f46e5;"><i class="pi pi-users"></i></div>
              <div class="c-info-elite"><strong>Qualquer pessoa</strong><span>Primeiro horário vago</span></div>
              <div class="c-meta-elite" *ngIf="!selectedPro">

@@ -55,8 +55,8 @@
 }
 .btn-primary-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.2); background: #2563eb; }
 
-/* ── EMPTY STATE ELITE ───────────────────────── */
-.empty-state-elite {
+/* ── EMPTY STATE GLASS ───────────────────────── */
+.empty-state-glass {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   text-align: center; padding: 100px 20px; background: var(--glass-bg); border-radius: 40px;
   border: 1px dashed var(--glass-border); margin-top: 20px;
@@ -77,10 +77,12 @@
 .empty-state-elite h3 { font-size: 1.8rem; font-weight: 800; color: var(--text-main); margin-bottom: 12px; }
 .empty-state-elite p { max-width: 500px; color: var(--text-muted); font-size: 1rem; line-height: 1.6; margin-bottom: 32px; }
 
-/* ── GRID ELITE DE PROFISSIONAIS ─────────────── */
-.prof-grid-elite {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 24px; padding: 10px 0;
+/* ── GRID GLASS DE PROFISSIONAIS ─────────────── */
+.prof-grid-glass {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+   gap: 20px;
+   padding: 10px 0;
 }
 
 .prof-card-ent {

@@ -143,7 +143,7 @@ export class ChatbotService {
       this.addMessage(convId, {
         id: Math.random().toString(36).substr(2, 9),
         sender: 'bot',
-        text: "Assistente Elite em ação. Como posso ajudar com seu agendamento?",
+        text: "Assistente Inteligente em ação. Como posso ajudar com seu agendamento?",
         timestamp: new Date()
       });
     }, 1500);

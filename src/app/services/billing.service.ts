@@ -53,7 +53,7 @@ export class BillingService {
         { text: 'Agenda Online Completa', included: true },
         { text: '1 Profissional', included: true },
         { text: 'Insights de IA Essenciais', included: true },
-        { text: 'Base de Clientes Elite', included: true },
+        { text: 'Base de Clientes Premium', included: true },
         { text: 'Sincronização Cloud', included: true },
       ]
     },
@@ -70,12 +70,12 @@ export class BillingService {
         { text: 'Até 5 Profissionais', included: true },
         { text: 'IA de Agendamento Autônomo', included: true },
         { text: 'Relatórios de Gestão V2', included: true },
-        { text: 'Elite Visual Customization', included: true },
+        { text: 'Customização de Design', included: true },
       ]
     },
     {
       id: 'premium',
-      name: 'Elite Enterprise',
+      name: 'Premium Enterprise',
       basePrice: 349,
       months: 1,
       tokensLimit: 5000000,

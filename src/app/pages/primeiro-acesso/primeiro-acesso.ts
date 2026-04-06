@@ -146,7 +146,7 @@ export class PrimeiroAcesso implements OnInit {
         { t: 'Decolagem', d: 'Sua plataforma está pronta para escalar sua rentabilidade. Vamos lá!' }
       ],
       barbeiro: [
-        { t: 'Sua Agenda de Elite', d: 'Bem-vindo. Aqui sua produtividade encontra a organização.' },
+        { t: 'Sua Agenda Profissional', d: 'Bem-vindo. Aqui sua produtividade encontra a organização.' },
         { t: 'Foco no Cliente', d: 'Acesse seus agendamentos, preferências e histórico de serviços.' },
         { t: 'Meus Ganhos', d: 'Veja suas comissões e metas acumuladas de forma clara e justa.' },
         { t: 'Pronto para o Corte', d: 'Sua cadeira está virtualmente pronta. Comece agora!' }
