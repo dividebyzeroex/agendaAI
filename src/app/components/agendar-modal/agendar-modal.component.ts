@@ -88,10 +88,13 @@ export interface AgendamentoForm {
             </div>
           </div>
  
-          <!-- Campo Telefone Expansível -->
+          <!-- Campo Telefone Expansível Premium -->
           <div class="expand-phone" *ngIf="isNovoCliente">
-            <input type="tel" [(ngModel)]="form.clienteTelefone"
-              placeholder="Digite o telefone para o novo cadastro" class="elite-phone-input" />
+            <div class="premium-search-box">
+              <i class="pi pi-phone search-icon"></i>
+              <input type="tel" [(ngModel)]="form.clienteTelefone"
+                placeholder="Digite o telefone para o novo cadastro..." class="elite-search-input" />
+            </div>
           </div>
  
           <!-- Badge Cliente Selecionado -->
