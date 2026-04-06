@@ -9,8 +9,10 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private supabase: SupabaseClient | null = null;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private userProfileSubject = new BehaviorSubject<{ nome: string, role: string } | null>(null);
   
-  public user$: Observable<User | null> = this.currentUserSubject.asObservable();
+  public user$ = this.currentUserSubject.asObservable();
+  public profile$ = this.userProfileSubject.asObservable();
 
   private ngZone = inject(NgZone);
 
@@ -25,8 +27,13 @@ export class AuthService {
         
         // Listen to auth state changes
         this.supabase.auth.onAuthStateChange((event, session) => {
-          this.ngZone.run(() => {
+          this.ngZone.run(async () => {
             this.currentUserSubject.next(session?.user || null);
+            if (session?.user) {
+              await this.loadUserProfile(session.user.id);
+            } else {
+              this.userProfileSubject.next(null);
+            }
           });
         });
       } else {
@@ -66,9 +73,52 @@ export class AuthService {
     const { data: { session } } = await this.supabase.auth.getSession();
     if (session) {
       this.currentUserSubject.next(session.user);
+      await this.loadUserProfile(session.user.id);
       return true;
     }
     return false;
+  }
+
+  private async loadUserProfile(userId: string) {
+    if (!this.supabase) return;
+    
+    // 1. Tenta buscar pelo user_id (Conexão já estabelecida)
+    let { data, error } = await this.supabase
+      .from('profissionais')
+      .select('id, nome, role, email')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    // 2. Se não encontrou, tenta buscar pelo e-mail do usuário autenticado (Primeiro acesso)
+    if (!data && !error) {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (user?.email) {
+        const { data: profByEmail, error: emailErr } = await this.supabase
+          .from('profissionais')
+          .select('id, nome, role, email')
+          .eq('email', user.email)
+          .maybeSingle();
+
+        if (profByEmail && !emailErr) {
+          data = profByEmail;
+          // Realiza o Linkage: Salva o user_id no registro do profissional
+          await this.supabase
+            .from('profissionais')
+            .update({ user_id: userId })
+            .eq('id', profByEmail.id);
+          
+          console.log(`[AuthService] Identidade vinculada: ${user.email} -> ${profByEmail.role}`);
+        }
+      }
+    }
+
+    if (data) {
+      this.userProfileSubject.next({ nome: data.nome, role: data.role });
+    } else {
+      // Fallback para admin genérico se não for profissional listado
+      // Nota: No futuro, isso pode ser movido para uma tabela de 'empresa_contas'
+      this.userProfileSubject.next({ nome: 'Admin', role: 'dono' });
+    }
   }
 
   // --- Real Auth Flow ---

@@ -8,7 +8,8 @@ import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.ser
 import { ClienteService } from '../../services/cliente.service';
 import { NotificationService } from '../../services/notification.service';
 import { MultiAgentService } from '../../services/multi-agent.service';
-import { map, Subscription, interval } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { map, Subscription, interval, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
@@ -22,7 +23,10 @@ export class Admin implements OnInit, OnDestroy {
   private clienteService = inject(ClienteService);
   private notifService = inject(NotificationService);
   private agentService = inject(MultiAgentService);
+  private authService = inject(AuthService);
   private router = inject(Router);
+
+  userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
 
   todayAppointments: AgendaEvent[] = [];
   noShowEvents: AgendaEvent[] = [];
@@ -73,6 +77,14 @@ export class Admin implements OnInit, OnDestroy {
         }));
       })
     );
+  }
+
+  get isAdminOrFin(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
+  }
+
+  get isStaff(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'esteticista' || p?.role === 'barbeiro'));
   }
 
   ngOnDestroy() {

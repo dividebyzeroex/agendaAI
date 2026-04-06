@@ -113,7 +113,24 @@
 .card-top-ent { display: flex; justify-content: space-between; align-items: center; }
 .badge-role {
   background: var(--active-bg); color: var(--text-muted); padding: 6px 14px; border-radius: 12px;
-  font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px;
+  font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+  transition: all .3s;
+}
+.badge-role.dono { 
+  background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; 
+  box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+}
+.badge-role.financeiro { 
+  background: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); 
+}
+.badge-role.secretaria { 
+  background: rgba(14, 165, 233, 0.1); color: #0ea5e9; border: 1px solid rgba(14, 165, 233, 0.2); 
+}
+.badge-role.esteticista { 
+  background: rgba(217, 70, 239, 0.1); color: #d946ef; border: 1px solid rgba(217, 70, 239, 0.2); 
+}
+.badge-role.barbeiro { 
+  background: rgba(71, 85, 105, 0.1); color: #475569; border: 1px solid rgba(71, 85, 105, 0.2); 
 }
 .status-indicator {
   display: flex; align-items: center; gap: 8px; font-size: 0.75rem; font-weight: 700; color: var(--text-muted);

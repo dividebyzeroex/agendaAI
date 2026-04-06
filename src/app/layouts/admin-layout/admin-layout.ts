@@ -21,6 +21,8 @@ import { ToastContainerComponent } from '../../components/toast-container/toast-
 import { ThemeService, AppTheme } from '../../services/theme.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
+import { AuthService } from '../../services/auth.service';
+import { map, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin-layout',
@@ -52,10 +54,12 @@ export class AdminLayout implements OnInit {
   billing      = inject(BillingService);
   theme        = inject(ThemeService);
   estabService = inject(EstabelecimentoService);
+  authService  = inject(AuthService);
 
   showOnboarding = false;
   isNotifOpen = false;
   
+  userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
   userMenuItems: MenuItem[] | undefined;
 
   async ngOnInit() {
@@ -83,12 +87,19 @@ export class AdminLayout implements OnInit {
         command: () => this.logout() 
       }
     ];
-    // Check if this user needs to do onboarding (flag in Supabase)
+    
     await this.onboarding.checkOnboarding();
     this.onboarding.showOnboarding$.subscribe(show => (this.showOnboarding = show));
 
-    // Lógica Gatekeeper: Sincroniza dados do Onboarding salvos localmente antes da autenticação
     await this.processTempOnboarding();
+  }
+
+  get isDono(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'dono'));
+  }
+
+  get isAdminOrFin(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
   }
 
   private async processTempOnboarding() {
@@ -96,15 +107,12 @@ export class AdminLayout implements OnInit {
     if (rawData) {
       try {
         const onboardingData = JSON.parse(rawData);
-        // Tenta criar a empresa com os dados fornecidos no onboarding "off-line" (pré-login)
         await this.estabService.createEstabelecimento({
           ...onboardingData,
           onboarding_completo: true
         });
-        // Sucesso! Limpamos o lixo do storage
         localStorage.removeItem('ag_temp_onboarding_data');
         localStorage.removeItem('ag_onboarding_email');
-        console.log('[Gatekeeper] Empresa criada com sucesso via Onboarding Diferido.');
       } catch (err) {
         console.error('[Gatekeeper] Erro ao sincronizar onboarding:', err);
       }

@@ -21,16 +21,16 @@
       <a routerLink="/admin/clientes" routerLinkActive="active">
         <i class="pi pi-users"></i><span>Clientes</span>
       </a>
-      <a routerLink="/admin/profissionais" routerLinkActive="active">
+      <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async">
         <i class="pi pi-id-card"></i><span>Profissionais</span>
       </a>
-      <a routerLink="/admin/analytics" routerLinkActive="active">
+      <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async">
         <i class="pi pi-chart-bar"></i><span>Analytics IA</span>
       </a>
       <a routerLink="/admin/configuracoes" routerLinkActive="active">
         <i class="pi pi-cog"></i><span>Configurações</span>
       </a>
-      <a routerLink="/admin/billing" routerLinkActive="active">
+      <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async">
         <i class="pi pi-credit-card"></i><span>Planos</span>
         <span class="trial-badge" *ngIf="billing.isTrialActive() | async as active">
            {{ billing.getTrialDaysRemaining() | async }}d restantes
@@ -98,8 +98,8 @@
             (click)="isNotifOpen = !isNotifOpen"></p-button>
           <span class="notif-badge" *ngIf="notifService.unreadCount > 0">{{ notifService.unreadCount }}</span>
         </div>
-        <div class="user-avatar-wrap" (click)="menu.toggle($event)">
-          <p-avatar label="A" shape="circle" styleClass="premium-avatar"></p-avatar>
+        <div class="user-avatar-wrap" (click)="menu.toggle($event)" *ngIf="userProfile$ | async as profile">
+          <p-avatar [label]="(profile.nome[0] | uppercase)" shape="circle" styleClass="premium-avatar"></p-avatar>
         </div>
         <p-menu #menu [model]="userMenuItems" [popup]="true" styleClass="premium-menu"></p-menu>
       </div>

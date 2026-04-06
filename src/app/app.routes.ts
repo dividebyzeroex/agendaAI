@@ -15,6 +15,7 @@ import { AdminProfissionais } from './pages/admin-profissionais/admin-profission
 import { AdminBilling } from './pages/admin-billing/admin-billing';
 import { authGuard } from './guards/auth.guard';
 import { billingGuard } from './guards/billing.guard';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
@@ -38,9 +39,24 @@ export const routes: Routes = [
       { path: 'agenda', component: AdminAgenda },
       { path: 'clientes', component: AdminClientes },
       { path: 'configuracoes', component: AdminConfiguracoes },
-      { path: 'analytics', component: AdminAnalytics },
-      { path: 'profissionais', component: AdminProfissionais },
-      { path: 'billing', component: AdminBilling }
+      { 
+        path: 'analytics', 
+        component: AdminAnalytics, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono', 'financeiro'] } 
+      },
+      { 
+        path: 'profissionais', 
+        component: AdminProfissionais, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono'] } 
+      },
+      { 
+        path: 'billing', 
+        component: AdminBilling, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono'] } 
+      }
     ]
   },
   { path: '**', redirectTo: '' }

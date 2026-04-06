@@ -10,7 +10,7 @@
       </div>
     </div>
 
-    <div class="stat-card-elite">
+    <div class="stat-card-elite" *ngIf="isAdminOrFin | async">
       <div class="stat-icon-ent green"><i class="pi pi-dollar"></i></div>
       <div class="stat-body-ent">
         <span class="stat-label-ent">Receita Projetada</span>

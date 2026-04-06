@@ -85,6 +85,7 @@ export class AdminProfissionais implements OnInit {
       nome: '', cargo: '', especialidade: '', bio: '', telefone: '', email: '',
       comissao_padrao: 0, instagram: '', linkedin: '',
       cor_agenda: '#1a73e8', valor_hora: 0, ativo: true,
+      role: 'barbeiro',
       disponibilidades: [], servicos: [],
     };
     this.disponibilidades = this.svc.getDisponibilidadesPadrao();

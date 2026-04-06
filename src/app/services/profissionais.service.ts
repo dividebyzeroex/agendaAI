@@ -20,6 +20,8 @@ export interface Profissional {
   linkedin?: string;
   cor_agenda?: string;
   valor_hora?: number;
+  role?: string;
+  user_id?: string;
   ativo?: boolean;
   created_at?: string;
 }
@@ -162,6 +164,9 @@ export class ProfissionaisService {
     const { ...payload } = form as any;
     delete payload.disponibilidades;
     delete payload.servicos;
+
+    // Mantém o role se vier no form (para RBAC)
+    const role = payload.role || 'barbeiro';
 
     // Criptografia Zero-Knowledge
     const encrypted = await this.security.encryptObject(payload, ['nome', 'bio', 'email', 'telefone', 'instagram', 'linkedin']);

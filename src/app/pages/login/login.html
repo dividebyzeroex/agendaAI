@@ -27,8 +27,8 @@
             <!-- MODO LOGIN/SIGNUP PADRÃO -->
             <ng-container *ngIf="!isDoingOnboarding">
               <div class="login-header" *ngIf="!isLoading">
-                <h3>{{ isSignupMode ? 'Criar Conta Empresa' : 'Acesso Empresa' }}</h3>
-                <p>Gerencie seu negócio e equipe em um só lugar.</p>
+                <h3>{{ isSignupMode ? 'Leve o AgendaAi para seu Negócio' : 'Acesso à Plataforma' }}</h3>
+                <p>{{ isSignupMode ? 'Cadastre sua empresa e equipe em minutos.' : 'Entre com seu e-mail para gerenciar sua agenda.' }}</p>
               </div>
 
               <div class="login-form" *ngIf="!isLoading">
@@ -41,7 +41,7 @@
                 </div>
 
                 <div class="field" *ngIf="!isOtpSent">
-                  <label for="email">E-mail Corporativo</label>
+                  <label for="email">E-mail Profissional</label>
                   <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full prime-input" placeholder="seu@email.com" />
                 </div>
 
@@ -57,7 +57,7 @@
                   <i class="pi pi-envelope"></i>
                   <div>
                     Verifique sua caixa de entrada.<br>
-                    Enviamos um link de acesso para <b>{{email}}</b>
+                    Enviamos um link de acesso pessoal para <b>{{email}}</b>
                   </div>
                 </div>
 

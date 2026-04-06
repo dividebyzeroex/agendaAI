@@ -71,7 +71,9 @@
           <div class="card-glass-reveal"></div>
           
           <div class="card-top-ent">
-            <span class="badge-role">{{ p.cargo || 'Especialista' }}</span>
+            <span class="badge-role" [class]="p.role || 'barbeiro'">
+              {{ (p.role === 'dono' ? 'Proprietário' : (p.role === 'financeiro' ? 'Financeiro' : (p.role === 'secretaria' ? 'Secretaria' : p.cargo || 'Especialista'))) }}
+            </span>
             <div class="status-indicator" [class.online]="p.ativo">
               <span class="dot"></span>
               {{ p.ativo ? 'Em Atividade' : 'Pausa' }}
@@ -209,6 +211,20 @@
                 <div class="input-wrap">
                    <i class="pi pi-briefcase"></i>
                    <input type="text" [(ngModel)]="profAtual.cargo" placeholder="Ex: Barbeiro Major" />
+                </div>
+             </div>
+
+             <div class="field-premium">
+                <label>Nível de Acesso (Role)</label>
+                <div class="input-wrap">
+                   <i class="pi pi-shield"></i>
+                   <select [(ngModel)]="profAtual.role" style="background: transparent; border: none; width: 100%; color: var(--text-base); outline: none;">
+                      <option value="dono">Dono (Acesso Total)</option>
+                      <option value="secretaria">Secretária</option>
+                      <option value="financeiro">Financeiro</option>
+                      <option value="esteticista">Esteticista</option>
+                      <option value="barbeiro">Barbeiro / Staff</option>
+                   </select>
                 </div>
              </div>
 
