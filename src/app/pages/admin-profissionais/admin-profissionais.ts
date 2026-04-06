@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProfissionaisService, Profissional, ProfissionalCompleto, ProfissionalDisponibilidade } from '../../services/profissionais.service';
 import { EstabelecimentoService, Servico } from '../../services/estabelecimento.service';
+import { AuthService } from '../../services/auth.service';
 
 type PanelTab = 'dados' | 'disponibilidade' | 'servicos' | 'financeiro';
 
@@ -21,6 +22,7 @@ const CORES_AGENDA = [
 export class AdminProfissionais implements OnInit {
   private svc      = inject(ProfissionaisService);
   private estabSvc = inject(EstabelecimentoService);
+  private authSvc  = inject(AuthService); // Novo injetor de autoridade
   private ngZone   = inject(NgZone);
   private cdr      = inject(ChangeDetectorRef);
 
@@ -56,6 +58,18 @@ export class AdminProfissionais implements OnInit {
       p.nome.toLowerCase().includes(q) ||
       p.especialidade?.toLowerCase().includes(q)
     );
+  }
+
+  get currentUserRole(): string {
+    return this.authSvc.userProfileValue?.role || 'barbeiro';
+  }
+
+  isDono(): boolean {
+    return this.currentUserRole === 'dono';
+  }
+
+  countDonosAtivos(): number {
+    return this.profissionais.filter(p => p.role === 'dono' && p.ativo).length;
   }
 
   ngOnInit() {
@@ -126,8 +140,21 @@ export class AdminProfissionais implements OnInit {
           this.panelTab = 'disponibilidade';
           this.cdr.detectChanges();
         });
-        this.showSuccess('Profissional criado! Configure a disponibilidade.');
+          this.showSuccess('Profissional criado! Configure a disponibilidade.');
       } else {
+        // Regra: Apenas Dono altera outros Donos
+        if (this.profAtual.role === 'dono' && !this.isDono()) {
+          this.erro = 'Apenas administradores podem atribuir o cargo de Dono.';
+          return;
+        }
+
+        // Regra: Impedir desativação do ÚLTIMO Dono
+        const original = this.profissionais.find(p => p.id === this.profAtual.id);
+        if (original?.role === 'dono' && this.profAtual.role !== 'dono' && this.countDonosAtivos() <= 1) {
+          this.erro = 'Operação negada: A empresa deve ter ao menos 1 Dono ativo.';
+          return;
+        }
+
         await this.svc.atualizarProfissional(this.profAtual.id!, this.profAtual);
         this.showSuccess('Dados atualizados!');
       }
@@ -188,6 +215,11 @@ export class AdminProfissionais implements OnInit {
   // ─── Ações da lista ────────────────────────────────────────
 
   async toggleAtivo(p: ProfissionalCompleto) {
+    // Regra: Impedir desativação do ÚLTIMO Dono
+    if (p.role === 'dono' && p.ativo && this.countDonosAtivos() <= 1) {
+      alert('Operação bloqueada: Você é o único Dono ativo. A empresa não pode ficar sem administração.');
+      return;
+    }
     await this.svc.toggleAtivo(p.id!, !p.ativo);
   }
 

@@ -9,9 +9,12 @@ import { environment } from '../../environments/environment';
 export class AuthService {
   private supabase: SupabaseClient | null = null;
   private currentUserSubject = new BehaviorSubject<User | null>(null);
-  private userProfileSubject = new BehaviorSubject<{ nome: string, role: string } | null>(null);
-  
-  public user$ = this.currentUserSubject.asObservable();
+  userProfileSubject = new BehaviorSubject<{nome: string, role: string} | null>(null);
+  userProfile$ = this.userProfileSubject.asObservable();
+
+  get userProfileValue() {
+    return this.userProfileSubject.value;
+  }
   public profile$ = this.userProfileSubject.asObservable();
 
   private ngZone = inject(NgZone);
@@ -115,8 +118,24 @@ export class AuthService {
     if (data) {
       this.userProfileSubject.next({ nome: data.nome, role: data.role });
     } else {
+      // 3. Fallback: Tenta buscar pelo Telefone do usuário autenticado
+      const { data: { user } } = await this.supabase.auth.getUser();
+      if (user?.phone) {
+        const { data: profByPhone, error: phoneErr } = await this.supabase
+          .from('profissionais')
+          .select('id, nome, role, telefone')
+          .eq('telefone', user.phone)
+          .maybeSingle();
+
+        if (profByPhone && !phoneErr) {
+          this.userProfileSubject.next({ nome: profByPhone.nome, role: profByPhone.role });
+          // Linkage Automático
+          await this.supabase.from('profissionais').update({ user_id: userId }).eq('id', profByPhone.id);
+          return;
+        }
+      }
+
       // Fallback para admin genérico se não for profissional listado
-      // Nota: No futuro, isso pode ser movido para uma tabela de 'empresa_contas'
       this.userProfileSubject.next({ nome: 'Admin', role: 'dono' });
     }
   }
@@ -160,6 +179,26 @@ export class AuthService {
       options: {
         emailRedirectTo: window.location.origin + '/admin'
       }
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async signInWithPhone(phone: string) {
+    if (!this.supabase) throw new Error('Supabase not initialized.');
+    const { data, error } = await this.supabase.auth.signInWithOtp({
+      phone: phone.startsWith('+') ? phone : `+55${phone.replace(/\D/g, '')}`
+    });
+    if (error) throw error;
+    return data;
+  }
+
+  async verifyOtp(phone: string, token: string) {
+    if (!this.supabase) throw new Error('Supabase not initialized.');
+    const { data, error } = await this.supabase.auth.verifyOtp({
+      phone: phone.startsWith('+') ? phone : `+55${phone.replace(/\D/g, '')}`,
+      token,
+      type: 'sms'
     });
     if (error) throw error;
     return data;

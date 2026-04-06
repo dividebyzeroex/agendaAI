@@ -1,0 +1,63 @@
+<div class="login-wrapper pro-theme">
+  <div class="login-container">
+    <div class="brand">
+      <span class="logo-mark">▲</span>
+      <h2>AgendaAi <span class="badge-pro">PRO</span></h2>
+    </div>
+
+    <div class="login-card-glass">
+      <div class="login-header" *ngIf="!isLoading">
+        <h3>{{ isOtpSent ? 'Verificar Acesso' : 'Acesso Profissional' }}</h3>
+        <p>{{ isOtpSent ? 'Digite o código enviado ao seu celular.' : 'Sua agenda em qualquer lugar.' }}</p>
+      </div>
+
+      <div class="login-form">
+        <!-- Erro Visual -->
+        <div class="error-box" *ngIf="errorMessage">
+          <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
+        </div>
+
+        <!-- FASE 1: Telefone -->
+        <ng-container *ngIf="!isOtpSent">
+          <div class="field">
+            <label for="phone">Número do Celular</label>
+            <div class="input-with-prefix">
+               <span>+55</span>
+               <input pInputText id="phone" [(ngModel)]="phone" type="tel" 
+                      class="w-full super-input" placeholder="(00) 00000-0000" />
+            </div>
+          </div>
+          <p-button label="Enviar Código" icon="pi pi-send" 
+                    styleClass="w-full btn-login-main" 
+                    [loading]="isLoading" 
+                    (onClick)="sendOtp()">
+          </p-button>
+        </ng-container>
+
+        <!-- FASE 2: OTP -->
+        <ng-container *ngIf="isOtpSent">
+          <div class="field">
+            <label for="otp">Código de 6 Dígitos</label>
+            <input pInputText id="otp" [(ngModel)]="otp" type="text" 
+                   maxlength="6" class="w-full super-input otp-input" 
+                   placeholder="000000" />
+          </div>
+          <p-button label="Confirmar e Acessar" icon="pi pi-check" 
+                    styleClass="w-full btn-login-main" 
+                    [loading]="isLoading" 
+                    (onClick)="verifyOtp()">
+          </p-button>
+          <a href="javascript:void(0)" class="btn-voltar" (click)="backToPhone()">
+             <i class="pi pi-arrow-left"></i> Voltar ao telefone
+          </a>
+        </ng-container>
+
+        <div class="divider"><span>Segurança AgendaAi</span></div>
+      </div>
+    </div>
+
+    <div class="footer-hint">
+       Apenas para profissionais pré-cadastrados.
+    </div>
+  </div>
+</div>

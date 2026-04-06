@@ -21,6 +21,7 @@ import { ToastContainerComponent } from '../../components/toast-container/toast-
 import { ThemeService, AppTheme } from '../../services/theme.service';
 import { TooltipModule } from 'primeng/tooltip';
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
+import { ProfissionaisService } from '../../services/profissionais.service';
 import { AuthService } from '../../services/auth.service';
 import { map, Observable } from 'rxjs';
 
@@ -55,6 +56,7 @@ export class AdminLayout implements OnInit {
   theme        = inject(ThemeService);
   estabService = inject(EstabelecimentoService);
   authService  = inject(AuthService);
+  profService  = inject(ProfissionaisService); // Novo injetor para o Dono Nato
 
   showOnboarding = false;
   isNotifOpen = false;
@@ -111,6 +113,18 @@ export class AdminLayout implements OnInit {
           ...onboardingData,
           onboarding_completo: true
         });
+
+        // 🔗 REGRA: O Criador é o Dono Nato
+        // Criamos o primeiro registro de profissional para garantir a identidade no primeiro login
+        await this.profService.criarProfissional({
+          nome: onboardingData.nome || 'Proprietário',
+          email: onboardingData.email,
+          telefone: onboardingData.telefone,
+          role: 'dono',
+          ativo: true,
+          cargo: 'Proprietário'
+        });
+
         localStorage.removeItem('ag_temp_onboarding_data');
         localStorage.removeItem('ag_onboarding_email');
       } catch (err) {
