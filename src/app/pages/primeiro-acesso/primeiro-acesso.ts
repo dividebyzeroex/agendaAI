@@ -152,7 +152,7 @@ export class PrimeiroAcesso implements OnInit {
         idx = (idx + 1) % this.randomNames.length;
         this.cdr.detectChanges();
       }
-    }, 150);
+    }, 1500);
   }
 
   onNameChange() {
