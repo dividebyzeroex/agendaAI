@@ -119,10 +119,16 @@ export class PrimeiroAcesso implements OnInit {
 
     try {
       await this.profSvc.finalizarOnboarding();
-      console.log('[PrimeiroAcesso] Sucesso no banco. Navegando para /admin...');
+      console.log('[PrimeiroAcesso] Sucesso no banco e cache. Navegando para /admin...');
       
-      // Força a navegação imediata
-      await this.router.navigateByUrl('/admin');
+      // Tenta navegação SPA (Suave)
+      const success = await this.router.navigateByUrl('/admin');
+      
+      // Protocolo de Força Bruta: Se o SPA falhar (Guard bloqueou), força o navegador a recarregar no /admin
+      if (!success) {
+        console.warn('[PrimeiroAcesso] Navegação SPA cancelada ou falhou. Protocolo de Travessia Ativado...');
+        window.location.replace('/admin');
+      }
     } catch (e: any) {
       console.error('[PrimeiroAcesso] Erro fatal na decolagem:', e);
       this.erro = 'Erro na decolagem: ' + e.message;

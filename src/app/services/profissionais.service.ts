@@ -266,7 +266,12 @@ export class ProfissionaisService {
   async finalizarOnboarding(id?: string): Promise<void> {
     const targetId = id || this.authService.userProfileValue?.id;
     if (!targetId) throw new Error('Identidade do profissional não localizada na sessão ativa.');
+    
+    // 1. Atualiza no Banco
     await this.atualizarProfissional(targetId, { onboarding_concluido: true, primeiro_acesso: false });
+    
+    // 2. Atualiza Localmente no AuthService (Evita bloqueio de Guard)
+    this.authService.updateUserProfileLocal({ onboarding_concluido: true, primeiro_acesso: false });
   }
 
   async atualizarSenha(password: string): Promise<void> {
