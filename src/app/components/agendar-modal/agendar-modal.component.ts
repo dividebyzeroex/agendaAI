@@ -65,7 +65,7 @@ export interface AgendamentoForm {
             </div>
  
             <!-- Dropdown Reativo de Clientes -->
-            <div class="elite-dropdown" *ngIf="showDropdown && (clientesFiltrados.length > 0 || clienteQuery.length > 1)">
+            <div class="glass-dropdown" *ngIf="showDropdown && (clientesFiltrados.length > 0 || clienteQuery)">
               <div class="dropdown-scroll custom-scroll">
                 <div class="client-row"
                   *ngFor="let c of clientesFiltrados"
@@ -257,9 +257,9 @@ export interface AgendamentoForm {
     }
     .clear-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 10px; font-size: 0.8rem; }
  
-    .elite-dropdown {
-      position: absolute; top: calc(100% + 12px); left: 0; right: 0; z-index: 100;
-      background: rgba(20, 20, 25, 0.95); backdrop-filter: blur(20px); border: 1px solid var(--glass-border);
+    .glass-dropdown {
+      position: absolute; top: calc(100% + 12px); left: 0; right: 0; z-index: 1000;
+      background: rgba(17, 17, 17, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.12);
       border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); overflow: hidden;
     }
     .dropdown-scroll { max-height: 250px; overflow-y: auto; padding: 8px; }
