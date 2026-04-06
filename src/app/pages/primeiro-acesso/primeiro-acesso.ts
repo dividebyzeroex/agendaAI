@@ -81,22 +81,32 @@ export class PrimeiroAcesso implements OnInit {
 
     this.isSaving = true;
     this.erro = '';
+    this.cdr.detectChanges(); // Garante o feedback visual imediato
+
     try {
+      // 1. Tentar atualizar a senha primeiro (o ponto mais sensível)
       await this.profSvc.atualizarSenha(this.pass1);
       
       const profile = this.auth.userProfileValue;
       if (profile) {
+        // 2. Se a senha passou, atualizamos os dados do perfil
         const updateData: any = { primeiro_acesso: false };
         if (this.nomeCorreto && this.nomeCorreto !== profile.nome) {
           updateData.nome = this.nomeCorreto;
         }
+        
         await this.profSvc.atualizarProfissional(profile.id, updateData);
+        
+        // 3. Força a mudança de fase e atualiza a UI
         this.fase = 'tour';
+        this.isSaving = false;
+        this.cdr.detectChanges();
       }
     } catch (e: any) {
-      this.erro = 'Erro ao definir senha: ' + e.message;
-    } finally {
+      console.error('[PrimeiroAcesso] Falha na ativação:', e);
+      this.erro = e.message || 'Erro inesperado ao definir senha. Tente uma senha mais forte.';
       this.isSaving = false;
+      this.cdr.detectChanges();
     }
   }
 
