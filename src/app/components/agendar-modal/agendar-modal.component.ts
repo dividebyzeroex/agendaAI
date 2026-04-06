@@ -274,8 +274,8 @@ export interface AgendamentoForm {
     }
     .mini-avatar.plus { background: rgba(37,99,235,0.1); color: var(--primary-color); border: 1px dashed var(--primary-color); }
     .c-info { display: flex; flex-direction: column; }
-    .c-name { font-weight: 700; color: var(--text-main); font-size: 0.92rem; }
-    .c-sub { font-size: 0.78rem; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+    .c-name { font-weight: 700; color: #ffffff; font-size: 0.92rem; }
+    .c-sub { font-size: 0.78rem; color: rgba(255,255,255,0.6); font-family: 'Space Mono', monospace; }
  
     /* Serviços e Profissionais */
     .service-horizontal { display: flex; gap: 12px; padding-bottom: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
@@ -419,13 +419,15 @@ export class AgendarModalComponent implements OnInit {
   selectCliente(c: Cliente) {
     this.form.clienteId   = c.id!;
     this.form.clienteNome = c.nome;
-    this.clienteQuery     = c.nome;
+    this.clienteQuery     = ''; // Limpa para evitar duplicação visual
     this.showDropdown     = false;
+    this.isNovoCliente    = false;
   }
 
   usarNovoCliente() {
     this.form.clienteId   = null;
     this.form.clienteNome = this.clienteQuery;
+    this.clienteQuery     = ''; // Limpa mantendo o nome no chip/form
     this.isNovoCliente    = true;
     this.showDropdown     = false;
   }
