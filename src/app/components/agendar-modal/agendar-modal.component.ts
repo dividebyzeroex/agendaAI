@@ -259,6 +259,15 @@ export interface AgendamentoForm {
       font-size: 0.95rem; font-weight: 500; width: 100%; outline: none;
     }
     .clear-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 10px; font-size: 0.8rem; }
+    
+    .expand-phone { 
+      margin-top: 8px;
+      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes slideDown { 
+      from { opacity: 0; transform: translateY(-10px); } 
+      to { opacity: 1; transform: translateY(0); } 
+    }
  
     .glass-dropdown {
       position: absolute; top: calc(100% + 12px); left: 0; right: 0; z-index: 1000;
