@@ -61,6 +61,16 @@
         </div>
       </div>
 
+      <!-- Ilustração Digital Premium -->
+      <div class="tour-visual">
+        <img [src]="getStepImage()" class="tour-img-3d" [class.img-swap]="tourStep" alt="Premium Visual" />
+      </div>
+
+      <!-- Ilustração Digital Premium -->
+      <div class="tour-visual">
+        <img [src]="getStepImage()" class="tour-img-3d" [class.img-swap]="tourStep" alt="Premium Visual" />
+      </div>
+
       <!-- Conteúdo Dinâmico -->
       <div class="tour-card" [class.slide-in]="tourStep">
         <h3>{{ getStepContent().t }}</h3>

@@ -246,6 +246,13 @@ export class AuthService {
     return data.session?.access_token || '';
   }
 
+  async updateUserProfileLocal(changes: any) {
+    const current = this.userProfileSubject.value;
+    if (current) {
+      this.userProfileSubject.next({ ...current, ...changes });
+    }
+  }
+
   async logout() {
     if (this.supabase) {
       await this.supabase.auth.signOut();
