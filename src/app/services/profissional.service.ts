@@ -217,7 +217,7 @@ export class ProfissionalService {
       .eq('ativo', true);
 
     if (establishmentId) {
-      query = query.eq('establishment_id', establishmentId);
+      query = query.eq('estabelecimento_id', establishmentId);
     }
 
     const { data, error } = await query.order('nome');
