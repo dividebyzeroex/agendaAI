@@ -24,7 +24,7 @@ export interface Profissional {
   role?: string;
   user_id?: string;
   ativo?: boolean;
-  auth_type?: 'email' | 'phone' | 'password';
+  auth_type?: 'email' | 'otp' | 'senha';
   convite_enviado?: boolean;
   primeiro_acesso?: boolean;
   onboarding_concluido?: boolean;
@@ -282,7 +282,7 @@ export class ProfissionaisService {
     await this.fetchAll();
   }
 
-  async setAuthType(id: string, auth_type: 'email' | 'phone' | 'password'): Promise<void> {
+  async setAuthType(id: string, auth_type: 'email' | 'otp' | 'senha'): Promise<void> {
     await this.atualizarProfissional(id, { auth_type });
   }
 
@@ -330,7 +330,7 @@ export class ProfissionaisService {
     if (!p) return;
 
     try {
-      if (p.auth_type === 'phone' && p.telefone) {
+      if (p.auth_type === 'otp' && p.telefone) {
         await this.authService.signInWithPhone(p.telefone);
       } else if (p.email) {
         await this.authService.signInWithOtp(p.email);

@@ -258,10 +258,10 @@
                     <button class="auth-btn" [class.active]="profAtual.auth_type === 'email'" (click)="profAtual.auth_type = 'email'">
                        <i class="pi pi-envelope"></i> Link Mágico
                     </button>
-                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'phone'" (click)="profAtual.auth_type = 'phone'">
+                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'otp'" (click)="profAtual.auth_type = 'otp'">
                        <i class="pi pi-phone"></i> SMS (OTP)
                     </button>
-                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'password'" (click)="profAtual.auth_type = 'password'">
+                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'senha'" (click)="profAtual.auth_type = 'senha'">
                        <i class="pi pi-lock"></i> Senha
                     </button>
                 </div>
