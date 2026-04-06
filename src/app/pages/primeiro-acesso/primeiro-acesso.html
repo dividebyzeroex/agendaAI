@@ -10,7 +10,7 @@
         <i class="pi pi-shield"></i>
         <span>AgendaAi <small>Pro</small></span>
       </div>
-      <h2>Bem-vindo, <span class="gradient-text name-swap" [key]="displayName">{{ displayName }}!</span></h2>
+      <h2>Bem-vindo, <span class="gradient-text" [class.name-swap]="animateName">{{ displayName }}!</span></h2>
       <p>{{ fase === 'senha' ? 'Sua segurança vem em primeiro lugar. Vamos ativar sua credencial permanente.' : 'Falta pouco! Entenda como seu papel de ' + userRole + ' decola na plataforma.' }}</p>
     </div>
 

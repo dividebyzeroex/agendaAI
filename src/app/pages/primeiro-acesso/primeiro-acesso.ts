@@ -24,6 +24,7 @@ export class PrimeiroAcesso implements OnInit {
   nomeCorreto = '';
   isSaving = false;
   erro = '';
+  animateName = true;
 
   tourStep = 1;
   userRole = '';
@@ -148,9 +149,15 @@ export class PrimeiroAcesso implements OnInit {
         this.cdr.detectChanges();
         clearInterval(this.nameInterval);
       } else {
-        this.displayName = this.randomNames[idx];
-        idx = (idx + 1) % this.randomNames.length;
+        this.animateName = false;
         this.cdr.detectChanges();
+        
+        setTimeout(() => {
+          this.displayName = this.randomNames[idx];
+          idx = (idx + 1) % this.randomNames.length;
+          this.animateName = true;
+          this.cdr.detectChanges();
+        }, 10);
       }
     }, 1500);
   }
