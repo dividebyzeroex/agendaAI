@@ -226,13 +226,13 @@
                 <label>Nível de Acesso (Role)</label>
                 <div class="input-wrap">
                    <i class="pi pi-shield"></i>
-                   <select [(ngModel)]="profAtual.role" style="background: transparent; border: none; width: 100%; color: var(--text-base); outline: none;">
-                      <option value="dono">Dono (Acesso Total)</option>
-                      <option value="secretaria">Secretária</option>
-                      <option value="financeiro">Financeiro</option>
-                      <option value="esteticista">Esteticista</option>
-                      <option value="barbeiro">Barbeiro / Staff</option>
-                   </select>
+                    <select [(ngModel)]="profAtual.role" class="select-premium">
+                       <option value="dono">Dono (Acesso Total)</option>
+                       <option value="secretaria">Secretária</option>
+                       <option value="financeiro">Financeiro</option>
+                       <option value="esteticista">Esteticista</option>
+                       <option value="barbeiro">Barbeiro / Staff</option>
+                    </select>
                 </div>
              </div>
 
@@ -255,12 +255,15 @@
               <div class="field-premium full">
                 <label>Preferência de Acesso (Auth)</label>
                 <div class="auth-toggle-group">
-                   <button class="auth-btn" [class.active]="profAtual.auth_type === 'email'" (click)="profAtual.auth_type = 'email'">
-                      <i class="pi pi-envelope"></i> E-mail (Magic Link)
-                   </button>
-                   <button class="auth-btn" [class.active]="profAtual.auth_type === 'phone'" (click)="profAtual.auth_type = 'phone'">
-                      <i class="pi pi-phone"></i> Telefone (OTP)
-                   </button>
+                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'email'" (click)="profAtual.auth_type = 'email'">
+                       <i class="pi pi-envelope"></i> Link Mágico
+                    </button>
+                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'phone'" (click)="profAtual.auth_type = 'phone'">
+                       <i class="pi pi-phone"></i> SMS (OTP)
+                    </button>
+                    <button class="auth-btn" [class.active]="profAtual.auth_type === 'password'" (click)="profAtual.auth_type = 'password'">
+                       <i class="pi pi-lock"></i> Senha
+                    </button>
                 </div>
                 <p class="field-hint">Determine como este profissional realizará o login no sistema.</p>
               </div>

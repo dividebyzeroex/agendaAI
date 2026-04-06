@@ -24,7 +24,7 @@ export interface Profissional {
   role?: string;
   user_id?: string;
   ativo?: boolean;
-  auth_type?: 'email' | 'phone';
+  auth_type?: 'email' | 'phone' | 'password';
   convite_enviado?: boolean;
   primeiro_acesso?: boolean;
   onboarding_concluido?: boolean;
