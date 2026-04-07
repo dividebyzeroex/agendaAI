@@ -4,13 +4,12 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
-import { Card } from 'primeng/card';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login-pro',
   standalone: true,
-  imports: [CommonModule, FormsModule, Button, InputText, Card],
+  imports: [CommonModule, FormsModule, Button, InputText],
   templateUrl: './login-pro.html',
   styleUrls: ['./login-pro.css']
 })

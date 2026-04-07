@@ -114,8 +114,7 @@ export class Login {
         await this.authService.signInWithEmail(this.email, this.password);
         await this.authService.redirectAfterLogin();
       } else if (this.authType === 'phone') {
-        await this.authService.verifyOtp(this.phone, this.otp);
-        await this.authService.redirectAfterLogin();
+        this.errorMessage = 'A autenticação por Telefone (OTP) é exclusiva para o portal de profissionais.';
       } else {
         await this.authService.signInWithOtp(this.email);
         this.isOtpSent = true;
