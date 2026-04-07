@@ -92,23 +92,34 @@ export class Admin implements OnInit, OnDestroy {
   }
 
   private processAppointments(events: AgendaEvent[]) {
-    const now = new Date();
-    const todayStr = now.toISOString().split('T')[0];
+    const agora = new Date();
     
-    // Todos de hoje
-    this.todayAppointments = events.filter(e => e.start.startsWith(todayStr))
-                                   .sort((a,b) => a.start.localeCompare(b.start));
+    // 🔗 Filtro de Autoridade: Apenas agendamentos do dia local (Soberania de Fuso)
+    this.todayAppointments = events.filter(e => {
+        const start = new Date(e.start);
+        return start.getFullYear() === agora.getFullYear() &&
+               start.getMonth() === agora.getMonth() &&
+               start.getDate() === agora.getDate();
+    }).sort((a,b) => a.start.localeCompare(b.start));
     
     // Identificar No-Shows: Começaram há mais de 10 minutos (atraso) e ainda estão apenas 'confirmado'
     this.noShowEvents = this.todayAppointments.filter(e => {
         const startTime = new Date(e.start);
-        const diffMinutes = (now.getTime() - startTime.getTime()) / (1000 * 60);
+        const diffMinutes = (agora.getTime() - startTime.getTime()) / (1000 * 60);
         return (e.status === 'confirmado' || e.status === 'pendente') && diffMinutes >= 10;
     });
 
     this.totalToday = this.todayAppointments.length;
-    this.revenue = this.todayAppointments.filter(e => e.status !== 'cancelado')
-                                         .reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
+    
+    // Faturamento: Soma de todos os agendamentos que não foram cancelados
+    this.revenue = events.filter(e => {
+        // Faturamento do mês corrente
+        const start = new Date(e.start);
+        return start.getMonth() === agora.getMonth() && 
+               start.getFullYear() === agora.getFullYear() && 
+               e.status !== 'cancelado';
+    }).reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
+
     this.isLoading = false;
   }
 

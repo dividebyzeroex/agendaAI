@@ -39,7 +39,8 @@ export const routes: Routes = [
     component: AdminLayout,
     canActivate: [authGuard, billingGuard],
     children: [
-      { path: '', component: Admin, pathMatch: 'full' },
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+      { path: 'dashboard', component: Admin },
       { path: 'agenda', component: AdminAgenda },
       { path: 'clientes', component: AdminClientes },
       { path: 'configuracoes', component: AdminConfiguracoes },

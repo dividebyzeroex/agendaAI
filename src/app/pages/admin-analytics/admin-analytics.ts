@@ -62,26 +62,43 @@ export class AdminAnalytics implements OnInit, OnDestroy {
   }
 
   private calculateStats(events: any[], clientes: any[]) {
-    const hoje = new Date().toISOString().split('T')[0];
+    const agora = new Date();
     const trintaDiasAtras = new Date();
     trintaDiasAtras.setDate(trintaDiasAtras.getDate() - 30);
 
-    // 1. Agendamentos Hoje
-    const hCount = events.filter(e => e.start.startsWith(hoje)).length;
+    // 🔗 Filtro de Autoridade (Hoje Local)
+    const hCount = events.filter(e => {
+        const start = new Date(e.start);
+        return start.getFullYear() === agora.getFullYear() &&
+               start.getMonth() === agora.getMonth() &&
+               start.getDate() === agora.getDate();
+    }).length;
 
-    // 2. Clientes Total e Novos (Deduplicados por telefone para evitar contagem de registros de teste/duplicados)
+    // Faturamento e Ticket Médio (Baseado nos Agendamentos - Real-time Fallback)
+    // Isso garante que os 19 agendamentos resgatados apareçam no KPI agora mesmo
+    const faturamentoReal = events.filter(e => {
+        const start = new Date(e.start);
+        return start.getMonth() === agora.getMonth() && 
+               start.getFullYear() === agora.getFullYear() && 
+               e.status !== 'cancelado';
+    }).reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
+
+    const ticketReal = hCount > 0 ? faturamentoReal / hCount : 0;
+
+    // Clientes (Deduplicados por telefone)
     const uniquePhones = new Set(clientes.filter(c => c.telefone).map(c => c.telefone));
     const cTotal = uniquePhones.size;
     
     const cNovos = clientes.filter(c => {
       if (!c.created_at || !c.telefone) return false;
-      // Contar também apenas únicos nos novos
       const isNew = new Date(c.created_at) >= trintaDiasAtras;
       return isNew;
     }).reduce((acc: Set<string>, curr: any) => acc.add(curr.telefone), new Set()).size;
 
     this.stats = {
       ...this.stats,
+      faturamentoMes: faturamentoReal,
+      ticketMedio: ticketReal,
       agendamentosHoje: hCount,
       clientesTotal: cTotal,
       clientesNovos: cNovos
