@@ -209,9 +209,7 @@ export class ProfissionaisService {
 
     if (Object.keys(controlFields).length > 0) {
       const { error: ctrlErr } = await this.supabase
-        .from('profissionais')
-        .update(controlFields)
-        .eq('id', id);
+        .rpc('update_profissional_controles', { p_id: id, p_changes: controlFields });
       if (ctrlErr) throw ctrlErr;
     }
 
@@ -268,7 +266,8 @@ export class ProfissionaisService {
   }
 
   async removerServico(id: string): Promise<void> {
-    await this.supabase.from('profissional_servicos').delete().eq('id', id);
+    const { error } = await this.supabase.rpc('remover_profissional_servico', { p_id: id });
+    if (error) throw error;
     await this.fetchAll();
   }
 
@@ -300,11 +299,8 @@ export class ProfissionaisService {
     const targetId = id || this.authService.userProfileValue?.id;
     if (!targetId) throw new Error('Identidade do profissional não localizada na sessão ativa.');
     
-    // 1. Atualiza no Banco (Diretamente, sem passar pela RPC de PII)
-    const { error } = await this.supabase
-      .from('profissionais')
-      .update({ onboarding_concluido: true, primeiro_acesso: false })
-      .eq('id', targetId);
+    // 1. Atualiza no Banco via RPC Soberana
+    const { error } = await this.supabase.rpc('set_onboarding_concluido', { p_id: targetId });
       
     if (error) {
       console.error('[ProfissionaisService] Falha grave ao persistir onboarding:', error);

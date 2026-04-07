@@ -135,4 +135,21 @@ export class SecurityService {
     }
     return cloned;
   }
+  /**
+   * Registra um evento de segurança via RPC (Soberania de Auditoria)
+   */
+  async logSecurityEvent(acao: string, detalhes: any = {}): Promise<void> {
+    try {
+      const { data: { user } } = await this.supabase.auth.getUser();
+      await this.supabase.rpc('log_security_event', {
+        p_user_id: user?.id || null,
+        p_estabelecimento_id: this.estId,
+        p_acao: acao,
+        p_detalhes: detalhes
+      });
+    } catch (e) {
+      // Falha silenciosa no log para não interromper o fluxo principal, mas reportada no console de dev
+      console.warn('[SecurityService] Falha ao registrar evento de segurança:', e);
+    }
+  }
 }

@@ -18,7 +18,7 @@ type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclus
   templateUrl: './login.html',
   styleUrls: ['./login.css']
 })
-export class Login {
+export class Login implements OnInit {
   isSignupMode = false;
   email = '';
   isLoading = false;
@@ -69,6 +69,21 @@ export class Login {
   ];
 
   suggestedColors = ['#6366f1', '#a142f4', '#10b981', '#f43f5e', '#facc15', '#0f172a'];
+  
+  async ngOnInit() {
+    this.isLoading = true;
+    try {
+      const hasSession = await this.authService.checkSession();
+      if (hasSession) {
+        await this.authService.redirectAfterLogin();
+      }
+    } catch (e) {
+      console.error('Session check failed', e);
+    } finally {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
 
   async submitEmail() {
     this.errorMessage = '';

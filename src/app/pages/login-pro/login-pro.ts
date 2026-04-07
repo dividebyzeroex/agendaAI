@@ -1,4 +1,4 @@
-import { Component, inject, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -13,7 +13,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './login-pro.html',
   styleUrls: ['./login-pro.css']
 })
-export class LoginPro {
+export class LoginPro implements OnInit {
   private router = inject(Router);
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
@@ -23,6 +23,21 @@ export class LoginPro {
   isOtpSent = false;
   isLoading = false;
   errorMessage = '';
+  
+  async ngOnInit() {
+    this.isLoading = true;
+    try {
+      const hasSession = await this.authService.checkSession();
+      if (hasSession) {
+        await this.authService.redirectAfterLogin();
+      }
+    } catch (e) {
+      console.error('Session check failed', e);
+    } finally {
+      this.isLoading = false;
+      this.cdr.detectChanges();
+    }
+  }
 
   async sendOtp() {
     if (!this.phone) {

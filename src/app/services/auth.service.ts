@@ -3,6 +3,7 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { SecurityService } from './security.service';
 
 @Injectable({
   providedIn: 'root'
@@ -26,6 +27,7 @@ export class AuthService {
 
   private ngZone = inject(NgZone);
   private router = inject(Router);
+  private security = inject(SecurityService);
 
   constructor() {
     this.initSupabase();
@@ -45,8 +47,14 @@ export class AuthService {
         });
         
         this.supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN') console.log('🛡️ [Identidade] Acesso Soberano Concedido.');
-          if (event === 'TOKEN_REFRESHED') console.log('🔄 [Segurança] Chave Bearer Rotacionada com Sucesso.');
+          if (event === 'SIGNED_IN') {
+            console.log('🛡️ [Identidade] Acesso Soberano Concedido.');
+            this.security.logSecurityEvent('LOGIN_SUCCESS', { method: 'automatic' });
+          }
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('🔄 [Segurança] Chave Bearer Rotacionada com Sucesso.');
+            this.security.logSecurityEvent('TOKEN_REFRESHED');
+          }
           
           this.ngZone.run(async () => {
             this.currentUserSubject.next(session?.user || null);
@@ -103,69 +111,55 @@ export class AuthService {
   private async loadUserProfile(userId: string) {
     if (!this.supabase) return;
     
-    // 1. Tenta buscar pelo user_id (Conexão já estabelecida)
-    let { data, error } = await this.supabase
-      .from('profissionais')
-      .select('id, nome, role, email, primeiro_acesso, onboarding_concluido')
-      .eq('user_id', userId)
-      .maybeSingle();
+    // 1. Tenta buscar pelo user_id via RPC Soberana
+    let { data, error } = await this.supabase.rpc('get_user_profile_safe', { p_user_id: userId });
 
     // 2. Se não encontrou, tenta buscar pelo e-mail do usuário autenticado (Primeiro acesso)
     if (!data && !error) {
       const { data: { user } } = await this.supabase.auth.getUser();
       if (user?.email) {
-        const { data: profByEmail, error: emailErr } = await this.supabase
-          .from('profissionais')
-          .select('id, nome, role, email, primeiro_acesso, onboarding_concluido')
-          .eq('email', user.email)
-          .maybeSingle();
+        const { data: profByEmail, error: emailErr } = await this.supabase.rpc('get_user_profile_safe', { p_email: user.email });
 
         if (profByEmail && !emailErr) {
           data = profByEmail;
-          // Realiza o Linkage: Salva o user_id no registro do profissional
-          await this.supabase
-            .from('profissionais')
-            .update({ user_id: userId })
-            .eq('id', profByEmail.id);
-          
+          // Linkage de Identidade Soberano (RPC)
+          await this.supabase.rpc('link_user_to_professional', { p_professional_id: profByEmail.id, p_user_id: userId });
           console.log(`[AuthService] Identidade vinculada: ${user.email} -> ${profByEmail.role}`);
         }
       }
     }
 
     if (data) {
+      const p = data as any;
       this.userProfileSubject.next({ 
-        id: data.id,
-        nome: data.nome, 
-        role: data.role,
-        primeiro_acesso: data.primeiro_acesso || false,
-        onboarding_concluido: data.onboarding_concluido || false
+        id: p.id,
+        nome: p.nome, 
+        role: p.role,
+        primeiro_acesso: p.primeiro_acesso || false,
+        onboarding_concluido: p.onboarding_concluido || false
       });
     } else {
       // 3. Fallback: Tenta buscar pelo Telefone do usuário autenticado
       const { data: { user } } = await this.supabase.auth.getUser();
       if (user?.phone) {
-        const { data: profByPhone, error: phoneErr } = await this.supabase
-          .from('profissionais')
-          .select('id, nome, role, telefone, primeiro_acesso, onboarding_concluido')
-          .eq('telefone', user.phone)
-          .maybeSingle();
+        const { data: profByPhone, error: phoneErr } = await this.supabase.rpc('get_user_profile_safe', { p_phone: user.phone });
 
         if (profByPhone && !phoneErr) {
+          const p = profByPhone as any;
           this.userProfileSubject.next({ 
-            id: profByPhone.id,
-            nome: profByPhone.nome, 
-            role: profByPhone.role,
-            primeiro_acesso: profByPhone.primeiro_acesso || false,
-            onboarding_concluido: profByPhone.onboarding_concluido || false
+            id: p.id,
+            nome: p.nome, 
+            role: p.role,
+            primeiro_acesso: p.primeiro_acesso || false,
+            onboarding_concluido: p.onboarding_concluido || false
           });
-          // Linkage Automático
-          await this.supabase.from('profissionais').update({ user_id: userId }).eq('id', profByPhone.id);
+          // Linkage Automático (RPC)
+          await this.supabase.rpc('link_user_to_professional', { p_professional_id: p.id, p_user_id: userId });
           return;
         }
       }
 
-      // Fallback para admin genérico se não for profissional listado
+      // Fallback para admin genérico
       this.userProfileSubject.next({ 
         id: 'admin-legacy',
         nome: 'Admin', 
@@ -304,6 +298,7 @@ export class AuthService {
 
   async logout() {
     if (this.supabase) {
+      this.security.logSecurityEvent('LOGOUT');
       await this.supabase.auth.signOut();
     }
     localStorage.removeItem('ag-mock-user');
