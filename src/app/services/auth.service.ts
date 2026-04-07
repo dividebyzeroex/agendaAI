@@ -34,10 +34,20 @@ export class AuthService {
   private initSupabase() {
     try {
       if (environment.supabaseUrl && environment.supabaseUrl !== 'REPLACE_WITH_YOUR_SUPABASE_URL') {
-        this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey);
+        this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true,
+            storageKey: 'ag-auth-token',
+            storage: localStorage
+          }
+        });
         
-        // Listen to auth state changes
         this.supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN') console.log('🛡️ [Identidade] Acesso Soberano Concedido.');
+          if (event === 'TOKEN_REFRESHED') console.log('🔄 [Segurança] Chave Bearer Rotacionada com Sucesso.');
+          
           this.ngZone.run(async () => {
             this.currentUserSubject.next(session?.user || null);
             if (session?.user) {
