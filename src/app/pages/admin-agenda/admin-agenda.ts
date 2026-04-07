@@ -65,7 +65,23 @@ export class AdminAgenda implements OnInit {
     },
     // Substitui prompt() pelo modal premium
     select: (info: any) => {
-      this.selectInfo = info;
+      // Âncora Temporal: Se selecionado no Mês (allDay), injetamos horário padrão para visibilidade na grade
+      if (info.allDay) {
+        const start = new Date(info.startStr);
+        start.setHours(9, 0, 0); // Início às 09:00
+        
+        const end = new Date(info.startStr);
+        end.setHours(10, 0, 0); // Fim às 10:00 (ou duração padrão do serviço)
+
+        this.selectInfo = {
+          ...info,
+          startStr: start.toISOString(),
+          endStr: end.toISOString(),
+          allDay: false // Forçamos para a grade de horários
+        };
+      } else {
+        this.selectInfo = info;
+      }
       this.showAgendarModal = true;
     },
     // Substitui confirm() pelo modal de detalhe
