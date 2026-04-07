@@ -57,8 +57,7 @@ export class LoginPro {
 
     try {
       await this.authService.verifyOtp(this.phone, this.otp);
-      // Pós login de sucesso, o RoleGuard/AuthService redirecionará para a agenda
-      this.router.navigate(['/admin/agenda']);
+      await this.authService.redirectAfterLogin();
     } catch (err: any) {
       this.errorMessage = 'Código inválido ou expirado.';
       this.isLoading = false;

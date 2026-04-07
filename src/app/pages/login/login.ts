@@ -112,9 +112,10 @@ export class Login {
           throw new Error('Por favor, insira a sua senha.');
         }
         await this.authService.signInWithEmail(this.email, this.password);
-        this.router.navigateByUrl('/admin');
+        await this.authService.redirectAfterLogin();
       } else if (this.authType === 'phone') {
-        this.errorMessage = 'A autenticação por Telefone (OTP) será redirecionada para o seu WhatsApp cadastrado.';
+        await this.authService.verifyOtp(this.phone, this.otp);
+        await this.authService.redirectAfterLogin();
       } else {
         await this.authService.signInWithOtp(this.email);
         this.isOtpSent = true;

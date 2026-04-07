@@ -1,6 +1,7 @@
 import { Injectable, NgZone, inject } from '@angular/core';
 import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
+import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
 @Injectable({
@@ -24,6 +25,7 @@ export class AuthService {
   public profile$ = this.userProfileSubject.asObservable();
 
   private ngZone = inject(NgZone);
+  private router = inject(Router);
 
   constructor() {
     this.initSupabase();
@@ -268,11 +270,35 @@ export class AuthService {
     }
   }
 
+  async redirectAfterLogin() {
+    // 🔗 Inteligência de Redirecionamento de Identidade
+    const profile = this.userProfileSubject.value;
+    if (!profile) {
+      this.ngZone.run(() => this.router.navigate(['/login']));
+      return;
+    }
+
+    this.ngZone.run(() => {
+      if (profile.role === 'dono') {
+        // Se for o primeiro acesso e o onboarding não estiver feito, vai pro Dashboard que lida com o Onboarding
+        this.router.navigate(['/admin/dashboard']);
+      } else if (profile.role === 'financeiro') {
+        this.router.navigate(['/admin/analytics']);
+      } else if (profile.role === 'barbeiro' || profile.role === 'esteticista' || profile.role === 'profissional') {
+        this.router.navigate(['/admin/agenda']);
+      } else {
+        this.router.navigate(['/admin/dashboard']);
+      }
+    });
+  }
+
   async logout() {
     if (this.supabase) {
       await this.supabase.auth.signOut();
     }
     localStorage.removeItem('ag-mock-user');
     this.currentUserSubject.next(null);
+    this.userProfileSubject.next(null);
+    this.ngZone.run(() => this.router.navigate(['/login']));
   }
 }
