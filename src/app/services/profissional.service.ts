@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
+import { SmsService } from './sms.service';
 
 export interface ServicoExtra {
   titulo: string;
@@ -23,6 +24,7 @@ export interface CaixaItem {
 @Injectable({ providedIn: 'root' })
 export class ProfissionalService {
   private supabase = inject(SupabaseService).client;
+  private smsService = inject(SmsService);
 
   // Agenda do dia em tempo real
   agendaHoje$ = new BehaviorSubject<any[]>([]);
@@ -172,9 +174,14 @@ export class ProfissionalService {
     
     if (otpErr) throw otpErr;
 
-    // MOCK: Log do código para teste local
-    console.log(`[AUTH] Código para ${pro.nome}: ${codigo}`);
-    
+    // Envia o código OTP via SMS
+    const msg = `Seu código de acesso AgendaAi é: ${codigo}. Válido por 10 minutos.`;
+    await this.smsService.send({
+      to: pro.telefone,
+      message: msg,
+      tipo: 'manual'
+    });
+
     const telMascara = pro.telefone.replace(/.(?=.{4})/g, '*');
     return { proId: pro.id, telefone: telMascara };
   }

@@ -57,7 +57,7 @@ async function handleCheckout(req: VercelRequest, res: VercelResponse, stripe: S
     if (authError || !user) return res.status(401).json({ error: 'Token inválido.' });
   }
 
-  const appUrl = 'https://agenda-ai-xi.vercel.app';
+  const appUrl = process.env['PROJECT_URL'] || `https://${req.headers.host}`;
   const baseUrl = `${appUrl}/admin/billing`;
 
   const priceMap: Record<string, string | undefined> = {

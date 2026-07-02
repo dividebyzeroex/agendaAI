@@ -138,7 +138,7 @@ export class AdminLayout implements OnInit {
   }
 
   logout() {
-    window.location.href = '/login';
+    this.authService.logout();
   }
 
   setTheme(t: AppTheme) {

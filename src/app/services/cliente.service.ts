@@ -111,17 +111,13 @@ export class ClienteService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) throw new Error('Contexto não encontrado.');
 
-    const encryptedTel = await this.security.encryptData(telefone);
-
-    const { data: existing, error } = await this.supabase
-      .rpc('get_clientes_by_estab', { p_estab_id: estId })
-      .filter('telefone', 'eq', encryptedTel)
-      .maybeSingle<Cliente>();
+    // Busca na lista de clientes já carregada e descriptografada em memória.
+    // Isso contorna a impossibilidade de pesquisar no banco com AES-GCM (que possui IV dinâmico/aleatório).
+    const existing = this.clientes$.value.find(c => c.telefone === telefone);
 
     if (existing) {
-      const decryptedExisting = await this.security.decryptObject(existing, ['nome', 'telefone', 'email', 'observacoes']);
-      await this.updateCliente(decryptedExisting.id!, { ultima_visita: new Date().toISOString().split('T')[0] });
-      return decryptedExisting;
+      await this.updateCliente(existing.id!, { ultima_visita: new Date().toISOString().split('T')[0] });
+      return existing;
     }
     return this.addCliente({ nome, telefone, ultima_visita: new Date().toISOString().split('T')[0] });
   }

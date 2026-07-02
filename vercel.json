@@ -5,7 +5,7 @@
     { "source": "/api/verify-session", "destination": "/api/billing?action=verify" },
     { "source": "/api/get-invoices", "destination": "/api/billing?action=invoices" },
     { "source": "/api/cancel-subscription", "destination": "/api/billing?action=cancel" },
-    { "source": "/(.*)", "destination": "/" }
+    { "source": "/((?!api/).*)", "destination": "/" }
   ],
   "crons": [
     {
