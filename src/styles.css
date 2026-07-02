@@ -152,3 +152,83 @@ body {
   letter-spacing: 2px;
   margin-top: 1rem;
 }
+
+/* ══════════════════════════════════════════════════════
+   GLOBAL UX UTILITIES — Smooth Scroll, Scrollbar, Selection
+   ══════════════════════════════════════════════════════ */
+
+html {
+  scroll-behavior: smooth;
+}
+
+/* Branded text selection */
+::selection {
+  background: rgba(99, 102, 241, 0.2);
+  color: #1e293b;
+}
+
+::-moz-selection {
+  background: rgba(99, 102, 241, 0.2);
+  color: #1e293b;
+}
+
+/* Premium Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
+  border-radius: 100px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
+  background-clip: padding-box;
+}
+
+/* ── Reusable Animation Utilities ─────────────────── */
+
+.animate-fade-in {
+  animation: eliteSlideIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes growWidth {
+  from { width: 0%; }
+}
+
+/* Stagger delay utility — use with [style.animation-delay] */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+
+/* ── Gradient Text Utility ─────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-color, #6366f1), #a855f7);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

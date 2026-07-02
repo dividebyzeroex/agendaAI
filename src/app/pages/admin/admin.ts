@@ -38,10 +38,12 @@ export class Admin implements OnInit, OnDestroy {
   revenue = 0;
   isLoading = true;
   aiSuggestions: any[] = [];
+  saudacao = '';
   
   private sub = new Subscription();
 
   ngOnInit() {
+    this.updateSaudacao();
     // 1. Escuta agendamentos e filtra No-Shows
     this.sub.add(
       this.agendaService.events$.subscribe(events => {
@@ -85,6 +87,24 @@ export class Admin implements OnInit, OnDestroy {
 
   get isStaff(): Observable<boolean> {
     return this.userProfile$.pipe(map(p => p?.role === 'esteticista' || p?.role === 'barbeiro'));
+  }
+
+  updateSaudacao() {
+    const hora = new Date().getHours();
+    let prefix = 'Boa noite';
+    if (hora >= 5 && hora < 12) prefix = 'Bom dia';
+    else if (hora >= 12 && hora < 18) prefix = 'Boa tarde';
+
+    this.sub.add(
+      this.userProfile$.subscribe(p => {
+        if (p?.nome) {
+          const primeiroNome = p.nome.split(' ')[0];
+          this.saudacao = `${prefix}, ${primeiroNome}!`;
+        } else {
+          this.saudacao = `${prefix}!`;
+        }
+      })
+    );
   }
 
   ngOnDestroy() {

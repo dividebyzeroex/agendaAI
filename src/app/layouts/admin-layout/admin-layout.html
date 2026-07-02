@@ -1,4 +1,6 @@
-<div class="ag-admin-shell">
+<div class="ag-admin-shell" [class.sidebar-open]="isSidebarOpen">
+  
+  <div class="sidebar-overlay" *ngIf="isSidebarOpen" (click)="closeSidebar()"></div>
 
   <!-- Update Notifier Toast (background check) -->
   <app-update-notifier></app-update-notifier>
@@ -12,25 +14,25 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebar()">
         <i class="pi pi-home"></i><span>Painel</span>
       </a>
-      <a routerLink="/admin/agenda" routerLinkActive="active">
+      <a routerLink="/admin/agenda" routerLinkActive="active" (click)="closeSidebar()">
         <i class="pi pi-calendar-times"></i><span>Agenda</span>
       </a>
-      <a routerLink="/admin/clientes" routerLinkActive="active">
+      <a routerLink="/admin/clientes" routerLinkActive="active" (click)="closeSidebar()">
         <i class="pi pi-users"></i><span>Clientes</span>
       </a>
-      <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async">
+      <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-id-card"></i><span>Profissionais</span>
       </a>
-      <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async">
+      <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async" (click)="closeSidebar()">
         <i class="pi pi-chart-bar"></i><span>Analytics IA</span>
       </a>
-      <a routerLink="/admin/configuracoes" routerLinkActive="active">
+      <a routerLink="/admin/configuracoes" routerLinkActive="active" (click)="closeSidebar()">
         <i class="pi pi-cog"></i><span>Configurações</span>
       </a>
-      <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async">
+      <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-credit-card"></i><span>Planos</span>
         <span class="trial-badge" *ngIf="billing.isTrialActive() | async as active">
            {{ billing.getTrialDaysRemaining() | async }}d restantes
@@ -67,9 +69,14 @@
   <div class="ag-main">
     <!-- Topbar -->
     <header class="ag-topbar">
-      <div class="topbar-search">
-        <i class="pi pi-search"></i>
-        <span>Pressione <kbd>Ctrl+K</kbd> para buscar</span>
+      <div class="topbar-left">
+        <button class="mobile-hamburger" (click)="toggleSidebar()">
+          <i class="pi pi-bars"></i>
+        </button>
+        <div class="topbar-search desktop-only">
+          <i class="pi pi-search"></i>
+          <span>Pressione <kbd>Ctrl+K</kbd> para buscar</span>
+        </div>
       </div>
       <div class="topbar-right">
         <!-- Theme Switcher -->

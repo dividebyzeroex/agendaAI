@@ -4,18 +4,35 @@
   <div class="orb orb-1"></div>
   <div class="orb orb-2"></div>
 
-  <nav class="ag-nav">
-    <div class="logo">
+  <nav class="ag-nav" [class.scrolled]="isScrolled">
+    <div class="logo" (click)="scrollTo('top')">
       <span class="logo-mark">▲</span>
       AgendaAi
     </div>
-    <div class="nav-links">
-      <a href="#solucao">Solução</a>
-      <a href="#recursos">Recursos IA</a>
-      <a href="#precos">Preços</a>
+
+    <!-- Desktop Nav -->
+    <div class="nav-links desktop-only">
+      <a (click)="scrollTo('solucao')">Solução</a>
+      <a (click)="scrollTo('recursos')">Recursos IA</a>
+      <a (click)="scrollTo('precos')">Preços</a>
       <button class="btn-ghost" (click)="goToLogin()">Login</button>
     </div>
+
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+      <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
+    </button>
   </nav>
+
+  <!-- Mobile Dropdown Menu -->
+  <div class="mobile-menu" [class.open]="isMobileMenuOpen">
+    <div class="mobile-menu-content">
+      <a (click)="scrollTo('solucao')">Solução</a>
+      <a (click)="scrollTo('recursos')">Recursos IA</a>
+      <a (click)="scrollTo('precos')">Preços</a>
+      <button class="btn-primary" (click)="goToLogin()">Fazer Login</button>
+    </div>
+  </div>
 
   <main class="ag-content">
     
@@ -40,7 +57,7 @@
           <button class="btn-primary" (click)="goToLogin()">
             <i class="pi pi-bolt"></i> Começar Grátis
           </button>
-          <button class="btn-secondary" (click)="goToLogin()">
+          <button class="btn-secondary" (click)="scrollTo('solucao')">
             <i class="pi pi-shield"></i> Rede Blindada
           </button>
         </div>
@@ -49,7 +66,7 @@
       <!-- Floating Eco System (Parallax Cards) -->
       <!-- Floating Eco System (Parallax Cards) -->
       <div class="floating-eco">
-        <div class="eco-card card-1 glass">
+        <div class="eco-card card-1 glass animate-fade-in stagger-1">
           <div class="header">
             <span style="font-size: 0.8rem; font-weight: 700; color: #5f6368">Notificação IA</span>
           </div>
@@ -59,14 +76,14 @@
           </div>
         </div>
         
-        <div class="eco-card card-2 glass highlight">
+        <div class="eco-card card-2 glass highlight animate-fade-in stagger-2">
            <div class="body text-center">
               <i class="pi pi-lock" style="color: #fbbc04; font-size: 1.5rem; margin-bottom: 5px;"></i><br>
               <b style="font-size: 1.1rem">Zero-Knowledge</b>
            </div>
         </div>
 
-        <div class="eco-card card-3 glass">
+        <div class="eco-card card-3 glass animate-fade-in stagger-3">
           <div class="header" style="margin-bottom: 8px;">
             <span style="font-size: 0.75rem; font-weight: 700; color: var(--ag-accent)"><i class="pi pi-sparkles"></i> Agent Júlia</span>
           </div>
@@ -379,12 +396,38 @@
   </main>
 
   <footer class="ag-footer">
-    <div class="logo">
-      <span class="logo-mark">▲</span>
-      AgendaAi
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">
+          <span class="logo-mark">▲</span>
+          AgendaAi
+        </div>
+        <p class="footer-desc">A primeira agenda com Inteligência Artificial Invisível e Privacidade Zero-Knowledge.</p>
+      </div>
+      <div class="footer-links">
+        <div class="link-group">
+          <h4>Produto</h4>
+          <a (click)="scrollTo('recursos')">Recursos</a>
+          <a (click)="scrollTo('precos')">Preços</a>
+          <a (click)="scrollTo('solucao')">Privacidade RPC</a>
+        </div>
+        <div class="link-group">
+          <h4>Suporte</h4>
+          <a href="#">Central de Ajuda</a>
+          <a href="#">Termos de Uso</a>
+          <a href="#">Privacidade</a>
+        </div>
+      </div>
     </div>
-    <div class="copy">
-      © 2026 AgendaAi Labs Inc. Todos os direitos reservados.
+    <div class="footer-bottom">
+      <div class="copy">
+        © 2026 AgendaAi Labs Inc. Todos os direitos reservados.
+      </div>
+      <div class="social-links">
+        <a href="#"><i class="pi pi-instagram"></i></a>
+        <a href="#"><i class="pi pi-twitter"></i></a>
+        <a href="#"><i class="pi pi-linkedin"></i></a>
+      </div>
     </div>
   </footer>
 </div>

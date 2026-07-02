@@ -24,81 +24,95 @@
 
   <!-- TAB: Estabelecimento -->
   <div class="tab-content" *ngIf="activeTab === 'negocio'">
-
-    <!-- 🔗 Card do Link Público -->
-    <div class="config-card link-card" *ngIf="estabelecimento.nome">
-      <div class="link-card-header">
-        <div class="link-icon">🔗</div>
-        <div>
-          <h3>Seu Link de Agendamento</h3>
-          <p>Compartilhe com seus clientes para que eles agendem sem precisar de login.</p>
+    <div class="bento-grid">
+      <!-- 🔗 Card do Link Público -->
+      <div class="bento-card config-card link-card" *ngIf="estabelecimento.nome">
+        <div class="link-card-header">
+          <div class="link-icon">🔗</div>
+          <div>
+            <h3>Seu Link de Agendamento</h3>
+            <p>Compartilhe com seus clientes para que eles agendem sem precisar de login.</p>
+          </div>
+        </div>
+        <div class="link-box">
+          <span class="link-url">{{ publicLink }}</span>
+          <button class="btn-copy" (click)="copiarLink()" [class.copied]="linkCopiado">
+            <i class="pi" [class.pi-copy]="!linkCopiado" [class.pi-check]="linkCopiado"></i>
+            {{ linkCopiado ? 'Copiado!' : 'Copiar' }}
+          </button>
+        </div>
+        <div class="link-actions">
+          <a [href]="publicLink" target="_blank" class="btn-preview">
+            <i class="pi pi-external-link"></i> Abrir portal
+          </a>
+          <span class="link-tip">Compartilhe no WhatsApp, Instagram bio ou onde preferir.</span>
         </div>
       </div>
-      <div class="link-box">
-        <span class="link-url">{{ publicLink }}</span>
-        <button class="btn-copy" (click)="copiarLink()" [class.copied]="linkCopiado">
-          <i class="pi" [class.pi-copy]="!linkCopiado" [class.pi-check]="linkCopiado"></i>
-          {{ linkCopiado ? 'Copiado!' : 'Copiar' }}
+
+      <!-- 📱 Card do Portal do Profissional -->
+      <div class="bento-card config-card link-card pro-link-card" *ngIf="estabelecimento.nome">
+        <div class="link-card-header">
+          <div class="link-icon">📱</div>
+          <div>
+            <h3>Portal do Profissional</h3>
+            <p>Agenda mobile para sua equipe — confirmar clientes, adicionar serviços e enviar para o caixa.</p>
+          </div>
+        </div>
+        <div class="link-box">
+          <span class="link-url">{{ proLink }}</span>
+          <button class="btn-copy pro" (click)="copiarProLink()" [class.copied]="proLinkCopiado">
+            <i class="pi" [class.pi-copy]="!proLinkCopiado" [class.pi-check]="proLinkCopiado"></i>
+            {{ proLinkCopiado ? 'Copiado!' : 'Copiar' }}
+          </button>
+        </div>
+        <div class="link-actions">
+          <a [href]="proLink" target="_blank" class="btn-preview pro">
+            <i class="pi pi-external-link"></i> Abrir portal
+          </a>
+          <span class="link-tip">Compartilhe apenas com sua equipe de profissionais.</span>
+        </div>
+      </div>
+
+      <!-- 💳 Card Planos e Assinaturas -->
+      <div class="bento-card config-card plan-card">
+         <div class="link-card-header">
+           <div class="link-icon">💳</div>
+           <div>
+             <h3>Planos e Assinaturas</h3>
+             <p>Gerencie seu plano, adicione créditos de SMS e veja faturas.</p>
+           </div>
+         </div>
+         <a routerLink="/admin/billing" class="btn-primary" style="margin-top: 1.5rem; display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: 12px;">Acessar Portal de Pagamento</a>
+      </div>
+
+      <!-- Dados do Negócio (Ocupa toda a largura da grid) -->
+      <div class="bento-card bento-wide config-card">
+        <h3>Dados do Negócio</h3>
+
+        <div class="form-grid">
+          <div class="field">
+            <label>Nome do Estabelecimento</label>
+            <input type="text" [(ngModel)]="estabelecimento.nome" class="ag-input" placeholder="Ex: Barbearia Silva" />
+          </div>
+          <div class="field">
+            <label>Cidade</label>
+            <input type="text" [(ngModel)]="estabelecimento.cidade" class="ag-input" placeholder="Ex: São Paulo - SP" />
+          </div>
+          <div class="field">
+            <label>Endereço</label>
+            <input type="text" [(ngModel)]="estabelecimento.endereco" class="ag-input" placeholder="Ex: Rua das Flores, 123" />
+          </div>
+          <div class="field">
+            <label>Telefone / WhatsApp</label>
+            <input type="text" [(ngModel)]="estabelecimento.telefone" class="ag-input" placeholder="(11) 99999-8888" />
+          </div>
+        </div>
+        <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()">
+          <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
+          <i class="pi pi-check" *ngIf="!isSaving"></i>
+          {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
         </button>
       </div>
-      <div class="link-actions">
-        <a [href]="publicLink" target="_blank" class="btn-preview">
-          <i class="pi pi-external-link"></i> Abrir portal
-        </a>
-        <span class="link-tip">Compartilhe no WhatsApp, Instagram bio ou onde preferir.</span>
-      </div>
-    </div>
-
-    <!-- 📱 Card do Portal do Profissional -->
-    <div class="config-card link-card pro-link-card" *ngIf="estabelecimento.nome">
-      <div class="link-card-header">
-        <div class="link-icon">📱</div>
-        <div>
-          <h3>Portal do Profissional</h3>
-          <p>Agenda mobile para sua equipe — confirmar clientes, adicionar serviços e enviar para o caixa.</p>
-        </div>
-      </div>
-      <div class="link-box">
-        <span class="link-url">{{ proLink }}</span>
-        <button class="btn-copy pro" (click)="copiarProLink()" [class.copied]="proLinkCopiado">
-          <i class="pi" [class.pi-copy]="!proLinkCopiado" [class.pi-check]="proLinkCopiado"></i>
-          {{ proLinkCopiado ? 'Copiado!' : 'Copiar' }}
-        </button>
-      </div>
-      <div class="link-actions">
-        <a [href]="proLink" target="_blank" class="btn-preview pro">
-          <i class="pi pi-external-link"></i> Abrir portal
-        </a>
-        <span class="link-tip">Compartilhe apenas com sua equipe de profissionais.</span>
-      </div>
-    </div>
-
-    <div class="config-card">
-      <h3>Dados do Negócio</h3>
-
-      <div class="form-grid">
-        <div class="field">
-          <label>Nome do Estabelecimento</label>
-          <input type="text" [(ngModel)]="estabelecimento.nome" class="ag-input" placeholder="Ex: Barbearia Silva" />
-        </div>
-        <div class="field">
-          <label>Cidade</label>
-          <input type="text" [(ngModel)]="estabelecimento.cidade" class="ag-input" placeholder="Ex: São Paulo - SP" />
-        </div>
-        <div class="field">
-          <label>Endereço</label>
-          <input type="text" [(ngModel)]="estabelecimento.endereco" class="ag-input" placeholder="Ex: Rua das Flores, 123" />
-        </div>
-        <div class="field">
-          <label>Telefone / WhatsApp</label>
-          <input type="text" [(ngModel)]="estabelecimento.telefone" class="ag-input" placeholder="(11) 99999-8888" />
-        </div>
-      </div>
-      <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()">
-        <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
-        <i class="pi pi-check" *ngIf="!isSaving"></i>
-        {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
-      </button>
     </div>
   </div>
 

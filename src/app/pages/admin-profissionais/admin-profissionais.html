@@ -96,11 +96,11 @@
           </div>
 
           <div class="expertise-tags-ent">
-            <span class="skill-pill" *ngFor="let serv of p.servicos?.slice(0, 3)">
+            <span class="skill-pill" *ngFor="let serv of p.servicos.slice(0, 3)">
               {{ serv.servicos?.emoji }} {{ serv.servicos?.titulo }}
             </span>
-            <span class="skill-pill more" *ngIf="(p.servicos?.length || 0) > 3">
-              +{{ (p.servicos && p.servicos.length > 3) ? (p.servicos.length - 3) : 0 }}
+            <span class="skill-pill more" *ngIf="(p.servicos.length || 0) > 3">
+              +{{ p.servicos.length - 3 }}
             </span>
           </div>
 

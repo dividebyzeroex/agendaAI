@@ -93,6 +93,63 @@
   line-height: 1.1;
 }
 
+/* ══════════════════════════════════════════════════════
+   AGENDA LEGENDS
+   ══════════════════════════════════════════════════════ */
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.legend-stats {
+  display: flex;
+  gap: 1.5rem;
+  padding: 10px 16px;
+  background: var(--active-bg);
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.color-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.color-dot.status-confirmado { background: #3b82f6; }
+.color-dot.status-atendimento { background: #10b981; }
+.color-dot.status-noshow { background: #f59e0b; }
+
+@media (max-width: 768px) {
+  .agenda-header-premium {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+  .header-stats {
+    flex-direction: column;
+    align-items: flex-start;
+    width: 100%;
+    gap: 1rem;
+  }
+  .legend-stats {
+    width: 100%;
+    justify-content: space-between;
+    padding: 10px;
+  }
+}
+
 .calendar-card-premium {
   background: var(--glass-bg);
   padding: 1.5rem;

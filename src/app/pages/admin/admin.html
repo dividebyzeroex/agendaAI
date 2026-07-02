@@ -1,5 +1,10 @@
 <div class="ag-dashboard" *ngIf="!isLoading; else loading">
 
+  <div class="dashboard-greeting">
+    <h2 class="greeting-text">{{ saudacao }}</h2>
+    <p class="greeting-sub">Aqui está o resumo da sua operação.</p>
+  </div>
+
   <!-- TOP STATS: ELITE CARDS -->
   <div class="stats-row">
     <div class="stat-card-elite">
@@ -60,8 +65,9 @@
       </div>
 
       <div *ngIf="todayAppointments.length === 0" class="empty-state">
-        <i class="pi pi-calendar-minus"></i>
-        <p>Nenhum agendamento ativo para hoje.<br>Seu tempo é precioso, que tal prospectar?</p>
+        <div class="empty-icon-wrap"><i class="pi pi-calendar-minus"></i></div>
+        <h4>Agenda Livre</h4>
+        <p>Nenhum agendamento ativo para hoje.<br>Seu tempo é precioso, que tal prospectar novos clientes?</p>
       </div>
 
       <div class="timeline-list" *ngIf="todayAppointments.length > 0">

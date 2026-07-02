@@ -25,6 +25,7 @@ export class Login implements OnInit {
   errorMessage = '';
   isOtpSent = false;
   successMessage = '';
+  isEmailValid = false;
 
   private router = inject(Router);
   private authService = inject(AuthService);
@@ -142,6 +143,11 @@ export class Login implements OnInit {
       this.isLoading = false;
       this.cdr.detectChanges();
     }
+  }
+
+  validateEmail() {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    this.isEmailValid = emailRegex.test(this.email);
   }
 
   // --- Lógica do Wizard Interno ao Card ---

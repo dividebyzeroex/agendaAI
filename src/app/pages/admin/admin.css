@@ -11,6 +11,23 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Dashboard Greeting */
+.dashboard-greeting {
+  margin-bottom: 1rem;
+}
+.greeting-text {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-main);
+  letter-spacing: -1px;
+  margin: 0 0 0.5rem 0;
+}
+.greeting-sub {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin: 0;
+}
+
 /* Stats Row - Elite Elite */
 .stats-row {
   display: grid;
@@ -189,8 +206,28 @@
 }
 .ai-action:hover { background: var(--glass-bg); border-color: var(--primary-color); color: var(--primary-color); }
 
-.empty-state { text-align: center; padding: 4rem 2rem; color: #94a3b8; }
-.empty-state i { font-size: 3rem; margin-bottom: 1rem; opacity: 0.3; }
+.empty-state {
+  text-align: center; 
+  padding: 4rem 2rem; 
+  color: #94a3b8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.empty-icon-wrap {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  background: var(--active-bg);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 2.5rem; color: var(--primary-color);
+  margin-bottom: 1rem;
+}
+.empty-state h4 {
+  margin: 0 0 0.5rem 0;
+  color: var(--text-main);
+  font-size: 1.25rem;
+}
+.empty-state p { margin: 0; line-height: 1.5; }
 
 /* 🚨 NO-SHOW REAL-TIME ALERT */
 .no-show-alert-card {
@@ -261,5 +298,15 @@
 @media (max-width: 1024px) {
   .dashboard-grid { grid-template-columns: 1fr; }
   .stats-row { grid-template-columns: 1fr; }
+  .bento-radar { grid-column: span 1; }
+  .bento-ai { grid-column: span 1; }
 }
 
+@media (max-width: 768px) {
+  .ag-dashboard {
+    padding: 1rem;
+  }
+  .greeting-text {
+    font-size: 1.5rem;
+  }
+}

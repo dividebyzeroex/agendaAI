@@ -12,8 +12,15 @@ import { Router } from '@angular/router';
 export class Landing {
   mouseY = 0;
   mouseX = 0;
+  isScrolled = false;
+  isMobileMenuOpen = false;
 
   constructor(private router: Router) {}
+
+  @HostListener('window:scroll', [])
+  onWindowScroll() {
+    this.isScrolled = window.scrollY > 50;
+  }
 
   @HostListener('document:mousemove', ['$event'])
   onMouseMove(e: MouseEvent) {
@@ -38,6 +45,18 @@ export class Landing {
 
   goToAgendar() {
     this.router.navigate(['/agendar']);
+  }
+
+  scrollTo(sectionId: string) {
+    this.isMobileMenuOpen = false;
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  toggleMobileMenu() {
+    this.isMobileMenuOpen = !this.isMobileMenuOpen;
   }
 
   toggleFaq(index: number) {

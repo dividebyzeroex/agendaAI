@@ -63,12 +63,20 @@ export class AdminLayout implements OnInit {
 
   showOnboarding = false;
   isNotifOpen = false;
+  isSidebarOpen = false;
   
   userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
   onlineUsers$ = this.presence.onlineUsers$;
   userMenuItems: MenuItem[] | undefined;
 
   async ngOnInit() {
+    // Busca a config do estabelecimento para pegar o slug real
+    let urlPublica = '/agendar';
+    const configData = this.estabService.estabelecimento$.getValue();
+    if (configData && configData.slug) {
+      urlPublica = `/agendar/${configData.slug}`;
+    }
+
     this.userMenuItems = [
       { 
         label: 'Minha Conta', 
@@ -83,7 +91,7 @@ export class AdminLayout implements OnInit {
       { 
         label: 'Ver Página Pública', 
         icon: 'pi pi-external-link',
-        url: '/',
+        url: urlPublica,
         target: '_blank'
       },
       { separator: true },
@@ -143,5 +151,15 @@ export class AdminLayout implements OnInit {
 
   setTheme(t: AppTheme) {
     this.theme.setTheme(t);
+  }
+
+  toggleSidebar() {
+    this.isSidebarOpen = !this.isSidebarOpen;
+  }
+
+  closeSidebar() {
+    if (window.innerWidth <= 768) {
+      this.isSidebarOpen = false;
+    }
   }
 }

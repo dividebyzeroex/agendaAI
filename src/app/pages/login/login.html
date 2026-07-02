@@ -39,7 +39,10 @@
                 <!-- PASSO 1: E-MAIL -->
                 <div class="field" *ngIf="step === 'email' && !isOtpSent">
                   <label for="email">E-mail Profissional</label>
-                  <input pInputText id="email" [(ngModel)]="email" type="email" class="w-full prime-input" placeholder="seu@email.com" />
+                  <div class="p-input-icon-right w-full relative">
+                    <input pInputText id="email" [(ngModel)]="email" (ngModelChange)="validateEmail()" type="email" class="w-full prime-input" [ngClass]="{'ng-invalid ng-dirty': email && !isEmailValid, 'is-valid': email && isEmailValid}" placeholder="seu@email.com" />
+                    <i class="pi pi-check" *ngIf="email && isEmailValid" style="color: #10b981; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
+                  </div>
                 </div>
 
                 <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (SENHA) -->
@@ -49,6 +52,9 @@
                     <a href="javascript:void(0)" (click)="resetSteps()" class="btn-change-email">Alterar e-mail</a>
                   </div>
                   <input pInputText id="password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="••••••••" />
+                  <div style="text-align: right; margin-top: 8px;">
+                    <a href="javascript:void(0)" class="btn-forgot-password">Esqueceu sua senha?</a>
+                  </div>
                 </div>
 
                 <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (LINK MÁGICO / OTP) -->
@@ -78,7 +84,7 @@
 
                 <div class="divider" *ngIf="!isOtpSent"><span>ou</span></div>
                 <div class="sso-buttons" *ngIf="!isOtpSent">
-                  <p-button icon="pi pi-google" label="Google" styleClass="btn-sso" (onClick)="loginComGoogle()"></p-button>
+                  <p-button icon="pi pi-google" label="Entrar com Google" styleClass="w-full btn-sso" (onClick)="loginComGoogle()"></p-button>
                 </div>
               </div>
             </ng-container>

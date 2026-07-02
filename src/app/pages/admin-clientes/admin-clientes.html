@@ -1,7 +1,10 @@
 <div class="ag-page">
   <div class="page-header">
     <div>
-      <h2>Base de <span class="gradient-text">Clientes</span></h2>
+      <h2 style="display: flex; align-items: center; gap: 12px;">
+        Base de <span class="gradient-text">Clientes</span>
+        <span class="badge-count" style="font-size: 0.8rem; background: var(--active-bg); padding: 4px 12px; border-radius: 20px; color: var(--primary-color);">{{ filteredClientes.length }}</span>
+      </h2>
       <p>Gerencie sua carteira e envie SMS diretamente do painel.</p>
     </div>
     <div class="header-actions-right">
