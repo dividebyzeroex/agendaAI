@@ -6,7 +6,7 @@
     </div>
 
     <div class="on-scene">
-      <div class="on-card-3d" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
+      <div class="on-card-3d" [class.flipped]="flipAngle !== 0" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
         
         <!-- FRENTE: Login, Signup, Step 1, Step 3 -->
         <div class="on-face on-front">
@@ -35,6 +35,13 @@
                 <div class="error-box" *ngIf="errorMessage">
                   <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
                 </div>
+
+                <!-- GOOGLE SSO (Ação principal — caminho mais rápido) -->
+                <div class="sso-buttons" *ngIf="!isOtpSent">
+                  <p-button icon="pi pi-google" label="Entrar com Google" styleClass="w-full btn-sso" (onClick)="loginComGoogle()"></p-button>
+                </div>
+
+                <div class="divider" *ngIf="!isOtpSent"><span>ou entre com e-mail</span></div>
                 
                 <!-- PASSO 1: E-MAIL -->
                 <div class="field" *ngIf="step === 'email' && !isOtpSent">
@@ -68,7 +75,7 @@
 
                 <p-button 
                     *ngIf="!isOtpSent"
-                    [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar' : 'Entrar no Sistema')" 
+                    [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar com E-mail' : 'Entrar no Sistema')" 
                     styleClass="w-full btn-login-main" 
                     [loading]="isLoading"
                     (onClick)="submitEmail()">
@@ -82,9 +89,11 @@
                   </div>
                 </div>
 
-                <div class="divider" *ngIf="!isOtpSent"><span>ou</span></div>
-                <div class="sso-buttons" *ngIf="!isOtpSent">
-                  <p-button icon="pi pi-google" label="Entrar com Google" styleClass="w-full btn-sso" (onClick)="loginComGoogle()"></p-button>
+                <div class="signup-link" *ngIf="!isOtpSent">
+                  {{ isSignupMode ? 'Já tem uma conta empresarial?' : 'Quer levar o AgendaAi para seu negócio?' }} 
+                  <a href="javascript:void(0)" (click)="toggleMode()">
+                    {{ isSignupMode ? 'Faça o login' : 'Comece agora' }}
+                  </a>
                 </div>
               </div>
             </ng-container>
@@ -217,13 +226,6 @@
         </div>
 
       </div>
-    </div>
-
-    <div class="signup-link" *ngIf="!isDoingOnboarding">
-      {{ isSignupMode ? 'Já tem uma conta empresarial?' : 'Quer levar o AgendaAi para seu negócio?' }} 
-      <a href="javascript:void(0)" (click)="toggleMode()">
-        {{ isSignupMode ? 'Faça o login' : 'Comece agora' }}
-      </a>
     </div>
   </div>
 </div>

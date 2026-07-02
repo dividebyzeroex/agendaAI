@@ -47,10 +47,6 @@
   width: 100%;
   perspective: 2000px;
   position: relative;
-  min-height: auto; /* Ajuste automático de altura */
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
 }
 
 .on-card-3d {
@@ -61,16 +57,34 @@
 }
 
 .on-face {
-  position: absolute;
-  top: 0; left: 0;
   width: 100%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  display: block;
+}
+
+.on-front {
+  position: relative;
+}
+
+.on-back {
+  position: absolute;
+  top: 0;
+  left: 0;
 }
 
 .on-back {
   transform: rotateY(180deg);
+}
+
+/* When flipped to back face, swap which face is relative */
+.on-card-3d.flipped .on-front {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.on-card-3d.flipped .on-back {
+  position: relative;
 }
 
 /* Timeline Interna ao Card */
@@ -529,22 +543,22 @@
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  padding: 16px !important;
-  border-radius: 18px !important;
-  background: linear-gradient(135deg, var(--primary-color, #4f46e5), #9333ea) !important;
-  border: none !important;
-  color: white !important;
-  font-weight: 800 !important;
-  font-size: 1.05rem !important;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-  margin-top: 1rem !important;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25) !important;
+  padding: 14px !important;
+  border-radius: 14px !important;
+  background: transparent !important;
+  border: 1.5px solid rgba(99, 102, 241, 0.3) !important;
+  color: #4f46e5 !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  margin-top: 0.5rem !important;
+  box-shadow: none !important;
 }
 
 ::ng-deep .btn-login-main .p-button:hover {
-  transform: translateY(-2px) scale(1.02) !important;
-  filter: brightness(1.1) !important;
-  box-shadow: 0 16px 35px rgba(99, 102, 241, 0.4) !important;
+  background: rgba(99, 102, 241, 0.08) !important;
+  border-color: #4f46e5 !important;
+  transform: translateY(-1px) !important;
 }
 
 .btn-back-auth {
@@ -568,8 +582,10 @@
 
 .signup-link {
   text-align: center;
-  margin-top: 3rem;
-  font-size: 0.95rem;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0,0,0,0.06);
+  font-size: 0.9rem;
   color: #64748b;
 }
 
@@ -625,6 +641,7 @@
 
 .sso-buttons {
   display: flex;
+  flex-direction: column;
   gap: 1rem;
 }
 
@@ -638,16 +655,15 @@
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
-  background: rgba(255, 255, 255, 0.5) !important;
-  backdrop-filter: blur(10px) !important;
-  color: var(--text-main) !important;
-  border: 1px solid rgba(255, 255, 255, 0.6) !important;
-  border-radius: 14px !important;
-  padding: 12px !important;
-  font-weight: 700 !important;
-  font-size: 0.95rem !important;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.02) !important;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;
+  color: white !important;
+  border: none !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  font-weight: 800 !important;
+  font-size: 1.05rem !important;
+  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.25) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 :host-context(.theme-escuro) ::ng-deep .btn-sso .p-button,
@@ -657,10 +673,9 @@
 }
 
 ::ng-deep .btn-sso .p-button:hover {
-  background: rgba(255, 255, 255, 0.8) !important;
-  border-color: rgba(255, 255, 255, 0.9) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 8px 15px rgba(0,0,0,0.05) !important;
+  transform: translateY(-3px) scale(1.02) !important;
+  box-shadow: 0 16px 35px rgba(99, 102, 241, 0.4) !important;
+  filter: brightness(1.1) !important;
 }
 :host-context(.theme-escuro) ::ng-deep .btn-sso .p-button:hover,
 :host-context(.theme-translucido) ::ng-deep .btn-sso .p-button:hover {
@@ -668,6 +683,7 @@
 }
 
 ::ng-deep .btn-sso .p-button i {
-  color: var(--text-main) !important;
+  color: white !important;
   font-size: 1.1rem !important;
+  margin-right: 8px !important;
 }
