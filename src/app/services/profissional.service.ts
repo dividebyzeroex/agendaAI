@@ -146,16 +146,17 @@ export class ProfissionalService {
 
   // ─── Autenticação do Colaborador (OTP) ────────────────────────────────
 
-  async solicitarCodigo(identificador: string): Promise<{ proId: string, telefone: string }> {
-    // 1. Busca profissional por ID ou Telefone
+  async solicitarCodigo(identificador: string, estabelecimentoId: string): Promise<{ proId: string, telefone: string }> {
+    // 1. Busca profissional por ID ou Telefone, validando se pertence ao estabelecimento
     const { data: pro, error: proErr } = await this.supabase
       .from('profissionais')
-      .select('id, telefone, nome')
+      .select('id, telefone, nome, estabelecimento_id')
       .or(`id.eq.${identificador},telefone.eq.${identificador}`)
+      .eq('estabelecimento_id', estabelecimentoId)
       .maybeSingle();
 
     if (proErr) throw proErr;
-    if (!pro) throw new Error('Profissional não localizado.');
+    if (!pro) throw new Error('Profissional não localizado neste estabelecimento.');
     if (!pro.telefone) throw new Error('Profissional sem telefone cadastrado.');
 
     // 2. Gera código de 6 dígitos

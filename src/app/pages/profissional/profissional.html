@@ -1,28 +1,26 @@
-<div class="pro-root">
+<div class="pro-root theme-translucido">
 
   <!-- ══════════════ AUTH SECTION ══════════════ -->
   <div class="pro-auth" *ngIf="authState !== 'ready'">
-    <div class="auth-card" *ngIf="authState === 'login'">
+    <div class="auth-card glass-panel" *ngIf="authState === 'login'">
       <div class="auth-hero">
         <span class="emoji">💇‍♂️</span>
-        <h2>Portal do Colaborador</h2>
+        <h2>Portal da Equipe</h2>
         <p>Acesse sua agenda diária e gerencie seus atendimentos.</p>
       </div>
 
       <div class="field">
         <label>ID ou WhatsApp</label>
-        <input type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input" (keyup.enter)="requestAcesso()" />
+        <input pInputText type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input w-full" (keyup.enter)="requestAcesso()" />
       </div>
 
       <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <button class="btn-primary" [disabled]="!identificador.trim() || isSaving" (click)="requestAcesso()">
-        {{ isSaving ? 'Buscando...' : 'Solicitar Acesso' }}
-      </button>
+      <p-button [label]="isSaving ? 'Buscando...' : 'Solicitar Acesso'" [disabled]="!identificador.trim() || isSaving" (onClick)="requestAcesso()" styleClass="w-full mt-4"></p-button>
     </div>
 
     <!-- OTP -->
-    <div class="auth-card" *ngIf="authState === 'otp'">
+    <div class="auth-card glass-panel" *ngIf="authState === 'otp'">
       <div class="auth-hero">
         <span class="emoji">📲</span>
         <h2>Validar Código</h2>
@@ -31,92 +29,93 @@
 
       <div class="field">
         <label>Código de 6 dígitos</label>
-        <input type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp" (keyup.enter)="verifyOtp()" maxlength="6" />
+        <input pInputText type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp w-full text-center" (keyup.enter)="verifyOtp()" maxlength="6" />
       </div>
 
       <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <button class="btn-primary" [disabled]="otpCode.length < 6 || isSaving" (click)="verifyOtp()">
-        {{ isSaving ? 'Verificando...' : 'Entrar na Agenda' }}
-      </button>
+      <p-button [label]="isSaving ? 'Verificando...' : 'Entrar na Agenda'" [disabled]="otpCode.length < 6 || isSaving" (onClick)="verifyOtp()" styleClass="w-full mt-4"></p-button>
 
-      <button class="btn-ghost" (click)="authState = 'login'" [disabled]="isSaving">Alterar Dados</button>
+      <p-button label="Alterar Dados" styleClass="p-button-text w-full mt-2" (onClick)="authState = 'login'" [disabled]="isSaving"></p-button>
     </div>
   </div>
 
   <!-- ══════════════ PORTAL SECTION ══════════════ -->
-  <div class="pro-app" *ngIf="authState === 'ready'">
+  <div class="pro-app glass-panel" *ngIf="authState === 'ready'">
     
     <!-- HEADER PREMIUM -->
-    <header class="pro-header-glass">
-       <div class="h-user">
-          <div class="h-avatar" [style.background]="profile?.cor_agenda || '#1a73e8'">
+    <header class="bento-header flex justify-content-between align-items-center">
+       <div class="h-user flex align-items-center gap-3">
+          <div class="h-avatar" [style.background]="profile?.cor_agenda || 'var(--primary-color)'">
              <img *ngIf="profile?.foto_url" [src]="profile?.foto_url" alt="" />
              <span *ngIf="!profile?.foto_url">{{ profile?.nome?.[0] }}</span>
           </div>
-          <div class="h-info">
+          <div class="h-info flex flex-column">
              <strong>{{ profile?.nome?.split(' ')?.[0] }}</strong>
              <span>{{ estabName }}</span>
           </div>
        </div>
-       <button (click)="logout()" class="btn-logout-glass"><i class="pi pi-power-off"></i></button>
+       <p-button icon="pi pi-power-off" styleClass="p-button-rounded p-button-danger p-button-text" (onClick)="logout()"></p-button>
     </header>
 
     <!-- PRO WALLET (RESUMO FINANCEIRO) -->
-    <div class="pro-wallet-glass">
-        <div class="pw-total">
+    <div class="pro-wallet p-3">
+        <div class="pw-total elite-shadow">
             <span class="label">Faturamento Hoje</span>
             <h2 class="value">R$ {{ (totalRevenue || 0).toFixed(2).replace('.', ',') }}</h2>
             <div class="pw-commission">
-                <span class="c-label">Minha Comissão</span>
+                <span class="c-label">Sua Comissão</span>
                 <span class="c-value">R$ {{ (totalCommission || 0).toFixed(2).replace('.', ',') }}</span>
             </div>
         </div>
     </div>
 
     <!-- CONTENT -->
-    <main class="pro-main">
+    <main class="pro-main p-3">
 
       <!-- VIEW: AGENDA -->
       <div class="view-agenda" *ngIf="view === 'agenda'">
-         <div class="vh-title-elite">
-            <h3>Minha Agenda</h3>
-            <span class="pill">{{ agenda.length }} Clientes</span>
+         <div class="vh-title flex justify-content-between align-items-center mb-3">
+            <h3>Agenda do Dia</h3>
+            <span class="pill-badge">{{ agenda.length }} Clientes</span>
          </div>
 
-         <!-- Elite Loader (Mini) -->
-         <div class="elite-loader-mini" *ngIf="isLoading">
-            <div class="elite-scissor-wrap"></div>
-            <div class="loader-text">Sincronizando Agenda...</div>
+         <!-- Loader -->
+         <div class="flex flex-column align-items-center p-5 opacity-70" *ngIf="isLoading">
+            <i class="pi pi-spin pi-spinner text-4xl text-primary mb-3"></i>
+            <span>Sincronizando Agenda...</span>
          </div>
 
          <!-- ACTUAL LIST BENTO -->
          <div class="agenda-list-bento" *ngIf="!isLoading">
-            <div class="empty-agenda-elite" *ngIf="agenda.length === 0">
-               <div class="e-icon">✨</div>
-               <h4>Dia de Descanso?</h4>
-               <p>Não há atendimentos programados.</p>
+            <div class="empty-state text-center p-5" *ngIf="agenda.length === 0">
+               <div class="text-6xl mb-3">✨</div>
+               <h4 class="text-xl font-bold mb-2">Dia Livre</h4>
+               <p class="text-500">Não há atendimentos programados para hoje.</p>
             </div>
 
-            <div class="ev-card-glass" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
-               <div class="ev-time-strip">
-                  <strong>{{ fmtH(ev.start) }}</strong>
-                  <div class="line"></div>
-                  <span>{{ fmtH(ev.end) }}</span>
+            <div class="ev-card glass-panel flex mb-3" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
+               <div class="ev-time flex flex-column align-items-center pr-3 mr-3 border-right-1 surface-border">
+                  <strong class="text-xl">{{ fmtH(ev.start) }}</strong>
+                  <div class="line flex-1 border-left-1 surface-border my-1"></div>
+                  <span class="text-sm text-500">{{ fmtH(ev.end) }}</span>
                </div>
-               <div class="ev-body-glass">
-                  <div class="ev-header">
-                     <span class="client-name">{{ ev?.clientes?.nome || 'Cliente' }}</span>
-                     <span class="st-pill-glass" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
+               <div class="ev-body flex-1">
+                  <div class="flex justify-content-between align-items-center mb-1">
+                     <span class="font-bold text-lg">{{ ev?.clientes?.nome || 'Cliente' }}</span>
+                     <span class="status-badge" [style.background]="getStat(ev.status).bg" [style.color]="getStat(ev.status).color">
                         {{ getStat(ev.status).label }}
                      </span>
                   </div>
-                  <p class="service-name">{{ ev?.servicos?.titulo || 'Serviço' }}</p>
-                  <div class="ev-footer" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado'">
-                    <button class="btn-action-glass" [disabled]="isSaving" (click)="goAtendimento(ev)">
-                       <i class="pi" [class]="ev.status === 'em_atendimento' ? 'pi-play' : 'pi-check-circle'"></i>
-                       {{ ev.status === 'em_atendimento' ? 'Continuar' : 'Atender Cliente' }}
-                    </button>
+                  <p class="text-500 text-sm mb-3">{{ ev?.servicos?.titulo || 'Serviço' }}</p>
+                  
+                  <div class="ev-footer" *ngIf="ev.status !== 'cancelado' && ev.status !== 'finalizado' && ev.status !== 'concluido'">
+                    <p-button [label]="ev.status === 'em_atendimento' ? 'Continuar' : 'Iniciar Atendimento'" 
+                              [icon]="ev.status === 'em_atendimento' ? 'pi pi-play' : 'pi pi-check-circle'"
+                              styleClass="p-button-sm w-full"
+                              (onClick)="goAtendimento(ev)" 
+                              [disabled]="isSaving">
+                    </p-button>
                   </div>
                </div>
             </div>
@@ -125,66 +124,67 @@
 
       <!-- VIEW: ATENDIMENTO -->
       <div class="view-atendimento" *ngIf="view === 'atendimento'">
-         <div class="at-header">
-            <button class="btn-back" (click)="backToAgenda()"><i class="pi pi-arrow-left"></i></button>
-            <h3>Atendimento: {{ activeEvent?.clientes?.nome }}</h3>
+         <div class="flex align-items-center gap-3 mb-4">
+            <p-button icon="pi pi-arrow-left" styleClass="p-button-rounded p-button-text" (onClick)="backToAgenda()"></p-button>
+            <h3 class="m-0">Atendendo: {{ activeEvent?.clientes?.nome }}</h3>
          </div>
 
-         <div class="at-card">
-            <div class="at-section">
-               <label>Serviço Principal</label>
-               <div class="s-row">
-                  <span class="s-emoji">{{ activeEvent?.servicos?.emoji || '✂️' }}</span>
-                  <div class="s-text">
-                     <strong>{{ activeEvent?.servicos?.titulo }}</strong>
-                     <span>R$ {{ activeEvent?.servicos?.preco }},00</span>
+         <div class="at-card glass-panel mb-4">
+            <div class="mb-4">
+               <label class="text-xs uppercase font-bold text-500 block mb-2">Serviço Principal</label>
+               <div class="flex align-items-center gap-3 p-3 surface-ground border-round-2xl">
+                  <span class="text-2xl">{{ activeEvent?.servicos?.emoji || '✂️' }}</span>
+                  <div>
+                     <strong class="block text-lg">{{ activeEvent?.servicos?.titulo }}</strong>
+                     <span class="text-primary font-bold">R$ {{ activeEvent?.servicos?.preco }},00</span>
                   </div>
                </div>
             </div>
 
-            <div class="at-section">
-               <div class="s-head">
-                  <label>Serviços Extras</label>
-                  <button class="btn-add" (click)="showAddExtras = true"><i class="pi pi-plus"></i></button>
+            <div>
+               <div class="flex justify-content-between align-items-center mb-2">
+                  <label class="text-xs uppercase font-bold text-500">Serviços Extras</label>
+                  <p-button icon="pi pi-plus" styleClass="p-button-rounded p-button-text p-button-sm" (onClick)="showAddExtras = true"></p-button>
                </div>
-               <div class="extras-list">
-                  <p class="e-empty" *ngIf="extras.length === 0">Nenhum extra adicionado</p>
-                  <div class="extra-item" *ngFor="let ex of extras; let i = index">
-                     <span>{{ ex.emoji }} {{ ex.titulo }} (R$ {{ ex.preco }})</span>
-                     <button (click)="removeExtra(i)" class="btn-close"><i class="pi pi-times"></i></button>
+               
+               <p class="text-500 text-sm italic" *ngIf="extras.length === 0">Nenhum extra adicionado</p>
+               
+               <div class="flex flex-column gap-2">
+                  <div class="flex justify-content-between align-items-center p-2 surface-ground border-round-xl" *ngFor="let ex of extras; let i = index">
+                     <span>{{ ex.emoji }} {{ ex.titulo }} <small class="text-500">(R$ {{ ex.preco }})</small></span>
+                     <p-button icon="pi pi-times" styleClass="p-button-rounded p-button-danger p-button-text p-button-sm" (onClick)="removeExtra(i)"></p-button>
                   </div>
                </div>
             </div>
          </div>
 
-         <button class="btn-primary large" [disabled]="isSaving" (click)="finishAtendimento()">
-            {{ isSaving ? 'Finalizando...' : 'Finalizar Atendimento' }}
-         </button>
+         <p-button [label]="isSaving ? 'Finalizando...' : 'Finalizar e Cobrar'" 
+                   icon="pi pi-check" 
+                   styleClass="w-full p-button-lg" 
+                   (onClick)="finishAtendimento()" 
+                   [disabled]="isSaving">
+         </p-button>
 
          <!-- Modal Extras -->
-         <div class="modal-overlay" *ngIf="showAddExtras" (click)="showAddExtras = false">
-            <div class="modal-body" (click)="$event.stopPropagation()">
-               <h4>Adicionar Extra</h4>
-               <div class="m-list">
-                  <button class="m-item" *ngFor="let s of services" (click)="addExtra(s)">
-                     <span>{{ s.emoji }} {{ s.titulo }}</span>
-                     <strong>R$ {{ s.preco }}</strong>
-                  </button>
-               </div>
+         <p-dialog header="Adicionar Serviço Extra" [(visible)]="showAddExtras" [modal]="true" [style]="{width: '90vw', maxWidth: '400px'}">
+            <div class="flex flex-column gap-2 mt-3">
+               <button class="flex justify-content-between align-items-center p-3 surface-ground border-round-xl border-none cursor-pointer hover:surface-hover transition-colors" 
+                       *ngFor="let s of services" (click)="addExtra(s)">
+                  <span class="font-medium">{{ s.emoji }} {{ s.titulo }}</span>
+                  <strong class="text-primary">R$ {{ s.preco }}</strong>
+               </button>
             </div>
-         </div>
+         </p-dialog>
       </div>
 
       <!-- VIEW: SUCESSO -->
-      <div class="view-sucesso" *ngIf="view === 'sucesso'">
-         <div class="s-icon">💰</div>
-         <h2>Atendimento Finalizado!</h2>
-         <p>O valor de <strong>R$ {{ finishedItem?.valor_total }},00</strong> foi enviado para o caixa.</p>
-         <button class="btn-primary" (click)="backToAgenda()">Voltar para Agenda</button>
+      <div class="view-sucesso text-center p-5" *ngIf="view === 'sucesso'">
+         <div class="text-6xl mb-4">💰</div>
+         <h2 class="mb-2">Tudo Certo!</h2>
+         <p class="text-500 mb-4">O valor de <strong class="text-primary">R$ {{ finishedItem?.valor_total }},00</strong> foi registrado no caixa.</p>
+         <p-button label="Voltar para a Agenda" (onClick)="backToAgenda()" styleClass="w-full"></p-button>
       </div>
 
     </main>
-
   </div>
-
 </div>

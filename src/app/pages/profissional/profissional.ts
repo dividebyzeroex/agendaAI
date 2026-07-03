@@ -7,13 +7,17 @@ import { EstabelecimentoPublicoService } from '../../services/estabelecimento-pu
 import { Servico } from '../../services/estabelecimento.service';
 import { Subscription } from 'rxjs';
 
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+
 type ProView = 'agenda' | 'atendimento' | 'sucesso';
 type ProAuth = 'login' | 'otp' | 'ready';
 
 @Component({
   selector: 'app-profissional',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InputTextModule, ButtonModule, DialogModule],
   templateUrl: './profissional.html',
   styleUrls: ['./profissional.css'],
 })
@@ -29,6 +33,7 @@ export class Profissional implements OnInit, OnDestroy {
   tempProId = '';
   maskedPhone = '';
   profile: any = null;
+  estabelecimentoId = '';
 
   // -- UI State --
   view: ProView = 'agenda';
@@ -60,7 +65,10 @@ export class Profissional implements OnInit, OnDestroy {
     const slug = this.route.snapshot.paramMap.get('slug') || '';
     if (slug) {
       const data = await this.pubService.getBySlug(slug);
-      if (data.estabelecimento) this.estabName = data.estabelecimento.nome!;
+      if (data.estabelecimento) {
+        this.estabName = data.estabelecimento.nome!;
+        this.estabelecimentoId = data.estabelecimento.id!;
+      }
       this.services = data.servicos || [];
     }
 
@@ -89,7 +97,7 @@ export class Profissional implements OnInit, OnDestroy {
     if (!this.identificador.trim()) return;
     this.isSaving = true; this.errorMsg = '';
     try {
-      const { proId, telefone } = await this.proService.solicitarCodigo(this.identificador.trim());
+      const { proId, telefone } = await this.proService.solicitarCodigo(this.identificador.trim(), this.estabelecimentoId);
       this.tempProId = proId;
       this.maskedPhone = telefone;
       this.authState = 'otp';
