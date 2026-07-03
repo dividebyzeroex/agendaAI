@@ -168,6 +168,16 @@ export class AdminProfissionais implements OnInit {
     finally { this.isSaving = false; }
   }
 
+  async copiarId(id: string) {
+    if (!id) return;
+    try {
+      await navigator.clipboard.writeText(id);
+      this.showSuccess('ID copiada para a área de transferência!');
+    } catch (err) {
+      this.erro = 'Falha ao copiar a ID.';
+    }
+  }
+
   // ─── Salvar disponibilidade ────────────────────────────────
 
   async salvarDisponibilidade() {

@@ -206,6 +206,21 @@
         <div class="form-section-ent">
           <div class="section-title">Dados Básicos</div>
           <div class="form-grid-premium">
+             <!-- Campo ID do Colaborador (Somente leitura para profissionais já criados) -->
+             <div class="field-premium full" *ngIf="!isNovo && profAtual.id">
+                <label>ID do Funcionário (Para Login)</label>
+                <div class="input-wrap flex gap-2">
+                   <div class="flex-1 relative" style="display: flex; align-items: center; background: rgba(0,0,0,0.03); border-radius: 8px;">
+                     <i class="pi pi-id-card" style="margin-left: 12px; color: var(--text-muted)"></i>
+                     <input type="text" [value]="profAtual.id" readonly style="border: none; background: transparent; padding-left: 10px; width: 100%; font-family: monospace; font-size: 0.95rem; color: var(--text-main)" />
+                   </div>
+                   <button type="button" class="btn-novo-prof-header" style="padding: 0 16px; border-radius: 8px;" (click)="copiarId(profAtual.id)" title="Copiar ID para enviar ao funcionário">
+                     <i class="pi pi-copy"></i> Copiar
+                   </button>
+                </div>
+                <p class="field-hint">O funcionário utilizará esta ID para acessar o sistema no portal da equipe.</p>
+             </div>
+
              <div class="field-premium">
                 <label>Nome Completo</label>
                 <div class="input-wrap">

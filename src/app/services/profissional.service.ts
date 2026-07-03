@@ -144,69 +144,55 @@ export class ProfissionalService {
     await this.fetchCaixaPendente();
   }
 
-  // ─── Autenticação do Colaborador (OTP) ────────────────────────────────
+  // ─── Autenticação do Colaborador (Magic Link via Supabase Auth) ─────────
 
-  async solicitarCodigo(identificador: string, estabelecimentoId: string): Promise<{ proId: string, telefone: string }> {
-    // 1. Busca profissional por ID ou Telefone, validando se pertence ao estabelecimento
+  async solicitarMagicLink(identificador: string, estabelecimentoId: string): Promise<{ emailMascara: string }> {
+    // 1. Busca profissional pelo ID, validando se pertence ao estabelecimento
     const { data: pro, error: proErr } = await this.supabase
       .from('profissionais')
-      .select('id, telefone, nome, estabelecimento_id')
-      .or(`id.eq.${identificador},telefone.eq.${identificador}`)
+      .select('id, email, nome')
+      .eq('id', identificador)
       .eq('estabelecimento_id', estabelecimentoId)
       .maybeSingle();
 
     if (proErr) throw proErr;
-    if (!pro) throw new Error('Profissional não localizado neste estabelecimento.');
-    if (!pro.telefone) throw new Error('Profissional sem telefone cadastrado.');
+    if (!pro) throw new Error('Funcionário não localizado neste estabelecimento com a ID fornecida.');
+    if (!pro.email) throw new Error('Funcionário não possui E-mail cadastrado. Peça ao gestor para cadastrar.');
 
-    // 2. Gera código de 6 dígitos
-    const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 10 * 60000).toISOString();
-
-    // 3. Salva no banco (tabela profissional_otps)
-    await this.supabase.from('profissional_otps').delete().eq('profissional_id', pro.id);
-    const { error: otpErr } = await this.supabase
-      .from('profissional_otps')
-      .insert([{
-        profissional_id: pro.id,
-        codigo,
-        expires_at: expiresAt
-      }]);
+    // 2. Aciona o disparo de Magic Link do Supabase Auth para a caixa de e-mail dele
+    const redirectUrl = window.location.origin + `/pro/${estabelecimentoId}?magic=true`;
     
-    if (otpErr) throw otpErr;
-
-    // Envia o código OTP via SMS
-    const msg = `Seu código de acesso AgendaAi é: ${codigo}. Válido por 10 minutos.`;
-    await this.smsService.send({
-      to: pro.telefone,
-      message: msg,
-      tipo: 'manual'
+    const { error } = await this.supabase.auth.signInWithOtp({
+      email: pro.email,
+      options: {
+        emailRedirectTo: redirectUrl,
+      }
     });
 
-    const telMascara = pro.telefone.replace(/.(?=.{4})/g, '*');
-    return { proId: pro.id, telefone: telMascara };
+    if (error) throw new Error('Falha ao acionar envio de e-mail mágico: ' + error.message);
+
+    // Retorna o e-mail mascarado para exibir na tela de sucesso
+    const [user, domain] = pro.email.split('@');
+    const emailMascara = user.substring(0, 3) + '***@' + domain;
+    return { emailMascara };
   }
 
-  async verificarCodigo(proId: string, codigo: string): Promise<any> {
-    const { data: otp, error } = await this.supabase
-      .from('profissional_otps')
-      .select('*')
-      .eq('profissional_id', proId)
-      .eq('codigo', codigo)
-      .maybeSingle();
+  async checkMagicLinkSession(estabelecimentoId: string): Promise<any | null> {
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session || !session.user || !session.user.email) return null;
 
-    if (error || !otp) throw new Error('Código inválido ou expirado.');
-    if (new Date(otp.expires_at) < new Date()) throw new Error('Código expirado.');
-
+    // Localiza o funcionário correspondente ao e-mail autenticado neste estabelecimento
     const { data: pro } = await this.supabase
       .from('profissionais')
       .select('*')
-      .eq('id', proId)
-      .single();
+      .eq('email', session.user.email)
+      .eq('estabelecimento_id', estabelecimentoId)
+      .maybeSingle();
 
-    await this.supabase.from('profissional_otps').delete().eq('id', otp.id);
     return pro;
   }
+
+
 
   subscribeRealtime(proId: string) {
     this.supabase

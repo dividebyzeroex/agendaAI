@@ -13,7 +13,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 
 type ProView = 'agenda' | 'atendimento' | 'sucesso';
-type ProAuth = 'login' | 'otp' | 'ready';
+type ProAuth = 'login' | 'magic_link_sent' | 'ready';
 
 @Component({
   selector: 'app-profissional',
@@ -29,10 +29,8 @@ export class Profissional implements OnInit, OnDestroy {
 
   // -- Auth State --
   authState: ProAuth = 'login';
-  identificador = ''; // ID or Phone
-  otpCode = '';
-  tempProId = '';
-  maskedPhone = '';
+  identificador = ''; // Employee ID
+  maskedEmail = '';
   profile: any = null;
   estabelecimentoId = '';
   estabSegmento = '';
@@ -79,6 +77,23 @@ export class Profissional implements OnInit, OnDestroy {
       this.services = data.servicos || [];
     }
 
+    // Check if coming from a Magic Link Redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('magic') === 'true') {
+      try {
+        const pro = await this.proService.checkMagicLinkSession(this.estabelecimentoId);
+        if (pro) {
+          this.profile = pro;
+          localStorage.setItem('pro_session_rebuild', JSON.stringify(pro));
+          this.authState = 'ready';
+          await this.startSession();
+          return;
+        }
+      } catch (e) {
+        console.error('Falha ao validar sessão do Magic Link', e);
+      }
+    }
+
     // Restore session
     const saved = localStorage.getItem('pro_session_rebuild');
     if (saved) {
@@ -100,32 +115,15 @@ export class Profissional implements OnInit, OnDestroy {
   }
 
   // -- Auth Logic --
-  async requestAcesso() {
+  async requestMagicLink() {
     if (!this.identificador.trim()) return;
     this.isSaving = true; this.errorMsg = '';
     try {
-      const { proId, telefone } = await this.proService.solicitarCodigo(this.identificador.trim(), this.estabelecimentoId);
-      this.tempProId = proId;
-      this.maskedPhone = telefone;
-      this.authState = 'otp';
+      const { emailMascara } = await this.proService.solicitarMagicLink(this.identificador.trim(), this.estabelecimentoId);
+      this.maskedEmail = emailMascara;
+      this.authState = 'magic_link_sent';
     } catch (e: any) {
       this.errorMsg = e.message || 'Dados inválidos.';
-    } finally {
-      this.isSaving = false;
-    }
-  }
-
-  async verifyOtp() {
-    if (this.otpCode.length < 6) return;
-    this.isSaving = true; this.errorMsg = '';
-    try {
-      const pro = await this.proService.verificarCodigo(this.tempProId, this.otpCode);
-      this.profile = pro;
-      localStorage.setItem('pro_session_rebuild', JSON.stringify(pro));
-      this.authState = 'ready';
-      await this.startSession();
-    } catch (e: any) {
-      this.errorMsg = e.message || 'Código incorreto.';
     } finally {
       this.isSaving = false;
     }

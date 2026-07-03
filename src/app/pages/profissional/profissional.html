@@ -10,33 +10,25 @@
       </div>
 
       <div class="field mt-4">
-        <label class="block text-left text-sm font-bold text-500 mb-2">ID ou WhatsApp</label>
-        <input pInputText type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input w-full p-3 border-round-xl" (keyup.enter)="requestAcesso()" />
+        <label class="block text-left text-sm font-bold text-500 mb-2">Sua ID de Funcionário</label>
+        <input pInputText type="text" [(ngModel)]="identificador" placeholder="Ex: 550e8400-e29b-41d4-a716-446655440000" class="pro-input w-full p-3 border-round-xl text-center" (keyup.enter)="requestMagicLink()" />
       </div>
 
       <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <p-button [label]="isSaving ? 'Buscando...' : 'Solicitar Acesso'" [disabled]="!identificador.trim() || isSaving" (onClick)="requestAcesso()" styleClass="p-button-primary w-full mt-4 p-3 border-round-xl font-bold"></p-button>
+      <button pButton [label]="isSaving ? 'Buscando...' : 'Receber Link de Acesso'" [disabled]="!identificador.trim() || isSaving" (click)="requestMagicLink()" class="p-button p-button-primary w-full mt-4 p-3 border-round-xl font-bold justify-content-center"></button>
     </div>
 
-    <!-- OTP -->
-    <div class="auth-card glass-panel" *ngIf="authState === 'otp'">
+    <!-- MAGIC LINK SENT -->
+    <div class="auth-card glass-panel" *ngIf="authState === 'magic_link_sent'">
       <div class="auth-hero">
-        <span class="emoji">📲</span>
-        <h2>Validar Código</h2>
-        <p>Enviamos um código para o número <strong>{{ maskedPhone }}</strong>.</p>
+        <span class="emoji">✉️</span>
+        <h2>Verifique seu E-mail</h2>
+        <p>Enviamos um link mágico de acesso seguro para <strong>{{ maskedEmail }}</strong>.</p>
+        <p class="text-sm text-500 mt-3 line-height-3">Abra o seu aplicativo de e-mail e clique no link para acessar a agenda instantaneamente.</p>
       </div>
 
-      <div class="field mt-4">
-        <label class="block text-left text-sm font-bold text-500 mb-2">Código de 6 dígitos</label>
-        <input pInputText type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp w-full text-center p-3 border-round-xl text-xl letter-spacing-2" (keyup.enter)="verifyOtp()" maxlength="6" />
-      </div>
-
-      <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
-
-      <p-button [label]="isSaving ? 'Verificando...' : 'Entrar na Agenda'" [disabled]="otpCode.length < 6 || isSaving" (onClick)="verifyOtp()" styleClass="p-button-primary w-full mt-4 p-3 border-round-xl font-bold"></p-button>
-
-      <p-button label="Alterar Dados" styleClass="p-button-text p-button-secondary w-full mt-2 font-bold" (onClick)="authState = 'login'" [disabled]="isSaving"></p-button>
+      <button pButton label="Voltar" class="p-button p-button-text p-button-secondary w-full mt-4 font-bold justify-content-center" (click)="authState = 'login'" [disabled]="isSaving"></button>
     </div>
   </div>
 
