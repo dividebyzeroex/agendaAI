@@ -34,6 +34,7 @@ export class Profissional implements OnInit, OnDestroy {
   profile: any = null;
   estabelecimentoId = '';
   estabSegmento = '';
+  currentSlug = '';
 
   get config() {
     return SegmentoConfigService.forSegmento(this.estabSegmento);
@@ -66,9 +67,9 @@ export class Profissional implements OnInit, OnDestroy {
     // Safety exit
     setTimeout(() => { if (this.isLoading) this.isLoading = false; }, 4000);
 
-    const slug = this.route.snapshot.paramMap.get('slug') || '';
-    if (slug) {
-      const data = await this.pubService.getBySlug(slug);
+    this.currentSlug = this.route.snapshot.paramMap.get('slug') || '';
+    if (this.currentSlug) {
+      const data = await this.pubService.getBySlug(this.currentSlug);
       if (data.estabelecimento) {
         this.estabName = data.estabelecimento.nome!;
         this.estabelecimentoId = data.estabelecimento.id!;
@@ -119,7 +120,7 @@ export class Profissional implements OnInit, OnDestroy {
     if (!this.identificador.trim()) return;
     this.isSaving = true; this.errorMsg = '';
     try {
-      const { emailMascara } = await this.proService.solicitarMagicLink(this.identificador.trim(), this.estabelecimentoId);
+      const { emailMascara } = await this.proService.solicitarMagicLink(this.identificador.trim(), this.estabelecimentoId, this.currentSlug);
       this.maskedEmail = emailMascara;
       this.authState = 'magic_link_sent';
     } catch (e: any) {

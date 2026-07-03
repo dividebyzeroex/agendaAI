@@ -146,14 +146,14 @@ export class ProfissionalService {
 
   // ─── Autenticação do Colaborador (Magic Link via Supabase Auth) ─────────
 
-  async solicitarMagicLink(identificador: string, estabelecimentoId: string): Promise<{ emailMascara: string }> {
+  async solicitarMagicLink(identificador: string, estabelecimentoId: string, slug: string): Promise<{ emailMascara: string }> {
     // 0. Validação de formato UUID para evitar erro 22P02 do PostgreSQL
     const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     if (!uuidRegex.test(identificador)) {
       throw new Error('O formato da ID digitada é inválido. Verifique se você copiou corretamente.');
     }
     if (!estabelecimentoId || !uuidRegex.test(estabelecimentoId)) {
-      throw new Error('O link de acesso do estabelecimento está inválido.');
+      throw new Error(`Erro: estabelecimentoId inválido ("${estabelecimentoId}"). Verifique se acessou pelo link correto do negócio.`);
     }
 
     // 1. Busca profissional pelo ID, validando se pertence ao estabelecimento
@@ -169,7 +169,7 @@ export class ProfissionalService {
     if (!pro.email) throw new Error('Funcionário não possui E-mail cadastrado. Peça ao gestor para cadastrar.');
 
     // 2. Aciona o disparo de Magic Link do Supabase Auth para a caixa de e-mail dele
-    const redirectUrl = window.location.origin + `/pro/${estabelecimentoId}?magic=true`;
+    const redirectUrl = window.location.origin + `/pro/${slug}?magic=true`;
     
     const { error } = await this.supabase.auth.signInWithOtp({
       email: pro.email,
