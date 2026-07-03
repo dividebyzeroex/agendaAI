@@ -45,6 +45,7 @@ export class Profissional implements OnInit, OnDestroy {
   isLoading = true;
   isSaving = false;
   errorMsg = '';
+  invalidEstab = false;
   
   // -- Data --
   estabName = '';
@@ -74,8 +75,16 @@ export class Profissional implements OnInit, OnDestroy {
         this.estabName = data.estabelecimento.nome!;
         this.estabelecimentoId = data.estabelecimento.id!;
         this.estabSegmento = data.estabelecimento.segmento || '';
+      } else {
+        this.invalidEstab = true;
+        this.isLoading = false;
+        return;
       }
       this.services = data.servicos || [];
+    } else {
+      this.invalidEstab = true;
+      this.isLoading = false;
+      return;
     }
 
     // Check if coming from a Magic Link Redirect

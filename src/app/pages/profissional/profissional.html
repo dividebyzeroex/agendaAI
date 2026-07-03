@@ -1,7 +1,18 @@
 <div class="pro-root">
 
+  <!-- ══════════════ ERROR SECTION (SLUG INVALIDO) ══════════════ -->
+  <div class="pro-auth" *ngIf="invalidEstab">
+    <div class="auth-card glass-panel text-center">
+      <div class="auth-hero">
+        <span class="emoji">🚫</span>
+        <h2 style="color: #ff4d4f;">Página Incorreta</h2>
+        <p>Não encontramos nenhum estabelecimento com este endereço.<br><br>Verifique se a URL acessada está correta ou peça o link correto para o administrador.</p>
+      </div>
+    </div>
+  </div>
+
   <!-- ══════════════ AUTH SECTION ══════════════ -->
-  <div class="pro-auth" *ngIf="authState !== 'ready'">
+  <div class="pro-auth" *ngIf="!invalidEstab && authState !== 'ready'">
     <div class="auth-card glass-panel" *ngIf="authState === 'login'">
       <div class="auth-hero">
         <span class="emoji">{{ config.heroEmoji || '💈' }}</span>
