@@ -147,6 +147,15 @@ export class ProfissionalService {
   // ─── Autenticação do Colaborador (Magic Link via Supabase Auth) ─────────
 
   async solicitarMagicLink(identificador: string, estabelecimentoId: string): Promise<{ emailMascara: string }> {
+    // 0. Validação de formato UUID para evitar erro 22P02 do PostgreSQL
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (!uuidRegex.test(identificador)) {
+      throw new Error('O formato da ID digitada é inválido. Verifique se você copiou corretamente.');
+    }
+    if (!estabelecimentoId || !uuidRegex.test(estabelecimentoId)) {
+      throw new Error('O link de acesso do estabelecimento está inválido.');
+    }
+
     // 1. Busca profissional pelo ID, validando se pertence ao estabelecimento
     const { data: pro, error: proErr } = await this.supabase
       .from('profissionais')
