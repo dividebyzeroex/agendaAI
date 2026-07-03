@@ -7,6 +7,12 @@
   min-height: 100vh;
   display: flex;
   justify-content: center;
+  background: radial-gradient(circle at top right, rgba(79, 70, 229, 0.05) 0%, transparent 40%),
+              radial-gradient(circle at bottom left, rgba(147, 51, 234, 0.05) 0%, transparent 40%),
+              #fcfcfd;
+  font-family: var(--p-font-family, 'Space Grotesk', 'Inter', sans-serif);
+  color: var(--text-main);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .pro-app {
@@ -15,8 +21,16 @@
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  border-left: 1px solid var(--glass-border);
-  border-right: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(40px) saturate(180%);
+  border-left: 1px solid rgba(0, 0, 0, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 40px 100px -20px rgba(0,0,0,0.05);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:host-context(.theme-claro) .pro-app {
+  background: white;
 }
 
 /* AUTH SECTION */
@@ -32,8 +46,14 @@
 .auth-card {
   padding: 3rem 2rem;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   text-align: center;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.08);
+  animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .auth-hero .emoji { font-size: 3.5rem; display: block; margin-bottom: 1rem; }
@@ -50,12 +70,13 @@
 /* HEADER GLASS */
 .bento-header {
   padding: 1.5rem;
-  border-bottom: 1px solid var(--glass-border);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   position: sticky;
   top: 0;
   z-index: 100;
-  background: var(--glass-bg);
-  backdrop-filter: blur(var(--glass-blur));
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .h-avatar {
@@ -76,13 +97,13 @@
 }
 
 .pw-total {
-  background: var(--active-bg);
+  background: rgba(255, 255, 255, 0.9);
   padding: 2rem 1.5rem;
   border-radius: 28px;
-  color: var(--text-main);
   position: relative;
   overflow: hidden;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.03);
 }
 
 .pw-total .label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 2px; color: var(--text-muted); font-weight: 800; }
@@ -110,9 +131,11 @@
 .agenda-list-bento { display: flex; flex-direction: column; gap: 16px; }
 
 .ev-card {
-   transition: all .3s ease;
+   transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+   background: rgba(255, 255, 255, 0.7);
+   border: 1px solid rgba(0,0,0,0.05);
 }
-.ev-card:hover { transform: translateY(-3px); }
+.ev-card:hover { transform: translateY(-3px) scale(1.01); box-shadow: 0 15px 35px rgba(0,0,0,0.06); }
 
 .status-badge {
   font-size: 0.7rem; font-weight: 800; padding: 4px 10px; border-radius: 20px; text-transform: uppercase;

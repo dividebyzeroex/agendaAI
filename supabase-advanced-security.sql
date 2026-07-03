@@ -332,10 +332,10 @@ begin
     (r->>'dia_semana')::integer,
     r->>'dia_nome',
     (r->>'ativo')::boolean,
-    r->>'hora_inicio',
-    r->>'hora_fim',
-    r->>'intervalo_inicio',
-    r->>'intervalo_fim'
+    (r->>'hora_inicio')::time,
+    (r->>'hora_fim')::time,
+    (r->>'intervalo_inicio')::time,
+    (r->>'intervalo_fim')::time
   from jsonb_array_elements(p_rows) r;
   return true;
 end; $$;
@@ -397,9 +397,9 @@ begin
     p_data->>'nome',
     p_data->>'telefone',
     p_data->>'email',
-    p_data->>'nascimento',
+    (p_data->>'nascimento')::date,
     p_data->>'observacoes',
-    p_data->>'ultima_visita',
+    (p_data->>'ultima_visita')::timestamp,
     coalesce((p_data->>'faltas')::integer, 0)
   ) returning * into v_res;
   return v_res;

@@ -28,10 +28,15 @@ CREATE OR REPLACE FUNCTION update_profissional_controles(
 BEGIN
     UPDATE profissionais 
     SET 
-        role = COALESCE((p_changes->>'role'), role),
+        role = COALESCE((p_changes->>'role')::user_role, role),
         ativo = COALESCE((p_changes->>'ativo')::boolean, ativo),
         auth_type = COALESCE((p_changes->>'auth_type'), auth_type),
-        updated_at = now()
+        comissao_padrao = COALESCE((p_changes->>'comissao_padrao')::numeric, comissao_padrao),
+        valor_hora = COALESCE((p_changes->>'valor_hora')::numeric, valor_hora),
+        cor_agenda = COALESCE((p_changes->>'cor_agenda'), cor_agenda),
+        especialidade = COALESCE((p_changes->>'especialidade'), especialidade),
+        data_contratacao = COALESCE((p_changes->>'data_contratacao')::date, data_contratacao),
+        foto_url = COALESCE((p_changes->>'foto_url'), foto_url)
     WHERE id = p_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;

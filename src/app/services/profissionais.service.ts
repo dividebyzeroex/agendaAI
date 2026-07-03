@@ -206,6 +206,12 @@ export class ProfissionaisService {
     if ('auth_type' in payload) controlFields.auth_type = payload.auth_type;
     if ('primeiro_acesso' in payload) controlFields.primeiro_acesso = payload.primeiro_acesso;
     if ('onboarding_concluido' in payload) controlFields.onboarding_concluido = payload.onboarding_concluido;
+    if ('comissao_padrao' in payload) controlFields.comissao_padrao = payload.comissao_padrao;
+    if ('valor_hora' in payload) controlFields.valor_hora = payload.valor_hora;
+    if ('cor_agenda' in payload) controlFields.cor_agenda = payload.cor_agenda;
+    if ('especialidade' in payload) controlFields.especialidade = payload.especialidade;
+    if ('data_contratacao' in payload) controlFields.data_contratacao = payload.data_contratacao;
+    if ('foto_url' in payload) controlFields.foto_url = payload.foto_url;
 
     if (Object.keys(controlFields).length > 0) {
       const { error: ctrlErr } = await this.supabase

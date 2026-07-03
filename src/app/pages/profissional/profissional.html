@@ -1,4 +1,4 @@
-<div class="pro-root theme-translucido">
+<div class="pro-root">
 
   <!-- ══════════════ AUTH SECTION ══════════════ -->
   <div class="pro-auth" *ngIf="authState !== 'ready'">
@@ -9,14 +9,14 @@
         <p>Acesse sua agenda diária e gerencie seus atendimentos.</p>
       </div>
 
-      <div class="field">
-        <label>ID ou WhatsApp</label>
-        <input pInputText type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input w-full" (keyup.enter)="requestAcesso()" />
+      <div class="field mt-4">
+        <label class="block text-left text-sm font-bold text-500 mb-2">ID ou WhatsApp</label>
+        <input pInputText type="text" [(ngModel)]="identificador" placeholder="Ex: 5511999998888" class="pro-input w-full p-3 border-round-xl" (keyup.enter)="requestAcesso()" />
       </div>
 
       <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <p-button [label]="isSaving ? 'Buscando...' : 'Solicitar Acesso'" [disabled]="!identificador.trim() || isSaving" (onClick)="requestAcesso()" styleClass="w-full mt-4"></p-button>
+      <p-button [label]="isSaving ? 'Buscando...' : 'Solicitar Acesso'" [disabled]="!identificador.trim() || isSaving" (onClick)="requestAcesso()" styleClass="p-button-primary w-full mt-4 p-3 border-round-xl font-bold"></p-button>
     </div>
 
     <!-- OTP -->
@@ -27,16 +27,16 @@
         <p>Enviamos um código para o número <strong>{{ maskedPhone }}</strong>.</p>
       </div>
 
-      <div class="field">
-        <label>Código de 6 dígitos</label>
-        <input pInputText type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp w-full text-center" (keyup.enter)="verifyOtp()" maxlength="6" />
+      <div class="field mt-4">
+        <label class="block text-left text-sm font-bold text-500 mb-2">Código de 6 dígitos</label>
+        <input pInputText type="tel" [(ngModel)]="otpCode" placeholder="000 000" class="pro-input otp w-full text-center p-3 border-round-xl text-xl letter-spacing-2" (keyup.enter)="verifyOtp()" maxlength="6" />
       </div>
 
       <div class="v-error" *ngIf="errorMsg">{{ errorMsg }}</div>
 
-      <p-button [label]="isSaving ? 'Verificando...' : 'Entrar na Agenda'" [disabled]="otpCode.length < 6 || isSaving" (onClick)="verifyOtp()" styleClass="w-full mt-4"></p-button>
+      <p-button [label]="isSaving ? 'Verificando...' : 'Entrar na Agenda'" [disabled]="otpCode.length < 6 || isSaving" (onClick)="verifyOtp()" styleClass="p-button-primary w-full mt-4 p-3 border-round-xl font-bold"></p-button>
 
-      <p-button label="Alterar Dados" styleClass="p-button-text w-full mt-2" (onClick)="authState = 'login'" [disabled]="isSaving"></p-button>
+      <p-button label="Alterar Dados" styleClass="p-button-text p-button-secondary w-full mt-2 font-bold" (onClick)="authState = 'login'" [disabled]="isSaving"></p-button>
     </div>
   </div>
 
@@ -61,11 +61,11 @@
     <!-- PRO WALLET (RESUMO FINANCEIRO) -->
     <div class="pro-wallet p-3">
         <div class="pw-total elite-shadow">
-            <span class="label">Faturamento Hoje</span>
-            <h2 class="value">R$ {{ (totalRevenue || 0).toFixed(2).replace('.', ',') }}</h2>
-            <div class="pw-commission">
-                <span class="c-label">Sua Comissão</span>
-                <span class="c-value">R$ {{ (totalCommission || 0).toFixed(2).replace('.', ',') }}</span>
+            <span class="label text-500 font-bold uppercase text-xs">Faturamento Hoje</span>
+            <h2 class="value text-primary font-bold m-0 mt-1 mb-3 text-4xl">R$ {{ (totalRevenue || 0).toFixed(2).replace('.', ',') }}</h2>
+            <div class="pw-commission flex justify-content-between align-items-center pt-3 border-top-1 surface-border">
+                <span class="c-label text-600 font-medium">Sua Comissão</span>
+                <span class="c-value text-primary font-bold text-xl">R$ {{ (totalCommission || 0).toFixed(2).replace('.', ',') }}</span>
             </div>
         </div>
     </div>
@@ -87,18 +87,20 @@
          </div>
 
          <!-- ACTUAL LIST BENTO -->
-         <div class="agenda-list-bento" *ngIf="!isLoading">
-            <div class="empty-state text-center p-5" *ngIf="agenda.length === 0">
-               <div class="text-6xl mb-3">✨</div>
-               <h4 class="text-xl font-bold mb-2">Dia Livre</h4>
+         <div class="agenda-list-bento view-step" *ngIf="!isLoading">
+            <div class="empty-state flex flex-column align-items-center justify-content-center p-6 text-center" *ngIf="agenda.length === 0">
+               <div class="icon-wrap mb-4">
+                  <i class="pi pi-calendar-plus text-5xl text-primary opacity-50"></i>
+               </div>
+               <h4 class="text-xl font-bold mb-2 text-800">Dia Livre</h4>
                <p class="text-500">Não há atendimentos programados para hoje.</p>
             </div>
 
-            <div class="ev-card glass-panel flex mb-3" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
-               <div class="ev-time flex flex-column align-items-center pr-3 mr-3 border-right-1 surface-border">
-                  <strong class="text-xl">{{ fmtH(ev.start) }}</strong>
-                  <div class="line flex-1 border-left-1 surface-border my-1"></div>
-                  <span class="text-sm text-500">{{ fmtH(ev.end) }}</span>
+            <div class="ev-card glass-panel flex mb-3 p-3 border-round-2xl elite-shadow-sm align-items-center" *ngFor="let ev of agenda" [class]="'ev-' + ev.status">
+               <div class="ev-time flex flex-column align-items-center pr-3 mr-3 border-right-1 surface-border" style="min-width: 65px;">
+                  <strong class="text-xl text-primary font-bold">{{ fmtH(ev.start) }}</strong>
+                  <div class="line flex-1 border-left-1 surface-border my-1" style="height: 20px;"></div>
+                  <span class="text-sm text-500 font-medium">{{ fmtH(ev.end) }}</span>
                </div>
                <div class="ev-body flex-1">
                   <div class="flex justify-content-between align-items-center mb-1">
@@ -123,13 +125,13 @@
       </div>
 
       <!-- VIEW: ATENDIMENTO -->
-      <div class="view-atendimento" *ngIf="view === 'atendimento'">
+      <div class="view-atendimento view-step" *ngIf="view === 'atendimento'">
          <div class="flex align-items-center gap-3 mb-4">
-            <p-button icon="pi pi-arrow-left" styleClass="p-button-rounded p-button-text" (onClick)="backToAgenda()"></p-button>
-            <h3 class="m-0">Atendendo: {{ activeEvent?.clientes?.nome }}</h3>
+            <p-button icon="pi pi-arrow-left" styleClass="p-button-rounded p-button-secondary p-button-text" (onClick)="backToAgenda()"></p-button>
+            <h3 class="m-0 text-800 font-bold">Atendendo: {{ activeEvent?.clientes?.nome }}</h3>
          </div>
 
-         <div class="at-card glass-panel mb-4">
+         <div class="at-card glass-panel mb-4 p-4 border-round-2xl elite-shadow-sm">
             <div class="mb-4">
                <label class="text-xs uppercase font-bold text-500 block mb-2">Serviço Principal</label>
                <div class="flex align-items-center gap-3 p-3 surface-ground border-round-2xl">
@@ -160,7 +162,7 @@
 
          <p-button [label]="isSaving ? 'Finalizando...' : 'Finalizar e Cobrar'" 
                    icon="pi pi-check" 
-                   styleClass="w-full p-button-lg" 
+                   styleClass="w-full p-button-lg p-button-primary border-round-xl font-bold elite-shadow" 
                    (onClick)="finishAtendimento()" 
                    [disabled]="isSaving">
          </p-button>
