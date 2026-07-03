@@ -2,11 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkflowService, WorkflowRule } from '../../services/workflow.service';
+import { DropdownModule } from 'primeng/dropdown';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-admin-automacoes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, DropdownModule, InputTextModule, ButtonModule],
   templateUrl: './admin-automacoes.html',
   styleUrls: ['./admin-automacoes.css']
 })
@@ -18,6 +21,17 @@ export class AdminAutomacoes implements OnInit {
   newRuleTrigger: 'ON_EVENT_CREATED' | 'ON_EVENT_CANCELED' = 'ON_EVENT_CREATED';
   newRuleAction: 'SEND_SMS' | 'SEND_EMAIL' | 'NOTIFY_ADMIN' = 'SEND_SMS';
   isLoading = true;
+  
+  triggerOptions = [
+    { label: 'Quando: Novo Agendamento', value: 'ON_EVENT_CREATED' },
+    { label: 'Quando: Cliente Cancelar', value: 'ON_EVENT_CANCELED' }
+  ];
+  
+  actionOptions = [
+    { label: 'Então: Enviar SMS de Lembrete', value: 'SEND_SMS' },
+    { label: 'Então: Enviar Email Analítico', value: 'SEND_EMAIL' },
+    { label: 'Então: Alarme no Dashboard', value: 'NOTIFY_ADMIN' }
+  ];
 
   ngOnInit() {
     this.workflowService.rules$.subscribe(rules => {

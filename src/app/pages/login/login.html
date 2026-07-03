@@ -78,6 +78,8 @@
                     [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar com E-mail' : 'Entrar no Sistema')" 
                     styleClass="w-full btn-login-main" 
                     [loading]="isLoading"
+                    [outlined]="true"
+                    severity="secondary"
                     (onClick)="submitEmail()">
                 </p-button>
 

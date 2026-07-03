@@ -2,11 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MultiAgentService, AgentDefinition, AgentLog, AgentTask } from '../../services/multi-agent.service';
+import { InputTextModule } from 'primeng/inputtext';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-admin-agents',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, InputTextModule, ButtonModule],
   templateUrl: './admin-agents.html',
   styleUrls: ['./admin-agents.css']
 })

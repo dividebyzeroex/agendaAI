@@ -5,14 +5,14 @@
 }
 
 /* --- LOGO & HEADER --- */
-.page-header.simple {
+.bento-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 2rem;
 }
 
-.page-header h2 {
+.bento-header h2 {
   font-size: 1.85rem;
   font-weight: 800;
   letter-spacing: -0.02em;
@@ -498,116 +498,117 @@
   background: transparent;
 }
 
-/* --- LIGHT THEME OVERRIDES (Elite Vision 2.0 - FIX: Host Context) --- */
-:host-context(.theme-claro) .billing-v2 {
-  --billing-card-bg: #ffffff;
-  --billing-text-main: hsl(222, 47%, 10%); /* Deep Dark Blue */
-  --billing-text-muted: hsl(215, 20%, 35%);
-  --billing-border: rgba(0, 0, 0, 0.08);
-  --billing-accent: #3b82f6;
+/* --- LIGHT/DARK THEME BENTO INTEGRATION --- */
+.ag-page.billing-v2 {
+  padding: 1.5rem 2rem;
+  background: transparent;
+  min-height: 100vh;
 }
 
-:host-context(.theme-claro) .billing-v2 h2,
-:host-context(.theme-claro) .billing-v2 h3,
-:host-context(.theme-claro) .billing-v2 h4,
-:host-context(.theme-claro) .billing-v2 strong,
-:host-context(.theme-claro) .billing-v2 label,
-:host-context(.theme-claro) .billing-v2 p,
-:host-context(.theme-claro) .billing-v2 span:not(.save-badge),
-:host-context(.theme-claro) .billing-v2 div:not(.u-bar-fill):not(.s-icon-wrap) {
-  color: var(--billing-text-main) !important;
+.billing-v2 h2, .billing-v2 h3, .billing-v2 h4,
+.billing-v2 strong, .billing-v2 label, .billing-v2 p,
+.billing-v2 span:not(.save-badge), .billing-v2 div:not(.u-bar-fill):not(.s-icon-wrap):not(.g-icon) {
+  color: var(--text-main);
 }
 
-:host-context(.theme-claro) .billing-v2 .p-pro-header p,
-:host-context(.theme-claro) .billing-v2 .sec-head p,
-:host-context(.theme-claro) .billing-v2 .p-cycle,
-:host-context(.theme-claro) .billing-v2 .p-currency,
-:host-context(.theme-claro) .billing-v2 .security-note,
-:host-context(.theme-claro) .billing-v2 .p-info p {
-  color: var(--billing-text-muted) !important;
+.billing-v2 .p-pro-header p,
+.billing-v2 .sec-head p,
+.billing-v2 .p-cycle,
+.billing-v2 .p-currency,
+.billing-v2 .security-note,
+.billing-v2 .p-info p {
+  color: var(--text-muted) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .usage-summary-bar,
-:host-context(.theme-claro) .billing-v2 .plan-card-pro,
-:host-context(.theme-claro) .billing-v2 .simple-section,
-:host-context(.theme-claro) .billing-v2 .simple-table-wrap,
-:host-context(.theme-claro) .billing-v2 .confirm-card,
-:host-context(.theme-claro) .billing-v2 .plan-preview {
-  background: var(--billing-card-bg) !important;
-  border: 1px solid var(--billing-border) !important;
-  backdrop-filter: none !important;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.04) !important;
+.usage-summary-bar,
+.plan-card-pro,
+.simple-section,
+.simple-table-wrap,
+.confirm-card,
+.plan-preview {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
+  backdrop-filter: blur(var(--glass-blur)) !important;
+  box-shadow: var(--elite-shadow) !important;
+  color: var(--text-main) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .usage-summary-bar i,
-:host-context(.theme-claro) .billing-v2 .plan-card-pro i:not(.pi-minus),
-:host-context(.theme-claro) .billing-v2 .success-banner-modern i {
-  color: #10b981 !important;
+.usage-summary-bar i,
+.plan-card-pro i:not(.pi-minus),
+.success-banner-modern i {
+  color: var(--primary-color) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .u-progress-mini {
-  background: rgba(0, 0, 0, 0.05) !important;
+.u-progress-mini {
+  background: rgba(0, 0, 0, 0.1) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .u-divider {
-  background: rgba(0, 0, 0, 0.08) !important;
+.u-divider {
+  background: var(--glass-border) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .cycle-tabs {
-  background: rgba(0, 0, 0, 0.03) !important;
-  border: 1px solid rgba(0, 0, 0, 0.05) !important;
+.cycle-tabs {
+  background: var(--glass-bg) !important;
+  border: 1px solid var(--glass-border) !important;
   padding: 6px !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .cycle-tab:not(.active) {
-  color: var(--billing-text-muted) !important;
+.cycle-tab:not(.active) {
+  color: var(--text-muted) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .btn-pro-action {
-  border-color: var(--billing-border) !important;
-  color: var(--billing-text-main) !important;
+.cycle-tab.active {
+  background: var(--primary-color) !important;
+  color: white !important;
+}
+
+.btn-pro-action {
+  border-color: var(--glass-border) !important;
+  color: var(--text-main) !important;
   font-weight: 700 !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .btn-pro-action:hover:not(:disabled) {
-  background: var(--billing-text-main) !important;
-  color: #ffffff !important;
+.btn-pro-action:hover:not(:disabled) {
+  background: var(--active-bg) !important;
+  color: var(--text-main) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .featured .btn-pro-action {
-  background: var(--billing-accent) !important;
+.featured .btn-pro-action {
+  background: var(--primary-color) !important;
   color: #ffffff !important;
   border: none !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .p-amount {
-  color: var(--billing-text-main) !important;
+.p-amount {
+  color: var(--text-main) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .simple-table th {
-  color: var(--billing-text-muted) !important;
-  border-bottom: 2px solid rgba(0, 0, 0, 0.05) !important;
+.simple-table th {
+  color: var(--text-muted) !important;
+  border-bottom: 2px solid var(--glass-border) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .simple-table td {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.03) !important;
-  color: var(--billing-text-muted) !important;
+.simple-table td {
+  border-bottom: 1px solid var(--glass-border) !important;
+  color: var(--text-muted) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .val-cell {
-  color: var(--billing-text-main) !important;
+.val-cell {
+  color: var(--text-main) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .btn-table-icon,
-:host-context(.theme-claro) .billing-v2 .btn-close {
-  color: var(--billing-text-muted) !important;
+.btn-table-icon,
+.btn-close {
+  color: var(--text-muted) !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .status-pill.active {
-  background: rgba(16, 185, 129, 0.08) !important;
+.status-pill.active {
+  background: rgba(16, 185, 129, 0.1) !important;
+  color: #10b981 !important;
 }
 
-:host-context(.theme-claro) .billing-v2 .btn-renew-now {
-  background: #b45309 !important;
+.btn-renew-now {
+  background: var(--primary-color) !important;
   color: #ffffff !important;
 }
+

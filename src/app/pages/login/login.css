@@ -230,30 +230,7 @@
 /* Estilos para inputs específicos do Onboarding dentro do card */
 .super-input { margin-bottom: 0.8rem !important; }
 
-/* Botão Próximo com Gradiente Real */
-::ng-deep .btn-login-main .p-button {
-  background: linear-gradient(135deg, #6366f1, #9333ea) !important;
-  border: none !important;
-  box-shadow: 0 10px 25px rgba(99, 102, 241, 0.3) !important;
-  font-weight: 800 !important;
-  font-size: 1.1rem !important;
-  padding: 18px !important;
-  border-radius: 18px !important;
-  transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
-}
-
-::ng-deep .btn-login-main .p-button:not(:disabled):hover {
-  transform: translateY(-3px) scale(1.02) !important;
-  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.45) !important;
-  filter: brightness(1.1) !important;
-}
-
-::ng-deep .btn-login-main .p-button:disabled {
-  background: #e2e8f0 !important;
-  color: #94a3b8 !important;
-  box-shadow: none !important;
-  opacity: 0.7 !important;
-}
+/* Botão Próximo (Onboarding only) — styled via .btn-login-main in consolidated rules below */
 
 @keyframes fadeInDown {
   from { opacity: 0; transform: translateY(-20px); }
@@ -539,15 +516,19 @@
 }
 
 ::ng-deep .btn-login-main .p-button {
+  --p-button-background: transparent;
+  --p-button-border-color: rgba(99, 102, 241, 0.3);
+  --p-button-color: #4f46e5;
+  --p-button-hover-background: rgba(99, 102, 241, 0.08);
+  --p-button-hover-border-color: #4f46e5;
+  --p-button-hover-color: #4f46e5;
   width: 100% !important;
   display: flex !important;
   justify-content: center !important;
   align-items: center !important;
   padding: 14px !important;
   border-radius: 14px !important;
-  background: transparent !important;
-  border: 1.5px solid rgba(99, 102, 241, 0.3) !important;
-  color: #4f46e5 !important;
+  border-width: 1.5px !important;
   font-weight: 700 !important;
   font-size: 0.95rem !important;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
@@ -556,8 +537,6 @@
 }
 
 ::ng-deep .btn-login-main .p-button:hover {
-  background: rgba(99, 102, 241, 0.08) !important;
-  border-color: #4f46e5 !important;
   transform: translateY(-1px) !important;
 }
 
@@ -651,6 +630,12 @@
 }
 
 ::ng-deep .btn-sso .p-button {
+  --p-button-background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  --p-button-border-color: transparent;
+  --p-button-color: white;
+  --p-button-hover-background: linear-gradient(135deg, #4338ca, #6d28d9);
+  --p-button-hover-border-color: transparent;
+  --p-button-hover-color: white;
   width: 100% !important;
   display: flex !important;
   justify-content: center !important;

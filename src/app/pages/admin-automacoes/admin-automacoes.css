@@ -1,6 +1,6 @@
 /* Admin Automacoes - Antigravity Style */
 .gradient-text {
-  background: linear-gradient(135deg, #1a73e8, #a142f4);
+  background: linear-gradient(135deg, var(--primary-color), #a142f4);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -14,14 +14,15 @@
 }
 
 .rule-card {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.07);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  box-shadow: var(--elite-shadow);
   transition: transform 0.3s ease, box-shadow 0.3s ease, opacity 0.3s;
+  backdrop-filter: blur(var(--glass-blur));
 }
-.rule-card:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(0,0,0,0.07); }
+.rule-card:hover { transform: translateY(-2px); box-shadow: var(--elite-hover-shadow); border-color: var(--primary-color); }
 .rule-card.inactive { opacity: 0.55; filter: grayscale(50%); }
 
 .rule-card-top {
@@ -30,18 +31,18 @@
   align-items: flex-start;
   margin-bottom: 1.25rem;
 }
-.rule-card-top h3 { margin: 0; font-size: 1rem; color: #202124; font-weight: 600; }
+.rule-card-top h3 { margin: 0; font-size: 1rem; color: var(--text-main); font-weight: 600; }
 
 /* Toggle Switch */
 .toggle-switch { cursor: pointer; }
 .toggle-pill {
   width: 44px; height: 24px;
-  background: #dadce0;
+  background: var(--glass-border);
   border-radius: 24px;
   position: relative;
   transition: background 0.3s;
 }
-.toggle-pill.on { background: #34a853; }
+.toggle-pill.on { background: #10b981; }
 .knob {
   width: 18px; height: 18px;
   background: white;
@@ -69,21 +70,22 @@
   font-size: 0.82rem;
   font-weight: 600;
 }
-.flow-badge.trigger { background: #e8eaf6; color: #3949ab; }
-.flow-badge.action { background: #fce4ec; color: #c2185b; }
-.flow-arrow { color: #9aa0a6; font-size: 0.85rem; }
+.flow-badge.trigger { background: rgba(57, 73, 171, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.2); }
+.flow-badge.action { background: rgba(194, 24, 91, 0.15); color: #f472b6; border: 1px solid rgba(244, 114, 182, 0.2); }
+.flow-arrow { color: var(--text-muted); font-size: 0.85rem; }
 
 /* New Rule Card */
 .new-rule-card {
-  background: white;
-  border: 1px solid rgba(0,0,0,0.07);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
   border-radius: 16px;
   padding: 1.75rem;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  box-shadow: var(--elite-shadow);
+  backdrop-filter: blur(var(--glass-blur));
 }
 .new-rule-card h3 {
   display: flex; align-items: center; gap: 8px;
-  margin: 0 0 1.5rem 0; font-size: 1.05rem; color: #202124;
+  margin: 0 0 1.5rem 0; font-size: 1.05rem; color: var(--text-main);
 }
 .new-rule-form {
   display: flex;
@@ -91,47 +93,32 @@
   gap: 12px;
   align-items: flex-end;
 }
-.new-rule-form input,
-.new-rule-form select {
-  flex: 1;
-  min-width: 200px;
-  padding: 11px 14px;
-  border: 1px solid rgba(0,0,0,0.12);
-  border-radius: 8px;
-  font-family: 'Space Grotesk', sans-serif;
-  font-size: 0.9rem;
-  outline: none;
-  transition: border 0.2s;
-  background: #fafafa;
-  color: #202124;
-}
-.new-rule-form input:focus,
-.new-rule-form select:focus { border-color: #1a73e8; background: white; }
 
-.btn-create {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #202124;
-  color: white;
-  border: none;
-  padding: 11px 24px;
-  border-radius: 8px;
-  font-family: inherit;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s;
-  white-space: nowrap;
+/* Customizations for PrimeNG inside Bento Grid */
+:host ::ng-deep .new-rule-form .p-dropdown,
+:host ::ng-deep .new-rule-form .p-inputtext {
+  background: var(--active-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
 }
-.btn-create:hover { background: #1a73e8; transform: translateY(-1px); }
+
+:host ::ng-deep .new-rule-form .p-dropdown:not(.p-disabled).p-focus,
+:host ::ng-deep .new-rule-form .p-inputtext:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 1px var(--primary-color);
+}
+
+:host ::ng-deep .new-rule-form .p-dropdown .p-dropdown-label {
+  color: var(--text-main);
+}
 
 .loading-state {
   display: flex; flex-direction: column; align-items: center;
-  gap: 1rem; padding: 4rem; color: #5f6368;
+  gap: 1rem; padding: 4rem; color: var(--text-muted);
 }
 .empty-state {
   grid-column: 1/-1;
-  text-align: center; padding: 4rem; color: #9aa0a6;
+  text-align: center; padding: 4rem; color: var(--text-muted);
 }
-.empty-state i { font-size: 2.5rem; margin-bottom: 1rem; display: block; }
+.empty-state i { font-size: 2.5rem; margin-bottom: 1rem; display: block; color: var(--primary-color); }
+
