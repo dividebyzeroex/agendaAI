@@ -95,20 +95,20 @@
 }
 
 /* Customizations for PrimeNG inside Bento Grid */
-:host ::ng-deep .new-rule-form .p-dropdown,
+:host ::ng-deep .new-rule-form .p-select,
 :host ::ng-deep .new-rule-form .p-inputtext {
   background: var(--active-bg);
   border: 1px solid var(--glass-border);
   color: var(--text-main);
 }
 
-:host ::ng-deep .new-rule-form .p-dropdown:not(.p-disabled).p-focus,
+:host ::ng-deep .new-rule-form .p-select:not(.p-disabled).p-focus,
 :host ::ng-deep .new-rule-form .p-inputtext:focus {
   border-color: var(--primary-color);
   box-shadow: 0 0 0 1px var(--primary-color);
 }
 
-:host ::ng-deep .new-rule-form .p-dropdown .p-dropdown-label {
+:host ::ng-deep .new-rule-form .p-select .p-select-label {
   color: var(--text-main);
 }
 

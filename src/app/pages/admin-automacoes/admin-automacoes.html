@@ -47,13 +47,13 @@
       <div class="new-rule-form">
         <input pInputText type="text" [(ngModel)]="newRuleName" placeholder="Nome da Automação (ex: Lembrete)" style="flex: 1; min-width: 200px;" />
         
-        <p-dropdown [options]="triggerOptions" [(ngModel)]="newRuleTrigger" 
+        <p-select [options]="triggerOptions" [(ngModel)]="newRuleTrigger" 
                     placeholder="Selecione o Gatilho" styleClass="w-full" [style]="{'min-width': '220px'}">
-        </p-dropdown>
+        </p-select>
         
-        <p-dropdown [options]="actionOptions" [(ngModel)]="newRuleAction" 
+        <p-select [options]="actionOptions" [(ngModel)]="newRuleAction" 
                     placeholder="Selecione a Ação" styleClass="w-full" [style]="{'min-width': '250px'}">
-        </p-dropdown>
+        </p-select>
         
         <p-button label="Criar Workflow" icon="pi pi-plus" (onClick)="createRule()" styleClass="w-full"></p-button>
       </div>

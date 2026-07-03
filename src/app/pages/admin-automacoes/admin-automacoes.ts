@@ -2,14 +2,14 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { WorkflowService, WorkflowRule } from '../../services/workflow.service';
-import { DropdownModule } from 'primeng/dropdown';
+import { SelectModule } from 'primeng/select';
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-admin-automacoes',
   standalone: true,
-  imports: [CommonModule, FormsModule, DropdownModule, InputTextModule, ButtonModule],
+  imports: [CommonModule, FormsModule, SelectModule, InputTextModule, ButtonModule],
   templateUrl: './admin-automacoes.html',
   styleUrls: ['./admin-automacoes.css']
 })
