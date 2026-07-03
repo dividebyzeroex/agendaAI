@@ -92,7 +92,7 @@
         <div class="form-grid">
           <div class="field">
             <label>Nome do Estabelecimento</label>
-            <input type="text" [(ngModel)]="estabelecimento.nome" class="ag-input" placeholder="Ex: Barbearia Silva" />
+            <input type="text" [(ngModel)]="estabelecimento.nome" class="ag-input" [placeholder]="segmentoConfig.current.placeholderNome" />
           </div>
           <div class="field">
             <label>Cidade</label>
@@ -108,7 +108,7 @@
           </div>
         </div>
         <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()">
-          <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
+          <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
           <i class="pi pi-check" *ngIf="!isSaving"></i>
           {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
         </button>
@@ -135,7 +135,7 @@
           </div>
           <div class="field full">
             <label>Nome do Serviço</label>
-            <input type="text" [(ngModel)]="novoServico.titulo" class="ag-input" placeholder="Ex: Corte Social" />
+            <input type="text" [(ngModel)]="novoServico.titulo" class="ag-input" [placeholder]="segmentoConfig.current.placeholderServico" />
           </div>
           <div class="field">
             <label>Preço (R$)</label>
@@ -160,7 +160,7 @@
         <!-- Elite Loader (Mini) -->
         <ng-container *ngIf="isLoadingService.isLoading$ | async">
           <div class="elite-loader-mini" style="min-height: 100px; background: var(--active-bg); border-radius: 20px; box-shadow: none; border: 1px solid var(--glass-border);">
-            <div class="elite-scissor-wrap"></div>
+            <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></div>
             <div class="loader-text">Buscando Serviços...</div>
           </div>
         </ng-container>

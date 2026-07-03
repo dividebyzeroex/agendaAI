@@ -8,6 +8,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { ProfissionaisService } from '../../services/profissionais.service';
+import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 
 type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
 
@@ -56,12 +57,7 @@ export class Login implements OnInit {
     slug: ''
   };
 
-  segmentOptions = [
-    { label: 'Barbearia', value: 'barbearia', icon: '✂️' },
-    { label: 'Clínica / Saúde', value: 'clinica', icon: '⚕️' },
-    { label: 'Estética / Spa', value: 'estetica', icon: '🧖' },
-    { label: 'Outro', value: 'outro', icon: '🏢' }
-  ];
+  segmentOptions = SEGMENTO_OPTIONS;
 
   volumeOptions = [
     { label: 'Começando', value: 'iniciante', desc: 'Até 50 / mês' },

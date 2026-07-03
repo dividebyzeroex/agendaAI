@@ -215,13 +215,16 @@ export class NovoClienteModalComponent implements OnInit {
     this.erro   = '';
 
     try {
+      // Normalize nascimento: empty string → null, otherwise keep the YYYY-MM-DD string
+      const nascimentoValue = this.form.nascimento?.trim() ? this.form.nascimento.trim() : null;
+
       if (this.isEdit && this.cliente?.id) {
         // Modo Edição
         const atualizado = await this.clienteService.updateCliente(this.cliente.id, {
           nome:       this.form.nome.trim(),
           telefone:   this.form.telefone.trim() || undefined,
           email:      this.form.email.trim()    || undefined,
-          nascimento: this.form.nascimento || undefined,
+          nascimento: nascimentoValue as any,
           observacoes: this.form.observacoes.trim() || undefined
         } as any);
         this.salvo.emit(atualizado);
@@ -231,7 +234,7 @@ export class NovoClienteModalComponent implements OnInit {
           nome:       this.form.nome.trim(),
           telefone:   this.form.telefone.trim() || undefined,
           email:      this.form.email.trim()    || undefined,
-          nascimento: this.form.nascimento || undefined,
+          nascimento: nascimentoValue as any,
           observacoes: this.form.observacoes.trim() || undefined,
           ultima_visita: new Date().toISOString().split('T')[0],
         });

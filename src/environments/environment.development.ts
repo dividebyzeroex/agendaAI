@@ -1,6 +1,6 @@
 export const environment = {
   production: false,
   supabaseUrl: 'https://vvanjarfwdxtzklogysy.supabase.co',
-  supabaseKey: 'sb_publishable_5b1o5g0Xp0XikWIjUzMeqg_FrO7UF1f',
+  supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZ2YW5qYXJmd2R4dHprbG9neXN5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUwNTgyMzQsImV4cCI6MjA5MDYzNDIzNH0.CpUQMGYEIp-A5eApAXLK_a7RCUbQ_L57RsDopKt_Zo8',
   apiBaseUrl: '/api' // Next.js API Routes endpoint for local dev
 };

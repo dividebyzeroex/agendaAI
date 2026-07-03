@@ -68,8 +68,14 @@ export class ClienteService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) throw new Error('Contexto de estabelecimento não encontrado.');
 
+    // Sanitize nascimento: empty string → null to prevent Postgres date casting error
+    const sanitized = { ...c };
+    if (sanitized.nascimento !== undefined && !sanitized.nascimento) {
+      delete sanitized.nascimento;
+    }
+
     // Criptografia PII (Zero-Knowledge)
-    const encrypted = await this.security.encryptObject(c, ['nome', 'telefone', 'email', 'observacoes']);
+    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('create_cliente_safe', { 
@@ -88,7 +94,13 @@ export class ClienteService {
   }
 
   async updateCliente(id: string, changes: Partial<Cliente>): Promise<Cliente> {
-    const encrypted = await this.security.encryptObject(changes, ['nome', 'telefone', 'email', 'observacoes']);
+    // Sanitize nascimento: empty string → remove to prevent Postgres date casting error
+    const sanitized = { ...changes };
+    if ('nascimento' in sanitized && !sanitized.nascimento) {
+      delete sanitized.nascimento;
+    }
+
+    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('update_cliente_safe', { p_id: id, p_changes: encrypted })

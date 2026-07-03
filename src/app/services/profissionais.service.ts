@@ -237,10 +237,10 @@ export class ProfissionaisService {
       dia_semana:  d.dia_semana,
       dia_nome:    d.dia_nome,
       ativo:       d.ativo,
-      hora_inicio: d.ativo ? d.hora_inicio : null,
-      hora_fim:    d.ativo ? d.hora_fim    : null,
-      intervalo_inicio: d.ativo ? d.intervalo_inicio : null,
-      intervalo_fim:    d.ativo ? d.intervalo_fim    : null,
+      hora_inicio: d.ativo && d.hora_inicio ? d.hora_inicio : null,
+      hora_fim:    d.ativo && d.hora_fim    ? d.hora_fim    : null,
+      intervalo_inicio: d.ativo && d.intervalo_inicio ? d.intervalo_inicio : null,
+      intervalo_fim:    d.ativo && d.intervalo_fim    ? d.intervalo_fim    : null,
     }));
 
     const { error } = await this.supabase.rpc('save_disponibilidades_safe', { 

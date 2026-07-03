@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ProfissionaisService, Profissional, ProfissionalCompleto, ProfissionalDisponibilidade } from '../../services/profissionais.service';
 import { EstabelecimentoService, Servico } from '../../services/estabelecimento.service';
 import { AuthService } from '../../services/auth.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 type PanelTab = 'dados' | 'disponibilidade' | 'servicos' | 'financeiro';
 
@@ -25,6 +26,7 @@ export class AdminProfissionais implements OnInit {
   private authSvc  = inject(AuthService); // Novo injetor de autoridade
   private ngZone   = inject(NgZone);
   private cdr      = inject(ChangeDetectorRef);
+  segmentoConfig = inject(SegmentoConfigService);
 
   profissionais: ProfissionalCompleto[] = [];
   catalogoServicos: Servico[] = [];
@@ -61,7 +63,7 @@ export class AdminProfissionais implements OnInit {
   }
 
   get currentUserRole(): string {
-    return this.authSvc.userProfileValue?.role || 'barbeiro';
+    return this.authSvc.userProfileValue?.role || this.segmentoConfig.current.rolePadrao;
   }
 
   isDono(): boolean {
@@ -98,8 +100,10 @@ export class AdminProfissionais implements OnInit {
     this.profAtual = {
       nome: '', cargo: '', especialidade: '', bio: '', telefone: '', email: '',
       comissao_padrao: 0, instagram: '', linkedin: '',
-      cor_agenda: '#1a73e8', valor_hora: 0, ativo: true,
-      role: 'barbeiro',
+      cor_agenda: this.coresAgenda[this.profissionais.length % this.coresAgenda.length],
+      valor_hora: 0,
+      ativo: true,
+      role: this.segmentoConfig.current.rolePadrao,
       auth_type: 'email',
       convite_enviado: false,
       disponibilidades: [], servicos: [],

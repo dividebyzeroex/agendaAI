@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ProfissionaisService } from '../../services/profissionais.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-primeiro-acesso',
@@ -17,6 +18,7 @@ export class PrimeiroAcesso implements OnInit {
   private profSvc = inject(ProfissionaisService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
+  private segmentoConfig = inject(SegmentoConfigService);
 
   fase: 'senha' | 'tour' = 'senha';
   pass1 = '';
@@ -159,8 +161,13 @@ export class PrimeiroAcesso implements OnInit {
       ]
     };
 
-    const role = (this.userRole === 'dono' || this.userRole === 'financeiro') ? this.userRole : 'barbeiro';
-    return (contents[role] || contents['barbeiro'])[this.tourStep - 1];
+    if (this.userRole === 'dono' || this.userRole === 'financeiro') {
+      return contents[this.userRole][this.tourStep - 1];
+    }
+    
+    // Fallback dinâmico pelo segmento
+    const steps = this.segmentoConfig.current.tourSteps;
+    return steps[this.tourStep - 1] || steps[0];
   }
 
   proximo() { 

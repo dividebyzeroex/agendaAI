@@ -7,6 +7,7 @@ import { Servico, Horario } from '../../services/estabelecimento.service';
 import { AgendaEventService } from '../../services/agenda-event.service';
 import { ClienteService } from '../../services/cliente.service';
 import { SmsService } from '../../services/sms.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 type BookingStep = 'service' | 'pro' | 'time' | 'confirm' | 'done';
 
@@ -24,6 +25,11 @@ export class Agendar implements OnInit {
   private clientSvc  = inject(ClienteService);
   private smsSvc     = inject(SmsService);
   private cdr        = inject(ChangeDetectorRef);
+
+  // -- Identificando o Segmento --
+  get config() {
+    return SegmentoConfigService.forSegmento(this.estab?.segmento || '');
+  }
 
   // -- Master State --
   step: BookingStep = 'service';
@@ -207,7 +213,7 @@ export class Agendar implements OnInit {
       const endDt = new Date(startDt.getTime() + duration * 60000);
       
       await this.agendaSvc.addEvent({
-        title: `${this.selectedService?.emoji || '✂️'} ${this.custName} | ${this.selectedService?.titulo}`,
+        title: `${this.selectedService?.emoji || this.config.emojiPadrao} ${this.custName} | ${this.selectedService?.titulo}`,
         start: this.toLocalISO(startDt), 
         end: this.toLocalISO(endDt),
         cliente_id: clienteId,

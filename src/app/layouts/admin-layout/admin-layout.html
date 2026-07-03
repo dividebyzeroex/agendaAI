@@ -24,7 +24,7 @@
         <i class="pi pi-users"></i><span>Clientes</span>
       </a>
       <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-id-card"></i><span>Profissionais</span>
+        <i class="pi pi-id-card"></i><span>{{ (segmentoConfig.config$ | async)?.labelProfissionalPlural || 'Profissionais' }}</span>
       </a>
       <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async" (click)="closeSidebar()">
         <i class="pi pi-chart-bar"></i><span>Analytics IA</span>

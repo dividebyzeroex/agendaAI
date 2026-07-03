@@ -4,7 +4,7 @@
   <div class="pro-auth" *ngIf="authState !== 'ready'">
     <div class="auth-card glass-panel" *ngIf="authState === 'login'">
       <div class="auth-hero">
-        <span class="emoji">💇‍♂️</span>
+        <span class="emoji">{{ config.heroEmoji || '💈' }}</span>
         <h2>Portal da Equipe</h2>
         <p>Acesse sua agenda diária e gerencie seus atendimentos.</p>
       </div>
@@ -133,7 +133,7 @@
             <div class="mb-4">
                <label class="text-xs uppercase font-bold text-500 block mb-2">Serviço Principal</label>
                <div class="flex align-items-center gap-3 p-3 surface-ground border-round-2xl">
-                  <span class="text-2xl">{{ activeEvent?.servicos?.emoji || '✂️' }}</span>
+                  <span class="text-2xl">{{ activeEvent?.servicos?.emoji || config.emojiPadrao }}</span>
                   <div>
                      <strong class="block text-lg">{{ activeEvent?.servicos?.titulo }}</strong>
                      <span class="text-primary font-bold">R$ {{ activeEvent?.servicos?.preco }},00</span>

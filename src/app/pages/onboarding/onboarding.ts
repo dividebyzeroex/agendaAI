@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EstabelecimentoService, Estabelecimento } from '../../services/estabelecimento.service';
+import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -40,12 +41,7 @@ export class Onboarding implements OnInit {
     slug: ''
   };
 
-  segmentOptions = [
-    { label: 'Barbearia', value: 'barbearia', icon: '✂️' },
-    { label: 'Clínica / Saúde', value: 'clinica', icon: '⚕️' },
-    { label: 'Estética / Spa', value: 'estetica', icon: '🧖' },
-    { label: 'Outro', value: 'outro', icon: '🏢' }
-  ];
+  segmentOptions = SEGMENTO_OPTIONS;
 
   volumeOptions = [
     { label: 'Começando', value: 'iniciante', desc: 'Até 50 / mês' },

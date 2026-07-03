@@ -32,13 +32,13 @@
 
       <!-- Elite Loader (Initial - Standardized to Mini) -->
       <div class="elite-loader-mini" *ngIf="isLoading" style="background: white; border-radius: 20px;">
-        <div class="elite-scissor-wrap"></div>
+        <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></div>
         <div class="loader-text">Sincronizando com o Estabelecimento...</div>
       </div>
 
       <!-- Transition Loader (Between steps) -->
       <div class="elite-loader-mini" *ngIf="isTransitioning">
-        <div class="elite-scissor-wrap"></div>
+        <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></div>
         <div class="loader-text">{{ transitionMsg }}</div>
       </div>
 
@@ -50,7 +50,7 @@
         </div>
         <div class="v-list">
           <button class="c-card-glass" *ngFor="let s of services" (click)="pickService(s)">
-            <div class="c-icon-glass">{{ s.emoji || '✂️' }}</div>
+            <div class="c-icon-glass">{{ s.emoji || config.emojiPadrao }}</div>
             <div class="c-info-glass">
                <strong>{{ s.titulo }}</strong>
                <span>{{ s.duracao_min }} minutos</span>
@@ -164,7 +164,7 @@
            <div style="font-size: 0.85rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Agendado para</div>
            <div>📅 {{ formatDate(selectedDate) }}</div>
            <div>🕒 {{ selectedTime }}</div>
-           <div style="margin-top: 10px; color: var(--primary);">✂️ {{ selectedService?.titulo }}</div>
+           <div style="margin-top: 10px; color: var(--primary);">{{ selectedService?.emoji || config.emojiPadrao }} {{ selectedService?.titulo }}</div>
         </div>
         
         <button class="btn-back-elite" style="justify-content: center; width: 100%;" onclick="window.location.reload()">

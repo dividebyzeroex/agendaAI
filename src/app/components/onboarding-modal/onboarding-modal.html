@@ -67,7 +67,7 @@
             <button class="tipo-btn"
               *ngFor="let t of tiposNegocio"
               [class.selected]="tipoNegocio === t.value"
-              (click)="tipoNegocio = t.value">
+              (click)="tipoNegocio = t.value; onTipoNegocioChange()">
               {{ t.label }}
             </button>
           </div>

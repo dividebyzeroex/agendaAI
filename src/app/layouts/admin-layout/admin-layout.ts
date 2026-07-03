@@ -25,6 +25,7 @@ import { ProfissionaisService } from '../../services/profissionais.service';
 import { AuthService } from '../../services/auth.service';
 import { map, Observable } from 'rxjs';
 import { PresenceService, OnlineUser } from '../../services/presence.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 
 @Component({
@@ -54,9 +55,10 @@ export class AdminLayout implements OnInit {
   onboarding = inject(OnboardingService);
   notifService = inject(NotificationService);
   aiInsights   = inject(AiInsightsService);
-  billing      = inject(BillingService);
-  theme        = inject(ThemeService);
+  billing = inject(BillingService);
+  theme = inject(ThemeService);
   estabService = inject(EstabelecimentoService);
+  segmentoConfig = inject(SegmentoConfigService);
   authService  = inject(AuthService);
   profService  = inject(ProfissionaisService);
   presence     = inject(PresenceService); // Monitor de Vida em Tempo Real

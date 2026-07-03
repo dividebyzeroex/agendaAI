@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-admin-configuracoes',
@@ -14,6 +15,7 @@ import { EstabelecimentoPublicoService } from '../../services/estabelecimento-pu
 export class AdminConfiguracoes implements OnInit {
   public isLoadingService = inject(EstabelecimentoService);
   private estabelecimentoService = inject(EstabelecimentoService);
+  segmentoConfig = inject(SegmentoConfigService);
 
   estabelecimento: Estabelecimento = { nome: '' };
   servicos: Servico[] = [];
@@ -28,7 +30,10 @@ export class AdminConfiguracoes implements OnInit {
   showNovoServico = false;
 
   ngOnInit() {
-    this.estabelecimentoService.estabelecimento$.subscribe(e => { if (e) this.estabelecimento = { ...e }; });
+    this.estabelecimentoService.estabelecimento$.subscribe(e => { 
+      if (e) this.estabelecimento = { ...e }; 
+      this.novoServico.emoji = this.segmentoConfig.current.emojiPadrao;
+    });
     this.estabelecimentoService.servicos$.subscribe(s => (this.servicos = [...s]));
     this.estabelecimentoService.horarios$.subscribe(h => (this.horarios = [...h]));
   }
@@ -81,7 +86,7 @@ export class AdminConfiguracoes implements OnInit {
     if (!this.novoServico.titulo || this.novoServico.preco <= 0) return;
     try {
       await this.estabelecimentoService.addServico({ ...this.novoServico, ativo: true });
-      this.novoServico = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: '✂️' };
+      this.novoServico = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: this.segmentoConfig.current.emojiPadrao };
       this.showNovoServico = false;
       this.showSuccessMsg('Serviço adicionado!');
     } catch (e: any) {

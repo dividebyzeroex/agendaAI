@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { OnboardingService } from '../../services/onboarding.service';
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { SupabaseService } from '../../services/supabase.service';
+import { SegmentoConfigService, SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 
 type OnboardingStep = 'boas_vindas' | 'negocio' | 'servicos' | 'horarios' | 'conclusao';
 
@@ -45,21 +46,22 @@ export class OnboardingModalComponent implements OnInit {
   telefoneNegocio = '';
   tipoNegocio = '';
 
-  tiposNegocio = [
-    { label: '💈 Barbearia', value: 'barbearia' },
-    { label: '💅 Salão de Beleza', value: 'salao' },
-    { label: '🐾 Pet Shop', value: 'petshop' },
-    { label: '🦷 Clínica Odontológica', value: 'clinica_odonto' },
-    { label: '🏥 Clínica Médica', value: 'clinica_medica' },
-    { label: '💆 Estética', value: 'estetica' },
-    { label: '🔧 Assistência Técnica', value: 'assistencia' },
-    { label: '📋 Outro', value: 'outro' }
-  ];
+  tiposNegocio = SEGMENTO_OPTIONS.map(s => ({ label: `${s.icon} ${s.label}`, value: s.value }));
 
   // Serviços
   servicos: ServicoInput[] = [
-    { emoji: '✂️', titulo: '', descricao: '', preco: 0, duracao_min: 30 }
+    { emoji: '📋', titulo: '', descricao: '', preco: 0, duracao_min: 30 }
   ];
+
+  /** Quando o usuário seleciona um tipo de negócio, pré-popula serviços sugeridos */
+  onTipoNegocioChange() {
+    if (this.tipoNegocio) {
+      const config = SegmentoConfigService.forSegmento(this.tipoNegocio);
+      if (config.servicosSugeridos.length > 0) {
+        this.servicos = config.servicosSugeridos.map(s => ({ ...s }));
+      }
+    }
+  }
 
   // Horários
   horarios: HorarioInput[] = [

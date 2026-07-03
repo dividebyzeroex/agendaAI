@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ProfissionalService, ServicoExtra, CaixaItem } from '../../services/profissional.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { Servico } from '../../services/estabelecimento.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 import { Subscription } from 'rxjs';
 
 import { InputTextModule } from 'primeng/inputtext';
@@ -34,6 +35,11 @@ export class Profissional implements OnInit, OnDestroy {
   maskedPhone = '';
   profile: any = null;
   estabelecimentoId = '';
+  estabSegmento = '';
+
+  get config() {
+    return SegmentoConfigService.forSegmento(this.estabSegmento);
+  }
 
   // -- UI State --
   view: ProView = 'agenda';
@@ -68,6 +74,7 @@ export class Profissional implements OnInit, OnDestroy {
       if (data.estabelecimento) {
         this.estabName = data.estabelecimento.nome!;
         this.estabelecimentoId = data.estabelecimento.id!;
+        this.estabSegmento = data.estabelecimento.segmento || '';
       }
       this.services = data.servicos || [];
     }
@@ -182,7 +189,7 @@ export class Profissional implements OnInit, OnDestroy {
         servicoPrincipal: {
           titulo: this.activeEvent?.servicos?.titulo || 'Serviço',
           preco:  this.activeEvent?.servicos?.preco  || 0,
-          emoji:  this.activeEvent?.servicos?.emoji  || '✂️'
+          emoji:  this.activeEvent?.servicos?.emoji  || this.config.emojiPadrao
         },
         servicosExtras:   this.extras,
         profissional:     this.profile.nome

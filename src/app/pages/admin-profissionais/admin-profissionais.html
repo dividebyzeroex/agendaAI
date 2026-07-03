@@ -44,7 +44,7 @@
 
       <!-- Elite Loader -->
       <div class="elite-loader-container" *ngIf="isLoading">
-        <div class="elite-scissor-wrap"></div>
+        <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></div>
         <div class="loader-text">Sincronizando Profissionais...</div>
       </div>
 
@@ -214,11 +214,11 @@
                 </div>
              </div>
              
-             <div class="field-premium">
+              <div class="field-premium">
                 <label>Cargo / Função</label>
                 <div class="input-wrap">
                    <i class="pi pi-briefcase"></i>
-                   <input type="text" [(ngModel)]="profAtual.cargo" placeholder="Ex: Barbeiro Major" />
+                   <input type="text" [(ngModel)]="profAtual.cargo" [placeholder]="(segmentoConfig.config$ | async)?.placeholderCargo || 'Ex: Barbeiro Major'" />
                 </div>
              </div>
 
@@ -227,20 +227,18 @@
                 <div class="input-wrap">
                    <i class="pi pi-shield"></i>
                     <select [(ngModel)]="profAtual.role" class="select-premium">
-                       <option value="dono">Dono (Acesso Total)</option>
-                       <option value="secretaria">Secretária</option>
-                       <option value="financeiro">Financeiro</option>
-                       <option value="esteticista">Esteticista</option>
-                       <option value="barbeiro">Barbeiro / Staff</option>
+                       <option *ngFor="let r of (segmentoConfig.config$ | async)?.roles" [value]="r.value">
+                         {{ r.label }}
+                       </option>
                     </select>
                 </div>
              </div>
 
-             <div class="field-premium">
+              <div class="field-premium">
                 <label>Especialidade</label>
                 <div class="input-wrap">
                    <i class="pi pi-tag"></i>
-                   <input type="text" [(ngModel)]="profAtual.especialidade" placeholder="Ex: Degradê, Barba" />
+                   <input type="text" [(ngModel)]="profAtual.especialidade" [placeholder]="(segmentoConfig.config$ | async)?.placeholderEspecialidade || 'Ex: Degradê, Barba'" />
                 </div>
              </div>
 
@@ -379,7 +377,7 @@
 
         <div class="expertise-list-premium">
            <div class="exp-card-premium" *ngFor="let sv of servicosVinculados()">
-              <div class="exp-icon">{{ sv.servicos?.emoji || '✂️' }}</div>
+              <div class="exp-icon">{{ sv.servicos?.emoji || (segmentoConfig.config$ | async)?.emojiPadrao || '✂️' }}</div>
               <div class="exp-main">
                  <div class="exp-name">{{ sv.servicos?.titulo }}</div>
                  <div class="exp-price" [class.custom]="!!sv.valor_proprio">
@@ -425,7 +423,7 @@
         <button class="btn-cancel-premium" (click)="fecharPainel()">Cancelar</button>
         <button class="btn-save-premium" [disabled]="isSaving" 
                 (click)="salvarAtual()">
-          <span *ngIf="isSaving" class="scissor-wait-mini">✂️</span>
+          <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
           <i class="pi pi-check" *ngIf="!isSaving"></i>
           <span>{{ isNovo && panelTab === 'dados' ? 'Próximo Passo' : (panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar Alterações') }}</span>
         </button>
