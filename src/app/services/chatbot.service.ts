@@ -41,10 +41,10 @@ export class ChatbotService {
   private activeConversationSubject = new BehaviorSubject<Conversation | null>(null);
   activeConversation$ = this.activeConversationSubject.asObservable();
 
-  private integrationsSubject = new BehaviorSubject<Record<string, boolean>>({
-    whatsapp: false,
-    facebook: false,
-    instagram: false
+  private integrationsSubject = new BehaviorSubject<Record<string, any>>({
+    whatsapp: { active: false },
+    facebook: { active: false },
+    instagram: { active: false }
   });
   integrations$ = this.integrationsSubject.asObservable();
 
@@ -71,12 +71,21 @@ export class ChatbotService {
       .rpc('get_chatbot_integrations_by_estab', { p_estab_id: est.id });
 
     if (integrations) {
-      const state: Record<string, boolean> = { whatsapp: false, facebook: false, instagram: false };
+      const state: Record<string, any> = { whatsapp: { active: false }, facebook: { active: false }, instagram: { active: false } };
       (integrations as any[]).forEach((inc: any) => {
-        state[inc.channel] = inc.status === 'active';
+        state[inc.channel] = { 
+          active: inc.status === 'active',
+          profileName: inc.config?.profileName || this.getMockProfileName(inc.channel)
+        };
       });
       this.integrationsSubject.next(state);
     }
+  }
+
+  private getMockProfileName(channel: string): string {
+    if (channel === 'whatsapp') return '+55 11 98765-4321';
+    if (channel === 'instagram') return '@barbearia.elite';
+    return 'Barbearia Elite';
   }
 
   /**
@@ -107,7 +116,8 @@ export class ChatbotService {
     
     // Update local state
     const current = this.integrationsSubject.value;
-    this.integrationsSubject.next({ ...current, [channel]: true });
+    current[channel] = { active: true, profileName: config?.profileName || this.getMockProfileName(channel) };
+    this.integrationsSubject.next({ ...current });
   }
 
   /**

@@ -109,6 +109,15 @@
 .icon-fb { color: var(--fb-blue); }
 .icon-ig { background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
 
+.brand-header { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
+.brand-header i { font-size: 2.5rem; }
+.brand-details h3 { font-size: 1.15rem; color: #1e293b; font-weight: 800; margin: 0 0 5px 0; }
+.channel-meta { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #64748b; font-weight: 600; }
+.status-dot.online { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
+.status-pill-small { padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; background: #f1f5f9; color: #64748b; text-transform: uppercase; }
+.btn-elite-action { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; font-size: 0.85rem; font-weight: 700; color: #475569; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
+.btn-elite-action:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+
 /* MAIN CONTENT */
 .chatbot-main { flex: 1; display: flex; flex-direction: column; background: white; position: relative; overflow: hidden; }
 .tab-content { flex: 1; display: flex; flex-direction: column; padding: 2.5rem; overflow-y: auto; width: 100%; }
@@ -141,10 +150,29 @@
 
 /* CHAT INTERFACE */
 .chat-header { padding: 1.25rem 2rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: white; }
+.user-info strong { display: block; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
+.user-info span { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
+.chat-actions { display: flex; gap: 10px; }
+.btn-client { background: white; border: 1px solid #e2e8f0; padding: 8px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; }
+.btn-client:hover { background: #f8fafc; color: #0f172a; border-color: #cbd5e1; }
+.btn-takeover { background: var(--elite-primary); border: none; padding: 8px 14px; border-radius: 10px; font-size: 0.75rem; font-weight: 700; color: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(99,102,241,0.2); }
+.btn-takeover:hover { background: #4f46e5; transform: translateY(-1px); box-shadow: 0 6px 15px rgba(99,102,241,0.3); }
+
 .messages-container { flex: 1; padding: 2.5rem; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 1.25rem; }
+.message-wrapper { display: flex; flex-direction: column; max-width: 75%; }
+.message-wrapper.bot { align-self: flex-start; }
+.message-wrapper.user { align-self: flex-end; align-items: flex-end; }
 .msg-bubble { padding: 14px 20px; border-radius: 22px; font-size: 0.95rem; line-height: 1.5; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
 .user .msg-bubble { background: var(--elite-primary); color: white; border-bottom-right-radius: 4px; box-shadow: 0 10px 25px rgba(99,102,241,0.2); }
 .bot .msg-bubble { background: white; color: #1e293b; border: 1px solid #f1f5f9; border-bottom-left-radius: 4px; }
+.msg-time { font-size: 0.65rem; color: #94a3b8; font-weight: 600; margin-top: 4px; margin-left: 10px; margin-right: 10px; }
+
+.input-container { padding: 20px 30px; display: flex; gap: 15px; border-top: 1px solid #f1f5f9; background: white; align-items: center; }
+.input-container input { flex: 1; padding: 16px 24px; border-radius: 20px; border: 2px solid #f1f5f9; background: #f8fafc; font-size: 0.95rem; font-weight: 500; color: #1e293b; outline: none; transition: 0.3s; }
+.input-container input:focus { border-color: var(--elite-primary); background: white; box-shadow: 0 0 0 4px rgba(99,102,241,0.08); }
+.btn-send { width: 54px; height: 54px; border-radius: 18px; background: var(--elite-primary); color: white; border: none; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; box-shadow: 0 10px 20px rgba(99,102,241,0.25); }
+.btn-send:hover { background: #4f46e5; transform: translateY(-2px); box-shadow: 0 15px 30px rgba(99,102,241,0.35); }
+.btn-send:active { transform: translateY(0); }
 
 /* MODAL / ONBOARDING ELITE */
 .modal-overlay { 

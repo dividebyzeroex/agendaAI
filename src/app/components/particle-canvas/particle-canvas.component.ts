@@ -1,5 +1,6 @@
-import { Component, HostListener, AfterViewInit, OnDestroy, ElementRef, ViewChild, Inject, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, AfterViewInit, OnDestroy, ElementRef, ViewChild, Inject, PLATFORM_ID, inject } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { Router, NavigationEnd } from '@angular/router';
 
 @Component({
   selector: 'app-particle-canvas',
@@ -27,8 +28,18 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
   private isMouseDown = false;
   private isBrowser = false;
 
+  private router = inject(Router);
+  public isSoftMode = false;
+
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
+    
+    // Listen to route changes to soften particles in logged area
+    this.router.events.subscribe((event) => {
+      if (event instanceof NavigationEnd) {
+        this.isSoftMode = event.urlAfterRedirects.includes('/admin');
+      }
+    });
   }
 
   ngAfterViewInit() {

@@ -8,7 +8,7 @@
     <div class="header-actions">
       <div class="active-status" *ngIf="integrations$ | async as integrations">
          <span class="dot active"></span>
-         {{ (integrations['whatsapp'] ? 1 : 0) + (integrations['facebook'] ? 1 : 0) + (integrations['instagram'] ? 1 : 0) }} Canais Ativos
+         {{ (integrations['whatsapp']?.active ? 1 : 0) + (integrations['facebook']?.active ? 1 : 0) + (integrations['instagram']?.active ? 1 : 0) }} Canais Ativos
       </div>
     </div>
   </div>
@@ -114,16 +114,17 @@
           
           <div class="channels-grid">
            <!-- WhatsApp -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['whatsapp']">
+           <div class="channel-card elite-compact-card" [class.active]="integrations['whatsapp']?.active">
              <div class="card-accent-bar" [style.background]="'var(--wa-green)'"></div>
              <div class="card-content">
                <div class="brand-header">
                  <i class="pi pi-whatsapp icon-wa"></i>
                  <div class="brand-details">
                    <h3>WhatsApp</h3>
-                   <span class="status-pill-small" [class.active]="integrations['whatsapp']">
-                     {{ integrations['whatsapp'] ? 'Ativo' : 'Inativo' }}
-                   </span>
+                   <div class="channel-meta" *ngIf="integrations['whatsapp']?.active">
+                     <span class="status-dot online"></span> {{ integrations['whatsapp'].profileName }}
+                   </div>
+                   <span class="status-pill-small" *ngIf="!integrations['whatsapp']?.active">Inativo</span>
                  </div>
                </div>
                <button class="btn-elite-action" (click)="openOnboarding('whatsapp')">
@@ -133,16 +134,17 @@
            </div>
 
            <!-- Facebook -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['facebook']">
+           <div class="channel-card elite-compact-card" [class.active]="integrations['facebook']?.active">
              <div class="card-accent-bar" [style.background]="'var(--fb-blue)'"></div>
              <div class="card-content">
                <div class="brand-header">
                  <i class="pi pi-facebook icon-fb"></i>
                  <div class="brand-details">
                    <h3>Messenger</h3>
-                   <span class="status-pill-small" [class.active]="integrations['facebook']">
-                     {{ integrations['facebook'] ? 'Ativo' : 'Inativo' }}
-                   </span>
+                   <div class="channel-meta" *ngIf="integrations['facebook']?.active">
+                     <span class="status-dot online"></span> {{ integrations['facebook'].profileName }}
+                   </div>
+                   <span class="status-pill-small" *ngIf="!integrations['facebook']?.active">Inativo</span>
                  </div>
                </div>
                <button class="btn-elite-action" (click)="openOnboarding('facebook')">
@@ -152,16 +154,17 @@
            </div>
 
            <!-- Instagram -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['instagram']">
+           <div class="channel-card elite-compact-card" [class.active]="integrations['instagram']?.active">
              <div class="card-accent-bar" [style.background]="'var(--ig-grad)'"></div>
              <div class="card-content">
                <div class="brand-header">
                  <i class="pi pi-instagram icon-ig"></i>
                  <div class="brand-details">
                    <h3>Instagram</h3>
-                   <span class="status-pill-small" [class.active]="integrations['instagram']">
-                     {{ integrations['instagram'] ? 'Ativo' : 'Inativo' }}
-                   </span>
+                   <div class="channel-meta" *ngIf="integrations['instagram']?.active">
+                     <span class="status-dot online"></span> {{ integrations['instagram'].profileName }}
+                   </div>
+                   <span class="status-pill-small" *ngIf="!integrations['instagram']?.active">Inativo</span>
                  </div>
                </div>
                <button class="btn-elite-action" (click)="openOnboarding('instagram')">
