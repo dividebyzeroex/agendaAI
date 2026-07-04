@@ -1266,3 +1266,71 @@ html, body {
     text-align: center;
   }
 }
+
+/* ========================================================
+   MARQUEE MULTI-SEGMENTOS
+   ======================================================== */
+.marquee-container {
+  width: 100%;
+  overflow: hidden;
+  background: rgba(0,0,0,0.2);
+  border-top: 1px solid rgba(255,255,255,0.05);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 1rem 0;
+  white-space: nowrap;
+  position: relative;
+  margin-bottom: 3rem;
+}
+.marquee-container::before,
+.marquee-container::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 100px;
+  height: 100%;
+  z-index: 2;
+}
+.marquee-container::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg-dark), transparent);
+}
+.marquee-container::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg-dark), transparent);
+}
+
+.marquee-track {
+  display: inline-block;
+  animation: scrollMarquee 40s linear infinite;
+}
+.marquee-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 0.5rem 1.25rem;
+  border-radius: 30px;
+  margin: 0 0.5rem;
+  color: #fff;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+.marquee-item:hover {
+  background: rgba(255,255,255,0.1);
+  transform: translateY(-2px);
+  border-color: var(--ag-accent);
+}
+
+@keyframes scrollMarquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* Ajustes de layout row-layout na sect Bento Segments */
+@media (max-width: 768px) {
+  .row-layout {
+    flex-direction: column !important;
+  }
+}
