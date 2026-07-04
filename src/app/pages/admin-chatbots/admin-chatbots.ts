@@ -189,7 +189,7 @@ export class AdminChatbots implements OnInit {
     const top = (window.screen.height / 2) - (h / 2);
     
     const authWindow = window.open(
-      'https://www.facebook.com/v17.0/dialog/oauth?client_id=AGENDA_AI_MOCK&redirect_uri=...',
+      'https://www.facebook.com/v17.0/dialog/oauth?client_id=324495949855323&redirect_uri=https://agenda-ai-xi.vercel.app/admin/chatbots',
       'MetaBusinessOAuth',
       `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`
     );
