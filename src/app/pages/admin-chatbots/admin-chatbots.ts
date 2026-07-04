@@ -98,12 +98,13 @@ export class AdminChatbots implements OnInit {
     
     this.isVerifying = true;
     try {
-      // In a real app, this redirects to Facebook. 
-      // Supabase handles the session after redirect.
-      await this.chatService.authenticateMeta(this.targetChannel);
+      // Simulating OAuth redirect and return for MVP UX
+      setTimeout(async () => {
+        await this.chatService.saveIntegration(this.targetChannel as any, { authMethod: 'oauth', provider: this.targetChannel });
+        this.isVerifying = false;
+        this.onboardingStep = 3;
+      }, 1500);
       
-      // Note: The redirection will happen here. 
-      // After redirecting back, we'd typically have a listener or check the session.
     } catch (err: any) {
       this.isVerifying = false;
       this.errorMessage = 'Erro ao iniciar login com Facebook.';

@@ -256,6 +256,21 @@
           </div>
           <h2>Conexão Estabelecida!</h2>
           <p>O {{ targetChannel | titlecase }} agora está vinculado à sua conta Elite. Seu assistente virtual começará a responder imediatamente.</p>
+          
+          <!-- Webhook Info para WhatsApp -->
+          <div class="webhook-info-box" *ngIf="targetChannel === 'whatsapp'">
+             <h4>Configuração Final na Meta</h4>
+             <p>Copie os dados abaixo e cole no painel de desenvolvedor da Meta para ativar o recebimento de mensagens:</p>
+             <div class="info-row">
+                <span class="label">URL do Webhook:</span>
+                <code>https://vvanjarfwdxtzklogysy.supabase.co/functions/v1/whatsapp-webhook</code>
+             </div>
+             <div class="info-row">
+                <span class="label">Verify Token:</span>
+                <code>agenda_ai_verify_2026</code>
+             </div>
+          </div>
+
           <button class="btn-next-elite success" (click)="finishOnboarding()">Concluir e Ir para o Painel</button>
         </div>
       </div>

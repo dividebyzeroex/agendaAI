@@ -215,5 +215,46 @@
 }
 @keyframes checkDraw { from { width: 0; height: 0; } to { width: 50px; height: 25px; } }
 
+.webhook-info-box {
+  background: #f8fafc;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: left;
+  margin-bottom: 25px;
+  border: 1px solid #e2e8f0;
+}
+.webhook-info-box h4 {
+  margin: 0 0 10px 0;
+  color: #1e293b;
+  font-size: 1.05rem;
+  font-weight: 800;
+}
+.webhook-info-box p {
+  font-size: 0.85rem;
+  margin-bottom: 15px;
+}
+.info-row {
+  margin-bottom: 10px;
+}
+.info-row .label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #64748b;
+  text-transform: uppercase;
+  margin-bottom: 5px;
+}
+.info-row code {
+  display: block;
+  background: white;
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px dashed #cbd5e1;
+  font-size: 0.85rem;
+  color: #0f172a;
+  font-family: monospace;
+  word-break: break-all;
+}
+
 .btn-close-modal { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; color: #cbd5e1; cursor: pointer; z-index: 10; transition: 0.3s; }
 .btn-close-modal:hover { color: #1e293b; transform: rotate(90deg); }
