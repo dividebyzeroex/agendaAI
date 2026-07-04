@@ -111,68 +111,58 @@
       <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
         <div *ngIf="integrations$ | async as integrations">
           <div class="section-title">Aumente sua conversão conectando novos canais</div>
-          
-          <div class="channels-grid">
+             <div class="channels-grid">
            <!-- WhatsApp -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['whatsapp']?.active">
-             <div class="card-accent-bar" [style.background]="'var(--wa-green)'"></div>
-             <div class="card-content">
-               <div class="brand-header">
-                 <i class="pi pi-whatsapp icon-wa"></i>
-                 <div class="brand-details">
-                   <h3>WhatsApp</h3>
-                   <div class="channel-meta" *ngIf="integrations['whatsapp']?.active">
-                     <span class="status-dot online"></span> {{ integrations['whatsapp'].profileName }}
-                   </div>
-                   <span class="status-pill-small" *ngIf="!integrations['whatsapp']?.active">Inativo</span>
-                 </div>
-               </div>
-               <button class="btn-elite-action" (click)="openOnboarding('whatsapp')">
-                 Configurar <i class="pi pi-angle-right"></i>
-               </button>
+           <div class="channel-card elite-compact-card whatsapp" [class.active]="integrations['whatsapp']?.active">
+             <div class="brand-logo-wrap wa">
+               <i class="pi pi-whatsapp"></i>
              </div>
+             <div class="brand-details">
+               <h3>WhatsApp</h3>
+               <div class="channel-meta" *ngIf="integrations['whatsapp']?.active">
+                 <span class="status-dot online"></span> {{ integrations['whatsapp'].profileName }}
+               </div>
+               <span class="status-pill-elite inactive" *ngIf="!integrations['whatsapp']?.active">Inativo</span>
+             </div>
+             <button class="btn-elite-action primary-btn" (click)="openOnboarding('whatsapp')">
+               Configurar
+             </button>
            </div>
 
-           <!-- Facebook -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['facebook']?.active">
-             <div class="card-accent-bar" [style.background]="'var(--fb-blue)'"></div>
-             <div class="card-content">
-               <div class="brand-header">
-                 <i class="pi pi-facebook icon-fb"></i>
-                 <div class="brand-details">
-                   <h3>Messenger</h3>
-                   <div class="channel-meta" *ngIf="integrations['facebook']?.active">
-                     <span class="status-dot online"></span> {{ integrations['facebook'].profileName }}
-                   </div>
-                   <span class="status-pill-small" *ngIf="!integrations['facebook']?.active">Inativo</span>
-                 </div>
-               </div>
-               <button class="btn-elite-action" (click)="openOnboarding('facebook')">
-                 Configurar <i class="pi pi-angle-right"></i>
-               </button>
+           <!-- Facebook Messenger -->
+           <div class="channel-card elite-compact-card facebook" [class.active]="integrations['facebook']?.active">
+             <div class="brand-logo-wrap fb">
+               <i class="pi pi-facebook"></i>
              </div>
+             <div class="brand-details">
+               <h3>Messenger</h3>
+               <div class="channel-meta" *ngIf="integrations['facebook']?.active">
+                 <span class="status-dot online"></span> {{ integrations['facebook'].profileName }}
+               </div>
+               <span class="status-pill-elite inactive" *ngIf="!integrations['facebook']?.active">Inativo</span>
+             </div>
+             <button class="btn-elite-action primary-btn" (click)="openOnboarding('facebook')">
+               Configurar
+             </button>
            </div>
 
            <!-- Instagram -->
-           <div class="channel-card elite-compact-card" [class.active]="integrations['instagram']?.active">
-             <div class="card-accent-bar" [style.background]="'var(--ig-grad)'"></div>
-             <div class="card-content">
-               <div class="brand-header">
-                 <i class="pi pi-instagram icon-ig"></i>
-                 <div class="brand-details">
-                   <h3>Instagram</h3>
-                   <div class="channel-meta" *ngIf="integrations['instagram']?.active">
-                     <span class="status-dot online"></span> {{ integrations['instagram'].profileName }}
-                   </div>
-                   <span class="status-pill-small" *ngIf="!integrations['instagram']?.active">Inativo</span>
-                 </div>
-               </div>
-               <button class="btn-elite-action" (click)="openOnboarding('instagram')">
-                 Configurar <i class="pi pi-angle-right"></i>
-               </button>
+           <div class="channel-card elite-compact-card instagram" [class.active]="integrations['instagram']?.active">
+             <div class="brand-logo-wrap ig">
+               <i class="pi pi-instagram"></i>
              </div>
+             <div class="brand-details">
+               <h3>Instagram</h3>
+               <div class="channel-meta" *ngIf="integrations['instagram']?.active">
+                 <span class="status-dot online"></span> {{ integrations['instagram'].profileName }}
+               </div>
+               <span class="status-pill-elite inactive" *ngIf="!integrations['instagram']?.active">Inativo</span>
+             </div>
+             <button class="btn-elite-action primary-btn" (click)="openOnboarding('instagram')">
+               Configurar
+             </button>
            </div>
-        </div>
+          </div>        </div>
       </div>
     </div>
 

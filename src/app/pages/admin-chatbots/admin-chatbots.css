@@ -87,36 +87,57 @@
 .conv-h span { font-size: 0.75rem; color: #94a3b8; font-weight: 600; }
 .conv-details p { font-size: 0.85rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin: 0; font-weight: 500; }
 
-/* COMPACT CARDS GRID */
-.channels-grid { 
-  display: grid; 
-  grid-template-columns: repeat(3, 1fr); 
-  gap: 1.5rem; 
+/* COMPACT CARDS GRID ELITE */
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 2rem;
 }
 
-.channel-card.elite-compact-card { 
-  background: white; border-radius: 28px; padding: 1.5rem; 
-  border: 1px solid #eef2f6; position: relative; overflow: hidden;
-  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
-  box-shadow: var(--elite-shadow);
+.channel-card.elite-compact-card {
+  background: white;
+  border-radius: 30px;
+  padding: 2.5rem 1.5rem;
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.02);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
 }
-.channel-card.elite-compact-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
 
-.card-accent-bar { position: absolute; top: 0; left: 0; width: 100%; height: 5px; opacity: 0.8; }
+.channel-card.whatsapp:hover { border-color: rgba(37, 211, 102, 0.4); box-shadow: 0 20px 40px rgba(37, 211, 102, 0.12); transform: translateY(-5px); }
+.channel-card.facebook:hover { border-color: rgba(24, 119, 242, 0.4); box-shadow: 0 20px 40px rgba(24, 119, 242, 0.12); transform: translateY(-5px); }
+.channel-card.instagram:hover { border-color: rgba(225, 48, 108, 0.4); box-shadow: 0 20px 40px rgba(225, 48, 108, 0.12); transform: translateY(-5px); }
 
-/* BRAND ICON COLORS */
-.icon-wa { color: var(--wa-green); }
-.icon-fb { color: var(--fb-blue); }
-.icon-ig { background: var(--ig-grad); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.brand-logo-wrap {
+  width: 80px; height: 80px; border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1.5rem; font-size: 2.8rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+  transition: 0.3s;
+}
+.channel-card:hover .brand-logo-wrap { transform: scale(1.05); }
 
-.brand-header { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
-.brand-header i { font-size: 2.5rem; }
-.brand-details h3 { font-size: 1.15rem; color: #1e293b; font-weight: 800; margin: 0 0 5px 0; }
-.channel-meta { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #64748b; font-weight: 600; }
-.status-dot.online { width: 8px; height: 8px; background: #10b981; border-radius: 50%; box-shadow: 0 0 6px rgba(16,185,129,0.5); }
-.status-pill-small { padding: 4px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: 800; background: #f1f5f9; color: #64748b; text-transform: uppercase; }
-.btn-elite-action { width: 100%; padding: 12px; border: 1px solid #e2e8f0; border-radius: 14px; background: white; font-size: 0.85rem; font-weight: 700; color: #475569; cursor: pointer; transition: 0.3s; display: flex; justify-content: space-between; align-items: center; }
-.btn-elite-action:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; }
+.brand-logo-wrap.wa { background: rgba(37, 211, 102, 0.1); color: var(--wa-green); }
+.brand-logo-wrap.fb { background: rgba(24, 119, 242, 0.1); color: var(--fb-blue); }
+.brand-logo-wrap.ig { background: rgba(225, 48, 108, 0.1); color: #e1306c; } /* Simple pink for Instagram base icon */
+
+.brand-details { margin-bottom: 2rem; display: flex; flex-direction: column; align-items: center; }
+.brand-details h3 { font-size: 1.3rem; color: #0f172a; font-weight: 900; margin: 0 0 8px 0; letter-spacing: -0.5px; }
+
+.channel-meta { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-top: 5px; }
+.status-dot.online { width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
+
+.status-pill-elite { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; background: #f1f5f9; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+
+.btn-elite-action.primary-btn { width: 100%; padding: 14px; border: none; border-radius: 16px; background: white; font-size: 0.9rem; font-weight: 800; color: #475569; cursor: pointer; transition: 0.3s; border: 2px solid #f1f5f9; }
+.btn-elite-action.primary-btn:hover { background: #f8fafc; border-color: var(--elite-primary); color: var(--elite-primary); box-shadow: 0 10px 20px rgba(99,102,241,0.1); }
+.channel-card.active .btn-elite-action.primary-btn { border-color: #e2e8f0; color: #64748b; }
+.channel-card.active .btn-elite-action.primary-btn:hover { background: white; border-color: #cbd5e1; color: #0f172a; }
 
 /* MAIN CONTENT */
 .chatbot-main { flex: 1; display: flex; flex-direction: column; background: white; position: relative; overflow: hidden; }
