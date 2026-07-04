@@ -118,6 +118,14 @@ export class AdminLayout implements OnInit {
     return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
   }
 
+  get isOperacional(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'operacional'));
+  }
+
+  get isSecretaria(): Observable<boolean> {
+    return this.userProfile$.pipe(map(p => p?.role === 'secretaria'));
+  }
+
   private async processTempOnboarding() {
     const rawData = localStorage.getItem('ag_temp_onboarding_data');
     if (rawData) {

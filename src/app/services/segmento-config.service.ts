@@ -74,8 +74,8 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'barbeiro',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Barbeiro', value: 'barbeiro' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Barbeiro', value: 'operacional' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '✂️', titulo: 'Corte Social', descricao: 'Corte masculino tradicional', preco: 40, duracao_min: 30 },
@@ -98,9 +98,9 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'profissional',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Cabeleireiro(a)', value: 'profissional' },
-      { label: 'Manicure', value: 'manicure' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Cabeleireiro(a)', value: 'operacional' },
+      { label: 'Manicure', value: 'operacional' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '💇', titulo: 'Corte Feminino', descricao: 'Corte e finalização', preco: 80, duracao_min: 45 },
@@ -123,9 +123,9 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'tosador',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Tosador(a)', value: 'tosador' },
-      { label: 'Veterinário(a)', value: 'veterinario' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Tosador(a)', value: 'operacional' },
+      { label: 'Veterinário(a)', value: 'operacional' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '🛁', titulo: 'Banho', descricao: 'Banho completo com secagem', preco: 50, duracao_min: 40 },
@@ -148,9 +148,9 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'dentista',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Dentista', value: 'dentista' },
-      { label: 'Auxiliar', value: 'auxiliar' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Dentista', value: 'operacional' },
+      { label: 'Auxiliar', value: 'operacional' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '🪥', titulo: 'Limpeza', descricao: 'Profilaxia dental completa', preco: 150, duracao_min: 40 },
@@ -173,10 +173,10 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'medico',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Médico(a)', value: 'medico' },
-      { label: 'Enfermeiro(a)', value: 'enfermeiro' },
-      { label: 'Recepcionista', value: 'recepcionista' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Médico(a)', value: 'operacional' },
+      { label: 'Enfermeiro(a)', value: 'operacional' },
+      { label: 'Recepcionista', value: 'secretaria' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '🩺', titulo: 'Consulta Geral', descricao: 'Avaliação clínica geral', preco: 200, duracao_min: 30 },
@@ -199,9 +199,9 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'esteticista',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Esteticista', value: 'esteticista' },
+      { label: 'Esteticista', value: 'operacional' },
       { label: 'Massoterapeuta', value: 'massoterapeuta' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '🧖', titulo: 'Limpeza de Pele', descricao: 'Limpeza facial profunda', preco: 120, duracao_min: 60 },
@@ -226,7 +226,7 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
       { label: 'Dono / Admin', value: 'dono' },
       { label: 'Técnico', value: 'tecnico' },
       { label: 'Atendente', value: 'atendente' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '📱', titulo: 'Troca de Tela', descricao: 'Substituição de display', preco: 200, duracao_min: 60 },
@@ -251,7 +251,7 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
       { label: 'Dono / Admin', value: 'dono' },
       { label: 'Confeiteiro(a)', value: 'confeiteiro' },
       { label: 'Atendente', value: 'atendente' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '🎂', titulo: 'Bolo Personalizado', descricao: 'Bolo decorado sob encomenda', preco: 120, duracao_min: 60 },
@@ -274,8 +274,8 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
     rolePadrao: 'profissional',
     roles: [
       { label: 'Dono / Admin', value: 'dono' },
-      { label: 'Profissional', value: 'profissional' },
-      { label: 'Financeiro', value: 'financeiro' },
+      { label: 'Profissional', value: 'operacional' },
+      { label: 'Financeiro', value: 'secretaria' },
     ],
     servicosSugeridos: [
       { emoji: '📋', titulo: 'Atendimento Padrão', descricao: 'Atendimento geral', preco: 50, duracao_min: 30 },

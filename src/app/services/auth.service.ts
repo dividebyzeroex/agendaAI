@@ -284,14 +284,14 @@ export class AuthService {
 
     this.ngZone.run(() => {
       if (profile.role === 'dono') {
-        // Se for o primeiro acesso e o onboarding não estiver feito, vai pro Dashboard que lida com o Onboarding
         this.router.navigate(['/admin/dashboard']);
-      } else if (profile.role === 'financeiro') {
-        this.router.navigate(['/admin/analytics']);
-      } else if (profile.role === 'barbeiro' || profile.role === 'esteticista' || profile.role === 'profissional') {
+      } else if (profile.role === 'secretaria') {
+        this.router.navigate(['/admin/agenda']);
+      } else if (profile.role === 'operacional') {
         this.router.navigate(['/admin/agenda']);
       } else {
-        this.router.navigate(['/admin/dashboard']);
+        // Fallback genérico para roles antigas
+        this.router.navigate(['/admin/agenda']);
       }
     });
   }

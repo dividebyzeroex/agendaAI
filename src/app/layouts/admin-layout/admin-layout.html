@@ -7,20 +7,20 @@
 
   <!-- Sidebar -->
 
-  <aside class="ag-sidebar">
+  <aside class="ag-sidebar" *ngIf="!(isOperacional | async)">
     <div class="sidebar-logo">
       <span class="logo-mark">▲</span>
       <span class="logo-text">AgendaAi</span>
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebar()">
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-home"></i><span>Painel</span>
       </a>
       <a routerLink="/admin/agenda" routerLinkActive="active" (click)="closeSidebar()">
         <i class="pi pi-calendar-times"></i><span>Agenda</span>
       </a>
-      <a routerLink="/admin/clientes" routerLinkActive="active" (click)="closeSidebar()">
+      <a routerLink="/admin/clientes" routerLinkActive="active" *ngIf="(isDono | async) || (isSecretaria | async)" (click)="closeSidebar()">
         <i class="pi pi-users"></i><span>Clientes</span>
       </a>
       <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
@@ -29,7 +29,7 @@
       <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async" (click)="closeSidebar()">
         <i class="pi pi-chart-bar"></i><span>Analytics IA</span>
       </a>
-      <a routerLink="/admin/configuracoes" routerLinkActive="active" (click)="closeSidebar()">
+      <a routerLink="/admin/configuracoes" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-cog"></i><span>Configurações</span>
       </a>
       <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
@@ -55,7 +55,7 @@
     </div>
 
     <!-- ELITE PRIVACY SHIELD Status -->
-    <div class="privacy-shield-wrap" pTooltip="Sua conexão está protegida por um túnel RPC criptografado ponta-a-ponta. Zero Query Params expostos." tooltipPosition="right">
+    <div class="privacy-shield-wrap" pTooltip="Sua conexão está protegida por um túnel RPC criptografado ponta-a-ponta. Zero Query Params expostos." tooltipPosition="right" *ngIf="isDono | async">
       <div class="shield-status-icon"></div>
       <div class="shield-info">
         <span class="shield-title">Rede Blindada</span>
@@ -66,11 +66,11 @@
   </aside>
 
   <!-- Main Area -->
-  <div class="ag-main">
+  <div class="ag-main" [style.margin-left]="(isOperacional | async) ? '0' : ''">
     <!-- Topbar -->
     <header class="ag-topbar">
       <div class="topbar-left">
-        <button class="mobile-hamburger" (click)="toggleSidebar()">
+        <button class="mobile-hamburger" (click)="toggleSidebar()" *ngIf="!(isOperacional | async)">
           <i class="pi pi-bars"></i>
         </button>
         <div class="topbar-search desktop-only">
