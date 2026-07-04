@@ -18,6 +18,9 @@
     <!-- SIDE NAV (Tabs & Conversations) -->
     <div class="chatbot-sidebar">
       <div class="sidebar-tabs">
+        <button [class.active]="activeTab === 'robots'" (click)="activeTab = 'robots'">
+          <i class="pi pi-android"></i> Robôs
+        </button>
         <button [class.active]="activeTab === 'channels'" (click)="activeTab = 'channels'">
           <i class="pi pi-th-large"></i> Canais
         </button>
@@ -56,6 +59,53 @@
 
     <!-- MAIN CHAT AREA -->
     <div class="chatbot-main">
+
+      <!-- TAB 0: ROBOTS (Gamified Factory) -->
+      <div class="tab-content robots-factory" *ngIf="activeTab === 'robots'">
+        <div class="section-title">Garagem de Robôs
+          <span class="subtitle">Contrate e treine seus assistentes virtuais de IA.</span>
+        </div>
+
+        <div class="robots-grid">
+          <!-- Create New Robot Card -->
+          <div class="robot-card create-new" (click)="openRobotModal()">
+            <div class="create-icon-wrap">
+               <i class="pi pi-plus"></i>
+            </div>
+            <h3>Criar Novo Robô</h3>
+            <p>Monte um assistente do zero com a personalidade da sua clínica.</p>
+          </div>
+
+          <!-- Existing Robots -->
+          <div class="robot-card elite-compact-card" *ngFor="let robot of myRobots" [class.inactive]="!robot.active">
+            <div class="robot-status-badge" [class.active]="robot.active">
+              {{ robot.active ? 'Online' : 'Inativo' }}
+            </div>
+            
+            <div class="robot-avatar-wrap">
+              <span class="avatar-emoji">{{ robot.avatar }}</span>
+            </div>
+            
+            <div class="robot-info">
+              <h3>{{ robot.name }}</h3>
+              <span class="robot-role">{{ robot.role }}</span>
+            </div>
+            
+            <div class="robot-traits">
+              <span class="trait"><i class="pi pi-comment"></i> {{ robot.tone }}</span>
+              <span class="trait"><i class="pi pi-send"></i> {{ robot.channel }}</span>
+            </div>
+            
+            <div class="robot-actions">
+              <button class="btn-robot-action edit" (click)="openRobotModal(robot)"><i class="pi pi-pencil"></i></button>
+              <button class="btn-robot-action toggle" (click)="toggleRobotStatus(robot.id!)">
+                <i class="pi" [ngClass]="robot.active ? 'pi-pause' : 'pi-play'"></i>
+              </button>
+              <button class="btn-robot-action delete" (click)="deleteRobot(robot.id!)"><i class="pi pi-trash"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <!-- TAB 1: INTEGRATIONS -->
       <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
@@ -279,6 +329,57 @@
         <div class="dot" [class.active]="onboardingStep >= 1"></div>
         <div class="dot" [class.active]="onboardingStep >= 2"></div>
         <div class="dot" [class.active]="onboardingStep >= 3"></div>
+      </div>
+    </div>
+  </div>
+  <!-- ROBOT CREATOR MODAL -->
+  <div class="modal-overlay" *ngIf="showRobotModal">
+    <div class="onboarding-modal glass-modal robot-modal">
+      <button class="btn-close-modal" (click)="showRobotModal = false"><i class="pi pi-times"></i></button>
+      
+      <div class="modal-body">
+         <h2 style="margin-bottom: 5px;">{{ robotForm.id ? 'Editar Robô' : 'Montar Novo Robô' }}</h2>
+         <p>Defina a alma do seu novo assistente virtual.</p>
+
+         <div class="onboarding-form">
+            <div class="input-field-elite">
+              <label>Nome do Robô</label>
+              <div class="input-wrap">
+                <i class="pi pi-user"></i>
+                <input type="text" [(ngModel)]="robotForm.name" placeholder="Ex: Marcos, Sofia...">
+              </div>
+            </div>
+
+            <div class="input-row-2">
+              <div class="input-field-elite">
+                <label>Cargo / Função</label>
+                <div class="input-wrap">
+                  <i class="pi pi-briefcase"></i>
+                  <input type="text" [(ngModel)]="robotForm.role" placeholder="Ex: Vendedor">
+                </div>
+              </div>
+              <div class="input-field-elite">
+                <label>Avatar (Emoji)</label>
+                <div class="input-wrap">
+                  <i class="pi pi-face-smile"></i>
+                  <input type="text" [(ngModel)]="robotForm.avatar" maxlength="2">
+                </div>
+              </div>
+            </div>
+
+            <div class="input-field-elite">
+              <label>Personalidade (Tom de Voz)</label>
+              <select class="elite-select" [(ngModel)]="robotForm.tone">
+                <option value="Amigável">Amigável e Empático 😊</option>
+                <option value="Profissional">Profissional e Direto 👔</option>
+                <option value="Divertido">Jovem e Divertido 🎉</option>
+              </select>
+            </div>
+         </div>
+
+         <button class="btn-next-elite success" (click)="saveRobot()" [disabled]="!robotForm.name">
+            {{ robotForm.id ? 'Salvar Modificações' : 'Contratar Robô' }} <i class="pi pi-bolt"></i>
+         </button>
       </div>
     </div>
   </div>

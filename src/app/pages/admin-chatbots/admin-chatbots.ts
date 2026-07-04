@@ -14,7 +14,7 @@ import { Observable } from 'rxjs';
 export class AdminChatbots implements OnInit {
   private chatService = inject(ChatbotService);
 
-  activeTab: 'channels' | 'history' | 'live' = 'channels';
+  activeTab: 'robots' | 'channels' | 'history' | 'live' = 'robots';
   conversations$: Observable<Conversation[]> = this.chatService.conversations$;
   activeConversation$: Observable<Conversation | null> = this.chatService.activeConversation$;
   integrations$ = this.chatService.integrations$;
@@ -32,6 +32,41 @@ export class AdminChatbots implements OnInit {
   whatsappConfig = { phoneId: '', token: '' };
   isVerifying = false;
   errorMessage = '';
+
+  // Gamification: "Fábrica de Robôs" State
+  myRobots = [
+    { id: 1, name: 'Marcos', role: 'Atendente de Agendamentos', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖', active: true }
+  ];
+  showRobotModal = false;
+  robotForm = { id: null as number | null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖' };
+
+  openRobotModal(robot?: any) {
+    if (robot) {
+      this.robotForm = { ...robot };
+    } else {
+      this.robotForm = { id: null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖' };
+    }
+    this.showRobotModal = true;
+  }
+
+  saveRobot() {
+    if (this.robotForm.id) {
+      const idx = this.myRobots.findIndex(r => r.id === this.robotForm.id);
+      if (idx > -1) this.myRobots[idx] = { ...this.robotForm, active: true } as any;
+    } else {
+      this.myRobots.push({ ...this.robotForm, id: Date.now(), active: true } as any);
+    }
+    this.showRobotModal = false;
+  }
+
+  deleteRobot(id: number) {
+    this.myRobots = this.myRobots.filter(r => r.id !== id);
+  }
+
+  toggleRobotStatus(id: number) {
+    const robot = this.myRobots.find(r => r.id === id);
+    if (robot) robot.active = !robot.active;
+  }
 
   ngOnInit() {
     this.conversations$.subscribe(convs => {

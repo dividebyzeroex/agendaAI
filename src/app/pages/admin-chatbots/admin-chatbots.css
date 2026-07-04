@@ -258,3 +258,86 @@
 
 .btn-close-modal { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; color: #cbd5e1; cursor: pointer; z-index: 10; transition: 0.3s; }
 .btn-close-modal:hover { color: #1e293b; transform: rotate(90deg); }
+
+/* GAMIFIED ROBOT FACTORY */
+.robots-factory .subtitle { display: block; font-size: 0.95rem; color: #64748b; font-weight: 500; margin-top: 5px; }
+
+.robots-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+
+.robot-card {
+  background: white;
+  border-radius: 24px;
+  padding: 1.5rem;
+  border: 1px solid #eef2f6;
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.165, 0.84, 0.44, 1);
+  box-shadow: var(--elite-shadow);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.robot-card:hover { transform: translateY(-5px); box-shadow: 0 20px 40px rgba(0,0,0,0.06); }
+.robot-card.inactive { filter: grayscale(1); opacity: 0.7; }
+
+/* Create New Robot */
+.robot-card.create-new {
+  background: rgba(99, 102, 241, 0.03);
+  border: 2px dashed #cbd5e1;
+  justify-content: center;
+  cursor: pointer;
+}
+.robot-card.create-new:hover { border-color: var(--elite-primary); background: rgba(99, 102, 241, 0.08); }
+.create-icon-wrap {
+  width: 60px; height: 60px; border-radius: 20px; background: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: var(--elite-primary); margin-bottom: 1rem;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+.robot-card.create-new p { font-size: 0.8rem; color: #64748b; margin-top: 5px; font-weight: 500; }
+
+/* Existing Robot Card */
+.robot-status-badge {
+  position: absolute; top: 15px; right: 15px;
+  padding: 4px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 900;
+  text-transform: uppercase; letter-spacing: 1px;
+  background: #f1f5f9; color: #64748b;
+}
+.robot-status-badge.active { background: #dcfce7; color: #10b981; }
+
+.robot-avatar-wrap {
+  width: 80px; height: 80px; border-radius: 25px;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  display: flex; align-items: center; justify-content: center;
+  margin: 1rem 0; box-shadow: inset 0 -4px 10px rgba(0,0,0,0.05);
+}
+.avatar-emoji { font-size: 2.5rem; }
+
+.robot-info h3 { margin: 0 0 4px 0; font-size: 1.2rem; color: #0f172a; font-weight: 800; }
+.robot-role { font-size: 0.8rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 1rem; }
+
+.robot-traits { display: flex; gap: 8px; justify-content: center; margin-bottom: 1.5rem; flex-wrap: wrap; }
+.trait { background: #f8fafc; padding: 4px 10px; border-radius: 8px; font-size: 0.7rem; font-weight: 700; color: #475569; display: flex; align-items: center; gap: 4px;}
+
+.robot-actions { display: flex; gap: 8px; width: 100%; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; justify-content: center; }
+.btn-robot-action { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
+.btn-robot-action.edit { background: #f1f5f9; color: #475569; }
+.btn-robot-action.edit:hover { background: var(--elite-primary); color: white; }
+.btn-robot-action.toggle { background: #f1f5f9; color: #475569; }
+.btn-robot-action.toggle:hover { background: #10b981; color: white; }
+.btn-robot-action.delete { background: #fef2f2; color: #ef4444; }
+.btn-robot-action.delete:hover { background: #ef4444; color: white; }
+
+/* Modal Form Row */
+.input-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.elite-select { 
+  width: 100%; padding: 18px; border-radius: 18px; border: 2px solid #f1f5f9; 
+  background: white; outline: none; transition: 0.3s; font-weight: 700; color: #1e293b;
+  appearance: none; cursor: pointer;
+}
+.elite-select:focus { border-color: var(--elite-primary); box-shadow: 0 0 0 6px rgba(99,102,241,0.08); }
