@@ -1334,3 +1334,43 @@ html, body {
     flex-direction: column !important;
   }
 }
+
+/* ========================================================
+   REVEAL ANIMATIONS (INTERSECTION OBSERVER)
+   ======================================================== */
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: all 1.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.reveal.active {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ========================================================
+   HERO IMAGE PARALLAX
+   ======================================================== */
+.hero-image-parallax {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 120%;
+  max-width: 500px;
+  transform: translate(-50%, -50%) 
+             translate(calc(var(--mouse-x) * -25px), calc(var(--mouse-y) * -25px)) 
+             rotateX(calc(var(--mouse-y) * 8deg)) 
+             rotateY(calc(var(--mouse-x) * 8deg));
+  z-index: 5;
+  filter: drop-shadow(0 20px 40px rgba(161, 66, 244, 0.3));
+  border-radius: 50%;
+  transition: transform 0.1s linear;
+  animation: floatImage 8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+@keyframes floatImage {
+  0% { filter: drop-shadow(0 20px 40px rgba(161, 66, 244, 0.3)); margin-top: 0; }
+  100% { filter: drop-shadow(0 30px 60px rgba(161, 66, 244, 0.5)); margin-top: -20px; }
+}

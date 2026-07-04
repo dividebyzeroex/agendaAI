@@ -1,4 +1,4 @@
-import { Component, HostListener } from '@angular/core';
+import { Component, HostListener, OnInit, AfterViewInit, ElementRef, ViewChildren, QueryList } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -9,13 +9,44 @@ import { Router } from '@angular/router';
   templateUrl: './landing.html',
   styleUrls: ['./landing.css']
 })
-export class Landing {
+export class Landing implements OnInit, AfterViewInit {
   mouseY = 0;
   mouseX = 0;
   isScrolled = false;
   isMobileMenuOpen = false;
 
-  constructor(private router: Router) {}
+  private observer: IntersectionObserver | null = null;
+
+  constructor(private router: Router, private el: ElementRef) {}
+
+  ngOnInit() {
+    // Inicializações, se necessário
+  }
+
+  ngAfterViewInit() {
+    this.setupIntersectionObserver();
+  }
+
+  private setupIntersectionObserver() {
+    const options = {
+      root: null,
+      rootMargin: '0px',
+      threshold: 0.15
+    };
+
+    this.observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+          // Opcional: parar de observar após a animação (para animar só na primeira vez)
+          // this.observer?.unobserve(entry.target);
+        }
+      });
+    }, options);
+
+    const revealElements = this.el.nativeElement.querySelectorAll('.reveal');
+    revealElements.forEach((el: Element) => this.observer?.observe(el));
+  }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
