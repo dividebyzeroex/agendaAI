@@ -32,7 +32,7 @@
         </button>
       </div>
 
-      <div class="conversation-list" *ngIf="activeTab !== 'channels'">
+      <div class="conversation-list" *ngIf="activeTab === 'history' || activeTab === 'live'">
         <div class="search-wrap">
           <i class="pi pi-search"></i>
           <input type="text" placeholder="Buscar conversas..." />

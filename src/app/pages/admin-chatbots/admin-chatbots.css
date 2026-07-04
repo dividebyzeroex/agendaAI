@@ -43,9 +43,9 @@
   width: 320px; border-right: 1px solid rgba(0,0,0,0.05); display: flex; 
   flex-direction: column; background: rgba(248, 250, 252, 0.4);
 }
-.sidebar-tabs { display: flex; gap: 8px; padding: 1.25rem; background: transparent; }
+.sidebar-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 1.25rem; background: transparent; }
 .sidebar-tabs button { 
-  flex: 1; border: none; padding: 12px; border-radius: 14px; font-size: 0.7rem; 
+  border: none; padding: 10px; border-radius: 14px; font-size: 0.7rem; 
   font-weight: 800; cursor: pointer; transition: 0.3s; 
   background: white; color: #64748b; border: 1px solid #e2e8f0;
   display: flex; flex-direction: column; align-items: center; gap: 4px;
