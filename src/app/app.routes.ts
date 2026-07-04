@@ -13,6 +13,7 @@ import { AdminConfiguracoes } from './pages/admin-configuracoes/admin-configurac
 import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
 import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
 import { AdminBilling } from './pages/admin-billing/admin-billing';
+import { AdminChatbots } from './pages/admin-chatbots/admin-chatbots';
 import { authGuard } from './guards/auth.guard';
 import { billingGuard } from './guards/billing.guard';
 import { roleGuard } from './guards/role.guard';
@@ -52,6 +53,12 @@ export const routes: Routes = [
       { 
         path: 'billing', 
         component: AdminBilling, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono'] } 
+      },
+      { 
+        path: 'chatbots', 
+        component: AdminChatbots, 
         canActivate: [roleGuard], 
         data: { roles: ['dono'] } 
       }
