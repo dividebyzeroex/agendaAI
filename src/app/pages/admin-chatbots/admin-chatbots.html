@@ -297,21 +297,56 @@
             
           </div>
 
-          <!-- FB/IG OAUTH BUTTON -->
-          <div class="oauth-container" *ngIf="targetChannel === 'facebook' || targetChannel === 'instagram'">
-             <div class="oauth-box">
-                <i class="pi pi-facebook-messenger" *ngIf="targetChannel === 'facebook'" style="color: #1877F2; font-size: 3rem; margin-bottom: 20px;"></i>
-                <i class="pi pi-instagram" *ngIf="targetChannel === 'instagram'" style="color: #E1306C; font-size: 3rem; margin-bottom: 20px;"></i>
-                <p>Clique abaixo para autorizar o AgendaAi a enviar mensagens em seu nome via Meta Business.</p>
-                <button class="btn-next-elite" (click)="authenticateViaOAuth()">
-                  <i class="pi pi-facebook"></i> Conectar com Facebook
-                </button>
+          <!-- FB/IG CONFIGURATION -->
+          <div class="onboarding-form" *ngIf="targetChannel === 'facebook' || targetChannel === 'instagram'">
+             
+             <div class="connection-mode-toggle">
+               <button class="mode-btn" [class.active]="whatsappConnectionMode === 'qr-code'" (click)="switchWhatsappMode('qr-code')">
+                 <i class="pi pi-facebook"></i> Login (OAuth)
+               </button>
+               <button class="mode-btn" [class.active]="whatsappConnectionMode === 'meta-api'" (click)="switchWhatsappMode('meta-api')">
+                 <i class="pi pi-key"></i> Token Direto (Avançado)
+               </button>
              </div>
+
+             <!-- OAUTH BUTTON (Mock/Dev Mode) -->
+             <div class="oauth-container fadeIn" *ngIf="whatsappConnectionMode === 'qr-code'">
+                <div class="oauth-box" style="text-align: center;">
+                   <i class="pi pi-facebook-messenger" *ngIf="targetChannel === 'facebook'" style="color: #1877F2; font-size: 3rem; margin-bottom: 20px;"></i>
+                   <i class="pi pi-instagram" *ngIf="targetChannel === 'instagram'" style="color: #E1306C; font-size: 3rem; margin-bottom: 20px;"></i>
+                   <p style="margin-bottom: 15px;">Clique abaixo para autorizar via Meta Business. (Requer App aprovado no Facebook)</p>
+                   <button class="btn-next-elite" (click)="authenticateViaOAuth()" style="width: auto; padding: 12px 24px;">
+                     <i class="pi pi-facebook"></i> Conectar com Facebook
+                   </button>
+                </div>
+             </div>
+
+             <!-- MANUAL TOKEN FORM -->
+             <div class="meta-api-form fadeIn" *ngIf="whatsappConnectionMode === 'meta-api'">
+               <div class="input-field-elite">
+                 <label>ID da Página (Page ID)</label>
+                 <div class="input-wrap">
+                   <i class="pi pi-id-card"></i>
+                   <input type="text" [(ngModel)]="whatsappConfig.phoneId" placeholder="Ex: 104234567890123">
+                 </div>
+               </div>
+               <div class="input-field-elite">
+                 <label>Token de Acesso da Página (Page Access Token)</label>
+                 <div class="input-wrap">
+                   <i class="pi pi-lock"></i>
+                   <input type="password" [(ngModel)]="whatsappConfig.token" placeholder="EAAG...">
+                 </div>
+               </div>
+               <p style="font-size: 0.75rem; color: #64748b; margin-top: 10px;">
+                 Gere este token na seção "Messenger > Configurações" do painel de desenvolvedores da Meta.
+               </p>
+             </div>
+
           </div>
 
           <div class="step-actions">
             <button class="btn-back-elite" (click)="onboardingStep = 1">Voltar</button>
-            <button class="btn-next-elite" *ngIf="targetChannel === 'whatsapp'" (click)="nextStep()" [disabled]="(whatsappConnectionMode === 'meta-api' && (!whatsappConfig.phoneId || !whatsappConfig.token)) || (whatsappConnectionMode === 'qr-code' && (!qrCodeImage || isGeneratingQr)) || isVerifying">
+            <button class="btn-next-elite" *ngIf="targetChannel === 'whatsapp' || (targetChannel !== 'whatsapp' && whatsappConnectionMode === 'meta-api')" (click)="nextStep()" [disabled]="(whatsappConnectionMode === 'meta-api' && (!whatsappConfig.phoneId || !whatsappConfig.token)) || (targetChannel === 'whatsapp' && whatsappConnectionMode === 'qr-code' && (!qrCodeImage || isGeneratingQr)) || isVerifying">
               <span *ngIf="!isVerifying && whatsappConnectionMode === 'meta-api'">Verificar e Conectar</span>
               <span *ngIf="!isVerifying && whatsappConnectionMode === 'qr-code'">Simular Leitura Concluída</span>
               <span *ngIf="isVerifying"><i class="pi pi-spin pi-spinner"></i> Autenticando...</span>
