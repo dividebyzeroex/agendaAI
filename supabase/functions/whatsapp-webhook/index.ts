@@ -9,12 +9,11 @@ console.log("WhatsApp Webhook Function Starting...");
 
 Deno.serve(async (req) => {
   try {
-    // Initialize Supabase Admin Client using environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL") || "";
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Allow GET for webhook verification (Meta WhatsApp API requirement)
+    // 1. Verificação Meta Webhook
     if (req.method === "GET") {
       const url = new URL(req.url);
       const mode = url.searchParams.get("hub.mode");
@@ -32,102 +31,187 @@ Deno.serve(async (req) => {
 
     let userPhone = "";
     let userMessage = "";
-    let isEvolutionAPI = false;
+    let targetPhoneId = ""; 
+    let channel = "whatsapp";
 
-    // 1. Detect Evolution API Format (Baileys based)
-    if (body.data && body.data.message) {
-      isEvolutionAPI = true;
-      userPhone = body.data.key?.remoteJid?.split("@")[0] || "";
-      userMessage = body.data.message?.conversation || body.data.message?.extendedTextMessage?.text || "";
-    } 
-    // 2. Detect Meta WhatsApp Cloud API Format
-    else if (body.entry && body.entry[0]?.changes && body.entry[0].changes[0]?.value?.messages) {
+    // Detect Meta WhatsApp Cloud API Format
+    if (body.entry && body.entry[0]?.changes && body.entry[0].changes[0]?.value?.messages) {
       const msgInfo = body.entry[0].changes[0].value.messages[0];
       userPhone = msgInfo.from;
       userMessage = msgInfo.text?.body || "";
+      targetPhoneId = body.entry[0].changes[0].value.metadata?.phone_number_id || "";
     }
 
-    // Ignore empty messages
-    if (!userMessage || !userPhone) {
+    if (!userMessage || !userPhone || !targetPhoneId) {
+      return new Response("OK", { status: 200 }); // Ignora status e erros
+    }
+
+    // 2. Identificar Estabelecimento pela Integração
+    const { data: integrations } = await supabaseAdmin
+      .from("chatbot_integrations")
+      .select("estabelecimento_id, config")
+      .eq("channel", "whatsapp")
+      .eq("status", "active");
+
+    let estabelecimentoId = null;
+    if (integrations) {
+      for (const intg of integrations) {
+        if (intg.config && intg.config.phoneId === targetPhoneId) {
+          estabelecimentoId = intg.estabelecimento_id;
+          break;
+        }
+      }
+    }
+
+    if (!estabelecimentoId && integrations && integrations.length > 0) {
+      estabelecimentoId = integrations[0].estabelecimento_id;
+      console.log("Fallback: usando a primeira integração encontrada");
+    }
+
+    if (!estabelecimentoId) {
+      console.log("Nenhum estabelecimento ativo encontrado para este webhook.");
       return new Response("OK", { status: 200 });
     }
 
-    console.log(`Processing message from ${userPhone}: ${userMessage}`);
+    // 3. Carregar a Persona (Alma do Robô)
+    const { data: robots } = await supabaseAdmin
+      .from("chatbot_robots")
+      .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("active", true)
+      .order("created_at", { ascending: false })
+      .limit(1);
 
-    // ==========================================
-    // 🧠 Cérebro Cognitivo (Gemini + Tools)
-    // ==========================================
+    const robot = (robots && robots.length > 0) ? robots[0] : null;
+    const robotName = robot ? robot.name : "Assistente";
+    const robotTone = robot ? robot.tone : "Amigável e profissional";
+    const robotRole = robot ? robot.role : "Agendador";
+
+    // 4. Salvar Mensagem do Usuário na Memória
+    await supabaseAdmin.from("chatbot_messages").insert({
+      estabelecimento_id: estabelecimentoId,
+      customer_phone: userPhone,
+      sender: "user",
+      message: userMessage,
+      channel: channel
+    });
+
+    // 5. Carregar Histórico de Conversa (Memória de Curto Prazo)
+    const { data: history } = await supabaseAdmin
+      .from("chatbot_messages")
+      .select("*")
+      .eq("estabelecimento_id", estabelecimentoId)
+      .eq("customer_phone", userPhone)
+      .order("created_at", { ascending: true })
+      .limit(15); 
+
+    const geminiHistory = (history || []).map(msg => ({
+      role: msg.sender === "user" ? "user" : "model",
+      parts: [{ text: msg.message }]
+    }));
+    
+    const currentMessage = geminiHistory.pop() || { role: "user", parts: [{ text: userMessage }] };
+
+    // 6. Configurar o Gemini com Tools
     const systemInstruction = `
-Você é o assistente virtual do AgendaAi, um sistema autônomo de agendamentos.
-Seja extremamente amigável, conciso (mensagens curtas para WhatsApp) e prestativo.
+Você é ${robotName}, atuando como ${robotRole}.
+Seu tom de voz é: ${robotTone}.
 Seu objetivo é ajudar o cliente a agendar serviços no estabelecimento.
-1. Sempre verifique os serviços disponíveis antes de oferecer.
-2. Use a ferramenta check_availability para buscar horários livres.
-3. Não invente horários. Só confirme se houver disponibilidade no banco.
+Regras Cruciais (Opção B - Confirmação Obrigatória):
+1. Sempre verifique os serviços disponíveis (get_services) antes de oferecer.
+2. Verifique horários livres (check_availability).
+3. ANTES de criar o agendamento no sistema, você DEVE mostrar um "Resumo" para o cliente confirmar.
+   Exemplo: "Fica então Corte de Cabelo para amanhã às 15h, certo?"
+4. APENAS se o cliente responder "Sim", "Certo", "Confirmo", aí sim você chama a ferramenta create_appointment.
+5. Seja conciso, responda em mensagens curtas ideais para WhatsApp.
 `;
 
     const functionDeclarations = [
       {
         name: "get_services",
-        description: "Retorna a lista de serviços oferecidos pelo estabelecimento com preços e durações.",
+        description: "Retorna a lista de serviços oferecidos pelo estabelecimento.",
         parameters: { type: "OBJECT", properties: {} },
       },
       {
         name: "check_availability",
-        description: "Verifica horários disponíveis para um determinado serviço e data. Retorna um array de horários livres.",
+        description: "Verifica horários disponíveis para uma data.",
+        parameters: {
+          type: "OBJECT",
+          properties: { date: { type: "STRING", description: "Data no formato YYYY-MM-DD" } },
+          required: ["date"]
+        }
+      },
+      {
+        name: "create_appointment",
+        description: "Agenda o serviço DEFINITIVAMENTE. Só chame APÓS o cliente confirmar o resumo.",
         parameters: {
           type: "OBJECT",
           properties: {
-            date: { type: "STRING", description: "Data no formato YYYY-MM-DD" },
-            service_name: { type: "STRING", description: "Nome aproximado do serviço desejado" }
+            date: { type: "STRING", description: "Data YYYY-MM-DD" },
+            time: { type: "STRING", description: "Horário HH:MM" },
+            service_name: { type: "STRING", description: "Nome do serviço" },
+            customer_name: { type: "STRING", description: "Nome do cliente (pergunte se não souber)" }
           },
-          required: ["date"]
+          required: ["date", "time", "service_name", "customer_name"]
         }
       }
     ];
 
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: userMessage,
-      config: {
-        systemInstruction: systemInstruction,
-        tools: [{ functionDeclarations }],
-        temperature: 0.2,
-      }
-    });
+    let chat = null;
+    let response = null;
+
+    try {
+      chat = ai.chats.create({
+        model: 'gemini-2.5-flash',
+        history: geminiHistory,
+        config: {
+          systemInstruction: systemInstruction,
+          tools: [{ functionDeclarations }],
+          temperature: 0.2,
+        }
+      });
+      response = await chat.sendMessage({ parts: currentMessage.parts });
+    } catch(e) {
+       console.log("Erro ao iniciar chat com gemini", e);
+       response = await ai.models.generateContent({
+         model: 'gemini-2.5-flash',
+         contents: userMessage,
+         config: { systemInstruction, tools: [{ functionDeclarations }] }
+       });
+    }
 
     let replyText = "";
     
     if (response.functionCalls && response.functionCalls.length > 0) {
       const call = response.functionCalls[0];
       console.log("Gemini requested function:", call.name, call.args);
-      
       let toolResult = {};
 
       if (call.name === "get_services") {
-        const { data, error } = await supabaseAdmin
-          .from("servicos")
-          .select("id, nome, preco, duracao_minutos");
-          
+        const { data, error } = await supabaseAdmin.from("servicos").select("nome, preco").eq("estabelecimento_id", estabelecimentoId);
         toolResult = error ? { error: error.message } : { services: data };
       } 
       else if (call.name === "check_availability") {
-        toolResult = { 
-          date: call.args.date,
-          available_slots: ["09:00", "10:30", "14:00", "15:30", "18:00"]
-        };
+        toolResult = { date: call.args.date, available_slots: ["09:00", "10:00", "14:30", "16:00"] };
+      }
+      else if (call.name === "create_appointment") {
+        const { data: srvs } = await supabaseAdmin.from("servicos").select("id").eq("estabelecimento_id", estabelecimentoId).ilike("nome", `%${call.args.service_name}%`).limit(1);
+        const srvId = (srvs && srvs.length > 0) ? srvs[0].id : null;
+
+        const { data, error } = await supabaseAdmin.from("agenda_events").insert({
+          estabelecimento_id: estabelecimentoId,
+          start_time: `${call.args.date}T${call.args.time}:00`,
+          end_time: `${call.args.date}T${call.args.time}:00`,
+          title: `Agendamento via IA - ${call.args.customer_name}`,
+          status: 'confirmado',
+          servico_id: srvId
+        });
+        toolResult = error ? { success: false, error: error.message } : { success: true, message: "Agendado no banco de dados com sucesso!" };
       }
 
-      const followUpResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          { role: "user", parts: [{ text: userMessage }] },
-          { role: "model", parts: [{ functionCall: call }] },
-          { role: "function", parts: [{ functionResponse: { name: call.name, response: toolResult } }] }
-        ],
-        config: { systemInstruction: systemInstruction }
+      const followUpResponse = await chat!.sendMessage({
+         parts: [{ functionResponse: { name: call.name, response: toolResult } }]
       });
-
       replyText = followUpResponse.text || "Desculpe, tive um problema ao verificar as informações.";
     } else {
       replyText = response.text || "Não entendi, pode repetir?";
@@ -135,28 +219,19 @@ Seu objetivo é ajudar o cliente a agendar serviços no estabelecimento.
 
     console.log("Gemini Output:", replyText);
 
-    // ==========================================
-    // 🚀 Disparo da Mensagem de Volta (API do WhatsApp)
-    // ==========================================
-    if (isEvolutionAPI && Deno.env.get("EVOLUTION_API_URL")) {
-      const evolutionUrl = Deno.env.get("EVOLUTION_API_URL");
-      const evolutionInstance = Deno.env.get("EVOLUTION_INSTANCE");
-      const evolutionApikey = Deno.env.get("EVOLUTION_API_KEY");
-      
-      await fetch(`${evolutionUrl}/message/sendText/${evolutionInstance}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "apikey": evolutionApikey || ""
-        },
-        body: JSON.stringify({
-          number: userPhone,
-          text: replyText
-        })
-      });
-    } else if (Deno.env.get("WHATSAPP_TOKEN")) {
+    // 7. Salvar Mensagem da IA na Memória
+    await supabaseAdmin.from("chatbot_messages").insert({
+      estabelecimento_id: estabelecimentoId,
+      customer_phone: userPhone,
+      sender: "bot",
+      message: replyText,
+      channel: channel
+    });
+
+    // 8. Disparo da Mensagem de Volta via WhatsApp
+    if (Deno.env.get("WHATSAPP_TOKEN")) {
       const metaToken = Deno.env.get("WHATSAPP_TOKEN");
-      const phoneId = Deno.env.get("WHATSAPP_PHONE_ID");
+      const phoneId = targetPhoneId || Deno.env.get("WHATSAPP_PHONE_ID"); 
       
       await fetch(`https://graph.facebook.com/v17.0/${phoneId}/messages`, {
         method: "POST",

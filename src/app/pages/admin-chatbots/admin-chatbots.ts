@@ -34,38 +34,44 @@ export class AdminChatbots implements OnInit {
   errorMessage = '';
 
   // Gamification: "Fábrica de Robôs" State
-  myRobots = [
-    { id: 1, name: 'Marcos', role: 'Atendente de Agendamentos', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖', active: true }
-  ];
+  myRobots$ = this.chatService.robots$;
   showRobotModal = false;
-  robotForm = { id: null as number | null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖' };
+  robotForm = { id: null as string | null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖', active: true };
 
   openRobotModal(robot?: any) {
     if (robot) {
       this.robotForm = { ...robot };
     } else {
-      this.robotForm = { id: null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖' };
+      this.robotForm = { id: null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖', active: true };
     }
     this.showRobotModal = true;
   }
 
-  saveRobot() {
-    if (this.robotForm.id) {
-      const idx = this.myRobots.findIndex(r => r.id === this.robotForm.id);
-      if (idx > -1) this.myRobots[idx] = { ...this.robotForm, active: true } as any;
-    } else {
-      this.myRobots.push({ ...this.robotForm, id: Date.now(), active: true } as any);
+  async saveRobot() {
+    try {
+      await this.chatService.saveRobot(this.robotForm as any);
+      this.showRobotModal = false;
+    } catch (e: any) {
+      alert("Erro ao salvar robô: " + e.message);
     }
-    this.showRobotModal = false;
   }
 
-  deleteRobot(id: number) {
-    this.myRobots = this.myRobots.filter(r => r.id !== id);
+  async deleteRobot(id: string) {
+    if (confirm("Tem certeza que deseja demitir esse robô?")) {
+      try {
+        await this.chatService.deleteRobot(id);
+      } catch (e: any) {
+        alert("Erro ao deletar: " + e.message);
+      }
+    }
   }
 
-  toggleRobotStatus(id: number) {
-    const robot = this.myRobots.find(r => r.id === id);
-    if (robot) robot.active = !robot.active;
+  async toggleRobotStatus(robot: any) {
+    try {
+      await this.chatService.saveRobot({ ...robot, active: !robot.active });
+    } catch (e: any) {
+      alert("Erro ao atualizar status.");
+    }
   }
 
   ngOnInit() {

@@ -29,6 +29,17 @@ export interface ChatbotIntegration {
   config: any;
 }
 
+export interface ChatbotRobot {
+  id?: string;
+  estabelecimento_id?: string;
+  name: string;
+  role: string;
+  avatar: string;
+  tone: string;
+  active: boolean;
+  channel?: string; // Optional field mapping to integration if needed
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -48,8 +59,12 @@ export class ChatbotService {
   });
   integrations$ = this.integrationsSubject.asObservable();
 
+  private robotsSubject = new BehaviorSubject<ChatbotRobot[]>([]);
+  robots$ = this.robotsSubject.asObservable();
+
   constructor() {
     this.loadIntegrations();
+    this.loadRobots();
     this.conversationsSubject.next(this.getMockConversations());
   }
 
@@ -80,6 +95,57 @@ export class ChatbotService {
       });
       this.integrationsSubject.next(state);
     }
+  }
+
+  async loadRobots() {
+    const { data: { user } } = await this.supabase.client.auth.getUser();
+    if (!user) return;
+
+    const { data: ests } = await this.supabase.client.rpc('get_estabelecimento_by_user', { p_user_id: user.id });
+    const est = (ests as any)?.[0];
+    if (!est) return;
+
+    const { data: robots } = await this.supabase.client.rpc('get_chatbot_robots', { p_estab_id: est.id });
+    
+    if (robots) {
+      // Map to frontend interface
+      const mappedRobots = (robots as any[]).map(r => ({
+        ...r,
+        channel: 'WhatsApp' // We default to WA display for now
+      }));
+      this.robotsSubject.next(mappedRobots);
+    }
+  }
+
+  async saveRobot(robot: ChatbotRobot) {
+    const { data: { user } } = await this.supabase.client.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+
+    const { data: ests } = await this.supabase.client.rpc('get_estabelecimento_by_user', { p_user_id: user.id });
+    const est = (ests as any)?.[0];
+    if (!est) throw new Error('Establishment not found');
+
+    const { data, error } = await this.supabase.client.rpc('upsert_chatbot_robot_safe', {
+      p_data: {
+        id: robot.id,
+        estabelecimento_id: est.id,
+        name: robot.name,
+        role: robot.role,
+        avatar: robot.avatar,
+        tone: robot.tone,
+        active: robot.active
+      }
+    });
+
+    if (error) throw error;
+    await this.loadRobots();
+    return data;
+  }
+
+  async deleteRobot(id: string) {
+    const { error } = await this.supabase.client.from('chatbot_robots').delete().eq('id', id);
+    if (error) throw error;
+    await this.loadRobots();
   }
 
   private getMockProfileName(channel: string): string {
