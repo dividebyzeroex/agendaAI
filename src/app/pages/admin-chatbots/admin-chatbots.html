@@ -263,22 +263,48 @@
           <h2>Conexão Segura</h2>
           <p>Siga as instruções para vincular sua conta oficial ao AgendaAi.</p>
           
-          <!-- WHATSAPP CLOUD API FORM -->
+          <!-- WHATSAPP CONFIGURATION -->
           <div class="onboarding-form" *ngIf="targetChannel === 'whatsapp'">
-            <div class="input-field-elite">
-              <label>Phone Number ID (Meta Cloud API)</label>
-              <div class="input-wrap">
-                <i class="pi pi-phone"></i>
-                <input type="text" [(ngModel)]="whatsappConfig.phoneId" placeholder="Ex: 531234567890123">
+            
+            <div class="connection-mode-toggle">
+              <button class="mode-btn" [class.active]="whatsappConnectionMode === 'qr-code'" (click)="switchWhatsappMode('qr-code')">
+                <i class="pi pi-qrcode"></i> Escanear QR Code
+              </button>
+              <button class="mode-btn" [class.active]="whatsappConnectionMode === 'meta-api'" (click)="switchWhatsappMode('meta-api')">
+                <i class="pi pi-key"></i> Meta API (Avançado)
+              </button>
+            </div>
+
+            <!-- QR CODE VIEW -->
+            <div class="qr-code-view" *ngIf="whatsappConnectionMode === 'qr-code'">
+               <div class="qr-placeholder" *ngIf="isGeneratingQr">
+                 <i class="pi pi-spin pi-spinner" style="font-size: 2rem; color: #94a3b8;"></i>
+                 <p>Gerando QR Code Único...</p>
+               </div>
+               <div class="qr-ready fadeIn" *ngIf="qrCodeImage">
+                 <img [src]="qrCodeImage" alt="WhatsApp QR Code" class="qr-image">
+                 <p>Abra o WhatsApp no seu celular > Aparelhos Conectados > Conectar um Aparelho e aponte para a tela.</p>
+               </div>
+            </div>
+
+            <!-- META API FORM -->
+            <div class="meta-api-form fadeIn" *ngIf="whatsappConnectionMode === 'meta-api'">
+              <div class="input-field-elite">
+                <label>Phone Number ID (Meta Cloud API)</label>
+                <div class="input-wrap">
+                  <i class="pi pi-phone"></i>
+                  <input type="text" [(ngModel)]="whatsappConfig.phoneId" placeholder="Ex: 531234567890123">
+                </div>
+              </div>
+              <div class="input-field-elite">
+                <label>Token de Acesso Temporário ou Permanente</label>
+                <div class="input-wrap">
+                  <i class="pi pi-lock"></i>
+                  <input type="password" [(ngModel)]="whatsappConfig.token" placeholder="EAAW...">
+                </div>
               </div>
             </div>
-            <div class="input-field-elite">
-              <label>Link de Verificação / Token de Acesso</label>
-              <div class="input-wrap">
-                <i class="pi pi-lock"></i>
-                <input type="password" [(ngModel)]="whatsappConfig.token" placeholder="EAAW...">
-              </div>
-            </div>
+            
           </div>
 
           <!-- FB/IG OAUTH BUTTON -->
@@ -295,8 +321,9 @@
 
           <div class="step-actions">
             <button class="btn-back-elite" (click)="onboardingStep = 1">Voltar</button>
-            <button class="btn-next-elite" *ngIf="targetChannel === 'whatsapp'" (click)="nextStep()" [disabled]="!whatsappConfig.phoneId || !whatsappConfig.token || isVerifying">
-              <span *ngIf="!isVerifying">Verificar e Conectar</span>
+            <button class="btn-next-elite" *ngIf="targetChannel === 'whatsapp'" (click)="nextStep()" [disabled]="(whatsappConnectionMode === 'meta-api' && (!whatsappConfig.phoneId || !whatsappConfig.token)) || (whatsappConnectionMode === 'qr-code' && (!qrCodeImage || isGeneratingQr)) || isVerifying">
+              <span *ngIf="!isVerifying && whatsappConnectionMode === 'meta-api'">Verificar e Conectar</span>
+              <span *ngIf="!isVerifying && whatsappConnectionMode === 'qr-code'">Simular Leitura Concluída</span>
               <span *ngIf="isVerifying"><i class="pi pi-spin pi-spinner"></i> Autenticando...</span>
             </button>
           </div>
@@ -370,13 +397,24 @@
               </div>
             </div>
 
-            <div class="input-field-elite">
-              <label>Personalidade (Tom de Voz)</label>
-              <select class="elite-select" [(ngModel)]="robotForm.tone">
-                <option value="Amigável">Amigável e Empático 😊</option>
-                <option value="Profissional">Profissional e Direto 👔</option>
-                <option value="Divertido">Jovem e Divertido 🎉</option>
-              </select>
+            <div class="input-row-2">
+              <div class="input-field-elite">
+                <label>Canal Principal</label>
+                <select class="elite-select" [(ngModel)]="robotForm.channel">
+                  <option value="WhatsApp">WhatsApp</option>
+                  <option value="Instagram">Instagram</option>
+                  <option value="Messenger">Facebook Messenger</option>
+                  <option value="Todos">Omnichannel (Todos)</option>
+                </select>
+              </div>
+              <div class="input-field-elite">
+                <label>Personalidade (Tom de Voz)</label>
+                <select class="elite-select" [(ngModel)]="robotForm.tone">
+                  <option value="Amigável">Amigável e Empático 😊</option>
+                  <option value="Profissional">Profissional e Direto 👔</option>
+                  <option value="Divertido">Jovem e Divertido 🎉</option>
+                </select>
+              </div>
             </div>
          </div>
 

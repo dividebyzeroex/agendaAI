@@ -287,6 +287,18 @@
 .btn-close-modal { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; color: #cbd5e1; cursor: pointer; z-index: 10; transition: 0.3s; }
 .btn-close-modal:hover { color: #1e293b; transform: rotate(90deg); }
 
+.connection-mode-toggle { display: flex; gap: 10px; margin-bottom: 25px; padding: 6px; background: #f1f5f9; border-radius: 12px; }
+.mode-btn { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.mode-btn:hover { color: #1e293b; }
+.mode-btn.active { background: white; color: var(--elite-primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+
+.qr-code-view { text-align: center; padding: 20px; background: #f8fafc; border-radius: 16px; border: 1px dashed #cbd5e1; margin-bottom: 20px; }
+.qr-placeholder { padding: 40px 0; display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.qr-placeholder p { font-size: 0.9rem; color: #64748b; font-weight: 600; margin: 0; }
+.qr-ready { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+.qr-image { width: 220px; height: 220px; border-radius: 12px; padding: 10px; background: white; box-shadow: 0 8px 25px rgba(0,0,0,0.05); }
+.qr-ready p { font-size: 0.85rem; color: #64748b; line-height: 1.4; max-width: 80%; margin: 0; }
+
 /* GAMIFIED ROBOT FACTORY */
 .robots-factory .subtitle { display: block; font-size: 0.95rem; color: #64748b; font-weight: 500; margin-top: 5px; }
 

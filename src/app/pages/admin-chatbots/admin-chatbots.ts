@@ -33,6 +33,11 @@ export class AdminChatbots implements OnInit {
   isVerifying = false;
   errorMessage = '';
 
+  // WhatsApp connection modes
+  whatsappConnectionMode: 'qr-code' | 'meta-api' = 'qr-code';
+  qrCodeImage: string | null = null;
+  isGeneratingQr = false;
+
   // Gamification: "Fábrica de Robôs" State
   myRobots$ = this.chatService.robots$;
   showRobotModal = false;
@@ -114,23 +119,61 @@ export class AdminChatbots implements OnInit {
     this.targetChannel = channel;
     this.onboardingStep = 1;
     this.showOnboarding = true;
-    this.errorMessage = '';
     this.whatsappConfig = { phoneId: '', token: '' };
+    this.whatsappConnectionMode = 'qr-code';
+    this.qrCodeImage = null;
   }
 
   async nextStep() {
-    if (this.onboardingStep === 2 && this.targetChannel === 'whatsapp') {
-      this.isVerifying = true;
-      try {
-        await this.chatService.saveIntegration('whatsapp', this.whatsappConfig);
-        this.isVerifying = false;
-        this.onboardingStep = 3;
-      } catch (err: any) {
-        this.isVerifying = false;
-        this.errorMessage = 'Falha ao autenticar com a Meta. Verifique o Phone ID e o Token.';
+    if (this.onboardingStep === 1) {
+      this.onboardingStep = 2;
+      if (this.targetChannel === 'whatsapp' && this.whatsappConnectionMode === 'qr-code') {
+        this.generateQrCode();
       }
-    } else {
-      this.onboardingStep++;
+    } else if (this.onboardingStep === 2) {
+      if (this.targetChannel === 'whatsapp') {
+        if (this.whatsappConnectionMode === 'meta-api') {
+          this.isVerifying = true;
+          try {
+            await this.chatService.saveIntegration('whatsapp', this.whatsappConfig);
+            this.isVerifying = false;
+            this.onboardingStep = 3;
+          } catch (e: any) {
+            this.isVerifying = false;
+            alert('Falha na configuração: ' + e.message);
+          }
+        } else {
+          // It's QR Code mode and user clicked Simulate
+          this.isVerifying = true;
+          try {
+             await this.chatService.saveIntegration('whatsapp', { type: 'evolution', qrCode: true });
+             this.isVerifying = false;
+             this.onboardingStep = 3;
+          } catch(e: any) {
+             this.isVerifying = false;
+             alert('Erro: ' + e.message);
+          }
+        }
+      } else {
+        this.onboardingStep = 3;
+      }
+    }
+  }
+
+  generateQrCode() {
+    this.isGeneratingQr = true;
+    this.qrCodeImage = null;
+    setTimeout(() => {
+      // Mock QR code image for demonstration
+      this.qrCodeImage = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=AgendaAi-Evolution-Simulation';
+      this.isGeneratingQr = false;
+    }, 2000);
+  }
+
+  switchWhatsappMode(mode: 'qr-code' | 'meta-api') {
+    this.whatsappConnectionMode = mode;
+    if (mode === 'qr-code' && !this.qrCodeImage) {
+      this.generateQrCode();
     }
   }
 
@@ -138,17 +181,38 @@ export class AdminChatbots implements OnInit {
     if (!this.targetChannel || this.targetChannel === 'whatsapp') return;
     
     this.isVerifying = true;
+    
+    // Simulate opening Facebook/Instagram OAuth window
+    const w = 600;
+    const h = 700;
+    const left = (window.screen.width / 2) - (w / 2);
+    const top = (window.screen.height / 2) - (h / 2);
+    
+    const authWindow = window.open(
+      'https://www.facebook.com/v17.0/dialog/oauth?client_id=AGENDA_AI_MOCK&redirect_uri=...',
+      'MetaBusinessOAuth',
+      `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`
+    );
+
     try {
-      // Simulating OAuth redirect and return for MVP UX
+      // Polling or waiting for the popup to "complete"
       setTimeout(async () => {
-        await this.chatService.saveIntegration(this.targetChannel as any, { authMethod: 'oauth', provider: this.targetChannel });
+        if (authWindow) authWindow.close();
+        
+        await this.chatService.saveIntegration(this.targetChannel as any, { 
+          authMethod: 'oauth', 
+          provider: this.targetChannel,
+          pageName: this.targetChannel === 'instagram' ? '@barbearia.elite' : 'Barbearia Elite' 
+        });
+        
         this.isVerifying = false;
         this.onboardingStep = 3;
-      }, 1500);
+      }, 3000);
       
     } catch (err: any) {
+      if (authWindow) authWindow.close();
       this.isVerifying = false;
-      this.errorMessage = 'Erro ao iniciar login com Facebook.';
+      this.errorMessage = 'Erro ao conectar com a Meta.';
     }
   }
 
