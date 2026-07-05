@@ -5,7 +5,7 @@ import { SupabaseService } from './supabase.service';
 
 export interface ChatMessage {
   id: string;
-  sender: 'bot' | 'user';
+  sender: 'business' | 'customer';
   text: string;
   timestamp: Date;
 }
@@ -329,7 +329,7 @@ export class ChatbotService {
          conv.messages = data.data.map((zm: any) => ({
             id: zm.id,
             text: zm.message?.text || zm.text || '',
-            sender: zm.fromMe ? 'bot' : 'user',
+            sender: zm.fromMe ? 'business' : 'customer',
             timestamp: new Date(zm.timestamp || new Date()),
             status: 'sent'
          }));
@@ -342,22 +342,32 @@ export class ChatbotService {
     this.activeConversationSubject.next(conv);
   }
 
-  async processSimulatedMessage(text: string, convId: string) {
+  getActiveConversation(): Conversation | null {
+    return this.activeConversationSubject.getValue();
+  }
+
+  async sendMessage(text: string, convId: string, accountId?: string) {
+    // Add locally immediately for UX
     this.addMessage(convId, {
       id: Math.random().toString(36).substr(2, 9),
-      sender: 'user',
+      sender: 'business',
       text,
       timestamp: new Date()
     });
 
-    setTimeout(() => {
-      this.addMessage(convId, {
-        id: Math.random().toString(36).substr(2, 9),
-        sender: 'bot',
-        text: "Assistente Inteligente em ação. Como posso ajudar com seu agendamento?",
-        timestamp: new Date()
+    if (!accountId) return;
+
+    try {
+      const { data, error } = await this.supabase.client.functions.invoke('zernio-send', {
+        method: 'POST',
+        body: { channel_id: accountId, to: convId, text: text }
       });
-    }, 1500);
+
+      if (error) throw error;
+      console.log('Mensagem enviada com sucesso via Zernio API:', data);
+    } catch (e) {
+      console.error('Erro ao enviar mensagem:', e);
+    }
   }
 
   private addMessage(convId: string, msg: ChatMessage) {

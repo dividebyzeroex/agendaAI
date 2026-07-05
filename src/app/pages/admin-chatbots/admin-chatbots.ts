@@ -103,7 +103,10 @@ export class AdminChatbots implements OnInit {
 
   sendMessage() {
     if (!this.newMessage.trim() || !this.selectedConvId) return;
-    this.chatService.processSimulatedMessage(this.newMessage, this.selectedConvId);
+    const activeConv = this.chatService.getActiveConversation();
+    if (activeConv) {
+      this.chatService.sendMessage(this.newMessage, this.selectedConvId, activeConv.accountId);
+    }
     this.newMessage = '';
   }
 

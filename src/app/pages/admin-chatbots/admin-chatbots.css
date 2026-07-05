@@ -184,11 +184,11 @@
 
 .messages-container { flex: 1; padding: 2.5rem; overflow-y: auto; background: #f8fafc; display: flex; flex-direction: column; gap: 1.25rem; }
 .message-wrapper { display: flex; flex-direction: column; max-width: 75%; }
-.message-wrapper.bot { align-self: flex-start; }
-.message-wrapper.user { align-self: flex-end; align-items: flex-end; }
+.message-wrapper.customer { align-self: flex-start; }
+.message-wrapper.business { align-self: flex-end; align-items: flex-end; }
 .msg-bubble { padding: 14px 20px; border-radius: 22px; font-size: 0.95rem; line-height: 1.5; font-weight: 500; box-shadow: 0 5px 15px rgba(0,0,0,0.02); }
-.user .msg-bubble { background: var(--elite-primary); color: white; border-bottom-right-radius: 4px; box-shadow: 0 10px 25px rgba(99,102,241,0.2); }
-.bot .msg-bubble { background: white; color: #1e293b; border: 1px solid #f1f5f9; border-bottom-left-radius: 4px; }
+.business .msg-bubble { background: var(--elite-primary); color: white; border-bottom-right-radius: 4px; box-shadow: 0 10px 25px rgba(99,102,241,0.2); }
+.customer .msg-bubble { background: white; color: #1e293b; border: 1px solid #f1f5f9; border-bottom-left-radius: 4px; }
 .msg-time { font-size: 0.65rem; color: #94a3b8; font-weight: 600; margin-top: 4px; margin-left: 10px; margin-right: 10px; }
 
 .input-container { padding: 20px 30px; display: flex; gap: 15px; border-top: 1px solid #f1f5f9; background: white; align-items: center; }

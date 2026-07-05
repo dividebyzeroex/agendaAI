@@ -228,8 +228,8 @@
             <div
               class="message-wrapper"
               *ngFor="let m of conv.messages"
-              [class.bot]="m.sender === 'bot'"
-              [class.user]="m.sender === 'user'"
+              [class.customer]="m.sender === 'customer'"
+              [class.business]="m.sender === 'business'"
             >
               <div class="msg-bubble">{{ m.text }}</div>
               <div class="msg-time">{{ m.timestamp | date: 'HH:mm' }}</div>
