@@ -87,14 +87,17 @@
 }
 
 .prof-card-ent {
-  position: relative; background: var(--glass-bg); border-radius: 24px; padding: 20px;
+  position: relative; 
+  background: var(--glass-bg, rgba(255,255,255,0.95)); 
+  border-radius: 24px; padding: 20px;
   display: flex; flex-direction: column; gap: 16px;
-  border: 1px solid var(--glass-border);
-  box-shadow: var(--elite-shadow);
+  border: 1px solid var(--glass-border, rgba(0,0,0,0.1));
+  box-shadow: var(--elite-shadow, 0 10px 30px rgba(0,0,0,0.05));
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer; overflow: hidden;
   animation: eliteRowEntrance 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
-  backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur, 20px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
 }
 
 @keyframes eliteRowEntrance {
@@ -216,12 +219,14 @@
 
 .edit-panel-glass {
   width: 500px; height: calc(100vh - 120px); position: sticky; top: 100px;
-  background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
-  border-left: 1px solid var(--glass-border);
-  box-shadow: var(--elite-shadow);
+  background: var(--glass-bg, rgba(255,255,255,0.95)); 
+  backdrop-filter: blur(var(--glass-blur, 20px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+  border-left: 1px solid var(--glass-border, rgba(0,0,0,0.1));
+  box-shadow: var(--elite-shadow, 0 20px 40px rgba(0,0,0,0.1));
   display: flex; flex-direction: column; gap: 0;
   border-radius: 32px; margin-left: 30px; animation: slideInRight .5s cubic-bezier(0.16, 1, 0.3, 1);
-  overflow: hidden; border: 1px solid var(--glass-border); z-index: 100;
+  overflow: hidden; border: 1px solid var(--glass-border, rgba(0,0,0,0.1)); z-index: 100;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 @keyframes slideInRight { from{opacity:0;transform:translateX(50px);} to{opacity:1;transform:none;} }
