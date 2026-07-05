@@ -9,6 +9,21 @@
 /* Global Variable Fallbacks — Overridden by .theme-X classes on body */
 :root {
   --primary-color: #3b82f6; /* Static brand color */
+  --primary-rgb: 59, 130, 246;
+  --accent-color: #10b981;
+  --bg-color: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+  
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(0, 0, 0, 0.08);
+  --glass-edge: rgba(255, 255, 255, 0.5);
+  --glass-blur: 16px;
+  
+  --active-bg: rgba(59, 130, 246, 0.1);
+  --elite-shadow: 0 10px 40px -10px rgba(0,0,0,0.05);
+  --text-shadow: none;
+  
   --p-border-radius: 12px;
 }
 
