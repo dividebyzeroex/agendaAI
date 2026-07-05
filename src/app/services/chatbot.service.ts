@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, Observable, from, of } from 'rxjs';
+import { BehaviorSubject, Subject, Observable, from, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
 
@@ -57,8 +57,16 @@ export interface ChatbotRobot {
 export class ChatbotService {
   private supabase = inject(SupabaseService);
 
+  
   private conversationsSubject = new BehaviorSubject<Conversation[]>([]);
   conversations$ = this.conversationsSubject.asObservable();
+
+  private aiIntentsSubject = new BehaviorSubject<{ [conversationId: string]: string }>({});
+  aiIntents$ = this.aiIntentsSubject.asObservable();
+  
+  private toastNotificationsSubject = new Subject<{ message: string, type: 'success' | 'info' }>();
+  toastNotifications$ = this.toastNotificationsSubject.asObservable();
+
 
   private activeConversationSubject = new BehaviorSubject<Conversation | null>(null);
   activeConversation$ = this.activeConversationSubject.asObservable();
@@ -87,20 +95,34 @@ export class ChatbotService {
     // Escutar eventos broadcast do zernio-webhook
     this.messageSubscription = this.supabase.client
       .channel('zernio_messages')
+      
       .on('broadcast', { event: 'new_message' }, payload => {
          console.log("Recebido broadcast do zernio:", payload);
-         
-         // Recarregar a lista de conversas
          this.loadConversations();
-         
-         // Se a conversa ativa for a que recebeu a mensagem, atualizar
          const activeId = this.activeConversationSubject.getValue()?.id;
-         // Note: No Zernio, o userPhone é o participantId, que mapeamos para conv.id
          if (activeId && payload['payload']?.userPhone === activeId) {
             this.setActiveConversation(activeId);
          }
       })
-      .subscribe();
+      .on('broadcast', { event: 'ai_intent' }, payload => {
+         console.log("Intent da IA recebido:", payload);
+         const { userPhone, intent } = payload['payload'] || {};
+         if (userPhone && intent) {
+            const currentIntents = this.aiIntentsSubject.getValue();
+            this.aiIntentsSubject.next({ ...currentIntents, [userPhone]: intent });
+            
+            if (intent.includes('Agendado') || intent.includes('Venda')) {
+               this.toastNotificationsSubject.next({ message: `🤖 IA detectou: ${intent}`, type: 'success' });
+               setTimeout(() => {
+                  const intentsAfter = this.aiIntentsSubject.getValue();
+                  const newIntents = { ...intentsAfter };
+                  delete newIntents[userPhone];
+                  this.aiIntentsSubject.next(newIntents);
+               }, 5000);
+            }
+         }
+      })
+.subscribe();
   }
 
   constructor() {

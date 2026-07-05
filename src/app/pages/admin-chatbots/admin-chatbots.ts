@@ -20,6 +20,12 @@ export class AdminChatbots implements OnInit {
   integrations$ = this.chatService.integrations$;
   connectedChannels$ = this.chatService.connectedChannels$;
 
+  aiIntents$ = this.chatService.aiIntents$;
+  toastNotifications$ = this.chatService.toastNotifications$;
+  aiActiveConversationsCount = 0;
+  toastMessage: { message: string, type: string } | null = null;
+
+
   // Local State
   selectedConvId: string | null = null;
   newMessage: string = '';
@@ -80,6 +86,22 @@ export class AdminChatbots implements OnInit {
     this.chatService.loadConversations();
     this.chatService.loadIntegrations();
     this.chatService.loadConnectedChannels();
+
+    // Listen to Intents to calculate active count
+    this.aiIntents$.subscribe(intents => {
+      this.aiActiveConversationsCount = Object.keys(intents).length;
+    });
+
+    // Listen to Toast Notifications
+    this.toastNotifications$.subscribe(toast => {
+      this.toastMessage = toast;
+      setTimeout(() => {
+        if (this.toastMessage === toast) {
+          this.toastMessage = null;
+        }
+      }, 5000);
+    });
+
 
     // Quando abrir a tela, checar se tem conversa ativa e selecionar aba
     this.activeConversation$.subscribe(conv => {
