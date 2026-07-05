@@ -82,27 +82,6 @@
         </div>
       </div>
       <div class="topbar-right">
-        <!-- Theme Switcher -->
-        <div class="theme-selector-wrap">
-          <div class="theme-indicator" 
-            [class.pos-claro]="theme.currentTheme === 'claro'"
-            [class.pos-escuro]="theme.currentTheme === 'escuro'"
-            [class.pos-translucido]="theme.currentTheme === 'translucido'">
-          </div>
-          <button (click)="setTheme('claro')" [class.active]="theme.currentTheme === 'claro'" 
-            pTooltip="Modo Claro" tooltipPosition="bottom">
-            <i class="pi pi-sun"></i>
-          </button>
-          <button (click)="setTheme('escuro')" [class.active]="theme.currentTheme === 'escuro'" 
-            pTooltip="Modo Escuro" tooltipPosition="bottom">
-            <i class="pi pi-moon"></i>
-          </button>
-          <button (click)="setTheme('translucido')" [class.active]="theme.currentTheme === 'translucido'" 
-            pTooltip="Elite Glass" tooltipPosition="bottom">
-            <i class="pi pi-image"></i>
-          </button>
-        </div>
-
         <!-- LIVE CREW (Presence Synchrony) -->
         <div class="presence-stack" *ngIf="onlineUsers$ | async as users">
            <div class="presence-avatars" *ngIf="users.length > 0">

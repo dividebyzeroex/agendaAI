@@ -1,15 +1,24 @@
-/* Clean Elite 2.0 — High Contrast & Depth */
+/* Clean Elite 2.0 — High Contrast & Depth (Sincronizado com Landing Page) */
 .theme-claro {
-  --bg-color: hsl(210, 40%, 95%); /* Ice Blue Contrast */
-  --text-main: hsl(222, 47%, 12%);
-  --text-muted: hsl(215, 20%, 40%);
-  --glass-bg: #ffffff;
+  --bg-color: #f8fafc; /* Slate 50 */
+  --text-main: #0f172a; /* Slate 900 */
+  --text-muted: #64748b; /* Slate 500 */
+  
+  --glass-bg: rgba(255, 255, 255, 0.85);
   --glass-border: rgba(0, 0, 0, 0.05);
-  --glass-blur: 0px;
-  --active-bg: rgba(59, 130, 246, 0.08); /* Soft primary tint */
-  --bg-image: none;
-  --elite-shadow: 0 10px 40px rgba(0, 0, 0, 0.04);
-  --elite-hover-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+  --glass-blur: 12px;
+  
+  --active-bg: rgba(99, 102, 241, 0.08); /* Indigo tint */
+  
+  --primary-color: #6366f1; /* Indigo 500 */
+  --primary-rgb: 99, 102, 241;
+  --accent-color: #8b5cf6; /* Violet 500 */
+  
+  --bg-image: radial-gradient(circle at 15% 10%, rgba(99, 102, 241, 0.1), transparent 30%),
+              radial-gradient(circle at 85% 40%, rgba(139, 92, 246, 0.1), transparent 30%);
+              
+  --elite-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+  --elite-hover-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
   --text-shadow: none;
-  --glass-edge: rgba(255, 255, 255, 0.8); /* Highlight edge on white cards */
+  --glass-edge: rgba(255, 255, 255, 1);
 }

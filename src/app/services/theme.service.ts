@@ -16,11 +16,11 @@ export class ThemeService {
 
   private initTheme() {
     if (isPlatformBrowser(this.platformId)) {
-      const saved = localStorage.getItem('agendaai-theme') as AppTheme;
+      const saved = 'claro' as AppTheme;
       if (saved) {
         this.setTheme(saved);
       } else {
-        this.setTheme('translucido');
+        this.setTheme('claro');
       }
     }
   }

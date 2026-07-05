@@ -14,6 +14,7 @@ import { OnboardingService } from '../../services/onboarding.service';
 import { OnboardingModalComponent } from '../../components/onboarding-modal/onboarding-modal';
 import { UpdateNotifierComponent } from '../../components/update-notifier/update-notifier.component';
 import { NotificationService } from '../../services/notification.service';
+import { ChatbotService } from '../../services/chatbot.service';
 import { AiInsightsService } from '../../services/ai-insights.service';
 import { NotificationCenterComponent } from '../../components/notification-center/notification-center';
 import { BillingService } from '../../services/billing.service';
@@ -54,9 +55,9 @@ export class AdminLayout implements OnInit {
   workflowEngine = inject(WorkflowService);
   onboarding = inject(OnboardingService);
   notifService = inject(NotificationService);
+  chatbotService = inject(ChatbotService);
   aiInsights   = inject(AiInsightsService);
   billing = inject(BillingService);
-  theme = inject(ThemeService);
   estabService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);
   authService  = inject(AuthService);
