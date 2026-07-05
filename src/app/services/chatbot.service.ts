@@ -475,4 +475,17 @@ export class ChatbotService {
   }
 
   // Removido getMockConversations()
+  
+  async sendTestMessageToAi(estabelecimentoId: string, robotId: string | null, history: any[]): Promise<string> {
+    try {
+      const { data, error } = await this.supabase.client.functions.invoke('ai-chat-test', {
+        body: { estabelecimento_id: estabelecimentoId, robot_id: robotId, history }
+      });
+      if (error) throw error;
+      return data.response;
+    } catch (e: any) {
+      console.error("Test AI Error:", e);
+      throw e;
+    }
+  }
 }
