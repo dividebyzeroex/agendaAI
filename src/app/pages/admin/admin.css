@@ -31,8 +31,18 @@
 /* Stats Row - Elite Elite */
 .stats-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: repeat(5, 1fr);
   gap: 1.5rem;
+}
+@media (max-width: 1400px) {
+  .stats-row {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+@media (max-width: 900px) {
+  .stats-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 .stat-card-elite {
@@ -76,9 +86,11 @@
 .stat-icon-ent.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 .stat-icon-ent.violet { background: rgba(161, 66, 244, 0.1); color: #a142f4; }
 
-.stat-body-ent { display: flex; flex-direction: column; gap: 2px; }
-.stat-label-ent { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-value-ent { font-size: 1.8rem; font-weight: 800; color: var(--text-main); letter-spacing: -1.5px; }
+.stat-body-ent { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
+.stat-label-ent { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+.stat-value-wrap { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
+.stat-number { font-size: 1.6rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
+.stat-subtext { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); line-height: 1; }
 
 /* Grid Layout for Main Content — BENTO CORE */
 .dashboard-grid {
@@ -93,13 +105,14 @@
 .bento-tall { grid-row: span 2; }
 .bento-full { grid-column: span 3; }
 
-.bento-radar { grid-column: span 2; grid-row: span 2; }
+.bento-radar { grid-column: span 2; grid-row: span 2; padding: 1.5rem; }
 .bento-ai { grid-column: span 1; grid-row: span 2; display: flex; flex-direction: column; gap: 1rem; }
 
 
 .sec-header {
   display: flex; justify-content: space-between; align-items: center;
   margin-bottom: 2rem;
+  width: 100%;
 }
 
 .sec-header h3 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
@@ -298,3 +311,32 @@
     font-size: 1.5rem;
   }
 }
+
+.bento-agent-activity { padding: 1.25rem; }
+.bento-agent-title { font-size: 0.8rem; font-weight: 800; color: #10b981; margin-bottom: 1rem; display:flex; align-items:center; gap:8px; }
+.bento-agent-title .shield-status-icon { width: 8px; height: 8px; }
+.agent-activity-list { display:flex; flex-direction:column; gap:10px; }
+.agent-empty-msg { font-size: 0.75rem; color: var(--text-muted); text-align: center; padding: 10px; }
+
+.agent-log-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  background: var(--active-bg);
+  padding: 12px;
+  border-radius: 12px;
+  border-left: 3px solid;
+  line-height: 1.4;
+}
+
+.agent-log-icon {
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.agent-log-text {
+  flex: 1;
+}
+.agent-log-text b { color: var(--text-main); font-weight: 700; margin-right: 4px; }
