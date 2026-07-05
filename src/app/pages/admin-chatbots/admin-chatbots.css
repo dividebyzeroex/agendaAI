@@ -11,7 +11,7 @@
 
 .ag-page.elite.chatbots { 
   display: flex; flex-direction: column; 
-  padding: 2.5rem 3rem; background: #f1f5f9; min-height: 100vh;
+  padding: 2.5rem 3rem;  min-height: 100vh;
   animation: pageFadeIn 0.6s ease-out;
 }
 @keyframes pageFadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -134,7 +134,7 @@
 .channel-meta { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #64748b; font-weight: 700; margin-top: 5px; }
 .status-dot.online { width: 10px; height: 10px; background: #10b981; border-radius: 50%; box-shadow: 0 0 8px rgba(16,185,129,0.6); }
 
-.status-pill-elite { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 900; background: #f1f5f9; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
+.status-pill-elite { padding: 6px 12px; border-radius: 8px; font-size: 0.7rem; font-weight: 900;  color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; }
 
 .btn-elite-action.primary-btn { width: 100%; padding: 14px; border: none; border-radius: 16px; background: white; font-size: 0.9rem; font-weight: 800; color: #475569; cursor: pointer; transition: 0.3s; border: 2px solid #f1f5f9; }
 .btn-elite-action.primary-btn:hover { background: #f8fafc; border-color: var(--elite-primary); color: var(--elite-primary); box-shadow: 0 10px 20px rgba(99,102,241,0.1); }
@@ -166,7 +166,7 @@
 
 .st-pill { display: inline-flex; padding: 6px 14px; border-radius: 10px; font-size: 0.65rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; }
 .st-pill.active { background: #dcfce7; color: #10b981; }
-.st-pill.completed { background: #f1f5f9; color: #64748b; }
+.st-pill.completed {  color: #64748b; }
 
 .btn-view { background: white; border: 1px solid #e2e8f0; padding: 10px 18px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; cursor: pointer; transition: 0.2s; color: #64748b; }
 .btn-view:hover { background: #f8fafc; color: var(--elite-primary); border-color: var(--elite-primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
@@ -306,7 +306,7 @@
   box-shadow: none;
 }
 .modal-stepper { display: flex; justify-content: center; gap: 10px; padding: 2rem; border-top: 1px solid #f1f5f9; }
-.modal-stepper .dot { width: 40px; height: 6px; border-radius: 10px; background: #f1f5f9; transition: 0.4s; }
+.modal-stepper .dot { width: 40px; height: 6px; border-radius: 10px;  transition: 0.4s; }
 .modal-stepper .dot.active { background: var(--elite-primary); width: 60px; }
 
 .fadeIn { animation: fadeIn 0.4s ease-out; }
@@ -365,7 +365,7 @@
 .btn-close-modal { position: absolute; top: 25px; right: 25px; background: none; border: none; font-size: 1.5rem; color: #cbd5e1; cursor: pointer; z-index: 10; transition: 0.3s; }
 .btn-close-modal:hover { color: #1e293b; transform: rotate(90deg); }
 
-.connection-mode-toggle { display: flex; gap: 10px; margin-bottom: 25px; padding: 6px; background: #f1f5f9; border-radius: 12px; }
+.connection-mode-toggle { display: flex; gap: 10px; margin-bottom: 25px; padding: 6px;  border-radius: 12px; }
 .mode-btn { flex: 1; padding: 12px; border: none; background: transparent; border-radius: 8px; font-size: 0.85rem; font-weight: 700; color: #64748b; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .mode-btn:hover { color: #1e293b; }
 .mode-btn.active { background: white; color: var(--elite-primary); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
@@ -424,7 +424,7 @@
   position: absolute; top: 15px; right: 15px;
   padding: 4px 10px; border-radius: 10px; font-size: 0.65rem; font-weight: 900;
   text-transform: uppercase; letter-spacing: 1px;
-  background: #f1f5f9; color: #64748b;
+   color: #64748b;
 }
 .robot-status-badge.active { background: #dcfce7; color: #10b981; }
 
@@ -444,9 +444,9 @@
 
 .robot-actions { display: flex; gap: 8px; width: 100%; border-top: 1px solid #f1f5f9; padding-top: 1.5rem; justify-content: center; }
 .btn-robot-action { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
-.btn-robot-action.edit { background: #f1f5f9; color: #475569; }
+.btn-robot-action.edit {  color: #475569; }
 .btn-robot-action.edit:hover { background: var(--elite-primary); color: white; }
-.btn-robot-action.toggle { background: #f1f5f9; color: #475569; }
+.btn-robot-action.toggle {  color: #475569; }
 .btn-robot-action.toggle:hover { background: #10b981; color: white; }
 .btn-robot-action.delete { background: #fef2f2; color: #ef4444; }
 .btn-robot-action.delete:hover { background: #ef4444; color: white; }
