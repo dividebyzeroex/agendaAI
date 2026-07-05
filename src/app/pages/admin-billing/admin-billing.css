@@ -391,7 +391,10 @@
 }
 
 .confirm-card {
-  width: 100%; max-width: 440px; padding: 2rem; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1);
+  width: 100%; max-width: 440px; padding: 2rem; border-radius: 28px; 
+  border: 1px solid var(--glass-border);
+  background: var(--bg-color);
+  box-shadow: var(--elite-shadow);
 }
 
 .c-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
