@@ -95,11 +95,11 @@ Deno.serve(async (req) => {
     const currentMessage = geminiHistory.pop() || { role: "user", parts: [{ text: userMessage }] };
 
     // Configurar o Gemini
-    const systemInstruction = \`
-Você é \${robotName}, atuando como \${robotRole}.
-Seu tom de voz é: \${robotTone}.
+    const systemInstruction = `
+Você é ${robotName}, atuando como ${robotRole}.
+Seu tom de voz é: ${robotTone}.
 Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa e natural.
-    \`;
+    `;
 
     const functionDeclarations = [
       { name: "get_services", description: "Retorna a lista de serviços oferecidos.", parameters: { type: "OBJECT", properties: {} } },
@@ -131,7 +131,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
          functionResult = { date: call.args.date, available_times: ["09:00", "10:30", "14:00", "16:00"] };
       } else if (call.name === "create_appointment") {
          const { data: serv } = await supabaseAdmin.from("agenda_events").insert({
-            title: \`Agendamento - \${call.args.client_name}\`,
+            title: `Agendamento - ${call.args.client_name}`,
             date: call.args.date,
             time: call.args.time,
             type: "service",
@@ -174,7 +174,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
       const zernioReq = await fetch('https://zernio.com/api/v1/messages', {
         method: 'POST',
         headers: {
-          'Authorization': \`Bearer \${zernioApiKey}\`,
+          'Authorization': `Bearer ${zernioApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
