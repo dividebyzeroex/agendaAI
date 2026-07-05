@@ -166,16 +166,15 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
     // Enviar mensagem via Zernio API (Usando Master Key)
     console.log("Enviando mensagem de volta via Zernio API...");
     try {
-      const zernioReq = await fetch('https://zernio.com/api/v1/messages', {
+      const zernioReq = await fetch(`https://zernio.com/api/v1/inbox/conversations/${userPhone}/messages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${zernioApiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          channel_id: channelId,
-          to: userPhone,
-          message: { text: botResponseText }
+          account_id: channelId,
+          message: botResponseText
         })
       });
       const zRes = await zernioReq.json().catch(() => ({}));

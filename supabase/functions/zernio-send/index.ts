@@ -30,16 +30,15 @@ Deno.serve(async (req) => {
 
     console.log(`Sending message to ${to} via channel ${channel_id}`);
 
-    const response = await fetch('https://zernio.com/api/v1/messages', {
+    const response = await fetch(`https://zernio.com/api/v1/inbox/conversations/${to}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${zernioApiKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        channel_id: channel_id,
-        to: to,
-        message: { text: text }
+        account_id: channel_id,
+        message: text
       })
     });
 
