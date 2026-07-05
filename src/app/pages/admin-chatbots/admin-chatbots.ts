@@ -26,7 +26,7 @@ export class AdminChatbots implements OnInit {
   // Onboarding Stepper
   showOnboarding = false;
   onboardingStep = 1;
-  targetChannel: 'whatsapp' | 'facebook' | 'instagram' | null = null;
+  targetChannel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram' | null = null;
   
   // Real Config Storage
   whatsappConfig = { phoneId: '', token: '' }; // phoneId será usado como zernio_channel_id
@@ -99,18 +99,16 @@ export class AdminChatbots implements OnInit {
     this.newMessage = '';
   }
 
-  getChannelIcon(channel: string | null): string {
-    if (!channel) return 'pi pi-chat';
-    const icons: Record<string, string> = {
-      whatsapp: 'pi pi-whatsapp',
-      facebook: 'pi pi-facebook',
-      instagram: 'pi pi-instagram'
-    };
-    return icons[channel] || 'pi pi-chat';
+  getChannelIcon(channel: string): string {
+    if (channel === 'whatsapp') return 'pi pi-whatsapp';
+    if (channel === 'facebook') return 'pi pi-facebook';
+    if (channel === 'instagram') return 'pi pi-instagram';
+    if (channel === 'telegram') return 'pi pi-telegram';
+    return 'pi pi-comment';
   }
 
   // ONBOARDING ACTIONS
-  openOnboarding(channel: 'whatsapp' | 'facebook' | 'instagram') {
+  openOnboarding(channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram') {
     this.targetChannel = channel;
     this.onboardingStep = 1;
     this.showOnboarding = true;

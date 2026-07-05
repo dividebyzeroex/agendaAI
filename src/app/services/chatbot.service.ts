@@ -14,7 +14,7 @@ export interface Conversation {
   id: string;
   customerName: string;
   customerPhone: string;
-  channel: 'whatsapp' | 'facebook' | 'instagram';
+  channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram';
   lastMessage: string;
   lastUpdate: Date;
   status: 'active' | 'completed' | 'waiting';
@@ -24,7 +24,7 @@ export interface Conversation {
 export interface ChatbotIntegration {
   id?: string;
   establishment_id: string;
-  channel: 'whatsapp' | 'facebook' | 'instagram';
+  channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram';
   status: 'active' | 'inactive' | 'error';
   config: any;
 }
@@ -55,7 +55,8 @@ export class ChatbotService {
   private integrationsSubject = new BehaviorSubject<Record<string, any>>({
     whatsapp: { active: false },
     facebook: { active: false },
-    instagram: { active: false }
+    instagram: { active: false },
+    telegram: { active: false }
   });
   integrations$ = this.integrationsSubject.asObservable();
 
@@ -151,7 +152,7 @@ export class ChatbotService {
       .rpc('get_chatbot_integrations_by_estab', { p_estab_id: est.id });
 
     if (integrations) {
-      const state: Record<string, any> = { whatsapp: { active: false }, facebook: { active: false }, instagram: { active: false } };
+      const state: Record<string, any> = { whatsapp: { active: false }, facebook: { active: false }, instagram: { active: false }, telegram: { active: false } };
       (integrations as any[]).forEach((inc: any) => {
         state[inc.channel] = { 
           active: inc.status === 'active',
@@ -222,7 +223,7 @@ export class ChatbotService {
   /**
    * Persists a new integration config
    */
-  async saveIntegration(channel: 'whatsapp' | 'facebook' | 'instagram', config: any) {
+  async saveIntegration(channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram', config: any) {
     const { data: { user } } = await this.supabase.client.auth.getUser();
     if (!user) throw new Error('Not authenticated');
 

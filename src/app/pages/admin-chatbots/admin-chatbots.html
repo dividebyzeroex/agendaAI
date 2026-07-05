@@ -162,6 +162,23 @@
                Configurar
              </button>
            </div>
+
+           <!-- Telegram -->
+           <div class="channel-card elite-compact-card telegram" [class.active]="integrations['telegram']?.active">
+             <div class="brand-logo-wrap tg">
+               <i class="pi pi-telegram"></i>
+             </div>
+             <div class="brand-details">
+               <h3>Telegram</h3>
+               <div class="channel-meta" *ngIf="integrations['telegram']?.active">
+                 <span class="status-dot online"></span> {{ integrations['telegram'].profileName }}
+               </div>
+               <span class="status-pill-elite inactive" *ngIf="!integrations['telegram']?.active">Inativo</span>
+             </div>
+             <button class="btn-elite-action primary-btn" (click)="openOnboarding('telegram')">
+               Configurar
+             </button>
+           </div>
           </div>
         </div>
       </div>
