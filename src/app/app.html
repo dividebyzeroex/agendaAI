@@ -1,3 +1,3 @@
-<app-particle-canvas></app-particle-canvas>
+<app-particle-canvas *ngIf="!router.url.startsWith('/admin')"></app-particle-canvas>
 <router-outlet></router-outlet>
 <app-toast-container></app-toast-container>
