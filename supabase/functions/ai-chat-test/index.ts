@@ -3,6 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2.40.0";
 import { GoogleGenAI } from "npm:@google/genai";
 
 const geminiApiKey = Deno.env.get("GEMINI_API_KEY");
+const grokApiKey = Deno.env.get("GROK_API_KEY");
 const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
 console.log("AI Chat Test Function Starting...");
@@ -69,114 +70,191 @@ Deno.serve(async (req) => {
       { name: "signal_intent", description: "Avisa o sistema sobre a intenção atual do cliente (ex: 'Consultando', 'Agendando', 'Reagendando').", parameters: { type: "OBJECT", properties: { intent: { type: "STRING", description: "A intenção curta" } }, required: ["intent"] } }
     ];
 
-    console.log("Chamando Gemini API (Test Mode)...");
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
-      contents: mergedHistory,
-      config: {
-        systemInstruction: `
-Você é ${robotName}, atuando como ${robotRole}.
-Seu tom de voz é: ${robotTone}.
+    const systemInstruction = `Você é ${robotName}, atuando como ${robotRole}. Seu tom de voz é: ${robotTone}.
 Seu objetivo é ajudar o cliente a agendar serviços de forma natural e amigável.
 ANTES de responder sobre preços ou serviços, USE a ferramenta get_services.
 ANTES de confirmar um horário, USE a ferramenta check_availability.
 Se o cliente quiser reagendar, USE reschedule_appointment.
 Sempre que você detectar a intenção do cliente, USE a ferramenta signal_intent IMEDIATAMENTE.
-[ATENÇÃO] Você está operando em MODO TESTE (Sandbox) com o próprio administrador. Trate-o como um cliente real, mas saiba que ele está validando o sistema.
-`,
-        temperature: 0.2,
-        tools: [{ functionDeclarations }],
+[ATENÇÃO] Você está operando em MODO TESTE (Sandbox) com o próprio administrador. Trate-o como um cliente real, mas saiba que ele está validando o sistema.`;
+
+    const executeTool = async (callName: string, callArgs: any) => {
+      if (callName === "signal_intent") {
+         return { success: true };
+      } else if (callName === "get_services") {
+         const { data: servs } = await supabaseAdmin.from('servicos').select('id, titulo, preco, duracao_min').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
+         return { services: servs || [] };
+      } else if (callName === "get_professionals") {
+         const { data: profs } = await supabaseAdmin.from('profissionais').select('id, nome, especialidade').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
+         return { professionals: profs || [] };
+      } else if (callName === "check_availability") {
+         const { data: eventos } = await supabaseAdmin.rpc('get_public_events_by_day', {
+            p_estab_id: estabelecimento_id,
+            p_date_start: `${callArgs.date} 00:00:00`,
+            p_date_end: `${callArgs.date} 23:59:59`
+         });
+         return { date: callArgs.date, occupied_events: eventos || [], info: "O bot deve sugerir horários comerciais padrão (09h-18h) que NÃO estejam conflitantes com os ocupados listados." };
+      } else if (callName === "create_appointment") {
+         let userPhone = "5511999999999"; 
+         let { data: clienteReq } = await supabaseAdmin.from('clientes').select('id').eq('telefone', userPhone).limit(1);
+         let clienteId = null;
+         if (!clienteReq || clienteReq.length === 0) {
+             const { data: newCli } = await supabaseAdmin.from('clientes').insert({ estabelecimento_id, nome: "Testador IA", telefone: userPhone }).select();
+             if (newCli) clienteId = newCli[0].id;
+         } else {
+             clienteId = clienteReq[0].id;
+         }
+
+         const startDate = new Date(`${callArgs.date}T${callArgs.time}:00`);
+         const endDate = new Date(startDate.getTime() + 30 * 60000);
+         const { data: serv } = await supabaseAdmin.from("agenda_events").insert({
+            title: `[TESTE IA] ${callArgs.client_name}`,
+            start: startDate.toISOString(),
+            end: endDate.toISOString(),
+            type: "service",
+            status: "scheduled",
+            estabelecimento_id,
+            cliente_id: clienteId,
+            servico_id: callArgs.service_id,
+            profissional_id: callArgs.professional_id || null
+         }).select();
+         return { success: true, event: serv ? serv[0] : null };
+      } else if (callName === "reschedule_appointment") {
+         return { success: true, info: "Simulado com sucesso." };
+      } else if (callName === "add_to_waitlist") {
+         return { success: true, info: "Adicionado à fila de espera." };
       }
-    });
+      return {};
+    };
 
     let botResponseText = "";
-    let currentResponse = response;
-    let currentHistory = [...mergedHistory];
-
-    let loopCount = 0;
-    while (loopCount < 5) {
-      if (currentResponse.functionCalls && currentResponse.functionCalls.length > 0) {
-        const call = currentResponse.functionCalls[0];
-        console.log("Gemini chamou a function:", call.name, call.args);
-        
-        currentHistory.push({ role: 'model', parts: [{ functionCall: call }] });
-        
-        let functionResult: any = {};
-
-        if (call.name === "signal_intent") {
-           functionResult = { success: true };
-        } else if (call.name === "get_services") {
-           const { data: servs } = await supabaseAdmin.from('servicos').select('id, titulo, preco, duracao_min').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
-           functionResult = { services: servs || [] };
-        } else if (call.name === "get_professionals") {
-           const { data: profs } = await supabaseAdmin.from('profissionais').select('id, nome, especialidade').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
-           functionResult = { professionals: profs || [] };
-        } else if (call.name === "check_availability") {
-           const { data: eventos } = await supabaseAdmin.rpc('get_public_events_by_day', {
-              p_estab_id: estabelecimento_id,
-              p_date_start: `${call.args.date} 00:00:00`,
-              p_date_end: `${call.args.date} 23:59:59`
-           });
-           functionResult = { date: call.args.date, occupied_events: eventos || [], info: "O bot deve sugerir horários comerciais padrão (09h-18h) que NÃO estejam conflitantes com os ocupados listados." };
-        } else if (call.name === "create_appointment") {
-           let userPhone = "5511999999999"; 
-           let { data: clienteReq } = await supabaseAdmin.from('clientes').select('id').eq('telefone', userPhone).limit(1);
-           let clienteId = null;
-           if (!clienteReq || clienteReq.length === 0) {
-               const { data: newCli } = await supabaseAdmin.from('clientes').insert({ estabelecimento_id, nome: "Testador IA", telefone: userPhone }).select();
-               if (newCli) clienteId = newCli[0].id;
-           } else {
-               clienteId = clienteReq[0].id;
-           }
-
-           const startDate = new Date(`${call.args.date}T${call.args.time}:00`);
-           const endDate = new Date(startDate.getTime() + 30 * 60000);
-           const { data: serv } = await supabaseAdmin.from("agenda_events").insert({
-              title: `[TESTE IA] ${call.args.client_name}`,
-              start: startDate.toISOString(),
-              end: endDate.toISOString(),
-              type: "service",
-              status: "scheduled",
-              estabelecimento_id,
-              cliente_id: clienteId,
-              servico_id: call.args.service_id,
-              profissional_id: call.args.professional_id || null
-           }).select();
-           
-           functionResult = { success: true, event: serv ? serv[0] : null };
-        } else if (call.name === "reschedule_appointment") {
-           functionResult = { success: true, info: "Simulado com sucesso." };
-        } else if (call.name === "add_to_waitlist") {
-           functionResult = { success: true, info: "Adicionado à fila de espera." };
+    
+    try {
+      console.log("Chamando Gemini API (Test Mode)...");
+      let currentResponse = await ai.models.generateContent({
+        model: 'gemini-2.0-flash',
+        contents: mergedHistory,
+        config: {
+          systemInstruction,
+          temperature: 0.2,
+          tools: [{ functionDeclarations }],
         }
+      });
+  
+      let currentHistory = [...mergedHistory];
+      let loopCount = 0;
+  
+      while (loopCount < 5) {
+        if (currentResponse.functionCalls && currentResponse.functionCalls.length > 0) {
+          const call = currentResponse.functionCalls[0];
+          console.log("Gemini chamou a function:", call.name, call.args);
+          currentHistory.push({ role: 'model', parts: [{ functionCall: call }] });
+          
+          let functionResult = await executeTool(call.name, call.args);
+  
+          currentHistory.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] });
+          currentResponse = await ai.models.generateContent({
+            model: 'gemini-2.0-flash',
+            contents: currentHistory,
+            config: { systemInstruction, temperature: 0.2, tools: [{ functionDeclarations }] }
+          });
+          loopCount++;
+        } else {
+          botResponseText = currentResponse.text || "Entendido.";
+          break;
+        }
+      }
+    } catch (geminiError: any) {
+      console.error("Gemini failed, falling back to Grok:", geminiError.message);
+      
+      if (!grokApiKey) {
+        throw new Error("Gemini failed and GROK_API_KEY is not configured.");
+      }
 
-        currentHistory.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] });
+      // Convert history to OpenAI format
+      const grokMessages = [
+        { role: "system", content: systemInstruction },
+        ...history.map((m: any) => ({
+          role: m.role === "model" ? "assistant" : "user",
+          content: m.text
+        }))
+      ];
 
-        currentResponse = await ai.models.generateContent({
-          model: 'gemini-2.0-flash',
-          contents: currentHistory,
-          config: { systemInstruction: `
-Você é ${robotName}, atuando como ${robotRole}.
-Seu tom de voz é: ${robotTone}.
-Seu objetivo é ajudar o cliente a agendar serviços de forma natural e amigável.
-ANTES de responder sobre preços ou serviços, USE a ferramenta get_services.
-ANTES de confirmar um horário, USE a ferramenta check_availability.
-Se o cliente quiser reagendar, USE reschedule_appointment.
-`, temperature: 0.2, tools: [{ functionDeclarations }] }
+      // Convert tools to OpenAI format
+      const grokTools = functionDeclarations.map(fd => {
+        let properties = fd.parameters.properties || {};
+        let openaiProperties: any = {};
+        for (const key in properties) {
+          openaiProperties[key] = {
+            type: properties[key].type.toLowerCase(),
+            description: properties[key].description
+          };
+        }
+        return {
+          type: "function",
+          function: {
+            name: fd.name,
+            description: fd.description,
+            parameters: {
+              type: "object",
+              properties: openaiProperties,
+              required: fd.parameters.required || []
+            }
+          }
+        };
+      });
+
+      let currentGrokMessages = [...grokMessages];
+      let loopCount = 0;
+      let finalResponseText = "";
+
+      while (loopCount < 5) {
+        const grokReq = await fetch("https://api.x.ai/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${grokApiKey}`
+          },
+          body: JSON.stringify({
+            model: "grok-4.3",
+            messages: currentGrokMessages,
+            temperature: 0.2,
+            tools: grokTools
+          })
         });
 
-        // Loop continuará se a nova resposta tiver outra function call
-        loopCount++;
-      } else {
-        // Se a resposta tem texto, nós encerramos
-        botResponseText = currentResponse.text || "Entendido.";
-        break;
+        if (!grokReq.ok) {
+          const errorText = await grokReq.text();
+          throw new Error("Grok API failed: " + errorText);
+        }
+
+        const grokData = await grokReq.json();
+        const message = grokData.choices[0].message;
+        currentGrokMessages.push(message);
+
+        if (message.tool_calls && message.tool_calls.length > 0) {
+          const call = message.tool_calls[0];
+          const callName = call.function.name;
+          const callArgs = JSON.parse(call.function.arguments);
+          console.log("Grok chamou a function:", callName, callArgs);
+
+          let functionResult = await executeTool(callName, callArgs);
+
+          currentGrokMessages.push({
+            role: "tool",
+            tool_call_id: call.id,
+            content: JSON.stringify(functionResult)
+          });
+          loopCount++;
+        } else {
+          finalResponseText = message.content || "Entendido.";
+          break;
+        }
       }
+      botResponseText = finalResponseText;
     }
 
-    console.log("Gemini Response:", botResponseText);
-
+    console.log("AI Final Response:", botResponseText);
     return new Response(JSON.stringify({ response: botResponseText }), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
   } catch (err: any) {
