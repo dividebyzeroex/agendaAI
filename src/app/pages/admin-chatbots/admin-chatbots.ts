@@ -123,11 +123,12 @@ export class AdminChatbots implements OnInit {
   }
 
   private typingTimeout: any;
-  onTyping(convId: string) {
+  onTyping(convId: string | null | undefined) {
+    if (!convId) return;
     clearTimeout(this.typingTimeout);
     this.typingTimeout = setTimeout(() => {
        const activeConv = this.chatService.getActiveConversation();
-       if (activeConv) {
+       if (activeConv && activeConv.accountId) {
           this.chatService.broadcastTyping(convId, activeConv.accountId, 'Equipe de Atendimento');
        }
     }, 500); // Throttling

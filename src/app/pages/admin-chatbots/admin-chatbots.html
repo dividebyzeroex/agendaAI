@@ -251,7 +251,7 @@
             <input
               type="text"
               [(ngModel)]="newMessage"
-              (keyup.enter)="sendMessage()" (input)="onTyping(conversation.id)"
+              (keyup.enter)="sendMessage()" (input)="onTyping(selectedConvId)"
               placeholder="Digite sua mensagem (Bot ativo)..."
             />
             <button class="btn-send" (click)="sendMessage()"><i class="pi pi-send"></i></button>

@@ -160,9 +160,7 @@ export class AdminLayout implements OnInit {
     this.authService.logout();
   }
 
-  setTheme(t: AppTheme) {
-    this.theme.setTheme(t);
-  }
+
 
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
