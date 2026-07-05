@@ -33,12 +33,13 @@
   gap: 1.25rem; margin-bottom: 2rem;
 }
 .stat-card {
-  background: var(--glass-bg); border: 1.5px solid var(--glass-border);
+  background: var(--glass-bg, rgba(255,255,255,0.95)); border: 1.5px solid var(--glass-border, rgba(0,0,0,0.06));
   border-radius: 1.25rem; padding: 1.25rem;
   display: flex; align-items: center; gap: 1rem;
-  box-shadow: var(--elite-shadow);
+  box-shadow: var(--elite-shadow, 0 10px 30px rgba(0,0,0,0.05));
   transition: transform 0.3s;
-  backdrop-filter: blur(var(--glass-blur));
+  backdrop-filter: blur(var(--glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
 }
 .stat-card:hover { transform: translateY(-3px); }
 
@@ -61,13 +62,14 @@
 
 /* Query Card */
 .query-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-bg, rgba(255,255,255,0.95));
+  border: 1px solid var(--glass-border, rgba(0,0,0,0.06));
   border-radius: 16px;
   padding: 1.75rem;
   margin-bottom: 1.5rem;
-  box-shadow: var(--elite-shadow);
-  backdrop-filter: blur(var(--glass-blur));
+  box-shadow: var(--elite-shadow, 0 10px 30px rgba(0,0,0,0.05));
+  backdrop-filter: blur(var(--glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
 }
 
 .query-box {
@@ -130,13 +132,14 @@
 
 /* Result Card */
 .result-card {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: var(--glass-bg, rgba(255,255,255,0.95));
+  border: 1px solid var(--glass-border, rgba(0,0,0,0.06));
   border-radius: 16px;
-  padding: 1.75rem;
-  box-shadow: var(--elite-shadow);
-  animation: fadeUp 0.4s ease;
-  backdrop-filter: blur(var(--glass-blur));
+  padding: 2rem;
+  box-shadow: var(--elite-shadow, 0 10px 30px rgba(0,0,0,0.05));
+  backdrop-filter: blur(var(--glass-blur, 16px));
+  -webkit-backdrop-filter: blur(var(--glass-blur, 16px));
+  margin-top: 20px;
 }
 
 .ai-response {

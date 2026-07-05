@@ -188,7 +188,7 @@
 .cycle-tab {
   border: none;
   background: transparent;
-  color: #64748b;
+  color: var(--text-muted);
   padding: 0.6rem 1.5rem;
   font-weight: 700;
   font-size: 0.85rem;
@@ -282,7 +282,7 @@
 
 .p-currency { font-size: 1rem; color: #94a3b8; font-weight: 600; }
 .p-amount { font-size: 2.5rem; font-weight: 800; color: white; letter-spacing: -1px; }
-.p-cycle { font-size: 0.85rem; color: #64748b; }
+.p-cycle { font-size: 0.85rem; color: var(--text-muted); }
 
 .p-cycle-total {
   font-size: 0.75rem;
@@ -321,8 +321,8 @@
 }
 
 .btn-pro-action:hover:not(:disabled) {
-  background: white;
-  color: #0f172a;
+  background: var(--glass-bg);
+  color: var(--text-main);
 }
 
 .featured .btn-pro-action {
@@ -349,7 +349,7 @@
 }
 
 .sec-head h3 { font-size: 1.1rem; font-weight: 700; color: white; margin: 0 0 4px; }
-.sec-head p { font-size: 0.85rem; color: #64748b; margin-bottom: 0; }
+.sec-head p { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0; }
 
 .simple-table-wrap {
   width: 100%;
@@ -403,7 +403,7 @@
   background: rgba(255,255,255,0.03); border-radius: 16px; margin-bottom: 1.5rem;
 }
 
-.p-info label { display: block; font-size: 0.65rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 4px; }
+.p-info label { display: block; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; font-weight: 800; margin-bottom: 4px; }
 .p-info strong { font-size: 1.2rem; color: white; }
 .p-info p { font-size: 0.85rem; color: #94a3b8; margin: 2px 0 0; }
 .p-val { font-size: 1.5rem; font-weight: 800; color: #6366f1; }
@@ -470,7 +470,7 @@
 }
 
 .btn-renew-now {
-  background: white;
+  background: var(--glass-bg);
   color: #b45309;
   border: none;
   padding: 0.75rem 1.75rem;

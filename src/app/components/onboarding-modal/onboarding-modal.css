@@ -23,7 +23,7 @@
 
 /* Modal Card */
 .ob-modal {
-  background: white;
+  background: var(--glass-bg);
   border-radius: 24px;
   width: 100%;
   max-width: 680px;
@@ -166,7 +166,7 @@
 }
 .ob-input:focus {
   border-color: #1a73e8;
-  background: white;
+  background: var(--glass-bg);
   box-shadow: 0 0 0 3px rgba(26,115,232,0.1);
 }
 .emoji-input { width: 56px; text-align: center; font-size: 1.5rem; padding: 8px 4px; }
@@ -183,7 +183,7 @@
   padding: 10px 6px;
   border: 1.5px solid #e8eaed;
   border-radius: 10px;
-  background: white;
+  background: var(--glass-bg);
   font-family: inherit;
   font-size: 0.78rem;
   cursor: pointer;
@@ -244,7 +244,7 @@
 }
 .toggle-pill.on { background: #34a853; }
 .knob {
-  width: 16px; height: 16px; background: white; border-radius: 50%;
+  width: 16px; height: 16px; background: var(--glass-bg); border-radius: 50%;
   position: absolute; top: 3px; left: 3px; transition: left 0.3s;
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }

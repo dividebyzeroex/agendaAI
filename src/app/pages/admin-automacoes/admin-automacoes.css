@@ -45,7 +45,7 @@
 .toggle-pill.on { background: #10b981; }
 .knob {
   width: 18px; height: 18px;
-  background: white;
+  background: var(--glass-bg);
   border-radius: 50%;
   position: absolute;
   top: 3px; left: 3px;

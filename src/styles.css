@@ -206,12 +206,12 @@ html {
 /* Branded text selection */
 ::selection {
   background: rgba(99, 102, 241, 0.2);
-  color: #1e293b;
+  color: var(--text-main);
 }
 
 ::-moz-selection {
   background: rgba(99, 102, 241, 0.2);
-  color: #1e293b;
+  color: var(--text-main);
 }
 
 /* Premium Scrollbar */

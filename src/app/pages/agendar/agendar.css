@@ -34,7 +34,7 @@
 }
 
 :host-context(.theme-claro) .ag-app {
-  background: white;
+  background: var(--glass-bg);
 }
 
 /* Header WOW */
@@ -77,14 +77,14 @@
 .h-title span { font-size: 0.85rem; color: var(--text-muted); font-weight: 600; opacity: 0.8; }
 
 .text-gradient {
-  background: linear-gradient(135deg, #0f172a 30%, #475569);
+  background: linear-gradient(135deg, var(--text-main) 30%, #475569);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 /* Progress */
-.ag-progress { height: 4px; background: #f1f5f9; position: sticky; top: 93px; z-index: 50; overflow: hidden; }
+.ag-progress { height: 4px; background: var(--glass-border); position: sticky; top: 93px; z-index: 50; overflow: hidden; }
 .p-fill { 
   height: 100%; 
   background: linear-gradient(90deg, #4f46e5, #9333ea); 
@@ -110,7 +110,7 @@
   letter-spacing: -1.5px; 
   margin-bottom: 0.5rem; 
   line-height: 0.95; 
-  color: #0f172a;
+  color: var(--text-main);
 }
 .v-hero p { font-size: 1.15rem; color: var(--text-muted); font-weight: 500; letter-spacing: -0.3px; }
 
@@ -142,7 +142,7 @@
 }
 
 :host-context(.theme-claro) .c-card-elite {
-  background: white;
+  background: var(--glass-bg);
   border-color: rgba(0,0,0,0.08);
   box-shadow: 0 10px 30px rgba(0,0,0,0.04);
 }
@@ -302,7 +302,7 @@
   opacity: 0.3;
 }
 
-.rv-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: #64748b; letter-spacing: 2px; margin-bottom: 2rem; }
+.rv-title { font-size: 0.75rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); letter-spacing: 2px; margin-bottom: 2rem; }
 
 .rv-row { display: flex; justify-content: space-between; margin-bottom: 16px; align-items: baseline; }
 .rv-row span { font-size: 0.95rem; color: var(--text-muted); font-weight: 500; }
@@ -374,7 +374,7 @@
 }
 
 .btn-elite-confirm:disabled {
-  background: #e2e8f0;
+  background: var(--glass-border);
   color: #94a3b8;
   box-shadow: none;
   cursor: not-allowed;
@@ -438,8 +438,8 @@
 .skeleton-list { display: flex; flex-direction: column; gap: 16px; margin-top: 1rem; }
 .sk-item {
   display: flex; align-items: center; gap: 16px;
-  background: white; border-radius: var(--radius);
-  padding: 1.25rem; border: 1.5px solid #f1f5f9;
+  background: var(--glass-bg); border-radius: var(--radius);
+  padding: 1.25rem; border: 1.5px solid var(--glass-border);
 }
 .sk-info { flex: 1; }
 

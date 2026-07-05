@@ -4,10 +4,10 @@
 */
 
 :root {
-  --bg-main: #f8fafc; /* Slate 50 */
+  --bg-main: var(--bg-color); /* Slate 50 */
   --bg-card: #ffffff;
   
-  --text-primary: #0f172a; /* Slate 900 */
+  --text-primary: var(--text-main); /* Slate 900 */
   --text-secondary: #475569; /* Slate 600 */
   --text-muted: #94a3b8; /* Slate 400 */
   
@@ -16,7 +16,7 @@
   --accent-emerald: #10b981; /* Emerald 500 */
   --accent-rose: #f43f5e; /* Rose 500 */
   
-  --border-color: #e2e8f0; /* Slate 200 */
+  --border-color: var(--glass-border); /* Slate 200 */
   --glass-bg: rgba(255, 255, 255, 0.85);
   
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
@@ -133,7 +133,7 @@ html, body {
 }
 
 .btn-secondary {
-  background: white;
+  background: var(--glass-bg);
   color: var(--text-primary) !important;
   border: 1px solid var(--border-color);
   padding: 12px 24px;
@@ -147,7 +147,7 @@ html, body {
   gap: 8px;
 }
 .btn-secondary:hover {
-  background: #f1f5f9;
+  background: var(--glass-border);
   border-color: #cbd5e1;
 }
 
@@ -288,7 +288,7 @@ html, body {
    ======================================================== */
 .marquee-section {
   padding: 2rem 0;
-  background: white;
+  background: var(--glass-bg);
   border-top: 1px solid var(--border-color);
   border-bottom: 1px solid var(--border-color);
   overflow: hidden;
@@ -304,7 +304,7 @@ html, body {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: #f8fafc;
+  background: var(--bg-color);
   border: 1px solid var(--border-color);
   padding: 0.5rem 1.2rem;
   border-radius: 20px;
@@ -323,7 +323,7 @@ html, body {
 .section-subtitle { color: var(--text-secondary); font-size: 1.1rem; max-width: 600px; margin: 0 auto 3rem; line-height: 1.6; }
 .niche-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
 .niche-card {
-  background: white;
+  background: var(--glass-bg);
   border: 1px solid var(--border-color);
   border-radius: 16px;
   padding: 2rem;
@@ -335,15 +335,15 @@ html, body {
 .niche-icon { font-size: 2rem; color: var(--accent-primary); margin-bottom: 1rem; }
 .niche-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; }
 .niche-card p { color: var(--text-secondary); font-size: 0.95rem; line-height: 1.5; margin-bottom: 1rem; }
-.niche-tag { display: inline-block; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--accent-secondary); }
+.niche-tag { display: inline-block; background: var(--glass-border); padding: 4px 10px; border-radius: 6px; font-size: 0.8rem; font-weight: 600; color: var(--accent-secondary); }
 
 /* ========================================================
    BENTO GRID (RECURSOS)
    ======================================================== */
-.features-section { padding: 6rem 2rem; background: white; }
+.features-section { padding: 6rem 2rem; background: var(--glass-bg); }
 .bento-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; max-width: 1000px; margin: 0 auto; }
 .bento-card {
-  background: #f8fafc;
+  background: var(--bg-color);
   border-radius: 20px;
   padding: 2.5rem;
   border: 1px solid var(--border-color);
@@ -383,7 +383,7 @@ html, body {
 .compare-section { padding: 6rem 2rem; }
 .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; max-width: 1000px; margin: 0 auto; }
 .compare-card {
-  background: white; border-radius: 20px; padding: 2.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
+  background: var(--glass-bg); border-radius: 20px; padding: 2.5rem; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm);
 }
 .compare-bad { border-top: 4px solid var(--accent-rose); }
 .compare-good { border-top: 4px solid var(--accent-emerald); }
@@ -397,18 +397,18 @@ html, body {
 .compare-good .compare-list i { color: var(--accent-emerald); }
 
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; max-width: 1000px; margin: 3rem auto 0; }
-.stat-card { background: white; border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; }
+.stat-card { background: var(--glass-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; text-align: center; }
 .stat-value { font-size: 2rem; font-weight: 800; color: var(--accent-primary); margin-bottom: 0.5rem; }
 .stat-label { font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; }
 
 /* ========================================================
    PRICING
    ======================================================== */
-.pricing-section { padding: 6rem 2rem; background: white; }
+.pricing-section { padding: 6rem 2rem; background: var(--glass-bg); }
 .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2rem; max-width: 1100px; margin: 4rem auto 0; align-items: stretch; }
-.pricing-card { background: #f8fafc; border-radius: 24px; padding: 3rem 2rem; border: 1px solid var(--border-color); transition: transform 0.3s, box-shadow 0.3s; position: relative; display: flex; flex-direction: column; }
+.pricing-card { background: var(--bg-color); border-radius: 24px; padding: 3rem 2rem; border: 1px solid var(--border-color); transition: transform 0.3s, box-shadow 0.3s; position: relative; display: flex; flex-direction: column; }
 .pricing-card:hover { transform: translateY(-5px); box-shadow: var(--shadow-xl); border-color: var(--accent-primary); }
-.pricing-card.popular { border: 2px solid var(--accent-primary); background: white; box-shadow: var(--shadow-md); }
+.pricing-card.popular { border: 2px solid var(--accent-primary); background: var(--glass-bg); box-shadow: var(--shadow-md); }
 .popular-badge { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); color: white; padding: 6px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; }
 .plan-name { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.5rem; }
 .plan-price { font-size: 3rem; font-weight: 800; margin: 1rem 0; color: var(--text-primary); }
@@ -420,14 +420,14 @@ html, body {
 .plan-features li.disabled { opacity: 0.5; }
 .plan-features li.disabled i { color: var(--text-muted); }
 .pricing-card .btn-primary { width: 100%; padding: 14px; }
-.pricing-card:not(.popular) .btn-primary { background: white; color: var(--accent-primary) !important; border: 1px solid var(--accent-primary); box-shadow: none; }
-.pricing-card:not(.popular) .btn-primary:hover { background: #f8fafc; }
+.pricing-card:not(.popular) .btn-primary { background: var(--glass-bg); color: var(--accent-primary) !important; border: 1px solid var(--accent-primary); box-shadow: none; }
+.pricing-card:not(.popular) .btn-primary:hover { background: var(--bg-color); }
 
 /* ========================================================
    FAQ & FOOTER CTA
    ======================================================== */
 .faq-section { padding: 6rem 2rem; max-width: 800px; margin: 0 auto; }
-.faq-item { background: white; border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 1rem; overflow: hidden; }
+.faq-item { background: var(--glass-bg); border: 1px solid var(--border-color); border-radius: 12px; margin-bottom: 1rem; overflow: hidden; }
 .faq-question { padding: 1.5rem; display: flex; justify-content: space-between; align-items: center; cursor: pointer; font-weight: 600; }
 .faq-answer { padding: 0 1.5rem 1.5rem; color: var(--text-secondary); line-height: 1.6; display: none; }
 .faq-item.expanded .faq-answer { display: block; }
@@ -436,9 +436,9 @@ html, body {
 .cta-footer { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); padding: 6rem 2rem; text-align: center; color: white; }
 .cta-footer h2 { font-size: 2.5rem; font-weight: 800; margin-bottom: 1.5rem; color: white; }
 .cta-footer p { font-size: 1.1rem; opacity: 0.9; margin-bottom: 2.5rem; max-width: 600px; margin-left: auto; margin-right: auto; }
-.cta-footer .btn-secondary { background: white; color: var(--accent-primary) !important; border: none; }
+.cta-footer .btn-secondary { background: var(--glass-bg); color: var(--accent-primary) !important; border: none; }
 
-.footer-bottom { background: #0f172a; padding: 4rem 2rem 2rem; color: #94a3b8; }
+.footer-bottom { background: var(--text-main); padding: 4rem 2rem 2rem; color: #94a3b8; }
 .footer-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 2rem; max-width: 1100px; margin: 0 auto 3rem; }
 .footer-brand h3 { color: white; font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem; }
 .footer-brand p { font-size: 0.9rem; line-height: 1.6; max-width: 300px; }
