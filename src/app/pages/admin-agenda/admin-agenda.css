@@ -169,7 +169,17 @@
 ::ng-deep .fc-theme-standard td,
 ::ng-deep .fc-theme-standard th,
 ::ng-deep .fc-theme-standard .fc-scrollgrid {
-  border-color: var(--glass-border);
+  border-color: var(--glass-border) !important;
+}
+
+::ng-deep .fc-scrollgrid {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* Fix the ugly default pale yellow 'today' background */
+::ng-deep .fc .fc-day-today {
+  background: rgba(99, 102, 241, 0.03) !important;
 }
 
 /* Header Text */
@@ -222,8 +232,15 @@
 
 /* Column Headers */
 ::ng-deep .fc-col-header-cell {
-  padding: 12px 0 !important;
-  background: var(--active-bg);
+  padding: 16px 0 !important;
+  background: rgba(0,0,0,0.02);
+  border-bottom: 1px solid var(--glass-border) !important;
+}
+::ng-deep .fc .fc-timegrid-axis-cushion,
+::ng-deep .fc .fc-timegrid-slot-label-cushion {
+  color: var(--text-muted) !important;
+  font-weight: 600 !important;
+  font-size: 0.8rem !important;
 }
 ::ng-deep .fc-col-header-cell-cushion {
   font-weight: 700;
