@@ -1,5 +1,4 @@
 <div class="ag-page elite chatbots">
-  
   <div class="page-header">
     <div>
       <h2>Central de <span class="gradient-text">Chatbots</span></h2>
@@ -7,14 +6,15 @@
     </div>
     <div class="header-actions">
       <div class="stat-card" *ngIf="connectedChannels$ | async as channels">
-        <div class="stat-value"><span class="status-dot online"></span> {{ channels.length }} Canais Ativos</div>
+        <div class="stat-value">
+          <span class="status-dot online"></span> {{ channels.length }} Canais Ativos
+        </div>
         <div class="stat-label">Gerencie integrações, monitore logs e interaja em tempo real.</div>
       </div>
     </div>
   </div>
 
   <div class="chatbot-layout glass">
-    
     <!-- SIDE NAV (Tabs & Conversations) -->
     <div class="chatbot-sidebar">
       <div class="sidebar-tabs">
@@ -37,18 +37,21 @@
           <i class="pi pi-search"></i>
           <input type="text" placeholder="Buscar conversas..." />
         </div>
-        
-        <div class="conv-item" *ngFor="let conv of conversations$ | async" 
-             [class.active]="(activeConversation$ | async)?.id === conv.id"
-             (click)="selectConversation(conv.id)">
+
+        <div
+          class="conv-item"
+          *ngFor="let conv of conversations$ | async"
+          [class.active]="(activeConversation$ | async)?.id === conv.id"
+          (click)="selectConversation(conv.id)"
+        >
           <div class="conv-avatar">
-             {{ conv.customerName.charAt(0) }}
-             <i class="channel-badge" [class]="getChannelIcon(conv.channel)"></i>
+            {{ conv.customerName.charAt(0) }}
+            <i class="channel-badge" [class]="getChannelIcon(conv.channel)"></i>
           </div>
           <div class="conv-details">
             <div class="conv-h">
               <strong>{{ conv.customerName }}</strong>
-              <span class="time">{{ conv.lastUpdate | date:'HH:mm' }}</span>
+              <span class="time">{{ conv.lastUpdate | date: 'HH:mm' }}</span>
             </div>
             <p>{{ conv.lastMessage }}</p>
           </div>
@@ -59,10 +62,10 @@
 
     <!-- MAIN CHAT AREA -->
     <div class="chatbot-main">
-
       <!-- TAB 0: ROBOTS (Gamified Factory) -->
       <div class="tab-content robots-factory" *ngIf="activeTab === 'robots'">
-        <div class="section-title">Garagem de Robôs
+        <div class="section-title">
+          Garagem de Robôs
           <span class="subtitle">Contrate e treine seus assistentes virtuais de IA.</span>
         </div>
 
@@ -70,38 +73,46 @@
           <!-- Create New Robot Card -->
           <div class="robot-card create-new" (click)="openRobotModal()">
             <div class="create-icon-wrap">
-               <i class="pi pi-plus"></i>
+              <i class="pi pi-plus"></i>
             </div>
             <h3>Criar Novo Robô</h3>
             <p>Monte um assistente do zero com a personalidade da sua clínica.</p>
           </div>
 
           <!-- Existing Robots -->
-          <div class="robot-card elite-compact-card" *ngFor="let robot of myRobots$ | async" [class.inactive]="!robot.active">
+          <div
+            class="robot-card elite-compact-card"
+            *ngFor="let robot of myRobots$ | async"
+            [class.inactive]="!robot.active"
+          >
             <div class="robot-status-badge" [class.active]="robot.active">
               {{ robot.active ? 'Online' : 'Inativo' }}
             </div>
-            
+
             <div class="robot-avatar-wrap">
               <span class="avatar-emoji">{{ robot.avatar }}</span>
             </div>
-            
+
             <div class="robot-info">
               <h3>{{ robot.name }}</h3>
               <span class="robot-role">{{ robot.role }}</span>
             </div>
-            
+
             <div class="robot-traits">
               <span class="trait"><i class="pi pi-comment"></i> {{ robot.tone }}</span>
               <span class="trait"><i class="pi pi-send"></i> {{ robot.channel }}</span>
             </div>
-            
+
             <div class="robot-actions">
-              <button class="btn-robot-action edit" (click)="openRobotModal(robot)"><i class="pi pi-pencil"></i></button>
+              <button class="btn-robot-action edit" (click)="openRobotModal(robot)">
+                <i class="pi pi-pencil"></i>
+              </button>
               <button class="btn-robot-action toggle" (click)="toggleRobotStatus(robot)">
                 <i class="pi" [ngClass]="robot.active ? 'pi-pause' : 'pi-play'"></i>
               </button>
-              <button class="btn-robot-action delete" (click)="deleteRobot(robot.id!)"><i class="pi pi-trash"></i></button>
+              <button class="btn-robot-action delete" (click)="deleteRobot(robot.id!)">
+                <i class="pi pi-trash"></i>
+              </button>
             </div>
           </div>
         </div>
@@ -110,96 +121,130 @@
       <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
         <div *ngIf="connectedChannels$ | async as channels">
           <div class="section-title">Aumente sua conversão conectando novos canais</div>
-             
+
           <div class="channels-grid" *ngIf="channels.length > 0; else noChannels">
-            <div class="channel-card elite-compact-card {{channel.platform}}" [class.active]="channel.status === 'active' || channel.status === 'connected'" *ngFor="let channel of channels">
-              
+            <div
+              class="channel-card elite-compact-card {{ channel.platform }}"
+              [class.active]="channel.status === 'active' || channel.status === 'connected'"
+              *ngFor="let channel of channels"
+            >
               <!-- Foto de perfil ou icone default -->
-              <div class="brand-logo-wrap {{channel.platform}}">
-                <img *ngIf="channel.profilePicture" [src]="channel.profilePicture" alt="Profile" class="profile-img" />
-                <i *ngIf="!channel.profilePicture" class="pi pi-{{channel.platform}}"></i>
+              <div class="brand-logo-wrap {{ channel.platform }}">
+                <img
+                  *ngIf="channel.profilePicture"
+                  [src]="channel.profilePicture"
+                  alt="Profile"
+                  class="profile-img"
+                />
+                <i *ngIf="!channel.profilePicture" class="pi pi-{{ channel.platform }}"></i>
               </div>
-              
+
               <div class="brand-details">
                 <h3>{{ channel.platform | titlecase }}</h3>
-                <div class="channel-meta" *ngIf="channel.status === 'active' || channel.status === 'connected'">
-                  <span class="status-dot online"></span> 
+                <div
+                  class="channel-meta"
+                  *ngIf="channel.status === 'active' || channel.status === 'connected'"
+                >
+                  <span class="status-dot online"></span>
                   <span class="channel-name">{{ channel.displayName || channel.username }}</span>
                 </div>
-                <div class="channel-username" *ngIf="channel.username">
-                  @{{ channel.username }}
-                </div>
-                <span class="status-pill-elite inactive" *ngIf="channel.status !== 'active' && channel.status !== 'connected'">Desconectado</span>
+                <div class="channel-username" *ngIf="channel.username">@{{ channel.username }}</div>
+                <span
+                  class="status-pill-elite inactive"
+                  *ngIf="channel.status !== 'active' && channel.status !== 'connected'"
+                  >Desconectado</span
+                >
               </div>
-              
-              <button class="btn-elite-action primary-btn outline" disabled>
-                Conectado
-              </button>
+
+              <button class="btn-elite-action primary-btn outline" disabled>Conectado</button>
             </div>
           </div>
-          
+
           <ng-template #noChannels>
             <div class="empty-state-card">
               <i class="pi pi-link empty-icon"></i>
               <h3>Nenhum canal conectado</h3>
-              <p>Você precisa conectar seus canais sociais (Instagram, WhatsApp, etc) através do painel do Zernio.</p>
+              <p>
+                Você precisa conectar seus canais sociais (Instagram, WhatsApp, etc) através do
+                painel do Zernio.
+              </p>
             </div>
           </ng-template>
-
         </div>
       </div>
 
-    <!-- TAB 2: HISTORY (List Mode) -->
-    <div class="tab-content history" *ngIf="activeTab === 'history'">
-          <!-- Detailed table or list of logs -->
-          <div class="history-table glass">
-             <table>
-                <thead><tr><th>Cliente / Canal</th><th>Última Mensagem</th><th>Status</th><th>Ações</th></tr></thead>
-                <tbody>
-                   <tr *ngFor="let conv of conversations$ | async">
-                      <td class="td-user">
-                        <div class="user-brand-meta">
-                          <i [class]="getChannelIcon(conv.channel)" class="conv-channel-icon"></i>
-                          <div class="user-info-text">
-                            <strong>{{ conv.customerName }}</strong>
-                            <span>{{ conv.customerPhone }}</span>
-                          </div>
-                        </div>
-                      </td>
-                      <td class="td-msg">{{ conv.lastMessage }}</td>
-                      <td><span class="st-pill" [class]="conv.status">{{ conv.status | titlecase }}</span></td>
-                      <td><button class="btn-view" (click)="selectConversation(conv.id)">Ver Log</button></td>
-                   </tr>
-                </tbody>
-             </table>
-          </div>
+      <!-- TAB 2: HISTORY (List Mode) -->
+      <div class="tab-content history" *ngIf="activeTab === 'history'">
+        <!-- Detailed table or list of logs -->
+        <div class="history-table glass">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente / Canal</th>
+                <th>Última Mensagem</th>
+                <th>Status</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let conv of conversations$ | async">
+                <td class="td-user">
+                  <div class="user-brand-meta">
+                    <i [class]="getChannelIcon(conv.channel)" class="conv-channel-icon"></i>
+                    <div class="user-info-text">
+                      <strong>{{ conv.customerName }}</strong>
+                      <span>{{ conv.customerPhone }}</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="td-msg">{{ conv.lastMessage }}</td>
+                <td>
+                  <span class="st-pill" [class]="conv.status">{{ conv.status | titlecase }}</span>
+                </td>
+                <td>
+                  <button class="btn-view" (click)="selectConversation(conv.id)">Ver Log</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- TAB 3: LIVE (Chat View) -->
       <div class="tab-content live" *ngIf="activeTab === 'live'">
-        <div *ngIf="(activeConversation$ | async) as conv">
+        <div *ngIf="activeConversation$ | async as conv" class="live-chat-wrapper">
           <div class="chat-header">
-           <div class="user-info">
-             <strong>{{ conv.customerName }}</strong>
-             <span>{{ conv.customerPhone }} via {{ conv.channel }}</span>
-           </div>
-           <div class="chat-actions">
+            <div class="user-info">
+              <strong>{{ conv.customerName }}</strong>
+              <span>{{ conv.customerPhone }} via {{ conv.channel }}</span>
+            </div>
+            <div class="chat-actions">
               <button class="btn-client"><i class="pi pi-user"></i> Ver Cliente</button>
               <button class="btn-takeover">Assumir Controle <i class="pi pi-user-edit"></i></button>
-           </div>
-        </div>
+            </div>
+          </div>
 
-        <div class="messages-container" #scrollMe [scrollTop]="scrollMe.scrollHeight">
-           <div class="message-wrapper" *ngFor="let m of conv.messages" [class.bot]="m.sender === 'bot'" [class.user]="m.sender === 'user'">
+          <div class="messages-container" #scrollMe [scrollTop]="scrollMe.scrollHeight">
+            <div
+              class="message-wrapper"
+              *ngFor="let m of conv.messages"
+              [class.bot]="m.sender === 'bot'"
+              [class.user]="m.sender === 'user'"
+            >
               <div class="msg-bubble">{{ m.text }}</div>
-              <div class="msg-time">{{ m.timestamp | date:'HH:mm' }}</div>
-           </div>
-        </div>
+              <div class="msg-time">{{ m.timestamp | date: 'HH:mm' }}</div>
+            </div>
+          </div>
 
-        <div class="input-container glass">
-           <input type="text" [(ngModel)]="newMessage" (keyup.enter)="sendMessage()" placeholder="Digite sua mensagem (Bot ativo)..." />
-           <button class="btn-send" (click)="sendMessage()"><i class="pi pi-send"></i></button>
-        </div>
+          <div class="input-container glass">
+            <input
+              type="text"
+              [(ngModel)]="newMessage"
+              (keyup.enter)="sendMessage()"
+              placeholder="Digite sua mensagem (Bot ativo)..."
+            />
+            <button class="btn-send" (click)="sendMessage()"><i class="pi pi-send"></i></button>
+          </div>
         </div>
       </div>
 
@@ -213,8 +258,10 @@
   <!-- ONBOARDING MODAL STEPPER -->
   <div class="modal-overlay" *ngIf="showOnboarding">
     <div class="onboarding-modal glass-modal">
-      <button class="btn-close-modal" (click)="closeOnboarding()"><i class="pi pi-times"></i></button>
-      
+      <button class="btn-close-modal" (click)="closeOnboarding()">
+        <i class="pi pi-times"></i>
+      </button>
+
       <div class="modal-body">
         <!-- STEP 1: WELCOME -->
         <div class="step-content fadeIn" *ngIf="onboardingStep === 1">
@@ -222,45 +269,69 @@
             <i [class]="getChannelIcon(targetChannel!)" [ngClass]="'icon-' + targetChannel"></i>
           </div>
           <h2>Conectar {{ targetChannel | titlecase }}</h2>
-          <p>Potencialize seu estabelecimento com agendamentos automáticos 24h por dia, 7 dias por semana.</p>
+          <p>
+            Potencialize seu estabelecimento com agendamentos automáticos 24h por dia, 7 dias por
+            semana.
+          </p>
           <ul class="benefit-list">
-             <li><i class="pi pi-check-circle"></i> Redução de 80% no tempo de resposta</li>
-             <li><i class="pi pi-check-circle"></i> Agendamento direto na sua grade</li>
-             <li><i class="pi pi-check-circle"></i> Confirmação automática via SMS</li>
+            <li><i class="pi pi-check-circle"></i> Redução de 80% no tempo de resposta</li>
+            <li><i class="pi pi-check-circle"></i> Agendamento direto na sua grade</li>
+            <li><i class="pi pi-check-circle"></i> Confirmação automática via SMS</li>
           </ul>
-          <button class="btn-next-elite" (click)="nextStep()">Iniciar Configuração <i class="pi pi-arrow-right"></i></button>
+          <button class="btn-next-elite" (click)="nextStep()">
+            Iniciar Configuração <i class="pi pi-arrow-right"></i>
+          </button>
         </div>
 
         <!-- STEP 2: CONFIGURATION (REAL AUTH) -->
         <div class="step-content fadeIn" *ngIf="onboardingStep === 2">
           <h2>Conexão Segura</h2>
           <p>Siga as instruções para vincular sua conta oficial ao AgendaAi.</p>
-          
+
           <!-- ZERNIO OMNICHANNEL CONFIGURATION -->
           <div class="onboarding-form zernio-form">
-             <div class="oauth-box" style="text-align: center; padding: 2rem;">
-                <div class="brand-logo-wrap" style="margin: 0 auto 1.5rem auto; width: 64px; height: 64px; background: #0f172a; color: white;">
-                  <span style="font-weight: 900; font-size: 1.5rem;">Z</span>
+            <div class="oauth-box" style="text-align: center; padding: 2rem">
+              <div
+                class="brand-logo-wrap"
+                style="
+                  margin: 0 auto 1.5rem auto;
+                  width: 64px;
+                  height: 64px;
+                  background: #0f172a;
+                  color: white;
+                "
+              >
+                <span style="font-weight: 900; font-size: 1.5rem">Z</span>
+              </div>
+              <h3 style="margin-bottom: 10px; font-weight: 800; color: #1e293b">
+                Conectar via Zernio
+              </h3>
+              <p style="margin-bottom: 25px; color: #64748b; font-size: 0.9rem">
+                A AgendaAi gerencia todos os canais (WhatsApp, Facebook, Instagram) através de uma
+                API unificada. Insira o ID do Canal fornecido pelo nosso suporte para ativar.
+              </p>
+
+              <div class="input-field-elite" style="text-align: left">
+                <label>Zernio Channel ID</label>
+                <div class="input-wrap">
+                  <i class="pi pi-link"></i>
+                  <input
+                    type="text"
+                    [(ngModel)]="whatsappConfig.phoneId"
+                    placeholder="Ex: chn_123456789"
+                  />
                 </div>
-                <h3 style="margin-bottom: 10px; font-weight: 800; color: #1e293b;">Conectar via Zernio</h3>
-                <p style="margin-bottom: 25px; color: #64748b; font-size: 0.9rem;">
-                  A AgendaAi gerencia todos os canais (WhatsApp, Facebook, Instagram) através de uma API unificada. 
-                  Insira o ID do Canal fornecido pelo nosso suporte para ativar.
-                </p>
-                
-                <div class="input-field-elite" style="text-align: left;">
-                  <label>Zernio Channel ID</label>
-                  <div class="input-wrap">
-                    <i class="pi pi-link"></i>
-                    <input type="text" [(ngModel)]="whatsappConfig.phoneId" placeholder="Ex: chn_123456789">
-                  </div>
-                </div>
-             </div>
+              </div>
+            </div>
           </div>
 
           <div class="step-actions">
             <button class="btn-back-elite" (click)="onboardingStep = 1">Voltar</button>
-            <button class="btn-next-elite" (click)="nextStep()" [disabled]="!whatsappConfig.phoneId || isVerifying">
+            <button
+              class="btn-next-elite"
+              (click)="nextStep()"
+              [disabled]="!whatsappConfig.phoneId || isVerifying"
+            >
               <span *ngIf="!isVerifying">Verificar e Conectar</span>
               <span *ngIf="isVerifying"><i class="pi pi-spin pi-spinner"></i> Autenticando...</span>
             </button>
@@ -273,23 +344,31 @@
             <div class="check-draw"></div>
           </div>
           <h2>Conexão Estabelecida!</h2>
-          <p>O {{ targetChannel | titlecase }} agora está vinculado à sua conta Elite. Seu assistente virtual começará a responder imediatamente.</p>
-          
+          <p>
+            O {{ targetChannel | titlecase }} agora está vinculado à sua conta Elite. Seu assistente
+            virtual começará a responder imediatamente.
+          </p>
+
           <!-- Webhook Info para WhatsApp -->
           <div class="webhook-info-box" *ngIf="targetChannel === 'whatsapp'">
-             <h4>Configuração Final na Meta</h4>
-             <p>Copie os dados abaixo e cole no painel de desenvolvedor da Meta para ativar o recebimento de mensagens:</p>
-             <div class="info-row">
-                <span class="label">URL do Webhook:</span>
-                <code>https://vvanjarfwdxtzklogysy.supabase.co/functions/v1/whatsapp-webhook</code>
-             </div>
-             <div class="info-row">
-                <span class="label">Verify Token:</span>
-                <code>agenda_ai_verify_2026</code>
-             </div>
+            <h4>Configuração Final na Meta</h4>
+            <p>
+              Copie os dados abaixo e cole no painel de desenvolvedor da Meta para ativar o
+              recebimento de mensagens:
+            </p>
+            <div class="info-row">
+              <span class="label">URL do Webhook:</span>
+              <code>https://vvanjarfwdxtzklogysy.supabase.co/functions/v1/whatsapp-webhook</code>
+            </div>
+            <div class="info-row">
+              <span class="label">Verify Token:</span>
+              <code>agenda_ai_verify_2026</code>
+            </div>
           </div>
 
-          <button class="btn-next-elite success" (click)="finishOnboarding()">Concluir e Ir para o Painel</button>
+          <button class="btn-next-elite success" (click)="finishOnboarding()">
+            Concluir e Ir para o Painel
+          </button>
         </div>
       </div>
 
@@ -303,62 +382,65 @@
   <!-- ROBOT CREATOR MODAL -->
   <div class="modal-overlay" *ngIf="showRobotModal">
     <div class="onboarding-modal glass-modal robot-modal">
-      <button class="btn-close-modal" (click)="showRobotModal = false"><i class="pi pi-times"></i></button>
-      
+      <button class="btn-close-modal" (click)="showRobotModal = false">
+        <i class="pi pi-times"></i>
+      </button>
+
       <div class="modal-body">
-         <h2 style="margin-bottom: 5px;">{{ robotForm.id ? 'Editar Robô' : 'Montar Novo Robô' }}</h2>
-         <p>Defina a alma do seu novo assistente virtual.</p>
+        <h2 style="margin-bottom: 5px">{{ robotForm.id ? 'Editar Robô' : 'Montar Novo Robô' }}</h2>
+        <p>Defina a alma do seu novo assistente virtual.</p>
 
-         <div class="onboarding-form">
+        <div class="onboarding-form">
+          <div class="input-field-elite">
+            <label>Nome do Robô</label>
+            <div class="input-wrap">
+              <i class="pi pi-user"></i>
+              <input type="text" [(ngModel)]="robotForm.name" placeholder="Ex: Marcos, Sofia..." />
+            </div>
+          </div>
+
+          <div class="input-row-2">
             <div class="input-field-elite">
-              <label>Nome do Robô</label>
+              <label>Cargo / Função</label>
               <div class="input-wrap">
-                <i class="pi pi-user"></i>
-                <input type="text" [(ngModel)]="robotForm.name" placeholder="Ex: Marcos, Sofia...">
+                <i class="pi pi-briefcase"></i>
+                <input type="text" [(ngModel)]="robotForm.role" placeholder="Ex: Vendedor" />
               </div>
             </div>
-
-            <div class="input-row-2">
-              <div class="input-field-elite">
-                <label>Cargo / Função</label>
-                <div class="input-wrap">
-                  <i class="pi pi-briefcase"></i>
-                  <input type="text" [(ngModel)]="robotForm.role" placeholder="Ex: Vendedor">
-                </div>
-              </div>
-              <div class="input-field-elite">
-                <label>Avatar (Emoji)</label>
-                <div class="input-wrap">
-                  <i class="pi pi-face-smile"></i>
-                  <input type="text" [(ngModel)]="robotForm.avatar" maxlength="2">
-                </div>
+            <div class="input-field-elite">
+              <label>Avatar (Emoji)</label>
+              <div class="input-wrap">
+                <i class="pi pi-face-smile"></i>
+                <input type="text" [(ngModel)]="robotForm.avatar" maxlength="2" />
               </div>
             </div>
+          </div>
 
-            <div class="input-row-2">
-              <div class="input-field-elite">
-                <label>Canal Principal</label>
-                <select class="elite-select" [(ngModel)]="robotForm.channel">
-                  <option value="WhatsApp">WhatsApp</option>
-                  <option value="Instagram">Instagram</option>
-                  <option value="Messenger">Facebook Messenger</option>
-                  <option value="Todos">Omnichannel (Todos)</option>
-                </select>
-              </div>
-              <div class="input-field-elite">
-                <label>Personalidade (Tom de Voz)</label>
-                <select class="elite-select" [(ngModel)]="robotForm.tone">
-                  <option value="Amigável">Amigável e Empático 😊</option>
-                  <option value="Profissional">Profissional e Direto 👔</option>
-                  <option value="Divertido">Jovem e Divertido 🎉</option>
-                </select>
-              </div>
+          <div class="input-row-2">
+            <div class="input-field-elite">
+              <label>Canal Principal</label>
+              <select class="elite-select" [(ngModel)]="robotForm.channel">
+                <option value="WhatsApp">WhatsApp</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Messenger">Facebook Messenger</option>
+                <option value="Todos">Omnichannel (Todos)</option>
+              </select>
             </div>
-         </div>
+            <div class="input-field-elite">
+              <label>Personalidade (Tom de Voz)</label>
+              <select class="elite-select" [(ngModel)]="robotForm.tone">
+                <option value="Amigável">Amigável e Empático 😊</option>
+                <option value="Profissional">Profissional e Direto 👔</option>
+                <option value="Divertido">Jovem e Divertido 🎉</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-         <button class="btn-next-elite success" (click)="saveRobot()" [disabled]="!robotForm.name">
-            {{ robotForm.id ? 'Salvar Modificações' : 'Contratar Robô' }} <i class="pi pi-bolt"></i>
-         </button>
+        <button class="btn-next-elite success" (click)="saveRobot()" [disabled]="!robotForm.name">
+          {{ robotForm.id ? 'Salvar Modificações' : 'Contratar Robô' }} <i class="pi pi-bolt"></i>
+        </button>
       </div>
     </div>
   </div>
+</div>

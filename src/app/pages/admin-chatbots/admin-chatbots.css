@@ -172,6 +172,7 @@
 .btn-view:hover { background: #f8fafc; color: var(--elite-primary); border-color: var(--elite-primary); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
 
 /* CHAT INTERFACE */
+.live-chat-wrapper { flex: 1; display: flex; flex-direction: column; width: 100%; height: 100%; }
 .chat-header { padding: 1.25rem 2rem; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: white; }
 .user-info strong { display: block; font-size: 1.1rem; color: #1e293b; font-weight: 800; }
 .user-info span { font-size: 0.8rem; color: #94a3b8; font-weight: 600; }
