@@ -68,7 +68,7 @@ export interface SegmentoConfig {
 const SEGMENTOS: Record<string, SegmentoConfig> = {
 
   barbearia: {
-    id: 'barbearia', label: 'Barbearia', heroEmoji: '💈', emojiPadrao: '✂️', corPadrao: '#6366f1',
+    id: 'barbearia', label: 'Barbearia', heroEmoji: '💈', emojiPadrao: '✂️', corPadrao: '#ff007f',
     labelProfissional: 'Barbeiro', labelProfissionalPlural: 'Barbeiros', labelCliente: 'Cliente', labelServico: 'Serviço',
     placeholderNome: 'Ex: Barbearia Silva', placeholderServico: 'Ex: Corte Social', placeholderEspecialidade: 'Ex: Degradê, Barba', placeholderCargo: 'Ex: Barbeiro Sênior',
     rolePadrao: 'barbeiro',
@@ -268,7 +268,7 @@ const SEGMENTOS: Record<string, SegmentoConfig> = {
   },
 
   outro: {
-    id: 'outro', label: 'Outro', heroEmoji: '🏢', emojiPadrao: '📋', corPadrao: '#6366f1',
+    id: 'outro', label: 'Outro', heroEmoji: '🏢', emojiPadrao: '📋', corPadrao: '#ff007f',
     labelProfissional: 'Profissional', labelProfissionalPlural: 'Equipe', labelCliente: 'Cliente', labelServico: 'Serviço',
     placeholderNome: 'Ex: Meu Negócio', placeholderServico: 'Ex: Atendimento Padrão', placeholderEspecialidade: 'Ex: Geral', placeholderCargo: 'Ex: Atendente',
     rolePadrao: 'profissional',
