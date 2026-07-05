@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
     console.log("Buscando histórico na Zernio API...");
     let geminiHistory: any[] = [];
     try {
-      const histReq = await fetch(`https://zernio.com/api/v1/inbox/conversations/${userPhone}/messages?account_id=${channelId}&limit=15&sort_order=asc`, {
+      const histReq = await fetch(`https://zernio.com/api/v1/inbox/conversations/${userPhone}/messages?accountId=${channelId}&limit=15&sort_order=asc`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${zernioApiKey}`,

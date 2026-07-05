@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
 
     let fetchUrl = "https://zernio.com/api/v1/inbox/conversations";
     if (conversationId && accountId) {
-       fetchUrl = `https://zernio.com/api/v1/inbox/conversations/${conversationId}/messages?account_id=${accountId}&sort_order=asc`;
+       fetchUrl = `https://zernio.com/api/v1/inbox/conversations/${conversationId}/messages?accountId=${accountId}&sort_order=asc`;
     }
 
     const response = await fetch(fetchUrl, {
