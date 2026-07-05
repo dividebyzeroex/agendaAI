@@ -447,7 +447,6 @@ export class AgendarModalComponent implements OnInit {
     this.showDropdown = true;
     this.isNovoCliente = false;
     this.form.clienteId = null;
-    this.form.clienteNome = this.clienteQuery;
   }
 
   selectCliente(c: Cliente) {
