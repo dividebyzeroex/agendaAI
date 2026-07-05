@@ -30,16 +30,16 @@ Deno.serve(async (req) => {
     const incomingText = message.text;
 
     const { data: estab } = await supabaseAdmin
-      .from('zernio_channels')
-      .select('estabelecimento_id')
-      .eq('channel_id', channelId)
+      .from('chatbot_integrations')
+      .select('establishment_id')
+      .contains('config', { zernio_channel_id: channelId })
       .single();
 
     if (!estab) {
       console.log("Canal não mapeado para um estabelecimento.");
       return new Response("Not mapped", { status: 200 });
     }
-    const estabelecimentoId = estab.estabelecimento_id;
+    const estabelecimentoId = estab.establishment_id;
 
     const { data: convData } = await supabaseAdmin
       .from('chatbot_conversations')
