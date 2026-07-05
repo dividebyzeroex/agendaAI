@@ -91,68 +91,72 @@ Sempre que você detectar a intenção do cliente, USE a ferramenta signal_inten
     });
 
     let botResponseText = "";
-    
-    if (response.functionCalls && response.functionCalls.length > 0) {
-      const call = response.functionCalls[0];
-      console.log("Gemini chamou a function:", call.name, call.args);
-      let functionResult = {};
+    let currentResponse = response;
+    let currentHistory = [...mergedHistory];
 
-      if (call.name === "signal_intent") {
-         functionResult = { success: true };
-      } else if (call.name === "get_services") {
-         const { data: servs } = await supabaseAdmin.from('servicos').select('id, titulo, preco, duracao_min').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
-         functionResult = { services: servs || [] };
-      } else if (call.name === "get_professionals") {
-         const { data: profs } = await supabaseAdmin.from('profissionais').select('id, nome, especialidade').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
-         functionResult = { professionals: profs || [] };
-      } else if (call.name === "check_availability") {
-         const { data: eventos } = await supabaseAdmin.rpc('get_public_events_by_day', {
-            p_estab_id: estabelecimento_id,
-            p_date_start: `${call.args.date} 00:00:00`,
-            p_date_end: `${call.args.date} 23:59:59`
-         });
-         functionResult = { date: call.args.date, occupied_events: eventos || [], info: "O bot deve sugerir horários comerciais padrão (09h-18h) que NÃO estejam conflitantes com os ocupados listados." };
-      } else if (call.name === "create_appointment") {
-         // Create a fake test client or find existing
-         let userPhone = "5511999999999"; // FAKE TEST PHONE
-         let { data: clienteReq } = await supabaseAdmin.from('clientes').select('id').eq('telefone', userPhone).limit(1);
-         let clienteId = null;
-         if (!clienteReq || clienteReq.length === 0) {
-             const { data: newCli } = await supabaseAdmin.from('clientes').insert({ estabelecimento_id, nome: "Testador IA", telefone: userPhone }).select();
-             if (newCli) clienteId = newCli[0].id;
-         } else {
-             clienteId = clienteReq[0].id;
-         }
+    let loopCount = 0;
+    while (loopCount < 5) {
+      if (currentResponse.functionCalls && currentResponse.functionCalls.length > 0) {
+        const call = currentResponse.functionCalls[0];
+        console.log("Gemini chamou a function:", call.name, call.args);
+        
+        currentHistory.push({ role: 'model', parts: [{ functionCall: call }] });
+        
+        let functionResult: any = {};
 
-         const startDate = new Date(`${call.args.date}T${call.args.time}:00`);
-         const endDate = new Date(startDate.getTime() + 30 * 60000);
-         const { data: serv } = await supabaseAdmin.from("agenda_events").insert({
-            title: `[TESTE IA] ${call.args.client_name}`,
-            start: startDate.toISOString(),
-            end: endDate.toISOString(),
-            type: "service",
-            status: "scheduled",
-            estabelecimento_id,
-            cliente_id: clienteId,
-            servico_id: call.args.service_id,
-            profissional_id: call.args.professional_id || null
-         }).select();
-         
-         functionResult = { success: true, event: serv ? serv[0] : null };
-      } else if (call.name === "reschedule_appointment") {
-         functionResult = { success: true, info: "Simulado com sucesso." };
-      } else if (call.name === "add_to_waitlist") {
-         functionResult = { success: true, info: "Adicionado à fila de espera." };
-      }
+        if (call.name === "signal_intent") {
+           functionResult = { success: true };
+        } else if (call.name === "get_services") {
+           const { data: servs } = await supabaseAdmin.from('servicos').select('id, titulo, preco, duracao_min').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
+           functionResult = { services: servs || [] };
+        } else if (call.name === "get_professionals") {
+           const { data: profs } = await supabaseAdmin.from('profissionais').select('id, nome, especialidade').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
+           functionResult = { professionals: profs || [] };
+        } else if (call.name === "check_availability") {
+           const { data: eventos } = await supabaseAdmin.rpc('get_public_events_by_day', {
+              p_estab_id: estabelecimento_id,
+              p_date_start: `${call.args.date} 00:00:00`,
+              p_date_end: `${call.args.date} 23:59:59`
+           });
+           functionResult = { date: call.args.date, occupied_events: eventos || [], info: "O bot deve sugerir horários comerciais padrão (09h-18h) que NÃO estejam conflitantes com os ocupados listados." };
+        } else if (call.name === "create_appointment") {
+           let userPhone = "5511999999999"; 
+           let { data: clienteReq } = await supabaseAdmin.from('clientes').select('id').eq('telefone', userPhone).limit(1);
+           let clienteId = null;
+           if (!clienteReq || clienteReq.length === 0) {
+               const { data: newCli } = await supabaseAdmin.from('clientes').insert({ estabelecimento_id, nome: "Testador IA", telefone: userPhone }).select();
+               if (newCli) clienteId = newCli[0].id;
+           } else {
+               clienteId = clienteReq[0].id;
+           }
 
-      const followupResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: [
-          ...mergedHistory,
-          { role: 'model', parts: [{ functionCall: call }] },
-          { role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] }
-        ],
-        config: { systemInstruction: `
+           const startDate = new Date(`${call.args.date}T${call.args.time}:00`);
+           const endDate = new Date(startDate.getTime() + 30 * 60000);
+           const { data: serv } = await supabaseAdmin.from("agenda_events").insert({
+              title: `[TESTE IA] ${call.args.client_name}`,
+              start: startDate.toISOString(),
+              end: endDate.toISOString(),
+              type: "service",
+              status: "scheduled",
+              estabelecimento_id,
+              cliente_id: clienteId,
+              servico_id: call.args.service_id,
+              profissional_id: call.args.professional_id || null
+           }).select();
+           
+           functionResult = { success: true, event: serv ? serv[0] : null };
+        } else if (call.name === "reschedule_appointment") {
+           functionResult = { success: true, info: "Simulado com sucesso." };
+        } else if (call.name === "add_to_waitlist") {
+           functionResult = { success: true, info: "Adicionado à fila de espera." };
+        }
+
+        currentHistory.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] });
+
+        currentResponse = await ai.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: currentHistory,
+          config: { systemInstruction: `
 Você é ${robotName}, atuando como ${robotRole}.
 Seu tom de voz é: ${robotTone}.
 Seu objetivo é ajudar o cliente a agendar serviços de forma natural e amigável.
@@ -160,11 +164,15 @@ ANTES de responder sobre preços ou serviços, USE a ferramenta get_services.
 ANTES de confirmar um horário, USE a ferramenta check_availability.
 Se o cliente quiser reagendar, USE reschedule_appointment.
 `, temperature: 0.2, tools: [{ functionDeclarations }] }
-      });
+        });
 
-      botResponseText = followupResponse.text || "Entendido.";
-    } else {
-      botResponseText = response.text || "Desculpe, não entendi.";
+        // Loop continuará se a nova resposta tiver outra function call
+        loopCount++;
+      } else {
+        // Se a resposta tem texto, nós encerramos
+        botResponseText = currentResponse.text || "Entendido.";
+        break;
+      }
     }
 
     console.log("Gemini Response:", botResponseText);
