@@ -80,8 +80,12 @@ import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.ser
     @keyframes slideUp { from { opacity:0; transform:translateY(30px); } to { opacity:1; transform:none; } }
 
     .evento-modal-box {
-      background: white; border-radius: 28px; width: 100%; max-width: 440px;
+      background: var(--glass-bg, rgba(255,255,255,0.95)); 
+      backdrop-filter: blur(var(--glass-blur, 20px));
+      -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+      border-radius: 28px; width: 100%; max-width: 440px;
       box-shadow: 0 40px 100px rgba(0,0,0,0.25);
+      border: 1px solid var(--glass-border);
       animation: slideUp .4s cubic-bezier(.2,.8,.2,1); overflow: hidden;
     }
 

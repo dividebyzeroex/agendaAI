@@ -206,7 +206,10 @@ export interface AgendamentoForm {
     }
  
     .modal-box {
-      background: var(--glass-bg); border-radius: 28px; width: 100%; max-width: 580px;
+      background: var(--glass-bg, rgba(255,255,255,0.95)); 
+      backdrop-filter: blur(var(--glass-blur, 20px));
+      -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
+      border-radius: 28px; width: 100%; max-width: 580px;
       box-shadow: 0 30px 60px rgba(0,0,0,0.4), var(--elite-shadow);
       display: flex; flex-direction: column; max-height: 92vh; overflow: hidden;
       border: 1px solid var(--glass-border); position: relative;
