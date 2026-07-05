@@ -29,17 +29,11 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
   private isBrowser = false;
 
   private router = inject(Router);
-  public isSoftMode = false;
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
     
-    // Listen to route changes to soften particles in logged area
-    this.router.events.subscribe((event) => {
-      if (event instanceof NavigationEnd) {
-        this.isSoftMode = event.urlAfterRedirects.includes('/admin');
-      }
-    });
+    // Logic for soft mode removed so particles always display
   }
 
   ngAfterViewInit() {
