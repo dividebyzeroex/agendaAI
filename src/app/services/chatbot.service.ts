@@ -71,6 +71,37 @@ export class ChatbotService {
 
   private robotsSubject = new BehaviorSubject<ChatbotRobot[]>([]);
   robots$ = this.robotsSubject.asObservable();
+  
+  private messageSubscription: any;
+
+  async init() {
+    this.supabase.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN') {
+        this.loadRobots();
+        this.loadConversations();
+        this.loadIntegrations();
+        this.loadConnectedChannels();
+      }
+    });
+
+    // Escutar eventos broadcast do zernio-webhook
+    this.messageSubscription = this.supabase.client
+      .channel('zernio_messages')
+      .on('broadcast', { event: 'new_message' }, payload => {
+         console.log("Recebido broadcast do zernio:", payload);
+         
+         // Recarregar a lista de conversas
+         this.loadConversations();
+         
+         // Se a conversa ativa for a que recebeu a mensagem, atualizar
+         const activeId = this.activeConversationSubject.getValue()?.id;
+         // Note: No Zernio, o userPhone é o participantId, que mapeamos para conv.id
+         if (activeId && payload['payload']?.userPhone === activeId) {
+            this.setActiveConversation(activeId);
+         }
+      })
+      .subscribe();
+  }
 
   constructor() {
     this.loadIntegrations();

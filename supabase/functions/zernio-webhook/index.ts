@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     // Identificar Estabelecimento usando o channelId do Zernio
     const { data: integrations } = await supabaseAdmin
       .from("chatbot_integrations")
-      .select("estabelecimento_id, channel, config")
+      .select("establishment_id, channel, config")
       .eq("status", "active")
       .contains("config", { zernio_channel_id: channelId });
 
@@ -40,14 +40,14 @@ Deno.serve(async (req) => {
     let integrationChannel = "whatsapp";
 
     if (integrations && integrations.length > 0) {
-      estabelecimentoId = integrations[0].estabelecimento_id;
+      estabelecimentoId = integrations[0].establishment_id;
       integrationChannel = integrations[0].channel;
     } else {
-      console.log(\`Nenhuma integração encontrada para Zernio Channel ID: \${channelId}\`);
+      console.log(`Nenhuma integração encontrada para Zernio Channel ID: ${channelId}`);
       // Fallback para dev local se n achar
-      const { data: all } = await supabaseAdmin.from("chatbot_integrations").select("estabelecimento_id, channel").limit(1);
+      const { data: all } = await supabaseAdmin.from("chatbot_integrations").select("establishment_id, channel").limit(1);
       if (all && all.length > 0) {
-         estabelecimentoId = all[0].estabelecimento_id;
+         estabelecimentoId = all[0].establishment_id;
          integrationChannel = all[0].channel;
          console.log("Usando fallback de fallback", estabelecimentoId);
       } else {
@@ -183,6 +183,14 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
     } catch(err) {
       console.error("Erro chamando Zernio:", err);
     }
+
+    // Broadcast event for UI to refresh in real-time
+    console.log("Broadcasting to UI...");
+    await supabaseAdmin.channel('zernio_messages').send({
+      type: 'broadcast',
+      event: 'new_message',
+      payload: { channelId, userPhone }
+    });
 
     return new Response("OK", { status: 200 });
 
