@@ -18,14 +18,14 @@
         <div class="stat-value" style="color: #6366f1">
           🤖 {{ aiActiveConversationsCount }} Conversas com IA
         </div>
-        <div class="stat-label">A inteligência artificial está operando ativamente.</div>
+        <div class="stat-label">Assistente autônomo ativo</div>
       </div>
 
       <div class="stat-card" *ngIf="connectedChannels$ | async as channels">
         <div class="stat-value">
           <span class="status-dot online"></span> {{ channels.length }} Canais Ativos
         </div>
-        <div class="stat-label">Gerencie integrações, monitore logs e interaja em tempo real.</div>
+        <div class="stat-label">Omnichannel conectado</div>
       </div>
     </div>
   </div>
