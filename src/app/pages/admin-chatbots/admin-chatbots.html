@@ -257,11 +257,11 @@
             <button class="btn-send" (click)="sendMessage()"><i class="pi pi-send"></i></button>
           </div>
         </div>
-      </div>
-
-      <div class="no-selection" *ngIf="activeTab === 'live' && !(activeConversation$ | async)">
-        <i class="pi pi-users"></i>
-        <h3>Selecione uma conversa para monitorar.</h3>
+        
+        <div class="no-selection" *ngIf="!(activeConversation$ | async)">
+          <i class="pi pi-users"></i>
+          <h3>Selecione uma conversa para monitorar.</h3>
+        </div>
       </div>
     </div>
   </div>
