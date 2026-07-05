@@ -100,23 +100,44 @@ export class AdminChatbots implements OnInit {
     this.testingRobot = null;
   }
 
-  sendMessageToTestBot() {
+  async sendMessageToTestBot() {
     if (!this.testNewMessage.trim()) return;
     
     this.testMessages.push({ sender: 'user', text: this.testNewMessage, time: new Date() });
+    const userText = this.testNewMessage;
     this.testNewMessage = '';
     
     this.isAiTyping = true;
     
-    // Simula delay de digitação
-    setTimeout(() => {
-      this.isAiTyping = false;
+    try {
+      // Map history to the format expected by the AI
+      const history = this.testMessages.map(m => ({
+        role: m.sender === 'user' ? 'user' : 'model',
+        text: m.text
+      }));
+
+      // Call the Edge Function
+      const responseText = await this.chatService.sendTestMessageToAi(
+        this.testingRobot.estabelecimento_id,
+        this.testingRobot.id,
+        history
+      );
+
       this.testMessages.push({
         sender: 'ai',
-        text: `[MODO TESTE] Entendi sua mensagem. Sou o assistente de IA configurado com o tom "${this.testingRobot?.tone}". Esta é uma resposta simulada.`,
+        text: responseText || "Sem resposta.",
         time: new Date()
       });
-    }, 1500);
+    } catch (e: any) {
+      console.error("Erro no chat de teste:", e);
+      this.testMessages.push({
+        sender: 'ai',
+        text: `[ERRO] Falha ao contatar a IA: ${e.message}`,
+        time: new Date()
+      });
+    } finally {
+      this.isAiTyping = false;
+    }
   }
 
   ngOnInit() {
