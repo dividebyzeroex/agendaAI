@@ -14,10 +14,11 @@ import { Observable } from 'rxjs';
 export class AdminChatbots implements OnInit {
   private chatService = inject(ChatbotService);
 
-  activeTab: 'robots' | 'channels' | 'history' | 'live' = 'robots';
+  activeTab: string = 'channels';
   conversations$: Observable<Conversation[]> = this.chatService.conversations$;
   activeConversation$: Observable<Conversation | null> = this.chatService.activeConversation$;
   integrations$ = this.chatService.integrations$;
+  connectedChannels$ = this.chatService.connectedChannels$;
 
   // Local State
   selectedConvId: string | null = null;
@@ -75,9 +76,16 @@ export class AdminChatbots implements OnInit {
   }
 
   ngOnInit() {
-    this.conversations$.subscribe(convs => {
-      if (convs.length > 0 && !this.selectedConvId) {
-        this.selectConversation(convs[0].id);
+    this.chatService.loadRobots();
+    this.chatService.loadConversations();
+    this.chatService.loadIntegrations();
+    this.chatService.loadConnectedChannels();
+
+    // Quando abrir a tela, checar se tem conversa ativa e selecionar aba
+    this.activeConversation$.subscribe(conv => {
+      if (conv && this.activeTab !== 'live') {
+        this.selectedConvId = conv.id;
+        this.activeTab = 'live';
       }
     });
   }

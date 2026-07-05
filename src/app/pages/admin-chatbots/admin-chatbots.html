@@ -6,9 +6,9 @@
       <p>Gerencie integrações, monitore logs e interaja em tempo real.</p>
     </div>
     <div class="header-actions">
-      <div class="active-status" *ngIf="integrations$ | async as integrations">
-         <span class="dot active"></span>
-         {{ (integrations['whatsapp']?.active ? 1 : 0) + (integrations['facebook']?.active ? 1 : 0) + (integrations['instagram']?.active ? 1 : 0) }} Canais Ativos
+      <div class="stat-card" *ngIf="connectedChannels$ | async as channels">
+        <div class="stat-value"><span class="status-dot online"></span> {{ channels.length }} Canais Ativos</div>
+        <div class="stat-label">Gerencie integrações, monitore logs e interaja em tempo real.</div>
       </div>
     </div>
   </div>
@@ -106,82 +106,49 @@
           </div>
         </div>
       </div>
-
+      </div>
       <!-- TAB 1: INTEGRATIONS -->
       <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
-        <div *ngIf="integrations$ | async as integrations">
+        <div *ngIf="connectedChannels$ | async as channels">
           <div class="section-title">Aumente sua conversão conectando novos canais</div>
-             <div class="channels-grid">
-           <!-- WhatsApp -->
-           <div class="channel-card elite-compact-card whatsapp" [class.active]="integrations['whatsapp']?.active">
-             <div class="brand-logo-wrap wa">
-               <i class="pi pi-whatsapp"></i>
-             </div>
-             <div class="brand-details">
-               <h3>WhatsApp</h3>
-               <div class="channel-meta" *ngIf="integrations['whatsapp']?.active">
-                 <span class="status-dot online"></span> {{ integrations['whatsapp'].profileName }}
-               </div>
-               <span class="status-pill-elite inactive" *ngIf="!integrations['whatsapp']?.active">Inativo</span>
-             </div>
-             <button class="btn-elite-action primary-btn" (click)="openOnboarding('whatsapp')">
-               Configurar
-             </button>
-           </div>
-
-           <!-- Facebook Messenger -->
-           <div class="channel-card elite-compact-card facebook" [class.active]="integrations['facebook']?.active">
-             <div class="brand-logo-wrap fb">
-               <i class="pi pi-facebook"></i>
-             </div>
-             <div class="brand-details">
-               <h3>Messenger</h3>
-               <div class="channel-meta" *ngIf="integrations['facebook']?.active">
-                 <span class="status-dot online"></span> {{ integrations['facebook'].profileName }}
-               </div>
-               <span class="status-pill-elite inactive" *ngIf="!integrations['facebook']?.active">Inativo</span>
-             </div>
-             <button class="btn-elite-action primary-btn" (click)="openOnboarding('facebook')">
-               Configurar
-             </button>
-           </div>
-
-           <!-- Instagram -->
-           <div class="channel-card elite-compact-card instagram" [class.active]="integrations['instagram']?.active">
-             <div class="brand-logo-wrap ig">
-               <i class="pi pi-instagram"></i>
-             </div>
-             <div class="brand-details">
-               <h3>Instagram</h3>
-               <div class="channel-meta" *ngIf="integrations['instagram']?.active">
-                 <span class="status-dot online"></span> {{ integrations['instagram'].profileName }}
-               </div>
-               <span class="status-pill-elite inactive" *ngIf="!integrations['instagram']?.active">Inativo</span>
-             </div>
-             <button class="btn-elite-action primary-btn" (click)="openOnboarding('instagram')">
-               Configurar
-             </button>
-           </div>
-
-           <!-- Telegram -->
-           <div class="channel-card elite-compact-card telegram" [class.active]="integrations['telegram']?.active">
-             <div class="brand-logo-wrap tg">
-               <i class="pi pi-telegram"></i>
-             </div>
-             <div class="brand-details">
-               <h3>Telegram</h3>
-               <div class="channel-meta" *ngIf="integrations['telegram']?.active">
-                 <span class="status-dot online"></span> {{ integrations['telegram'].profileName }}
-               </div>
-               <span class="status-pill-elite inactive" *ngIf="!integrations['telegram']?.active">Inativo</span>
-             </div>
-             <button class="btn-elite-action primary-btn" (click)="openOnboarding('telegram')">
-               Configurar
-             </button>
-           </div>
+             
+          <div class="channels-grid" *ngIf="channels.length > 0; else noChannels">
+            <div class="channel-card elite-compact-card {{channel.platform}}" [class.active]="channel.status === 'active' || channel.status === 'connected'" *ngFor="let channel of channels">
+              
+              <!-- Foto de perfil ou icone default -->
+              <div class="brand-logo-wrap {{channel.platform}}">
+                <img *ngIf="channel.profilePicture" [src]="channel.profilePicture" alt="Profile" class="profile-img" />
+                <i *ngIf="!channel.profilePicture" class="pi pi-{{channel.platform}}"></i>
+              </div>
+              
+              <div class="brand-details">
+                <h3>{{ channel.platform | titlecase }}</h3>
+                <div class="channel-meta" *ngIf="channel.status === 'active' || channel.status === 'connected'">
+                  <span class="status-dot online"></span> 
+                  <span class="channel-name">{{ channel.displayName || channel.username }}</span>
+                </div>
+                <div class="channel-username" *ngIf="channel.username">
+                  @{{ channel.username }}
+                </div>
+                <span class="status-pill-elite inactive" *ngIf="channel.status !== 'active' && channel.status !== 'connected'">Desconectado</span>
+              </div>
+              
+              <button class="btn-elite-action primary-btn outline" disabled>
+                Conectado
+              </button>
+            </div>
           </div>
+          
+          <ng-template #noChannels>
+            <div class="empty-state-card">
+              <i class="pi pi-link empty-icon"></i>
+              <h3>Nenhum canal conectado</h3>
+              <p>Você precisa conectar seus canais sociais (Instagram, WhatsApp, etc) através do painel do Zernio.</p>
+            </div>
+          </ng-template>
+
         </div>
-      </div>
+      </div>  </div>
 
     <!-- TAB 2: HISTORY (List Mode) -->
     <div class="tab-content history" *ngIf="activeTab === 'history'">
@@ -243,7 +210,6 @@
       </div>
     </div>
 
-  </div>
   <!-- ONBOARDING MODAL STEPPER -->
   <div class="modal-overlay" *ngIf="showOnboarding">
     <div class="onboarding-modal glass-modal">
@@ -396,4 +362,3 @@
       </div>
     </div>
   </div>
-</div>

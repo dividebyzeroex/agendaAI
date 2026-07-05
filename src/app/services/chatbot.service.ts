@@ -23,11 +23,21 @@ export interface Conversation {
 }
 
 export interface ChatbotIntegration {
-  id?: string;
-  establishment_id: string;
+  id: string;
+  estabelecimento_id: string;
+  provider: 'zernio';
   channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram';
-  status: 'active' | 'inactive' | 'error';
   config: any;
+  status: 'active' | 'inactive';
+}
+
+export interface ZernioAccount {
+  id: string;
+  platform: string;
+  displayName: string;
+  username: string;
+  profilePicture: string;
+  status: string;
 }
 
 export interface ChatbotRobot {
@@ -53,13 +63,11 @@ export class ChatbotService {
   private activeConversationSubject = new BehaviorSubject<Conversation | null>(null);
   activeConversation$ = this.activeConversationSubject.asObservable();
 
-  private integrationsSubject = new BehaviorSubject<Record<string, any>>({
-    whatsapp: { active: false },
-    facebook: { active: false },
-    instagram: { active: false },
-    telegram: { active: false }
-  });
-  integrations$ = this.integrationsSubject.asObservable();
+  private integrationsSubject = new BehaviorSubject<{ [key: string]: ChatbotIntegration }>({});
+  public integrations$ = this.integrationsSubject.asObservable();
+
+  private connectedChannelsSubject = new BehaviorSubject<ZernioAccount[]>([]);
+  public connectedChannels$ = this.connectedChannelsSubject.asObservable();
 
   private robotsSubject = new BehaviorSubject<ChatbotRobot[]>([]);
   robots$ = this.robotsSubject.asObservable();
@@ -122,14 +130,37 @@ export class ChatbotService {
       .rpc('get_chatbot_integrations_by_estab', { p_estab_id: est.id });
 
     if (integrations) {
-      const state: Record<string, any> = { whatsapp: { active: false }, facebook: { active: false }, instagram: { active: false }, telegram: { active: false } };
-      (integrations as any[]).forEach((inc: any) => {
-        state[inc.channel] = { 
-          active: inc.status === 'active',
-          profileName: inc.config?.profileName || this.getMockProfileName(inc.channel)
-        };
+      const data = integrations as any[];
+      const integrationMap = data.reduce((acc, curr) => {
+        acc[curr.channel] = curr;
+        return acc;
+      }, {} as { [key: string]: ChatbotIntegration });
+      
+      this.integrationsSubject.next(integrationMap);
+    }
+  }
+
+  async loadConnectedChannels() {
+    try {
+      const { data, error } = await this.supabase.client.functions.invoke('zernio-accounts', {
+         method: 'GET'
       });
-      this.integrationsSubject.next(state);
+
+      if (error) throw error;
+
+      if (data && data.accounts && Array.isArray(data.accounts)) {
+        const channels: ZernioAccount[] = data.accounts.map((ac: any) => ({
+           id: ac._id,
+           platform: ac.platform,
+           displayName: ac.displayName || ac.metadata?.profileData?.displayName || '',
+           username: ac.username || ac.metadata?.profileData?.username || '',
+           profilePicture: ac.profilePicture || ac.metadata?.profileData?.profilePicture || '',
+           status: ac.platformStatus || 'active'
+        }));
+        this.connectedChannelsSubject.next(channels);
+      }
+    } catch (err) {
+      console.error("Erro ao carregar contas conectadas da Zernio:", err);
     }
   }
 
@@ -195,22 +226,19 @@ export class ChatbotService {
    */
   async saveIntegration(channel: 'whatsapp' | 'facebook' | 'instagram' | 'telegram', config: any) {
     const { data: { user } } = await this.supabase.client.auth.getUser();
-    if (!user) throw new Error('Not authenticated');
-
-    // Get establishment ID using safe RPC
-    const { data: ests } = await this.supabase.client
-      .rpc('get_estabelecimento_by_user', { p_user_id: user.id });
-
+    if (!user) return;
+    const { data: ests } = await this.supabase.client.rpc('get_estabelecimento_by_user', { p_user_id: user.id });
     const est = (ests as any)?.[0];
-    if (!est) throw new Error('Establishment not found');
+    if (!est) return;
 
-    const { error } = await this.supabase.client
-      .rpc('upsert_chatbot_integration_safe', {
+    const { data, error } = await this.supabase.client
+      .rpc('upsert_chatbot_integration', {
         p_data: {
-          establishment_id: est.id,
+          estabelecimento_id: est.id,
           channel,
           status: 'active',
-          config
+          config,
+          provider: 'zernio'
         }
       });
 
@@ -218,8 +246,19 @@ export class ChatbotService {
     
     // Update local state
     const current = this.integrationsSubject.value;
-    current[channel] = { active: true, profileName: config?.profileName || this.getMockProfileName(channel) };
-    this.integrationsSubject.next({ ...current });
+    const existing = current[channel];
+
+    const newObj: ChatbotIntegration = {
+       id: existing?.id || '',
+       estabelecimento_id: est.id,
+       provider: 'zernio',
+       channel,
+       config,
+       status: 'active'
+    };
+    
+    current[channel] = newObj;
+    this.integrationsSubject.next(current);
   }
 
   /**
