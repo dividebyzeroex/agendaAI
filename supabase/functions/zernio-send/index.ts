@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        account_id: channel_id,
+        accountId: channel_id,
         message: text
       })
     });

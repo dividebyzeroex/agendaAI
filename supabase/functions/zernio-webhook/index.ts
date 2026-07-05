@@ -173,7 +173,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          account_id: channelId,
+          accountId: channelId,
           message: botResponseText
         })
       });
