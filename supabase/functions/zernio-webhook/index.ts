@@ -82,11 +82,11 @@ Deno.serve(async (req) => {
       });
       if (histReq.ok) {
         const histData = await histReq.json();
-        // O Zernio retorna .data como array de mensagens
-        if (histData.data && Array.isArray(histData.data)) {
-          geminiHistory = histData.data.map((msg: any) => ({
-             role: msg.fromMe ? "model" : "user",
-             parts: [{ text: msg.message?.text || msg.text || "" }]
+        // O Zernio retorna .messages como array de mensagens
+        if (histData.messages && Array.isArray(histData.messages)) {
+          geminiHistory = histData.messages.map((msg: any) => ({
+             role: msg.direction === 'outgoing' ? "model" : "user",
+             parts: [{ text: typeof msg.message === 'string' ? msg.message : (msg.message?.text || msg.text || "") }]
           })).filter((m: any) => m.parts[0].text !== "");
         }
       }

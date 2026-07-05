@@ -325,12 +325,12 @@ export class ChatbotService {
        
        if (error) throw error;
 
-       if (data && data.data && Array.isArray(data.data)) {
-         conv.messages = data.data.map((zm: any) => ({
+       if (data && data.messages && Array.isArray(data.messages)) {
+         conv.messages = data.messages.map((zm: any) => ({
             id: zm.id,
-            text: zm.message?.text || zm.text || '',
-            sender: zm.fromMe ? 'business' : 'customer',
-            timestamp: new Date(zm.timestamp || new Date()),
+            text: typeof zm.message === 'string' ? zm.message : (zm.message?.text || zm.text || ''),
+            sender: zm.direction === 'outgoing' ? 'business' : 'customer',
+            timestamp: new Date(zm.createdAt || zm.timestamp || new Date()),
             status: 'sent'
          }));
          // As mensagens do Zernio já vêm na ordem que pedimos (asc)
