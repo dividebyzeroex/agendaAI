@@ -72,7 +72,7 @@ Deno.serve(async (req) => {
     console.log("Chamando Gemini API (Test Mode)...");
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: mergedHistory,
       config: {
         systemInstruction: `
@@ -154,7 +154,7 @@ Sempre que você detectar a intenção do cliente, USE a ferramenta signal_inten
         currentHistory.push({ role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] });
 
         currentResponse = await ai.models.generateContent({
-          model: 'gemini-2.5-flash',
+          model: 'gemini-1.5-flash',
           contents: currentHistory,
           config: { systemInstruction: `
 Você é ${robotName}, atuando como ${robotRole}.

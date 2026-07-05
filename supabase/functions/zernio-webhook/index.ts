@@ -133,7 +133,7 @@ Deno.serve(async (req) => {
     });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-1.5-flash',
       contents: mergedHistory,
       config: {
         systemInstruction: `
@@ -214,7 +214,7 @@ Sempre que você detectar a intenção do cliente (ex: quer agendar, só consult
       }
 
       const followupResponse = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-1.5-flash',
         contents: [
           ...mergedHistory,
           { role: 'model', parts: [{ functionCall: call }] },
