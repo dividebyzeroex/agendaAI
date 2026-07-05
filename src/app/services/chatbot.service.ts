@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Subject, Observable, from, of } from 'rxjs';
 import { catchError, map, switchMap, tap } from 'rxjs/operators';
 import { SupabaseService } from './supabase.service';
+import { NotificationService } from './notification.service';
 
 export interface ChatMessage {
   id: string;
@@ -56,6 +57,7 @@ export interface ChatbotRobot {
 })
 export class ChatbotService {
   private supabase = inject(SupabaseService);
+  private notifService = inject(NotificationService);
 
   
   private conversationsSubject = new BehaviorSubject<Conversation[]>([]);
@@ -64,9 +66,7 @@ export class ChatbotService {
   private aiIntentsSubject = new BehaviorSubject<{ [conversationId: string]: string }>({});
   aiIntents$ = this.aiIntentsSubject.asObservable();
   
-  private toastNotificationsSubject = new Subject<{ message: string, type: 'success' | 'info' }>();
-  toastNotifications$ = this.toastNotificationsSubject.asObservable();
-
+  
 
   private activeConversationSubject = new BehaviorSubject<Conversation | null>(null);
   activeConversation$ = this.activeConversationSubject.asObservable();
@@ -112,7 +112,12 @@ export class ChatbotService {
             this.aiIntentsSubject.next({ ...currentIntents, [userPhone]: intent });
             
             if (intent.includes('Agendado') || intent.includes('Venda')) {
-               this.toastNotificationsSubject.next({ message: `🤖 IA detectou: ${intent}`, type: 'success' });
+               this.notifService.showToast({
+                  type: 'AI_INSIGHT',
+                  title: 'Ação do Assistente',
+                  message: `🤖 IA detectou: ${intent}`,
+                  icon: 'pi pi-sparkles'
+               });
                setTimeout(() => {
                   const intentsAfter = this.aiIntentsSubject.getValue();
                   const newIntents = { ...intentsAfter };
