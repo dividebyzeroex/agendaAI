@@ -14,7 +14,16 @@ Deno.serve(async (req) => {
       throw new Error("ZERNIO_API_KEY is not configured on the server.");
     }
 
-    const response = await fetch("https://zernio.com/api/v1/inbox/conversations", {
+    const url = new URL(req.url);
+    const conversationId = url.searchParams.get('conversation_id');
+    const accountId = url.searchParams.get('account_id');
+
+    let fetchUrl = "https://zernio.com/api/v1/inbox/conversations";
+    if (conversationId && accountId) {
+       fetchUrl = `https://zernio.com/api/v1/inbox/conversations/${conversationId}/messages?account_id=${accountId}&sort_order=asc`;
+    }
+
+    const response = await fetch(fetchUrl, {
       method: 'GET',
       headers: {
         'Authorization': `Bearer ${zernioApiKey}`,

@@ -69,30 +69,32 @@ Deno.serve(async (req) => {
     const robotTone = robot ? robot.tone : "Amigável e profissional";
     const robotRole = robot ? robot.role : "Agendador";
 
-    // Salvar Mensagem do Usuário na Memória
-    await supabaseAdmin.from("chatbot_messages").insert({
-      estabelecimento_id: estabelecimentoId,
-      customer_phone: userPhone,
-      sender: "user",
-      message: userMessage,
-      channel: integrationChannel
-    });
+    // Buscar Histórico Real do Zernio
+    console.log("Buscando histórico na Zernio API...");
+    let geminiHistory: any[] = [];
+    try {
+      const histReq = await fetch(`https://zernio.com/api/v1/inbox/conversations/${userPhone}/messages?account_id=${channelId}&limit=15&sort_order=asc`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${zernioApiKey}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (histReq.ok) {
+        const histData = await histReq.json();
+        // O Zernio retorna .data como array de mensagens
+        if (histData.data && Array.isArray(histData.data)) {
+          geminiHistory = histData.data.map((msg: any) => ({
+             role: msg.fromMe ? "model" : "user",
+             parts: [{ text: msg.message?.text || msg.text || "" }]
+          })).filter((m: any) => m.parts[0].text !== "");
+        }
+      }
+    } catch (e) {
+      console.error("Erro ao buscar histórico do Zernio", e);
+    }
 
-    // Carregar Histórico de Conversa
-    const { data: history } = await supabaseAdmin
-      .from("chatbot_messages")
-      .select("*")
-      .eq("estabelecimento_id", estabelecimentoId)
-      .eq("customer_phone", userPhone)
-      .order("created_at", { ascending: true })
-      .limit(15); 
-
-    const geminiHistory = (history || []).map((msg: any) => ({
-      role: msg.sender === "user" ? "user" : "model",
-      parts: [{ text: msg.message }]
-    }));
-    
-    const currentMessage = geminiHistory.pop() || { role: "user", parts: [{ text: userMessage }] };
+    const currentMessage = { role: "user", parts: [{ text: userMessage }] };
 
     // Configurar o Gemini
     const systemInstruction = `
@@ -159,14 +161,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
 
     console.log("Gemini Response:", botResponseText);
 
-    // Salvar Resposta do Bot
-    await supabaseAdmin.from("chatbot_messages").insert({
-      estabelecimento_id: estabelecimentoId,
-      customer_phone: userPhone,
-      sender: "bot",
-      message: botResponseText,
-      channel: integrationChannel
-    });
+    // Removido: Não salvamos mais a resposta do Bot localmente, apenas enviamos via Zernio
 
     // Enviar mensagem via Zernio API (Usando Master Key)
     console.log("Enviando mensagem de volta via Zernio API...");

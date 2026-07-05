@@ -19,6 +19,7 @@ export interface Conversation {
   lastUpdate: Date;
   status: 'active' | 'completed' | 'waiting';
   messages: ChatMessage[];
+  accountId?: string; // Usado para buscar mensagens na API do Zernio
 }
 
 export interface ChatbotIntegration {
@@ -73,64 +74,33 @@ export class ChatbotService {
     const { data: { user } } = await this.supabase.client.auth.getUser();
     if (!user) return;
 
-    const { data: ests } = await this.supabase.client.rpc('get_estabelecimento_by_user', { p_user_id: user.id });
-    const est = (ests as any)?.[0];
-    if (!est) return;
-
-    const { data: messages, error } = await this.supabase.client
-      .from('chatbot_messages')
-      .select('*')
-      .eq('estabelecimento_id', est.id)
-      .order('created_at', { ascending: true });
-
-    if (error) {
-      console.error('Error loading conversations:', error);
-      return;
-    }
-
-    if (messages) {
-      // Agrupar mensagens por customer_phone
-      const convosMap = new Map<string, Conversation>();
-
-      messages.forEach((msg: any) => {
-        const phone = msg.customer_phone || 'Desconhecido';
-        if (!convosMap.has(phone)) {
-          convosMap.set(phone, {
-            id: `conv_${phone}`,
-            customerName: phone, // Nome real poderia vir de outra tabela
-            customerPhone: phone,
-            channel: msg.channel as any || 'whatsapp',
-            lastMessage: '',
-            lastUpdate: new Date(msg.created_at),
-            status: 'active',
-            messages: []
-          });
-        }
-        
-        const conv = convosMap.get(phone)!;
-        conv.messages.push({
-          id: msg.id,
-          sender: msg.sender,
-          text: msg.message,
-          timestamp: new Date(msg.created_at)
-        });
-        
-        conv.lastMessage = msg.message;
-        conv.lastUpdate = new Date(msg.created_at);
+    // Chamar a Edge Function zernio-inbox para listar as conversas
+    try {
+      const { data, error } = await this.supabase.client.functions.invoke('zernio-inbox', {
+         method: 'POST'
       });
 
-      // Converter map para array e ordenar por lastUpdate (mais recentes primeiro)
-      const convosArray = Array.from(convosMap.values()).sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime());
-      
-      this.conversationsSubject.next(convosArray);
+      if (error) throw error;
 
-      // Se houver uma conversa ativa, atualizar ela
-      if (this.activeConversationSubject.value) {
-        const updatedActive = convosArray.find(c => c.id === this.activeConversationSubject.value!.id);
-        if (updatedActive) {
-          this.activeConversationSubject.next(updatedActive);
-        }
+      if (data && data.data && Array.isArray(data.data)) {
+        const convos: Conversation[] = data.data.map((zc: any) => ({
+           id: zc.participantId, // ID da conversa no frontend será o participantId
+           customerName: zc.participantName || zc.participantUsername || 'Desconhecido',
+           customerPhone: zc.participantId,
+           channel: zc.platform || 'instagram',
+           lastMessage: zc.lastMessage || '',
+           lastUpdate: new Date(zc.updatedTime || new Date()),
+           status: zc.status === 'active' ? 'active' : 'completed',
+           messages: [],
+           accountId: zc.accountId
+        }));
+        
+        // Ordenar mais recentes primeiro
+        convos.sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime());
+        this.conversationsSubject.next(convos);
       }
+    } catch (err) {
+      console.error("Erro ao carregar conversas do Zernio:", err);
     }
   }
 
@@ -268,9 +238,38 @@ export class ChatbotService {
     return data;
   }
 
-  setActiveConversation(convId: string) {
-    const conv = this.conversationsSubject.value.find(c => c.id === convId);
-    if (conv) this.activeConversationSubject.next(conv);
+  async setActiveConversation(id: string) {
+    const convos = this.conversationsSubject.getValue();
+    const conv = convos.find(c => c.id === id);
+    if (!conv) {
+      this.activeConversationSubject.next(null);
+      return;
+    }
+
+    // Ao ativar a conversa, buscar as mensagens reais dela no Zernio
+    try {
+       const { data, error } = await this.supabase.client.functions.invoke('zernio-inbox', {
+         method: 'POST',
+         body: { conversation_id: conv.id, account_id: conv.accountId }
+       });
+       
+       if (error) throw error;
+
+       if (data && data.data && Array.isArray(data.data)) {
+         conv.messages = data.data.map((zm: any) => ({
+            id: zm.id,
+            text: zm.message?.text || zm.text || '',
+            sender: zm.fromMe ? 'bot' : 'user',
+            timestamp: new Date(zm.timestamp || new Date()),
+            status: 'sent'
+         }));
+         // As mensagens do Zernio já vêm na ordem que pedimos (asc)
+       }
+    } catch (e) {
+       console.error("Erro ao carregar mensagens da conversa:", e);
+    }
+
+    this.activeConversationSubject.next(conv);
   }
 
   async processSimulatedMessage(text: string, convId: string) {
