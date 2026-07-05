@@ -4,9 +4,6 @@
   --wa-green: #10b981;
   --fb-blue: #1877f2;
   --ig-grad: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%);
-  --elite-glass: rgba(255, 255, 255, 0.7);
-  --elite-border: rgba(255, 255, 255, 0.4);
-  --elite-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
 }
 
 .ag-page.elite.chatbots { 
@@ -33,15 +30,13 @@
 
 /* CHATBOT LAYOUT GLASS */
 .chatbot-layout { 
-  display: flex; height: 750px; background: var(--elite-glass); backdrop-filter: blur(25px); 
-  border-radius: 35px; border: 1px solid var(--elite-border); 
-  overflow: hidden; box-shadow: 0 40px 100px rgba(0,0,0,0.08); 
+  display: flex; height: 750px; 
 }
 
 /* SIDEBAR ELITE */
 .chatbot-sidebar { 
-  width: 320px; border-right: 1px solid rgba(0,0,0,0.05); display: flex; 
-  flex-direction: column; background: rgba(248, 250, 252, 0.4);
+  width: 320px; border-right: 1px solid var(--glass-border); display: flex; 
+  flex-direction: column; background: rgba(0,0,0,0.02);
 }
 .sidebar-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 1.25rem; background: transparent; }
 .sidebar-tabs button { 
@@ -58,10 +53,10 @@
 .search-wrap { padding: 0 1.25rem 1.25rem; position: relative; }
 .search-wrap i { position: absolute; left: 32px; top: 12px; color: #94a3b8; font-size: 0.9rem; z-index: 1; }
 .search-wrap input { 
-  width: 100%; padding: 10px 12px 10px 40px; border-radius: 12px; border: 1px solid #e2e8f0; 
-  font-size: 0.85rem; background: rgba(255,255,255,0.6); outline: none; transition: 0.3s; font-weight: 600;
+  width: 100%; padding: 10px 12px 10px 40px; border-radius: 12px; border: 1px solid var(--glass-border); 
+  font-size: 0.85rem; background: rgba(255,255,255,0.3); outline: none; transition: 0.3s; font-weight: 600;
 }
-.search-wrap input:focus { border-color: var(--elite-primary); background: white; box-shadow: 0 0 0 5px rgba(99,102,241,0.1); }
+.search-wrap input:focus { border-color: var(--elite-primary); background: rgba(255,255,255,0.6); box-shadow: 0 0 0 3px rgba(99,102,241,0.1); }
 
 .conversation-list { flex: 1; overflow-y: auto; }
 .conv-item { 
@@ -95,7 +90,8 @@
 }
 
 .channel-card.elite-compact-card {
-  background: white;
+  background: var(--glass-bg);
+  backdrop-filter: blur(8px);
   border-radius: 20px;
   padding: 1.5rem 1rem;
   border: 1px solid rgba(226, 232, 240, 0.6);
@@ -142,7 +138,7 @@
 .channel-card.active .btn-elite-action.primary-btn:hover { background: white; border-color: #cbd5e1; color: #0f172a; }
 
 /* MAIN CONTENT */
-.chatbot-main { flex: 1; display: flex; flex-direction: column; background: white; position: relative; overflow: hidden; }
+.chatbot-main { flex: 1; display: flex; flex-direction: column; background: transparent; position: relative; overflow: hidden; }
 .tab-content { flex: 1; display: flex; flex-direction: column; padding: 2.5rem; overflow-y: auto; width: 100%; }
 .tab-content.live { padding: 0; overflow: hidden; }
 
