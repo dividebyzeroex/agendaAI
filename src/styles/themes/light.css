@@ -1,7 +1,7 @@
 /* Clean Elite 2.0 — High Contrast & Depth (Sincronizado com Landing Page) */
 .theme-claro {
   --bg-color: #0b071a; /* Deep purple/blue dark */
-  --text-main: var(--bg-color); /* White/bright */
+  --text-main: #ffffff; /* White/bright */
   --text-muted: #94a3b8; /* Light slate */
   
   --glass-bg: rgba(11, 7, 26, 0.65);
