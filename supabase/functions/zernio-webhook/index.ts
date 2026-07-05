@@ -119,6 +119,13 @@ Deno.serve(async (req) => {
     ];
 
     console.log("Chamando Gemini API...");
+
+    // Broadcast bot is typing
+    await supabaseAdmin.channel('zernio_messages').send({
+      type: 'broadcast', event: 'bot_typing',
+      payload: { channelId, userPhone, isTyping: true, name: robotName }
+    });
+
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: mergedHistory,

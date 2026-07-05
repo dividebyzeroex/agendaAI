@@ -122,6 +122,17 @@ export class AdminChatbots implements OnInit {
     this.newMessage = '';
   }
 
+  private typingTimeout: any;
+  onTyping(convId: string) {
+    clearTimeout(this.typingTimeout);
+    this.typingTimeout = setTimeout(() => {
+       const activeConv = this.chatService.getActiveConversation();
+       if (activeConv) {
+          this.chatService.broadcastTyping(convId, activeConv.accountId, 'Equipe de Atendimento');
+       }
+    }, 500); // Throttling
+  }
+
   getChannelIcon(channel: string): string {
     if (channel === 'whatsapp') return 'pi pi-whatsapp';
     if (channel === 'facebook') return 'pi pi-facebook';
