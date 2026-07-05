@@ -89,12 +89,6 @@ export class ChatbotService {
       if (event === 'SIGNED_IN') {
         this.loadRobots();
         this.loadConversations();
-         const tState = this.typingStatesSubject.getValue();
-         if (payload['payload']?.userPhone && tState[payload['payload']?.userPhone]) {
-            const newState = { ...tState };
-            delete newState[payload['payload']?.userPhone];
-            this.typingStatesSubject.next(newState);
-         }
         this.loadIntegrations();
         this.loadConnectedChannels();
       }
@@ -107,6 +101,14 @@ export class ChatbotService {
       .on('broadcast', { event: 'new_message' }, payload => {
          console.log("Recebido broadcast do zernio:", payload);
          this.loadConversations();
+         
+         const tState = this.typingStatesSubject.getValue();
+         if (payload['payload']?.userPhone && tState[payload['payload']?.userPhone]) {
+            const newState = { ...tState };
+            delete newState[payload['payload']?.userPhone];
+            this.typingStatesSubject.next(newState);
+         }
+
          const activeId = this.activeConversationSubject.getValue()?.id;
          if (activeId && payload['payload']?.userPhone === activeId) {
             this.setActiveConversation(activeId);
