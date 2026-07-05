@@ -29,14 +29,9 @@ export class AdminChatbots implements OnInit {
   targetChannel: 'whatsapp' | 'facebook' | 'instagram' | null = null;
   
   // Real Config Storage
-  whatsappConfig = { phoneId: '', token: '' };
+  whatsappConfig = { phoneId: '', token: '' }; // phoneId será usado como zernio_channel_id
   isVerifying = false;
   errorMessage = '';
-
-  // WhatsApp connection modes
-  whatsappConnectionMode: 'qr-code' | 'meta-api' = 'qr-code';
-  qrCodeImage: string | null = null;
-  isGeneratingQr = false;
 
   // Gamification: "Fábrica de Robôs" State
   myRobots$ = this.chatService.robots$;
@@ -120,99 +115,24 @@ export class AdminChatbots implements OnInit {
     this.onboardingStep = 1;
     this.showOnboarding = true;
     this.whatsappConfig = { phoneId: '', token: '' };
-    this.whatsappConnectionMode = 'qr-code';
-    this.qrCodeImage = null;
   }
 
   async nextStep() {
     if (this.onboardingStep === 1) {
       this.onboardingStep = 2;
-      if (this.targetChannel === 'whatsapp' && this.whatsappConnectionMode === 'qr-code') {
-        this.generateQrCode();
-      }
     } else if (this.onboardingStep === 2) {
-      if (this.targetChannel === 'whatsapp') {
-        if (this.whatsappConnectionMode === 'meta-api') {
-          this.isVerifying = true;
-          try {
-            await this.chatService.saveIntegration('whatsapp', this.whatsappConfig);
-            this.isVerifying = false;
-            this.onboardingStep = 3;
-          } catch (e: any) {
-            this.isVerifying = false;
-            alert('Falha na configuração: ' + e.message);
-          }
-        } else {
-          // It's QR Code mode and user clicked Simulate
-          this.isVerifying = true;
-          try {
-             await this.chatService.saveIntegration('whatsapp', { type: 'evolution', qrCode: true });
-             this.isVerifying = false;
-             this.onboardingStep = 3;
-          } catch(e: any) {
-             this.isVerifying = false;
-             alert('Erro: ' + e.message);
-          }
-        }
-      } else {
-        this.onboardingStep = 3;
-      }
-    }
-  }
-
-  generateQrCode() {
-    this.isGeneratingQr = true;
-    this.qrCodeImage = null;
-    setTimeout(() => {
-      // Mock QR code image for demonstration
-      this.qrCodeImage = 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=AgendaAi-Evolution-Simulation';
-      this.isGeneratingQr = false;
-    }, 2000);
-  }
-
-  switchWhatsappMode(mode: 'qr-code' | 'meta-api') {
-    this.whatsappConnectionMode = mode;
-    if (mode === 'qr-code' && !this.qrCodeImage) {
-      this.generateQrCode();
-    }
-  }
-
-  async authenticateViaOAuth() {
-    if (!this.targetChannel || this.targetChannel === 'whatsapp') return;
-    
-    this.isVerifying = true;
-    
-    // Simulate opening Facebook/Instagram OAuth window
-    const w = 600;
-    const h = 700;
-    const left = (window.screen.width / 2) - (w / 2);
-    const top = (window.screen.height / 2) - (h / 2);
-    
-    const authWindow = window.open(
-      'https://www.facebook.com/v17.0/dialog/oauth?client_id=324495949855323&redirect_uri=https://agenda-ai-xi.vercel.app/admin/chatbots',
-      'MetaBusinessOAuth',
-      `toolbar=no, location=no, directories=no, status=no, menubar=no, scrollbars=no, resizable=no, copyhistory=no, width=${w}, height=${h}, top=${top}, left=${left}`
-    );
-
-    try {
-      // Polling or waiting for the popup to "complete"
-      setTimeout(async () => {
-        if (authWindow) authWindow.close();
-        
+      this.isVerifying = true;
+      try {
         await this.chatService.saveIntegration(this.targetChannel as any, { 
-          authMethod: 'oauth', 
-          provider: this.targetChannel,
-          pageName: this.targetChannel === 'instagram' ? '@barbearia.elite' : 'Barbearia Elite' 
+          zernio_channel_id: this.whatsappConfig.phoneId,
+          provider: 'zernio'
         });
-        
         this.isVerifying = false;
         this.onboardingStep = 3;
-      }, 3000);
-      
-    } catch (err: any) {
-      if (authWindow) authWindow.close();
-      this.isVerifying = false;
-      this.errorMessage = 'Erro ao conectar com a Meta.';
+      } catch (e: any) {
+        this.isVerifying = false;
+        alert('Falha na configuração: ' + e.message);
+      }
     }
   }
 
