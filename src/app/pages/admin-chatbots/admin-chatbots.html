@@ -106,7 +106,6 @@
           </div>
         </div>
       </div>
-      </div>
       <!-- TAB 1: INTEGRATIONS -->
       <div class="tab-content integrations" *ngIf="activeTab === 'channels'">
         <div *ngIf="connectedChannels$ | async as channels">
@@ -148,7 +147,7 @@
           </ng-template>
 
         </div>
-      </div>  </div>
+      </div>
 
     <!-- TAB 2: HISTORY (List Mode) -->
     <div class="tab-content history" *ngIf="activeTab === 'history'">
@@ -209,6 +208,7 @@
         <h3>Selecione uma conversa para monitorar.</h3>
       </div>
     </div>
+  </div>
 
   <!-- ONBOARDING MODAL STEPPER -->
   <div class="modal-overlay" *ngIf="showOnboarding">
