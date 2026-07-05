@@ -115,7 +115,10 @@
             </div>
 
             <div class="robot-actions">
-              <button class="btn-robot-action edit" (click)="openRobotModal(robot)">
+              <button class="btn-robot-action test" title="Testar IA" (click)="openTestModal(robot)">
+                <i class="pi pi-comments"></i>
+              </button>
+              <button class="btn-robot-action edit" title="Editar" (click)="openRobotModal(robot)">
                 <i class="pi pi-pencil"></i>
               </button>
               <button class="btn-robot-action toggle" (click)="toggleRobotStatus(robot)">
@@ -451,6 +454,56 @@
         <button class="btn-next-elite success" (click)="saveRobot()" [disabled]="!robotForm.name">
           {{ robotForm.id ? 'Salvar Modificações' : 'Contratar Robô' }} <i class="pi pi-bolt"></i>
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEST CHAT MODAL -->
+  <div class="modal-overlay" *ngIf="showTestModal">
+    <div class="onboarding-modal glass-modal test-chat-modal">
+      <button class="btn-close-modal" (click)="closeTestModal()">
+        <i class="pi pi-times"></i>
+      </button>
+
+      <div class="modal-body chat-body">
+        <div class="chat-header-test">
+          <div class="robot-avatar-test">{{ testingRobot?.avatar }}</div>
+          <div>
+            <h3>{{ testingRobot?.name }}</h3>
+            <span class="status-test"><i class="pi pi-circle-fill online-dot"></i> Teste Sandbox Ativo</span>
+          </div>
+        </div>
+
+        <div class="test-messages-container" #testScroll [scrollTop]="testScroll.scrollHeight">
+          <div
+            class="message-wrapper"
+            *ngFor="let m of testMessages"
+            [class.customer]="m.sender === 'user'"
+            [class.business]="m.sender === 'ai'"
+          >
+            <div class="msg-bubble">{{ m.text }}</div>
+            <div class="msg-time">{{ m.time | date: 'HH:mm' }}</div>
+          </div>
+          
+          <div class="message-wrapper business typing-indicator" *ngIf="isAiTyping">
+            <div class="msg-bubble">
+              <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="test-input-container">
+          <input
+            type="text"
+            [(ngModel)]="testNewMessage"
+            (keyup.enter)="sendMessageToTestBot()"
+            placeholder="Mande uma mensagem para o robô..."
+            [disabled]="isAiTyping"
+          />
+          <button class="btn-send-test" (click)="sendMessageToTestBot()" [disabled]="isAiTyping || !testNewMessage">
+            <i class="pi pi-send"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>

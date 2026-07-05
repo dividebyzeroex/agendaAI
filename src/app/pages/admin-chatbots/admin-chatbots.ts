@@ -43,6 +43,13 @@ export class AdminChatbots implements OnInit {
   showRobotModal = false;
   robotForm = { id: null as string | null, name: '', role: 'Atendente Geral', channel: 'WhatsApp', tone: 'Amigável', avatar: '🤖', active: true };
 
+  // Test Chat Modal
+  showTestModal = false;
+  testingRobot: any = null;
+  testMessages: { sender: 'user' | 'ai', text: string, time: Date }[] = [];
+  testNewMessage: string = '';
+  isAiTyping = false;
+
   openRobotModal(robot?: any) {
     if (robot) {
       this.robotForm = { ...robot };
@@ -77,6 +84,39 @@ export class AdminChatbots implements OnInit {
     } catch (e: any) {
       alert("Erro ao atualizar status.");
     }
+  }
+
+  openTestModal(robot: any) {
+    this.testingRobot = robot;
+    this.testMessages = [
+      { sender: 'ai', text: `Olá! Eu sou ${robot.name} (${robot.role}), como posso te ajudar hoje?`, time: new Date() }
+    ];
+    this.testNewMessage = '';
+    this.showTestModal = true;
+  }
+
+  closeTestModal() {
+    this.showTestModal = false;
+    this.testingRobot = null;
+  }
+
+  sendMessageToTestBot() {
+    if (!this.testNewMessage.trim()) return;
+    
+    this.testMessages.push({ sender: 'user', text: this.testNewMessage, time: new Date() });
+    this.testNewMessage = '';
+    
+    this.isAiTyping = true;
+    
+    // Simula delay de digitação
+    setTimeout(() => {
+      this.isAiTyping = false;
+      this.testMessages.push({
+        sender: 'ai',
+        text: `[MODO TESTE] Entendi sua mensagem. Sou o assistente de IA configurado com o tom "${this.testingRobot?.tone}". Esta é uma resposta simulada.`,
+        time: new Date()
+      });
+    }, 1500);
   }
 
   ngOnInit() {
