@@ -112,6 +112,17 @@ export class ChatbotService {
          const activeId = this.activeConversationSubject.getValue()?.id;
          if (activeId && payload['payload']?.userPhone === activeId) {
             this.setActiveConversation(activeId);
+         } else {
+            // Se não estiver com a conversa aberta, exibe toast global
+            if (payload['payload']?.message) {
+               const contactName = payload['payload']?.contactName || payload['payload']?.userPhone;
+               this.notifService.showToast({
+                  type: 'INFO',
+                  title: `Nova mensagem de ${contactName}`,
+                  message: payload['payload'].message.substring(0, 50) + (payload['payload'].message.length > 50 ? '...' : ''),
+                  icon: 'pi pi-comment'
+               });
+            }
          }
       })
       .on('broadcast', { event: 'ai_intent' }, payload => {

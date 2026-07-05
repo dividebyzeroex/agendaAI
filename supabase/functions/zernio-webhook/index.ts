@@ -28,6 +28,12 @@ Deno.serve(async (req) => {
     if (!userMessage || !userPhone || !channelId) {
       return new Response("Missing required fields", { status: 200 });
     }
+    
+    // Broadcast nova mensagem recebida para o Realtime (para Toasts e UI global)
+    await supabaseAdmin.channel('zernio_messages').send({
+      type: 'broadcast', event: 'new_message',
+      payload: { channelId, userPhone, contactName: body.data.contact?.name, message: userMessage }
+    });
 
     // Identificar Estabelecimento usando o channelId do Zernio
     const { data: integrations } = await supabaseAdmin

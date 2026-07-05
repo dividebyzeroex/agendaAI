@@ -36,6 +36,8 @@ export class Admin implements OnInit, OnDestroy {
   totalToday = 0;
   totalClientes = 0;
   revenue = 0;
+  concurrentCount = 0;
+  waitlistCount = 2; // AI Waitlist Mock
   isLoading = true;
   aiSuggestions: any[] = [];
   saudacao = '';
@@ -139,6 +141,13 @@ export class Admin implements OnInit, OnDestroy {
                start.getFullYear() === agora.getFullYear() && 
                e.status !== 'cancelado';
     }).reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
+    
+    // Atendimentos simultâneos (acontecendo agora)
+    this.concurrentCount = this.todayAppointments.filter(e => {
+        const start = new Date(e.start);
+        const end = e.end ? new Date(e.end) : new Date(start.getTime() + 30*60000);
+        return agora >= start && agora <= end && e.status !== 'cancelado';
+    }).length;
 
     this.isLoading = false;
   }

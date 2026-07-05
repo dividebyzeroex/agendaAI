@@ -30,6 +30,22 @@
         <span class="stat-value-ent">{{ totalClientes }} Cadastrados</span>
       </div>
     </div>
+
+    <div class="stat-card-elite">
+      <div class="stat-icon-ent" style="background: rgba(239, 68, 68, 0.1); color: #ef4444;"><i class="pi pi-bolt"></i></div>
+      <div class="stat-body-ent">
+        <span class="stat-label-ent">Agora (Simultâneos)</span>
+        <span class="stat-value-ent">{{ concurrentCount }} Ativos</span>
+      </div>
+    </div>
+
+    <div class="stat-card-elite">
+      <div class="stat-icon-ent" style="background: rgba(245, 158, 11, 0.1); color: #f59e0b;"><i class="pi pi-clock"></i></div>
+      <div class="stat-body-ent">
+        <span class="stat-label-ent">Fila de Espera</span>
+        <span class="stat-value-ent">{{ waitlistCount }} IA</span>
+      </div>
+    </div>
   </div>
 
   <div class="dashboard-grid">
