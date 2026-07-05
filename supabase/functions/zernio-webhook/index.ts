@@ -71,7 +71,7 @@ Deno.serve(async (req) => {
 
     // Buscar Histórico Real do Zernio
     console.log("Buscando histórico na Zernio API...");
-    let geminiHistory: any[] = [];
+    let rawHistory: any[] = [];
     try {
       const histReq = await fetch(`https://zernio.com/api/v1/inbox/conversations/${userPhone}/messages?accountId=${channelId}&limit=15&sort_order=asc`, {
         method: 'GET',
@@ -82,19 +82,29 @@ Deno.serve(async (req) => {
       });
       if (histReq.ok) {
         const histData = await histReq.json();
-        // O Zernio retorna .messages como array de mensagens
         if (histData.messages && Array.isArray(histData.messages)) {
-          geminiHistory = histData.messages.map((msg: any) => ({
+          rawHistory = histData.messages.map((msg: any) => ({
              role: msg.direction === 'outgoing' ? "model" : "user",
-             parts: [{ text: typeof msg.message === 'string' ? msg.message : (msg.message?.text || msg.text || "") }]
-          })).filter((m: any) => m.parts[0].text !== "");
+             text: typeof msg.message === 'string' ? msg.message : (msg.message?.text || msg.text || "")
+          })).filter((m: any) => m.text !== "");
         }
       }
     } catch (e) {
       console.error("Erro ao buscar histórico do Zernio", e);
     }
 
-    const currentMessage = { role: "user", parts: [{ text: userMessage }] };
+    if (userMessage) {
+      rawHistory.push({ role: "user", text: userMessage });
+    }
+
+    const mergedHistory: any[] = [];
+    for (const msg of rawHistory) {
+      if (mergedHistory.length > 0 && mergedHistory[mergedHistory.length - 1].role === msg.role) {
+        mergedHistory[mergedHistory.length - 1].parts[0].text += "\n" + msg.text;
+      } else {
+        mergedHistory.push({ role: msg.role, parts: [{ text: msg.text }] });
+      }
+    }
 
     // Configurar o Gemini
     const systemInstruction = `
@@ -112,7 +122,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
     console.log("Chamando Gemini API...");
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
-      contents: [...geminiHistory, currentMessage],
+      contents: mergedHistory,
       config: {
         systemInstruction: systemInstruction,
         temperature: 0.2,
@@ -146,8 +156,7 @@ Seu objetivo é ajudar o cliente a agendar serviços. Responda de forma concisa 
       const followupResponse = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: [
-          ...geminiHistory,
-          currentMessage,
+          ...mergedHistory,
           { role: 'model', parts: [{ functionCall: call }] },
           { role: 'user', parts: [{ functionResponse: { name: call.name, response: functionResult } }] }
         ],
