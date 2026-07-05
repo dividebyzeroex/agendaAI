@@ -65,7 +65,72 @@ export class ChatbotService {
   constructor() {
     this.loadIntegrations();
     this.loadRobots();
-    this.conversationsSubject.next(this.getMockConversations());
+    this.loadConversations();
+  }
+
+  async loadConversations() {
+    const { data: { user } } = await this.supabase.client.auth.getUser();
+    if (!user) return;
+
+    const { data: ests } = await this.supabase.client.rpc('get_estabelecimento_by_user', { p_user_id: user.id });
+    const est = (ests as any)?.[0];
+    if (!est) return;
+
+    const { data: messages, error } = await this.supabase.client
+      .from('chatbot_messages')
+      .select('*')
+      .eq('estabelecimento_id', est.id)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error loading conversations:', error);
+      return;
+    }
+
+    if (messages) {
+      // Agrupar mensagens por customer_phone
+      const convosMap = new Map<string, Conversation>();
+
+      messages.forEach((msg: any) => {
+        const phone = msg.customer_phone || 'Desconhecido';
+        if (!convosMap.has(phone)) {
+          convosMap.set(phone, {
+            id: `conv_${phone}`,
+            customerName: phone, // Nome real poderia vir de outra tabela
+            customerPhone: phone,
+            channel: msg.channel as any || 'whatsapp',
+            lastMessage: '',
+            lastUpdate: new Date(msg.created_at),
+            status: 'active',
+            messages: []
+          });
+        }
+        
+        const conv = convosMap.get(phone)!;
+        conv.messages.push({
+          id: msg.id,
+          sender: msg.sender,
+          text: msg.message,
+          timestamp: new Date(msg.created_at)
+        });
+        
+        conv.lastMessage = msg.message;
+        conv.lastUpdate = new Date(msg.created_at);
+      });
+
+      // Converter map para array e ordenar por lastUpdate (mais recentes primeiro)
+      const convosArray = Array.from(convosMap.values()).sort((a, b) => b.lastUpdate.getTime() - a.lastUpdate.getTime());
+      
+      this.conversationsSubject.next(convosArray);
+
+      // Se houver uma conversa ativa, atualizar ela
+      if (this.activeConversationSubject.value) {
+        const updatedActive = convosArray.find(c => c.id === this.activeConversationSubject.value!.id);
+        if (updatedActive) {
+          this.activeConversationSubject.next(updatedActive);
+        }
+      }
+    }
   }
 
   /**
@@ -240,31 +305,5 @@ export class ChatbotService {
     }
   }
 
-  private getMockConversations(): Conversation[] {
-    return [
-      {
-        id: 'conv_1',
-        customerName: 'Ricardo Oliveira',
-        customerPhone: '(11) 98765-4321',
-        channel: 'whatsapp',
-        lastMessage: 'Vou querer o corte degradê para as 15h.',
-        lastUpdate: new Date(),
-        status: 'active',
-        messages: [
-          { id: 'm1', sender: 'bot', text: 'Olá Ricardo! Como posso ajudar?', timestamp: new Date(Date.now() - 360000) },
-          { id: 'm4', sender: 'user', text: 'Vou querer o corte degradê para as 15h.', timestamp: new Date() },
-        ]
-      },
-      {
-        id: 'conv_2',
-        customerName: 'Amanda Silva',
-        customerPhone: '(11) 91234-5678',
-        channel: 'instagram',
-        lastMessage: 'Obrigada, agendado!',
-        lastUpdate: new Date(Date.now() - 86400000),
-        status: 'completed',
-        messages: []
-      }
-    ];
-  }
+  // Removido getMockConversations()
 }
