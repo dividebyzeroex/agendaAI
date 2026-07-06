@@ -212,10 +212,10 @@ export class AgendaEventService {
   async updatePaymentStatus(id: string, payment_status: string, payment_method: string) {
     const { error } = await this.supabase.from('agenda_events').update({ payment_status, payment_method }).eq('id', id);
     if (error) {
-      this.notifService.error('Erro ao baixar pagamento', error.message);
+      this.notifService.showToast({ type: 'WARNING', title: 'Erro ao baixar pagamento', message: error.message });
       throw error;
     }
-    this.notifService.success('Pagamento Recebido', 'O pagamento foi registrado com sucesso.');
+    this.notifService.showToast({ type: 'SUCCESS', title: 'Pagamento Recebido', message: 'O pagamento foi registrado com sucesso.' });
     this.fetchEvents();
   }
 
