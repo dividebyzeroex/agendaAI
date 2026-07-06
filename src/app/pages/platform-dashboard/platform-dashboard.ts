@@ -13,9 +13,16 @@ export class PlatformDashboard implements OnInit {
   private platformService = inject(PlatformService);
   metrics: PlatformMetrics | null = null;
   isLoading = true;
+  hasError = false;
 
   async ngOnInit() {
-    this.metrics = await this.platformService.getGlobalMetrics();
-    this.isLoading = false;
+    try {
+      this.metrics = await this.platformService.getGlobalMetrics();
+    } catch (e) {
+      this.hasError = true;
+      console.error('Failed to load metrics. Please execute the required SQL migration script.');
+    } finally {
+      this.isLoading = false;
+    }
   }
 }

@@ -77,8 +77,18 @@
 </div>
 
 <ng-template #loading>
-  <div class="loading-state">
+  <div class="loading-state" *ngIf="!hasError">
     <i class="pi pi-spin pi-spinner"></i>
     <span>Carregando métricas da plataforma...</span>
+  </div>
+  
+  <div class="error-state" *ngIf="hasError">
+    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
+    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
+    <p>Para garantir o funcionamento geral com dados reais (sem mocks), execute o script SQL abaixo no seu painel Supabase (SQL Editor).</p>
+    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
+      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
+      -- Execute-o para criar as funções (RPCs) necessárias.
+    </code>
   </div>
 </ng-template>
