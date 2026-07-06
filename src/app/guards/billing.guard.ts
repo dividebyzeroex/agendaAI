@@ -16,6 +16,9 @@ export const billingGuard: CanActivateFn = (route, state) => {
     return true;
   }
 
+  // BYPASS TEMPORÁRIO PARA FASE DE TESTES (ACESSO GRATUITO)
+  return true;
+
   return billingService.canAccessAdmin().pipe(
     take(1),
     map(canAccess => {

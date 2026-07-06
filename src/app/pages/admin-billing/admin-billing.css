@@ -391,7 +391,12 @@
 }
 
 .confirm-card {
-  width: 100%; max-width: 440px; padding: 2rem; border-radius: 28px; border: 1px solid rgba(255,255,255,0.1);
+  width: 100%; max-width: 440px; padding: 2rem; border-radius: 28px; 
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.1));
+  background-color: var(--glass-bg, #0f172a);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
 }
 
 .c-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem; }
@@ -524,7 +529,6 @@
 .plan-card-pro,
 .simple-section,
 .simple-table-wrap,
-.confirm-card,
 .plan-preview {
   background: var(--glass-bg) !important;
   border: 1px solid var(--glass-border) !important;

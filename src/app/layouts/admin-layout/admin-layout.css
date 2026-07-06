@@ -35,6 +35,7 @@
   flex-direction: column;
   gap: 4px;
   flex: 1;
+  padding: 0 12px;
 }
 .sidebar-nav a {
   display: flex;
@@ -43,7 +44,7 @@
   padding: 11px 14px;
   text-decoration: none;
   color: var(--text-muted);
-  border-radius: 10px;
+  border-radius: 12px;
   font-weight: 500;
   font-size: 0.95rem;
   transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
@@ -54,7 +55,6 @@
   color: var(--primary-color);
   font-weight: 700;
   box-shadow: var(--elite-shadow), inset 0 0 0 1px var(--glass-edge);
-  border-left: 3px solid var(--primary-color);
 }
 
 /* Cost Tracker at bottom */
@@ -207,14 +207,14 @@
   transform: scale(1.05);
 }
 
-::ng-deep .premium-avatar {
-  background: linear-gradient(135deg, var(--text-main), #3b82f6);
-  color: white;
+::ng-deep .p-avatar.premium-avatar {
+  background: linear-gradient(135deg, var(--primary-color), #2563eb) !important;
+  color: white !important;
   font-weight: 700;
-  width: 38px;
-  height: 38px;
-  box-shadow: 0 4px 10px rgba(59,130,246,0.3);
-  border: 2px solid rgba(255,255,255,0.2);
+  width: 40px !important;
+  height: 40px !important;
+  box-shadow: 0 4px 10px rgba(59,130,246,0.3) !important;
+  border: 2px solid rgba(255,255,255,0.8) !important;
 }
 
 ::ng-deep .premium-menu {
@@ -284,11 +284,12 @@
 }
 
 .notif-badge {
-  position: absolute; top: 0; right: 0;
+  position: absolute; top: 4px; right: 4px;
   background: #ef4444; color: white;
   font-size: 0.65rem; font-weight: 700; min-width: 18px; height: 18px;
   border-radius: 50%; display: flex; align-items: center; justify-content: center;
-  border: 2px solid white; pointer-events: none;
+  border: 2px solid var(--glass-bg, #ffffff); pointer-events: none;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.4);
 }
 
 /* Page Content */
@@ -319,6 +320,12 @@
   margin-left: -12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
 }
 
 .p-avatar-item:first-child {
@@ -330,21 +337,26 @@
   z-index: 10 !important;
 }
 
-.p-avatar-item p-avatar ::ng-deep .premium-avatar {
-    border: 2px solid var(--surface-card) !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2) !important;
+.p-avatar-item p-avatar ::ng-deep .p-avatar {
+    border: 2px solid var(--glass-bg, #ffffff) !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    width: 36px !important;
+    height: 36px !important;
+    background: linear-gradient(135deg, #94a3b8, #64748b) !important;
+    color: white !important;
+    font-weight: 700 !important;
 }
 
 .p-status-glow {
   position: absolute;
-  bottom: 0px;
-  right: 0px;
-  width: 10px;
-  height: 10px;
+  bottom: 2px;
+  right: 2px;
+  width: 12px;
+  height: 12px;
   background: #10b981;
   border-radius: 50%;
-  border: 2px solid var(--surface-card);
-  box-shadow: 0 0 10px #10b981 !important;
+  border: 2px solid var(--glass-bg, #ffffff);
+  box-shadow: 0 0 10px rgba(16,185,129,0.5) !important;
   z-index: 2;
   animation: presencePulse 2s infinite ease-in-out;
 }

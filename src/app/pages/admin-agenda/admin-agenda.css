@@ -165,21 +165,35 @@
 /* FULLCALENDAR OVERRIDES                                       */
 /* ────────────────────────────────────────────────────────── */
 
-/* Remove standard borders and apply soft aesthetics */
+/* Remove standard borders and apply soft aesthetics natively */
+::ng-deep .fc {
+  --fc-border-color: var(--glass-border, rgba(0,0,0,0.1)) !important;
+  --fc-page-bg-color: transparent !important;
+  --fc-neutral-bg-color: transparent !important;
+  --fc-list-event-hover-bg-color: transparent !important;
+  --fc-today-bg-color: var(--active-bg, rgba(59, 130, 246, 0.05)) !important;
+}
+
 ::ng-deep .fc-theme-standard td,
-::ng-deep .fc-theme-standard th,
-::ng-deep .fc-theme-standard .fc-scrollgrid {
-  border-color: var(--glass-border) !important;
+::ng-deep .fc-theme-standard th {
+  border-color: var(--glass-border, rgba(0,0,0,0.1)) !important;
+  background: transparent !important;
 }
 
 ::ng-deep .fc-scrollgrid {
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
-/* Fix the ugly default pale yellow 'today' background */
-::ng-deep .fc .fc-day-today {
-  background: rgba(99, 102, 241, 0.03) !important;
+
+
+/* Hover effects for time slots */
+::ng-deep .fc-timegrid-slot:hover,
+::ng-deep .fc-daygrid-day:hover {
+  background: var(--active-bg, rgba(99, 102, 241, 0.05)) !important;
+  cursor: pointer;
+  transition: background 0.2s;
 }
 
 /* Header Text */
@@ -233,8 +247,12 @@
 /* Column Headers */
 ::ng-deep .fc-col-header-cell {
   padding: 16px 0 !important;
-  background: rgba(0,0,0,0.02);
-  border-bottom: 1px solid var(--glass-border) !important;
+  background: transparent !important;
+  border-bottom: 2px solid var(--glass-border, rgba(0,0,0,0.1)) !important;
+  transition: background 0.3s;
+}
+::ng-deep .fc-col-header-cell:hover {
+  background: var(--active-bg, rgba(0,0,0,0.04)) !important;
 }
 ::ng-deep .fc .fc-timegrid-axis-cushion,
 ::ng-deep .fc .fc-timegrid-slot-label-cushion {

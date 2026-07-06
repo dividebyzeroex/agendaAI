@@ -43,12 +43,9 @@ export interface AgendamentoForm {
  
         <!-- Seção: Cliente Inteligente -->
         <div class="elite-section">
-          <div class="section-header">
-            <label><i class="pi pi-user"></i> Identificação do Cliente</label>
-            <span class="badge" *ngIf="isNovoCliente">Novo Cliente</span>
-          </div>
+          <label><i class="pi pi-user"></i> Identificação do Cliente</label>
           
-          <div class="search-container">
+          <div class="search-container" *ngIf="!form.clienteNome">
             <div class="premium-search-box">
               <i class="pi pi-search search-icon"></i>
               <input
@@ -88,6 +85,13 @@ export interface AgendamentoForm {
             </div>
           </div>
  
+          <!-- Badge Cliente Selecionado -->
+          <div class="active-client-chip" *ngIf="form.clienteNome">
+            <i class="pi" [ngClass]="isNovoCliente ? 'pi-user-plus' : 'pi-verified'"></i>
+            <span>{{ isNovoCliente ? 'Novo: ' + form.clienteNome : form.clienteNome }}</span>
+            <button class="remove-chip" (click)="clearCliente()"><i class="pi pi-times"></i></button>
+          </div>
+
           <!-- Campo Telefone Expansível Premium -->
           <div class="expand-phone" *ngIf="isNovoCliente">
             <div class="premium-search-box">
@@ -95,13 +99,6 @@ export interface AgendamentoForm {
               <input type="tel" [(ngModel)]="form.clienteTelefone"
                 placeholder="Digite o telefone para o novo cadastro..." class="elite-search-input" />
             </div>
-          </div>
- 
-          <!-- Badge Cliente Selecionado -->
-          <div class="active-client-chip" *ngIf="form.clienteId && !isNovoCliente">
-            <i class="pi pi-verified"></i>
-            <span>{{ form.clienteNome }}</span>
-            <button class="remove-chip" (click)="clearCliente()"><i class="pi pi-times"></i></button>
           </div>
         </div>
  
@@ -252,7 +249,7 @@ export interface AgendamentoForm {
     /* Busca de Clientes */
     .search-container { position: relative; }
     .premium-search-box {
-      background: var(--active-bg); border: 2px solid var(--glass-border); border-radius: 14px;
+      background: var(--active-bg, rgba(255, 255, 255, 0.6)); border: 2px solid var(--glass-border, rgba(0, 0, 0, 0.15)); border-radius: 14px;
       padding: 2px 6px; display: flex; align-items: center; gap: 10px; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
     }
     .premium-search-box:focus-within { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); background: var(--glass-bg); }
@@ -450,7 +447,6 @@ export class AgendarModalComponent implements OnInit {
     this.showDropdown = true;
     this.isNovoCliente = false;
     this.form.clienteId = null;
-    this.form.clienteNome = this.clienteQuery;
   }
 
   selectCliente(c: Cliente) {

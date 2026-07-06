@@ -1,0 +1,102 @@
+.tenants-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 8px 0;
+}
+
+.header p {
+  color: #94a3b8;
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.table-card {
+  background: #1a1d24;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+:host ::ng-deep .p-datatable-platform .p-datatable-header,
+:host ::ng-deep .p-datatable-platform .p-datatable-thead > tr > th {
+  background: #0f1115;
+  color: #94a3b8;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-weight: 600;
+  padding: 1rem;
+}
+
+:host ::ng-deep .p-datatable-platform .p-datatable-tbody > tr {
+  background: #1a1d24;
+  color: #e2e8f0;
+}
+
+:host ::ng-deep .p-datatable-platform .p-datatable-tbody > tr > td {
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding: 1rem;
+}
+
+.tenant-name-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.tenant-name-col strong {
+  color: #fff;
+  font-size: 0.95rem;
+}
+
+.tenant-id {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.slug-col {
+  color: #3b82f6;
+  font-family: monospace;
+}
+
+.plan-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: bold;
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.plan-badge.pro {
+  background: rgba(59, 130, 246, 0.15);
+  color: #3b82f6;
+}
+
+.plan-badge.enterprise {
+  background: rgba(139, 92, 246, 0.15);
+  color: #8b5cf6;
+}
+
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px;
+  background: rgba(239, 68, 68, 0.05);
+  border: 1px dashed rgba(239, 68, 68, 0.3);
+  border-radius: 12px;
+  gap: 12px;
+  margin-top: 24px;
+}
+.error-state p {
+  color: #94a3b8;
+  max-width: 600px;
+}

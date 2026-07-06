@@ -1,0 +1,59 @@
+<div class="tenants-container">
+  <div class="header">
+    <h1>Estabelecimentos (Tenants)</h1>
+    <p>Gestão completa de todas as barbearias, clínicas e salões utilizando a AgendaAI.</p>
+  </div>
+
+  <div class="table-card">
+    <p-table [value]="tenants" [loading]="isLoading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-platform">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>ID / Estabelecimento</th>
+          <th>Slug</th>
+          <th>Plano</th>
+          <th>Data de Criação</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-t>
+        <tr>
+          <td>
+            <div class="tenant-name-col">
+              <strong>{{ t.nome }}</strong>
+              <span class="tenant-id">#{{ t.id }}</span>
+            </div>
+          </td>
+          <td class="slug-col">/{{ t.slug }}</td>
+          <td>
+            <span class="plan-badge" [ngClass]="t.plano">{{ t.plano | uppercase }}</span>
+          </td>
+          <td>{{ t.created_at | date:'dd/MM/yyyy' }}</td>
+          <td>
+            <p-tag [value]="t.status | uppercase" [severity]="getSeverity(t.status)"></p-tag>
+          </td>
+          <td>
+            <button pButton icon="pi pi-cog" class="p-button-text p-button-sm p-button-secondary" title="Configurar Inquilino"></button>
+            <button pButton icon="pi pi-ban" class="p-button-text p-button-sm p-button-danger" *ngIf="t.status === 'active'" title="Bloquear Conta"></button>
+            <button pButton icon="pi pi-check" class="p-button-text p-button-sm p-button-success" *ngIf="t.status === 'blocked'" title="Desbloquear Conta"></button>
+          </td>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="text-center p-4">Nenhum estabelecimento encontrado.</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+  
+  <div class="error-state" *ngIf="hasError">
+    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
+    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
+    <p>Para exibir a lista de estabelecimentos reais, execute o script SQL abaixo no painel Supabase (SQL Editor).</p>
+    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
+      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
+      -- Execute-o para criar a função get_platform_tenants().
+    </code>
+  </div>
+</div>

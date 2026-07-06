@@ -199,7 +199,7 @@
 
   <!-- CONFIRMATION MODAL -->
   <div class="modal-backdrop" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
-    <div class="confirm-card glass-heavy" (click)="$event.stopPropagation()">
+    <div class="confirm-card" (click)="$event.stopPropagation()">
       <div class="c-head">
         <h4>Confirmar Assinatura</h4>
         <button class="btn-close" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
