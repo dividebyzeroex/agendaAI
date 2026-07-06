@@ -24,6 +24,10 @@ export interface AgendaEvent {
   servicos_extras?: any[];
   valor_total?: number;
   cobranca_enviada?: boolean;
+  payment_status?: 'pendente' | 'pago_online' | 'pago_local';
+  payment_method?: string;
+  stripe_session_id?: string;
+  lembrete_enviado?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -203,6 +207,16 @@ export class AgendaEventService {
         this.getEvents().map(e => (e.id === id ? { ...e, ...decryptedChanges } : e))
       );
     });
+  }
+
+  async updatePaymentStatus(id: string, payment_status: string, payment_method: string) {
+    const { error } = await this.supabase.from('agenda_events').update({ payment_status, payment_method }).eq('id', id);
+    if (error) {
+      this.notifService.error('Erro ao baixar pagamento', error.message);
+      throw error;
+    }
+    this.notifService.success('Pagamento Recebido', 'O pagamento foi registrado com sucesso.');
+    this.fetchEvents();
   }
 
   async removeEvent(id: string): Promise<void> {

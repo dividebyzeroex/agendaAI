@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
+import { SupabaseService } from '../../services/supabase.service';
 
 @Component({
   selector: 'app-admin-configuracoes',
@@ -16,6 +17,7 @@ export class AdminConfiguracoes implements OnInit {
   public isLoadingService = inject(EstabelecimentoService);
   private estabelecimentoService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);
+  private supabaseSvc = inject(SupabaseService);
 
   estabelecimento: Estabelecimento = { nome: '' };
   servicos: Servico[] = [];
@@ -26,7 +28,7 @@ export class AdminConfiguracoes implements OnInit {
   savedMsg = '';
 
   // New service form
-  novoServico: Omit<Servico, 'id' | 'ativo'> = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: '✂️' };
+  novoServico: any = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: '✨', aceita_pagamento_antecipado: false, valor_antecipado: 0 };
   showNovoServico = false;
 
   ngOnInit() {
@@ -82,11 +84,26 @@ export class AdminConfiguracoes implements OnInit {
     }
   }
 
+  async conectarStripe() {
+    this.isSaving = true;
+    try {
+      const { data, error } = await this.supabaseSvc.client.functions.invoke('stripe-connect-onboard');
+      if (error) throw error;
+      if (data && data.url) {
+        window.location.href = data.url;
+      }
+    } catch (e: any) {
+      this.showSuccessMsg('Erro ao conectar Stripe: ' + e.message);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
   async adicionarServico() {
     if (!this.novoServico.titulo || this.novoServico.preco <= 0) return;
     try {
       await this.estabelecimentoService.addServico({ ...this.novoServico, ativo: true });
-      this.novoServico = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: this.segmentoConfig.current.emojiPadrao };
+      this.novoServico = { titulo: '', descricao: '', preco: 0, duracao_min: 30, emoji: this.segmentoConfig.current.emojiPadrao, aceita_pagamento_antecipado: false, valor_antecipado: 0 };
       this.showNovoServico = false;
       this.showSuccessMsg('Serviço adicionado!');
     } catch (e: any) {

@@ -32,6 +32,15 @@ import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.ser
           </div>
         </div>
 
+        <div class="status-summary" style="margin-bottom: 2rem;">
+          <div class="ss-item">
+            <span class="ss-label">Pagamento</span>
+            <span class="status-pill-ent" [class]="evento?.payment_status || 'pendente'">
+              {{ (evento?.payment_status === 'pago_online' ? 'Pago (Stripe)' : evento?.payment_status === 'pago_local' ? 'Pago (Local)' : 'Pendente') }}
+            </span>
+          </div>
+        </div>
+
         <div class="obs-box" *ngIf="evento?.observacoes">
           <span class="ss-label">Observações</span>
           <p>{{ evento?.observacoes }}</p>
@@ -56,6 +65,13 @@ import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.ser
             <i class="pi pi-check-circle"></i> Finalizar Atendimento
           </button>
         </ng-container>
+
+        <!-- Baixa manual de pagamento -->
+        <button *ngIf="evento?.payment_status !== 'pago_online' && evento?.payment_status !== 'pago_local'" 
+                class="btn-ent-ghost" style="border-color: #10b981; color: #10b981; margin-top: 8px;"
+                (click)="darBaixaPagamento()">
+          <i class="pi pi-money-bill"></i> Dar Baixa no Pagamento (Local)
+        </button>
 
         <!-- Ações secundárias -->
         <div class="footer-secondary">
@@ -108,9 +124,9 @@ import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.ser
       padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; 
       width: fit-content; text-transform: uppercase;
     }
-    .status-pill-ent.confirmado { background: #ecfdf5; color: #059669; }
+    .status-pill-ent.confirmado, .status-pill-ent.pago_online, .status-pill-ent.pago_local { background: #ecfdf5; color: #059669; }
     .status-pill-ent.em_atendimento { background: #eff6ff; color: #2563eb; }
-    .status-pill-ent.noshow { background: #fefce8; color: #a16207; }
+    .status-pill-ent.noshow, .status-pill-ent.pendente { background: #fefce8; color: #a16207; }
     .status-pill-ent.concluido { background: #f1f5f9; color: #475569; }
     .status-pill-ent.cancelado { background: #fef2f2; color: #dc2626; }
 
@@ -171,6 +187,12 @@ export class EventoModalComponent {
   async mudarStatus(novoStatus: 'confirmado' | 'pendente' | 'cancelado' | 'concluido' | 'noshow' | 'em_atendimento') {
     if (!this.evento?.id) return;
     await this.agendaService.updateStatus(this.evento.id, novoStatus);
+    this.fechar();
+  }
+
+  async darBaixaPagamento() {
+    if (!this.evento?.id) return;
+    await this.agendaService.updatePaymentStatus(this.evento.id, 'pago_local', 'local');
     this.fechar();
   }
 

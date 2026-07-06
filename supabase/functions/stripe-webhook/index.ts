@@ -40,7 +40,22 @@ Deno.serve(async (req) => {
       const estabelecimentoId = session.client_reference_id; // Passado na criação do checkout
       const customerId = session.customer as string;
 
-      if (estabelecimentoId) {
+      const agendaEventId = session.metadata?.agenda_event_id;
+
+      if (agendaEventId) {
+        // É um pré-pagamento de agendamento
+        await supabaseAdmin
+          .from('agenda_events')
+          .update({
+            payment_status: 'pago_online',
+            status: 'confirmado',
+            stripe_session_id: session.id
+          })
+          .eq('id', agendaEventId);
+        
+        console.log(`Agendamento ${agendaEventId} confirmado com sucesso via Stripe.`);
+      } else if (estabelecimentoId) {
+        // É uma assinatura de plano PRO
         await supabaseAdmin
           .from('estabelecimento')
           .update({ plano_ativo: 'pro', stripe_customer_id: customerId })

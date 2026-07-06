@@ -85,6 +85,23 @@
          <a routerLink="/admin/billing" class="btn-primary" style="margin-top: 1.5rem; display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: 12px;">Acessar Portal de Pagamento</a>
       </div>
 
+      <!-- 🏦 Card Pagamentos Stripe Connect -->
+      <div class="bento-card config-card plan-card">
+         <div class="link-card-header">
+           <div class="link-icon">🏦</div>
+           <div>
+             <h3>Recebimentos PIX/Cartão</h3>
+             <p>Conecte sua conta bancária para receber sinais antecipados direto do Agendamento Público.</p>
+           </div>
+         </div>
+         <div *ngIf="estabelecimento.stripe_account_id" class="stripe-connected">
+            <p style="color: var(--accent-color); font-weight: 500; margin-top: 1rem;"><i class="pi pi-check-circle"></i> Conta conectada e ativa</p>
+         </div>
+         <button *ngIf="!estabelecimento.stripe_account_id" class="btn-primary" style="margin-top: 1.5rem; width: 100%; display: block;" (click)="conectarStripe()">
+            Conectar Conta Bancária
+         </button>
+      </div>
+
       <!-- Dados do Negócio (Ocupa toda a largura da grid) -->
       <div class="bento-card bento-wide config-card">
         <h3>Dados do Negócio</h3>
@@ -144,6 +161,17 @@
           <div class="field">
             <label>Duração (min)</label>
             <input type="number" [(ngModel)]="novoServico.duracao_min" class="ag-input" min="5" step="5" />
+          </div>
+          <div class="field checkbox-field">
+             <label style="display:flex; align-items:center; gap: 8px;">
+               <input type="checkbox" [(ngModel)]="novoServico.aceita_pagamento_antecipado" />
+               Exigir pagamento antecipado (Sinal)
+             </label>
+          </div>
+          <div class="field" *ngIf="novoServico.aceita_pagamento_antecipado">
+             <label>Valor Antecipado (R$)</label>
+             <input type="number" [(ngModel)]="novoServico.valor_antecipado" class="ag-input" min="0" />
+             <small style="color:var(--text-muted)">Esse valor será cobrado no agendamento.</small>
           </div>
           <div class="field full">
             <label>Descrição</label>

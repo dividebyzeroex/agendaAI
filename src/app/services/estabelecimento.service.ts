@@ -11,6 +11,8 @@ export interface Servico {
   duracao_min: number;
   emoji?: string;
   ativo?: boolean;
+  aceita_pagamento_antecipado?: boolean;
+  valor_antecipado?: number;
 }
 
 export interface Horario {
@@ -35,6 +37,8 @@ export interface Estabelecimento {
   endereco_completo?: string;
   cidade?: string;
   logo_url?: string;
+  stripe_account_id?: string;
+  pagamento_online_ativo?: boolean;
   cor_primaria?: string;
   plano?: string;
   plano_expires_at?: string;

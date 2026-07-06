@@ -3,6 +3,8 @@ import { Landing } from './pages/landing/landing';
 import { Login } from './pages/login/login';
 import { PrimeiroAcesso } from './pages/primeiro-acesso/primeiro-acesso';
 import { Agendar } from './pages/agendar/agendar';
+import { AgendarSuccess } from './pages/agendar-success/agendar-success';
+import { AgendarAction } from './pages/agendar-action/agendar-action';
 import { Onboarding } from './pages/onboarding/onboarding';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 
@@ -24,6 +26,9 @@ export const routes: Routes = [
   { path: 'primeiro-acesso', component: PrimeiroAcesso },
   { path: 'onboarding', component: Onboarding, canActivate: [authGuard] },
   // Rota pública de agendamento — /agendar/:slug (ex: /agendar/barbearia-do-joao)
+  { path: 'agendar/success', component: AgendarSuccess },
+  { path: 'agendar/cancel', component: AgendarAction },
+  { path: 'agendar/reschedule', component: AgendarAction },
   { path: 'agendar/:slug', component: Agendar },
   // Fallback genérico sem slug
   { path: 'agendar', component: Agendar },

@@ -8,6 +8,7 @@ import { AgendaEventService } from '../../services/agenda-event.service';
 import { ClienteService } from '../../services/cliente.service';
 import { SmsService } from '../../services/sms.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
+import { SupabaseService } from '../../services/supabase.service';
 
 type BookingStep = 'service' | 'pro' | 'time' | 'confirm' | 'done';
 
@@ -24,6 +25,7 @@ export class Agendar implements OnInit {
   private agendaSvc  = inject(AgendaEventService);
   private clientSvc  = inject(ClienteService);
   private smsSvc     = inject(SmsService);
+  private supabase   = inject(SupabaseService);
   private cdr        = inject(ChangeDetectorRef);
 
   // -- Identificando o Segmento --
@@ -212,15 +214,38 @@ export class Agendar implements OnInit {
       const duration = this.selectedService?.duracao_min || 30;
       const endDt = new Date(startDt.getTime() + duration * 60000);
       
-      await this.agendaSvc.addEvent({
+      // Criar agendamento inicialmente pendente
+      const { data: eventData, error } = await this.supabase.client.from('agenda_events').insert({
         title: `${this.selectedService?.emoji || this.config.emojiPadrao} ${this.custName} | ${this.selectedService?.titulo}`,
         start: this.toLocalISO(startDt), 
         end: this.toLocalISO(endDt),
         cliente_id: clienteId,
         servico_id: this.selectedService?.id,
-        status: 'confirmado',
-      });
+        status: 'confirmado', // manter confirmado provisoriamente, se não for pago, o sistema de no-show resolve
+        payment_status: 'pendente'
+      }).select().single();
 
+      if (error) throw error;
+
+      // Se o serviço exige pré-pagamento, redirecionar
+      if (this.selectedService?.aceita_pagamento_antecipado) {
+        const { data: sessionData, error: funcError } = await this.supabase.client.functions.invoke('stripe-create-checkout', {
+          body: {
+            servicoId: this.selectedService.id,
+            estabelecimentoId: this.estab!.id,
+            agendaEventId: eventData.id,
+            origin: window.location.origin
+          }
+        });
+
+        if (funcError) throw funcError;
+        if (sessionData && sessionData.url) {
+          window.location.href = sessionData.url;
+          return;
+        }
+      }
+
+      // Fluxo normal sem pagamento online
       this.smsSvc.enviarConfirmacao(this.custPhone, this.custName, this.selectedService?.titulo!, this.selectedTime);
       this.goToStep('done', 'Finalizando seu agendamento...');
     } catch (err: any) {
