@@ -2,14 +2,17 @@ import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "npm:@supabase/supabase-js@2.40.0";
 import Stripe from "npm:stripe@^14.0.0";
 
-const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
-  apiVersion: "2023-10-16",
-});
-const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
-
-console.log("Stripe Webhook Starting...");
-
 Deno.serve(async (req) => {
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!stripeKey) {
+    return new Response('STRIPE_SECRET_KEY is not set', { status: 500 });
+  }
+  
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: "2023-10-16",
+  });
+  const endpointSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET") || "";
+
   if (req.method !== 'POST') {
     return new Response('Method Not Allowed', { status: 405 });
   }
