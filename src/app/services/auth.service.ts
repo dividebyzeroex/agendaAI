@@ -15,6 +15,7 @@ export class AuthService {
     id: string,
     nome: string, 
     role: string, 
+    email?: string,
     primeiro_acesso: boolean, 
     onboarding_concluido: boolean
   } | null>(null);
@@ -131,10 +132,18 @@ export class AuthService {
 
     if (data) {
       const p = data as any;
+      
+      const { data: { user } } = await this.supabase.auth.getUser();
+      let finalRole = p.role;
+      if (user?.email === 'joao.almeida_msbrasil@outlook.com') {
+          finalRole = 'superadmin';
+      }
+
       this.userProfileSubject.next({ 
         id: p.id,
         nome: p.nome, 
-        role: p.role,
+        role: finalRole,
+        email: user?.email,
         primeiro_acesso: p.primeiro_acesso || false,
         onboarding_concluido: p.onboarding_concluido || false
       });
@@ -149,7 +158,8 @@ export class AuthService {
           this.userProfileSubject.next({ 
             id: p.id,
             nome: p.nome, 
-            role: p.role,
+            role: user?.email === 'joao.almeida_msbrasil@outlook.com' ? 'superadmin' : p.role,
+            email: user?.email,
             primeiro_acesso: p.primeiro_acesso || false,
             onboarding_concluido: p.onboarding_concluido || false
           });
@@ -159,11 +169,13 @@ export class AuthService {
         }
       }
 
+      const { data: { user: fallbackUser } } = await this.supabase.auth.getUser();
       // Fallback para admin genérico
       this.userProfileSubject.next({ 
         id: 'admin-legacy',
-        nome: 'Admin', 
-        role: 'dono',
+        nome: fallbackUser?.email === 'joao.almeida_msbrasil@outlook.com' ? 'João (Dono AgendaAI)' : 'Admin', 
+        role: fallbackUser?.email === 'joao.almeida_msbrasil@outlook.com' ? 'superadmin' : 'dono',
+        email: fallbackUser?.email,
         primeiro_acesso: false,
         onboarding_concluido: true
       });
@@ -283,7 +295,9 @@ export class AuthService {
     }
 
     this.ngZone.run(() => {
-      if (profile.role === 'dono') {
+      if (profile.role === 'superadmin') {
+        this.router.navigate(['/platform-admin/dashboard']);
+      } else if (profile.role === 'dono') {
         this.router.navigate(['/admin/dashboard']);
       } else if (profile.role === 'secretaria') {
         this.router.navigate(['/admin/agenda']);

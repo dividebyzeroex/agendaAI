@@ -1,0 +1,51 @@
+<div class="platform-layout">
+  <aside class="sidebar">
+    <div class="brand">
+      <i class="pi pi-bolt"></i>
+      <span>AgendaAI Owner</span>
+    </div>
+    
+    <nav class="nav-menu">
+      <a routerLink="/platform-admin/dashboard" routerLinkActive="active" class="nav-item">
+        <i class="pi pi-chart-pie"></i> Visão Global
+      </a>
+      <a routerLink="/platform-admin/tenants" routerLinkActive="active" class="nav-item">
+        <i class="pi pi-building"></i> Estabelecimentos
+      </a>
+      <a class="nav-item disabled">
+        <i class="pi pi-credit-card"></i> Faturamento (Stripe)
+      </a>
+      <a class="nav-item disabled">
+        <i class="pi pi-sparkles"></i> Log de IA
+      </a>
+      <a class="nav-item disabled">
+        <i class="pi pi-cog"></i> Configurações
+      </a>
+    </nav>
+    
+    <div class="sidebar-footer">
+      <div class="user-info" *ngIf="user$ | async as user">
+        <div class="avatar">{{ user.nome ? user.nome.charAt(0).toUpperCase() : 'S' }}</div>
+        <div class="details">
+          <strong>{{ user.nome }}</strong>
+          <span>Super Admin</span>
+        </div>
+      </div>
+      <button class="btn-logout" (click)="logout()">
+        <i class="pi pi-sign-out"></i> Sair
+      </button>
+    </div>
+  </aside>
+  
+  <main class="content">
+    <header class="topbar">
+      <h2>SaaS Command Center</h2>
+      <div class="topbar-actions">
+        <span class="status-badge"><i class="pi pi-circle-fill"></i> Sistema Operacional</span>
+      </div>
+    </header>
+    <div class="page-content">
+      <router-outlet></router-outlet>
+    </div>
+  </main>
+</div>
