@@ -1,5 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { PlatformService } from '../../services/platform';
 
 @Component({
   selector: 'app-platform-billing',
@@ -23,26 +24,26 @@ export class PlatformBilling implements OnInit {
   ];
 
   transactions: any[] = [];
+  isLoading = true;
+  hasError = false;
 
-  ngOnInit() {
-    this.generateMockTransactions();
-  }
+  private platformService = inject(PlatformService);
 
-  generateMockTransactions() {
-    const tenants = ['Barbearia do João', 'Spa Zen', 'Tattoo Studio', 'Clinica Bella', 'Studio Makeup'];
-    const plans = ['Plano Completo', 'Plano Básico', 'Plano Premium'];
-    const amounts = [97, 49, 149, 299];
-    
-    for (let i = 0; i < 15; i++) {
-      this.transactions.push({
-        id: `tx_${Math.random().toString(36).substr(2, 9)}`,
-        tenant: tenants[Math.floor(Math.random() * tenants.length)],
-        plan: plans[Math.floor(Math.random() * plans.length)],
-        amount: amounts[Math.floor(Math.random() * amounts.length)],
-        date: new Date(Date.now() - Math.random() * 864000000),
-        status: Math.random() > 0.15 ? 'succeeded' : 'failed'
-      });
+  async ngOnInit() {
+    try {
+      const data = await this.platformService.getBillingData();
+      if (data) {
+        this.metrics = data.metrics;
+        this.plans = data.plans;
+        this.transactions = data.transactions;
+      }
+    } catch (e) {
+      this.hasError = true;
+      console.error('Failed to load real billing data.');
+    } finally {
+      this.isLoading = false;
     }
-    this.transactions.sort((a, b) => b.date.getTime() - a.date.getTime());
   }
+
+
 }

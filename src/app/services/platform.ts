@@ -53,5 +53,26 @@ export class PlatformService {
     }
   }
 
+  async getBillingData(): Promise<any> {
+    try {
+      const { data, error } = await this.supabase.functions.invoke('platform-billing');
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('[PlatformService] Error fetching billing:', e);
+      throw e;
+    }
+  }
+
+  async getSocialData(): Promise<any> {
+    try {
+      const { data, error } = await this.supabase.functions.invoke('platform-social');
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('[PlatformService] Error fetching social:', e);
+      throw e;
+    }
+  }
 
 }
