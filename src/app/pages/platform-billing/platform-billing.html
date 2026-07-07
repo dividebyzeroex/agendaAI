@@ -1,0 +1,68 @@
+<div class="billing-container">
+  <div class="header">
+    <h2>Faturamento e Receita SaaS</h2>
+    <p>Acompanhe o MRR, ARPU e histórico de pagamentos via Stripe.</p>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card highlight">
+      <span class="label">Receita Mensal (MRR)</span>
+      <span class="value">R$ {{ metrics.mrr | number:'1.2-2' }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Receita Anual (ARR)</span>
+      <span class="value">R$ {{ metrics.arr | number:'1.2-2' }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Ticket Médio (ARPU)</span>
+      <span class="value">R$ {{ metrics.arpu | number:'1.2-2' }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Taxa de Churn</span>
+      <span class="value" [class.error]="metrics.churn > 2">{{ metrics.churn | number:'1.1-1' }}<small>%</small></span>
+    </div>
+  </div>
+
+  <div class="dashboard-split">
+    <!-- Plan Breakdown -->
+    <div class="panel">
+      <h3>MRR por Plano</h3>
+      <div class="plan-list">
+        <div class="plan-item" *ngFor="let plan of plans">
+          <div class="plan-info">
+            <h4>{{ plan.name }}</h4>
+            <span class="subs">{{ plan.count }} assinantes</span>
+          </div>
+          <div class="plan-bar">
+            <div class="bar-fill" [style.width.%]="plan.percent"></div>
+          </div>
+          <div class="plan-value">
+            R$ {{ plan.mrr | number:'1.2-2' }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Transactions -->
+    <div class="panel">
+      <h3>Últimas Transações (Stripe)</h3>
+      <div class="tx-list">
+        <div class="tx-item" *ngFor="let tx of transactions">
+          <div class="tx-icon" [ngClass]="tx.status">
+            <i class="pi" [ngClass]="tx.status === 'succeeded' ? 'pi-check' : 'pi-times'"></i>
+          </div>
+          <div class="tx-details">
+            <h4>{{ tx.tenant }}</h4>
+            <span>{{ tx.plan }} • {{ tx.date | date:'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <div class="tx-amount">
+            R$ {{ tx.amount | number:'1.2-2' }}
+          </div>
+          <div class="tx-status" [ngClass]="tx.status">
+            {{ tx.status === 'succeeded' ? 'Pago' : 'Falhou' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

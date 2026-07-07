@@ -434,3 +434,36 @@ entrypoint = "./functions/zernio-send/index.ts"
 # Specifies static files to be bundled with the function. Supports glob patterns.
 # For example, if you want to serve static HTML pages in your function:
 # static_files = [ "./functions/zernio-send/*.html" ]
+
+[functions.platform-billing]
+enabled = true
+verify_jwt = false
+import_map = "./functions/platform-billing/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/platform-billing/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/platform-billing/*.html" ]
+
+[functions.platform-social]
+enabled = true
+verify_jwt = false
+import_map = "./functions/platform-social/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/platform-social/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/platform-social/*.html" ]
+
+[functions.platform-observability]
+enabled = true
+verify_jwt = false
+import_map = "./functions/platform-observability/deno.json"
+# Uncomment to specify a custom file path to the entrypoint.
+# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
+entrypoint = "./functions/platform-observability/index.ts"
+# Specifies static files to be bundled with the function. Supports glob patterns.
+# For example, if you want to serve static HTML pages in your function:
+# static_files = [ "./functions/platform-observability/*.html" ]
