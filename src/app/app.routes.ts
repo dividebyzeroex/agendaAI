@@ -22,6 +22,10 @@ import { platformOwnerGuard } from './guards/platform-owner.guard';
 import { PlatformLayout } from './layouts/platform-layout/platform-layout';
 import { PlatformDashboard } from './pages/platform-dashboard/platform-dashboard';
 import { PlatformTenants } from './pages/platform-tenants/platform-tenants';
+import { PlatformObservability } from './pages/platform-observability/platform-observability';
+import { PlatformSocial } from './pages/platform-social/platform-social';
+import { PlatformBilling } from './pages/platform-billing/platform-billing';
+import { PlatformSettings } from './pages/platform-settings/platform-settings';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
@@ -76,7 +80,11 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: PlatformDashboard },
-      { path: 'tenants', component: PlatformTenants }
+      { path: 'tenants', component: PlatformTenants },
+      { path: 'observability', component: PlatformObservability },
+      { path: 'social', component: PlatformSocial },
+      { path: 'billing', component: PlatformBilling },
+      { path: 'settings', component: PlatformSettings }
     ]
   },
   { path: '**', redirectTo: '' }
