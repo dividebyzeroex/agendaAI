@@ -11,17 +11,13 @@ import { PlatformService } from '../../services/platform';
 })
 export class PlatformBilling implements OnInit {
   metrics = {
-    mrr: 12450.00,
-    arr: 149400.00,
-    arpu: 97.50,
-    churn: 1.2
+    mrr: 0,
+    arr: 0,
+    arpu: 0,
+    churn: 0
   };
 
-  plans = [
-    { name: 'Básico', count: 42, mrr: 2058, percent: 16.5 },
-    { name: 'Completo', count: 64, mrr: 6208, percent: 49.8 },
-    { name: 'Premium', count: 12, mrr: 4184, percent: 33.7 }
-  ];
+  plans: any[] = [];
 
   transactions: any[] = [];
   isLoading = true;

@@ -75,4 +75,15 @@ export class PlatformService {
     }
   }
 
+  async getObservabilityData(): Promise<any> {
+    try {
+      const { data, error } = await this.supabase.functions.invoke('platform-observability');
+      if (error) throw error;
+      return data;
+    } catch (e) {
+      console.error('[PlatformService] Error fetching observability:', e);
+      throw e;
+    }
+  }
+
 }

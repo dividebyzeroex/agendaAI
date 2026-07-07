@@ -10,7 +10,7 @@ import { PlatformService } from '../../services/platform';
   styleUrls: ['./platform-social.css']
 })
 export class PlatformSocial implements OnInit {
-  isZernioConnected = true;
+  isZernioConnected = false;
   queue: any[] = [];
   
   stats = {
