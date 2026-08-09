@@ -50,35 +50,35 @@ import { ClienteService } from '../../services/cliente.service';
         
         <!-- Casos onde o atendimento ainda não começou -->
         <ng-container *ngIf="evento?.status === 'confirmado' || !evento?.status">
-          <button class="btn-ent-action primary" (click)="mudarStatus('em_atendimento')">
+          <button class="btn-primary primary" (click)="mudarStatus('em_atendimento')">
             <i class="pi pi-play"></i> Iniciar Atendimento
           </button>
-          <button class="btn-ent-action warning" (click)="mudarStatus('noshow')">
+          <button class="btn-primary warning" (click)="mudarStatus('noshow')">
             <i class="pi pi-user-minus"></i> No-Show
           </button>
         </ng-container>
 
         <!-- Caso onde o atendimento está em curso -->
         <ng-container *ngIf="evento?.status === 'em_atendimento'">
-          <button class="btn-ent-action success" (click)="iniciarCheckout()">
+          <button class="btn-primary success" (click)="iniciarCheckout()">
             <i class="pi pi-check-circle"></i> Finalizar Atendimento
           </button>
         </ng-container>
 
         <!-- Caso onde já está concluído (Recuperação) -->
         <ng-container *ngIf="evento?.status === 'concluido'">
-          <button class="btn-ent-action primary" (click)="iniciarRecuperacao()" [disabled]="isLoadingRecovery">
+          <button class="btn-primary primary" (click)="iniciarRecuperacao()" [disabled]="isLoadingRecovery">
             <i class="pi" [class.pi-spin]="isLoadingRecovery" [class.pi-spinner]="isLoadingRecovery" [class.pi-receipt]="!isLoadingRecovery"></i> {{ isLoadingRecovery ? 'Carregando...' : 'Ver Comanda do Cliente' }}
           </button>
         </ng-container>
 
         <!-- Ações secundárias -->
         <div class="footer-secondary">
-          <button class="btn-ent-ghost danger" (click)="confirmarDelete()">
+          <button class="btn-ghost danger" (click)="confirmarDelete()">
             <i class="pi" [class.pi-trash]="!confirmDelete" [class.pi-exclamation-triangle]="confirmDelete"></i>
             {{ confirmDelete ? 'Confirmar' : 'Excluir' }}
           </button>
-          <button class="btn-ent-ghost" (click)="fechar()">Fechar</button>
+          <button class="btn-ghost" (click)="fechar()">Fechar</button>
         </div>
       </div>
 
@@ -98,7 +98,7 @@ import { ClienteService } from '../../services/cliente.service';
            <label class="input-label">E-mail do Cliente para Reenvio</label>
            <div style="display: flex; gap: 8px; margin-top: 6px;">
              <input type="email" [(ngModel)]="emailCliente" class="prod-select" placeholder="cliente@email.com">
-             <button class="btn-ent-action primary" style="width: auto; padding: 10px 16px;" (click)="enviarComandaEmail()" [disabled]="isSendingEmail">
+             <button class="btn-primary primary" style="width: auto; padding: 10px 16px;" (click)="enviarComandaEmail()" [disabled]="isSendingEmail">
                <i class="pi pi-send" *ngIf="!isSendingEmail"></i>
                <i class="pi pi-spin pi-spinner" *ngIf="isSendingEmail"></i>
              </button>
@@ -110,13 +110,13 @@ import { ClienteService } from '../../services/cliente.service';
             <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Acessar Comanda</a>
             
             <div style="display:flex; justify-content:center; gap: 10px; margin-top: 16px;">
-              <button class="btn-ent-ghost" (click)="copiarLink()"><i class="pi pi-copy"></i> Copiar Link</button>
+              <button class="btn-ghost" (click)="copiarLink()"><i class="pi pi-copy"></i> Copiar Link</button>
             </div>
          </div>
       </div>
 
       <div class="evento-footer-ent" *ngIf="isRecoveryMode">
-         <button class="btn-ent-ghost" (click)="fechar()">Fechar</button>
+         <button class="btn-ghost" (click)="fechar()">Fechar</button>
       </div>
 
       <!-- VISÃO: CHECKOUT / COMANDA -->
@@ -208,19 +208,19 @@ import { ClienteService } from '../../services/cliente.service';
       </div>
 
       <div class="evento-footer-ent" *ngIf="isCheckoutMode">
-         <button class="btn-ent-action success" [disabled]="isFinalizing" (click)="finalizarEGerarComanda()">
+         <button class="btn-primary success" [disabled]="isFinalizing" (click)="finalizarEGerarComanda()">
             <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
             <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
             Gerar Comanda Digital
          </button>
          <div class="footer-secondary">
-           <button class="btn-ent-ghost" (click)="isCheckoutMode = false">Voltar</button>
+           <button class="btn-ghost" (click)="isCheckoutMode = false">Voltar</button>
          </div>
          
          <div class="comanda-link-box" *ngIf="comandaToken">
             <p>Comanda gerada com sucesso!</p>
             <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Ver Comanda do Cliente</a>
-            <button class="btn-ent-ghost" (click)="fechar()">Concluir</button>
+            <button class="btn-ghost" (click)="fechar()">Concluir</button>
          </div>
       </div>
     </div>
@@ -321,23 +321,23 @@ import { ClienteService } from '../../services/cliente.service';
     .obs-box p { margin: 8px 0 0 0; font-size: 0.9rem; color: #475569; line-height: 1.5; }
 
     .evento-footer-ent { padding: 0 2rem 2rem 2rem; display: flex; flex-direction: column; gap: 12px; }
-    .btn-ent-action {
+    .btn-primary {
       width: 100%; padding: 16px; border-radius: 16px; border: none;
       font-weight: 800; font-size: 1rem; cursor: pointer; transition: all 0.2s;
       display: flex; align-items: center; justify-content: center; gap: 10px;
     }
-    .btn-ent-action.primary { background: #3b82f6; color: white; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }
-    .btn-ent-action.warning { background: #fef9c3; color: #854d0e; border: 1.5px solid #fde047; }
-    .btn-ent-action.success { background: #10b981; color: white; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); }
-    .btn-ent-action:hover { transform: translateY(-2px); opacity: 0.9; }
+    .btn-primary.primary { background: #3b82f6; color: white; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }
+    .btn-primary.warning { background: #fef9c3; color: #854d0e; border: 1.5px solid #fde047; }
+    .btn-primary.success { background: #10b981; color: white; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); }
+    .btn-primary:hover { transform: translateY(-2px); opacity: 0.9; }
 
     .footer-secondary { display: flex; gap: 10px; margin-top: 8px; }
-    .btn-ent-ghost {
+    .btn-ghost {
       flex: 1; padding: 12px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0;
       color: #64748b; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.2s;
     }
-    .btn-ent-ghost.danger { color: #ef4444; border-color: #fecaca; background: #fff1f2; }
-    .btn-ent-ghost:hover { background: #f1f5f9; }
+    .btn-ghost.danger { color: #ef4444; border-color: #fecaca; background: #fff1f2; }
+    .btn-ghost:hover { background: #f1f5f9; }
 
     .close-btn { background: none; border: none; cursor: pointer; color: #94a3b8; width: 32px; height: 32px; border-radius: 50%; transition: all .2s; }
     .close-btn:hover { background: #f1f5f9; color: #1e293b; }

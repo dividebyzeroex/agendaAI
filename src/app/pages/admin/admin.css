@@ -201,12 +201,7 @@
 .ai-body h4 { margin: 0 0 6px 0; font-size: 1rem; font-weight: 700; position: relative; color: var(--text-main); }
 .ai-body p { margin: 0; font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; position: relative; }
 
-.ai-action {
-  margin-top: 15px; width: 100%; background: var(--active-bg); border: 1px solid var(--glass-border);
-  color: var(--text-main); border-radius: 12px; padding: 10px; font-weight: 700; font-size: 0.85rem;
-  cursor: pointer; transition: all 0.2s; position: relative; box-shadow: none;
-}
-.ai-action:hover { background: var(--glass-bg); border-color: var(--primary-color); color: var(--primary-color); }
+
 
 .empty-state {
   text-align: center; 
