@@ -125,7 +125,9 @@ async function handleVerify(req: VercelRequest, res: VercelResponse, stripe: Str
     plano: planId,
     plano_expires_at: currentExpires.toISOString(),
     stripe_subscription_id: stripeSubscriptionId,
-    stripe_customer_id: session.customer as string
+    stripe_customer_id: session.customer as string,
+    stripe_subscription_status: 'active',
+    stripe_current_period_end: currentExpires.toISOString()
   }).eq('id', estabelecimentoId);
 
   if (updateError) throw updateError;
@@ -143,15 +145,16 @@ async function handleCancel(req: VercelRequest, res: VercelResponse, stripe: Str
   const { data: estab } = await supabase.from('estabelecimento').select('stripe_subscription_id').eq('id', estabelecimentoId).single();
   if (!estab?.stripe_subscription_id) return res.status(400).json({ error: 'No subscription found' });
 
-  await stripe.subscriptions.update(estab.stripe_subscription_id, { cancel_at_period_end: true });
+  const updatedSubscription: any = await stripe.subscriptions.update(estab.stripe_subscription_id, { cancel_at_period_end: true });
   
-  // Apenas marcamos que o faturamento recorrente vai parar ao fim do período
-  // O plano será revertido pelo webhooks ou manualmente depois
+  // NUNCA reverter o plano imediatamente (Erro do concorrente AppBarber).
+  // Apenas marcamos que está cancelado para não renovar, mas mantém o acesso.
   await supabase.from('estabelecimento').update({ 
-    plano: 'starter' 
+    stripe_subscription_status: 'canceled_at_period_end',
+    stripe_current_period_end: new Date(updatedSubscription.current_period_end * 1000).toISOString()
   }).eq('id', estabelecimentoId);
 
-  return res.status(200).json({ status: 'cancelled' });
+  return res.status(200).json({ status: 'cancelled', message: 'Assinatura cancelada, mas acesso mantido até o fim do período.' });
 }
 
 // --- GET INVOICES LOGIC ---

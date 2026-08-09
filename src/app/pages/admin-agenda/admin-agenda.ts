@@ -96,6 +96,8 @@ export class AdminAgenda implements OnInit {
         observacoes: info.event.extendedProps?.['observacoes'],
         cliente_id: info.event.extendedProps?.['cliente_id'],
         servico_id: info.event.extendedProps?.['servico_id'],
+        profissional_id: info.event.extendedProps?.['profissional_id'],
+        profissional_nome: info.event.extendedProps?.['profissional_nome'],
       };
       this.showEventoModal = true;
     },

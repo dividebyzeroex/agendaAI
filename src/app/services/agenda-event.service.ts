@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { SecurityService } from './security.service';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface AgendaEvent {
   id: string;
@@ -178,7 +179,7 @@ export class AgendaEventService {
       })
       .maybeSingle<AgendaEvent>();
     
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     
     const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes']);
 
@@ -194,7 +195,7 @@ export class AgendaEventService {
     const { error } = await this.supabase
       .rpc('update_event_safe', { p_id: id, p_changes: encrypted });
     
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     
     const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes']);
 
@@ -207,7 +208,7 @@ export class AgendaEventService {
 
   async removeEvent(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('delete_event_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.eventsSubject.next(this.getEvents().filter(e => e.id !== id));
     });

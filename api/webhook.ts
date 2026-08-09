@@ -60,6 +60,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               plano_expires_at: expiresAt.toISOString(),
               stripe_customer_id: session.customer as string,
               stripe_subscription_id: session.subscription as string,
+              stripe_subscription_status: 'active',
+              stripe_current_period_end: expiresAt.toISOString()
             })
             .eq('id', estabelecimentoId);
 
@@ -69,11 +71,26 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         break;
       }
       
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as any;
+        await supabase
+          .from('estabelecimento')
+          .update({
+            stripe_subscription_status: subscription.status,
+            stripe_current_period_end: new Date(subscription.current_period_end * 1000).toISOString()
+          })
+          .eq('stripe_subscription_id', subscription.id);
+        break;
+      }
+      
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
         await supabase
           .from('estabelecimento')
-          .update({ plano: 'expired', stripe_subscription_id: null })
+          .update({ 
+            plano: 'starter', 
+            stripe_subscription_status: 'canceled' 
+          })
           .eq('stripe_subscription_id', subscription.id);
         break;
       }

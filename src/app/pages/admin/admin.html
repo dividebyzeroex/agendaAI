@@ -144,6 +144,19 @@
           </div>
       </div>
 
+      <!-- Aniversariantes do Mês -->
+      <div class="bento-card" *ngIf="aniversariantes.length > 0" style="padding: 1.5rem; background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.2);">
+        <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i class="pi pi-gift" style="color: #a855f7"></i> Aniversariantes do Mês ({{ aniversariantes.length }})
+        </h4>
+        <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; display: flex; flex-direction: column; gap: 6px;">
+          <div *ngFor="let ani of aniversariantes" style="display: flex; justify-content: space-between; padding-bottom: 4px; border-bottom: 1px solid rgba(168,85,247,0.1);">
+            <b>{{ ani.nome }}</b>
+            <span style="color: #a855f7">{{ ani.nascimento | date:'dd/MM' }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="ai-insight-card" *ngFor="let suggestion of aiSuggestions">
         <div class="ai-head">
           <i class="pi pi-sparkles"></i>

@@ -23,8 +23,14 @@
       <a routerLink="/admin/clientes" routerLinkActive="active" *ngIf="(isDono | async) || (isSecretaria | async)" (click)="closeSidebar()">
         <i class="pi pi-users"></i><span>Clientes</span>
       </a>
+      <a routerLink="/admin/produtos" routerLinkActive="active" *ngIf="(isDono | async) || (isSecretaria | async)" (click)="closeSidebar()">
+        <i class="pi pi-box"></i><span>Produtos</span>
+      </a>
       <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-id-card"></i><span>{{ (segmentoConfig.config$ | async)?.labelProfissionalPlural || 'Profissionais' }}</span>
+      </a>
+      <a routerLink="/admin/comissoes" routerLinkActive="active" *ngIf="(isDono | async) || (isAdminOrFin | async)" (click)="closeSidebar()">
+        <i class="pi pi-percentage"></i><span>Comissões</span>
       </a>
       <!-- HIDE AUTOMATIONS TEMPORARILY FOR TESTING
       <a routerLink="/admin/chatbots" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">

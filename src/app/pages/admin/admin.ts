@@ -41,6 +41,7 @@ export class Admin implements OnInit, OnDestroy {
   isLoading = true;
   aiSuggestions: any[] = [];
   saudacao = '';
+  aniversariantes: any[] = [];
   
   private sub = new Subscription();
 
@@ -81,7 +82,15 @@ export class Admin implements OnInit, OnDestroy {
         }));
       })
     );
+
+    // 5. Busca aniversariantes do mês
+    this.carregarAniversariantes();
   }
+
+  async carregarAniversariantes() {
+    this.aniversariantes = await this.clienteService.getAniversariantesDoMes();
+  }
+
 
   get isAdminOrFin(): Observable<boolean> {
     return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));

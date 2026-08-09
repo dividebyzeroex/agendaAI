@@ -20,6 +20,9 @@
     <button class="tab-btn" [class.active]="activeTab === 'horarios'" (click)="setTab('horarios')">
       <i class="pi pi-clock"></i> Horários
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'fidelidade'" (click)="setTab('fidelidade')">
+      <i class="pi pi-star"></i> Fidelidade
+    </button>
   </div>
 
   <!-- TAB: Estabelecimento -->
@@ -213,6 +216,40 @@
           </div>
           <span class="fechado-label" *ngIf="!h.ativo">Fechado</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Fidelidade -->
+  <div class="tab-content" *ngIf="activeTab === 'fidelidade'">
+    <div class="config-card">
+      <h3>Programa de Fidelidade</h3>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">Recompense seus clientes fiéis com um desconto especial após um certo número de visitas.</p>
+
+      <div class="bento-card bento-wide config-card" style="margin-top: 0;" *ngIf="estabelecimento.config_fidelidade">
+        <div class="dia-toggle" style="margin-bottom: 2rem;">
+          <div class="toggle-pill" [class.on]="estabelecimento.config_fidelidade.ativo" (click)="estabelecimento.config_fidelidade.ativo = !estabelecimento.config_fidelidade.ativo; salvarEstabelecimento()">
+            <div class="knob"></div>
+          </div>
+          <span class="dia-nome">Programa de Fidelidade Ativo</span>
+        </div>
+
+        <div class="form-grid" *ngIf="estabelecimento.config_fidelidade.ativo">
+          <div class="field">
+            <label>Visitas Necessárias (Meta)</label>
+            <input type="number" [(ngModel)]="estabelecimento.config_fidelidade.visitas_meta" class="ag-input" min="1" />
+          </div>
+          <div class="field">
+            <label>Desconto (%) nos Serviços</label>
+            <input type="number" [(ngModel)]="estabelecimento.config_fidelidade.desconto_percentual" class="ag-input" min="0" max="100" />
+          </div>
+        </div>
+        
+        <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()" *ngIf="estabelecimento.config_fidelidade.ativo" style="margin-top: 2rem;">
+          <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
+          <i class="pi pi-check" *ngIf="!isSaving"></i>
+          {{ isSaving ? 'Salvando...' : 'Salvar Regras' }}
+        </button>
       </div>
     </div>
   </div>

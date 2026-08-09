@@ -2,6 +2,7 @@ import { Injectable, inject, NgZone } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { createSWRCache } from '../utils/memoize';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface Servico {
   id?: string;
@@ -20,6 +21,12 @@ export interface Horario {
   abre: string | null;
   fecha: string | null;
   ativo: boolean;
+}
+
+export interface ConfigFidelidade {
+  ativo: boolean;
+  visitas_meta: number;
+  desconto_percentual: number;
 }
 
 export interface Estabelecimento {
@@ -44,6 +51,7 @@ export interface Estabelecimento {
   onboarding_completo?: boolean;
   months?: number;
   user_id?: string;
+  config_fidelidade?: ConfigFidelidade;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -80,8 +88,8 @@ export class EstabelecimentoService {
 
   private async init() {
     this.isLoadingSubject.next(true);
+    await this.fetchEstabelecimento();
     await Promise.all([
-      this.fetchEstabelecimento(),
       this.fetchServicos(),
       this.fetchHorarios(),
     ]);
@@ -95,7 +103,8 @@ export class EstabelecimentoService {
   private async _fetchEstabelecimentoRaw(userId: string): Promise<Estabelecimento | null> {
     const { data, error } = await this.supabase
       .rpc('get_estabelecimento_by_user', { p_user_id: userId })
-      .maybeSingle();
+      .limit(1)
+      .maybeSingle<Estabelecimento>();
     
     if (error) {
       console.warn('[EstabelecimentoService] Erro ao buscar empresa via POST:', error);
@@ -126,7 +135,7 @@ export class EstabelecimentoService {
     const { data, error } = await this.supabase
       .rpc('update_estabelecimento_safe', { p_id: current.id, p_changes: changes })
       .maybeSingle<Estabelecimento>();
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.estabelecimento$.next(data);
     });
@@ -143,7 +152,7 @@ export class EstabelecimentoService {
       })
       .maybeSingle<Estabelecimento>();
 
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.estabelecimento$.next(created as Estabelecimento);
     });
@@ -159,7 +168,7 @@ export class EstabelecimentoService {
     
     if (error) {
       console.error('[EstabelecimentoService] Erro ao buscar serviços via POST:', error);
-      throw error;
+      throw new Error(parseSupabaseError(error));
     }
     return (data as Servico[]) ?? [];
   }
@@ -181,7 +190,7 @@ export class EstabelecimentoService {
       })
       .maybeSingle<Servico>();
     
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.servicos$.next([...this.servicos$.value, data as Servico]);
     });
@@ -193,7 +202,7 @@ export class EstabelecimentoService {
     const { data, error } = await this.supabase
       .rpc('update_servico_safe', { p_id: id, p_changes: changes })
       .maybeSingle<Servico>();
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.servicos$.next(this.servicos$.value.map(s => (s.id === id ? (data as Servico) : s)));
     });
@@ -202,7 +211,7 @@ export class EstabelecimentoService {
 
   async deleteServico(id: string) {
     const { error } = await this.supabase.rpc('delete_servico_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.servicos$.next(this.servicos$.value.filter(s => s.id !== id));
     });
@@ -219,9 +228,34 @@ export class EstabelecimentoService {
       .rpc('get_horarios_by_estab', { p_estab_id: estId });
     
     if (!error) {
-      this.ngZone.run(() => {
-        this.horarios$.next(data || []);
-      });
+      const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      if (!data || data.length < 7) {
+        // Seed only the missing ones
+        const existingDays = data ? data.map((d: any) => d.dia_semana) : [];
+        const missingDays = days.map((d, i) => ({ dia_semana: i + 1, dia_nome: d })).filter(d => !existingDays.includes(d.dia_semana));
+
+        const seedPromises = missingDays.map(m => 
+          this.supabase.from('horarios_funcionamento').insert({
+            estabelecimento_id: estId,
+            dia_semana: m.dia_semana,
+            dia_nome: m.dia_nome,
+            abre: '09:00',
+            fecha: '18:00',
+            ativo: false // missing days (like sunday) start closed
+          }).select().single()
+        );
+        const results = await Promise.all(seedPromises);
+        const seeded = results.map(r => r.data).filter(Boolean);
+        
+        const allHorarios = [...(data || []), ...seeded].sort((a, b) => a.dia_semana - b.dia_semana);
+        this.ngZone.run(() => {
+          this.horarios$.next(allHorarios as Horario[]);
+        });
+      } else {
+        this.ngZone.run(() => {
+          this.horarios$.next(data);
+        });
+      }
     }
   }
 

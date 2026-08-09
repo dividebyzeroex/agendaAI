@@ -4,6 +4,7 @@ import { Login } from './pages/login/login';
 import { PrimeiroAcesso } from './pages/primeiro-acesso/primeiro-acesso';
 import { Agendar } from './pages/agendar/agendar';
 import { Onboarding } from './pages/onboarding/onboarding';
+import { ComandaComponent } from './pages/comanda/comanda';
 import { AdminLayout } from './layouts/admin-layout/admin-layout';
 
 import { Admin } from './pages/admin/admin';
@@ -12,6 +13,8 @@ import { AdminClientes } from './pages/admin-clientes/admin-clientes';
 import { AdminConfiguracoes } from './pages/admin-configuracoes/admin-configuracoes';
 import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
 import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
+import { AdminProdutos } from './pages/admin-produtos/admin-produtos';
+import { AdminComissoes } from './pages/admin-comissoes/admin-comissoes';
 import { AdminBilling } from './pages/admin-billing/admin-billing';
 import { AdminChatbots } from './pages/admin-chatbots/admin-chatbots';
 import { authGuard } from './guards/auth.guard';
@@ -36,6 +39,8 @@ export const routes: Routes = [
   { path: 'agendar/:slug', component: Agendar },
   // Fallback genérico sem slug
   { path: 'agendar', component: Agendar },
+  // Rota pública para visualização de comanda
+  { path: 'comanda/:token', component: ComandaComponent },
 
   { 
     path: 'admin', 
@@ -58,6 +63,18 @@ export const routes: Routes = [
         component: AdminProfissionais, 
         canActivate: [roleGuard], 
         data: { roles: ['dono'] } 
+      },
+      { 
+        path: 'produtos', 
+        component: AdminProdutos, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono', 'gerente'] } 
+      },
+      { 
+        path: 'comissoes', 
+        component: AdminComissoes, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono', 'financeiro', 'barbeiro'] } 
       },
       { 
         path: 'billing', 

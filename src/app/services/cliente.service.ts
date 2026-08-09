@@ -133,4 +133,46 @@ export class ClienteService {
     }
     return this.addCliente({ nome, telefone, ultima_visita: new Date().toISOString().split('T')[0] });
   }
+
+  // ─── Fidelidade e Aniversários ─────────────────────────────────────────────
+
+  async getAniversariantesDoMes(): Promise<Cliente[]> {
+    const currentId = (this.estService as any)['activeIdSubject'].value; 
+    if (!currentId) return [];
+
+    const { data, error } = await this.supabase
+      .rpc('get_aniversariantes_do_mes', { p_estab_id: currentId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao buscar aniversariantes:', error);
+      return [];
+    }
+
+    const decrypted = await Promise.all((data as Cliente[] || []).map((c: Cliente) => 
+      this.security.decryptObject(c, ['nome', 'telefone', 'email', 'observacoes'])
+    ));
+    return decrypted;
+  }
+
+  async getVisitasFidelidadePendentes(clienteId: string): Promise<number> {
+    const { data, error } = await this.supabase
+      .rpc('get_visitas_fidelidade_pendentes', { p_cliente_id: clienteId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao buscar visitas pendentes:', error);
+      return 0;
+    }
+    return data as number;
+  }
+
+  async resgatarFidelidadeCliente(clienteId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .rpc('resgatar_fidelidade_cliente', { p_cliente_id: clienteId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao resgatar fidelidade:', error);
+      return false;
+    }
+    return data as boolean;
+  }
 }
