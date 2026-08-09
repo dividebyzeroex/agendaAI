@@ -1,6 +1,6 @@
-import { Component, HostListener, AfterViewInit, OnDestroy, ElementRef, ViewChild, Inject, PLATFORM_ID, inject } from '@angular/core';
+import { Component, HostListener, AfterViewInit, OnDestroy, ElementRef, ViewChild, Inject, PLATFORM_ID, inject, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-particle-canvas',
@@ -9,36 +9,48 @@ import { Router, NavigationEnd } from '@angular/router';
   templateUrl: './particle-canvas.component.html',
   styleUrls: ['./particle-canvas.component.css']
 })
-export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
+export class ParticleCanvasComponent implements AfterViewInit, OnDestroy, OnChanges {
   @ViewChild('particleCanvas') canvasRef!: ElementRef<HTMLCanvasElement>;
+  
+  @Input() hasWaitlist: boolean = false;
+  @Input() hasNoShows: boolean = false;
+
   private ctx!: CanvasRenderingContext2D;
   private particles: Particle[] = [];
   private animationFrameId: number = 0;
   private mouse = { x: -1000, y: -1000 };
-
+  
   private interactRect: DOMRect | null = null;
-  private selectionRect: DOMRect | null = null;
+  private primaryBtnRect: DOMRect | null = null;
   private clickWaves: {x: number, y: number, radius: number}[] = [];
-  private lastScrollY = 0;
-  private scrollVelocity = 0;
-  private idleTimer: any;
-  private isIdle = false;
-  private superIdleTimer: any;
-  private isSuperIdle = false;
+  
   private isMouseDown = false;
   private isBrowser = false;
+  private isMobile = false;
+  private isBatterySaver = false;
+  private panicMode = false;
+  private clickCount = 0;
+  private clickTimer: any;
 
   private router = inject(Router);
 
   constructor(@Inject(PLATFORM_ID) platformId: Object) {
     this.isBrowser = isPlatformBrowser(platformId);
-    
-    // Logic for soft mode removed so particles always display
   }
 
   ngAfterViewInit() {
     if (this.isBrowser) {
+      this.checkEnvironment();
       this.initCanvas();
+      
+      // Monitor visibility for battery saving
+      document.addEventListener('visibilitychange', this.handleVisibilityChange);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['hasNoShows'] && this.hasNoShows) {
+      this.triggerNoShowPanic();
     }
   }
 
@@ -46,23 +58,28 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
     if (this.isBrowser) {
       if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
       window.removeEventListener('resize', this.resizeCanvas);
-      clearTimeout(this.idleTimer);
-      clearTimeout(this.superIdleTimer);
+      document.removeEventListener('visibilitychange', this.handleVisibilityChange);
     }
   }
 
-  private resetIdleTimer() {
-    if (!this.isBrowser) return;
-    this.isIdle = false;
-    this.isSuperIdle = false;
-    clearTimeout(this.idleTimer);
-    clearTimeout(this.superIdleTimer);
-    this.idleTimer = setTimeout(() => {
-      this.isIdle = true;
-    }, 4000);
-    this.superIdleTimer = setTimeout(() => {
-      this.isSuperIdle = true;
-    }, 10000);
+  private checkEnvironment() {
+    this.isMobile = window.innerWidth <= 768 || /Mobi|Android/i.test(navigator.userAgent);
+    this.isBatterySaver = this.isMobile; // Mobile defaults to fewer updates
+  }
+
+  private handleVisibilityChange = () => {
+    if (document.visibilityState === 'hidden') {
+      this.isBatterySaver = true;
+      if (this.animationFrameId) cancelAnimationFrame(this.animationFrameId);
+    } else {
+      this.isBatterySaver = this.isMobile; 
+      this.animate();
+    }
+  }
+
+  private triggerNoShowPanic() {
+    this.panicMode = true;
+    setTimeout(() => this.panicMode = false, 5000);
   }
 
   @HostListener('window:mousemove', ['$event'])
@@ -70,11 +87,10 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
     if (!this.isBrowser) return;
     this.mouse.x = event.clientX;
     this.mouse.y = event.clientY;
-    this.resetIdleTimer();
 
     const el = document.elementFromPoint(event.clientX, event.clientY);
     if (el) {
-      const interactable = el.closest('.btn-primary, .btn-secondary, .niche-card, .pricing-card, .bento-card, .auth-btn');
+      const interactable = el.closest('.bento-card, .btn-primary, .auth-btn');
       if (interactable) {
         this.interactRect = interactable.getBoundingClientRect();
       } else {
@@ -88,56 +104,29 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
   @HostListener('window:mousedown', ['$event'])
   onMouseDown(event: MouseEvent) {
     this.isMouseDown = true;
-    this.resetIdleTimer();
+    
+    // Panic on multiple clicks
+    this.clickCount++;
+    clearTimeout(this.clickTimer);
+    if (this.clickCount > 3) {
+      this.panicMode = true;
+      setTimeout(() => this.panicMode = false, 3000);
+      this.clickCount = 0;
+    } else {
+      this.clickTimer = setTimeout(() => this.clickCount = 0, 1000);
+    }
   }
 
   @HostListener('window:mouseup', ['$event'])
   onMouseUp(event: MouseEvent) {
     this.isMouseDown = false;
     this.clickWaves.push({ x: event.clientX, y: event.clientY, radius: 0 });
-    this.resetIdleTimer();
-  }
-
-  @HostListener('document:selectionchange')
-  onSelectionChange() {
-    if (!this.isBrowser) return;
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0 && !sel.isCollapsed) {
-      this.selectionRect = sel.getRangeAt(0).getBoundingClientRect();
-    } else {
-      this.selectionRect = null;
-    }
-    this.resetIdleTimer();
-  }
-
-  @HostListener('window:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent) {
-    if (!this.isBrowser) return;
-    const activeEl = document.activeElement as HTMLElement;
-    if (activeEl && (activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA')) {
-      const rect = activeEl.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      this.clickWaves.push({ x: cx, y: cy, radius: 0 });
-    }
-    this.resetIdleTimer();
   }
 
   @HostListener('window:mouseout', [])
   onMouseOut() {
     this.mouse.x = -1000;
     this.mouse.y = -1000;
-    this.interactRect = null;
-  }
-
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    if (!this.isBrowser) return;
-    this.resetIdleTimer();
-    
-    const currentScrollY = window.scrollY;
-    this.scrollVelocity = currentScrollY - this.lastScrollY;
-    this.lastScrollY = currentScrollY;
     this.interactRect = null;
   }
 
@@ -152,7 +141,6 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
     
     this.createParticles();
     this.animate();
-    this.resetIdleTimer();
   }
 
   private resizeCanvas = () => {
@@ -160,10 +148,11 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
     const canvas = this.canvasRef.nativeElement;
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+    this.checkEnvironment();
   }
 
   private createParticles() {
-    const amount = window.innerWidth < 768 ? 200 : 700;
+    const amount = this.isMobile ? 100 : 400; // Less particles on mobile
     this.particles = [];
     for (let i = 0; i < amount; i++) {
       this.particles.push(new Particle(window.innerWidth, window.innerHeight, i, amount));
@@ -171,41 +160,39 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
   }
 
   private animate = () => {
-    if (!this.ctx) return;
-    this.ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    if (!this.ctx || (this.isBatterySaver && document.visibilityState === 'hidden')) return;
     
-    this.scrollVelocity *= 0.92;
-    if (Math.abs(this.scrollVelocity) < 0.1) this.scrollVelocity = 0;
+    // Slight trail effect
+    this.ctx.fillStyle = 'rgba(248, 250, 252, 0.4)';
+    this.ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
     this.clickWaves.forEach(w => w.radius += 20);
     this.clickWaves = this.clickWaves.filter(w => w.radius < 1500);
 
-    let primaryBtnRect: DOMRect | null = null;
-    if (this.isIdle) {
-      const btn = document.querySelector('.btn-primary, .auth-btn');
-      if (btn) primaryBtnRect = btn.getBoundingClientRect();
-    }
+    const btn = document.querySelector('.btn-primary');
+    if (btn) this.primaryBtnRect = btn.getBoundingClientRect();
 
-    const riverStones = Array.from(document.querySelectorAll('.hero-title, .bento-card, .niche-card, .pricing-card, .auth-card')).map(el => el.getBoundingClientRect());
+    const riverStones = Array.from(document.querySelectorAll('.bento-card')).map(el => el.getBoundingClientRect());
 
+    // Update and Draw Particles
     for (let i = 0; i < this.particles.length; i++) {
       this.particles[i].update(
         this.mouse, 
         this.particles, 
         this.interactRect, 
-        this.scrollVelocity, 
-        this.isIdle,
-        this.isSuperIdle,
         this.isMouseDown,
         this.clickWaves,
-        this.selectionRect,
-        primaryBtnRect,
-        riverStones
+        this.primaryBtnRect,
+        riverStones,
+        this.hasWaitlist,
+        this.hasNoShows,
+        this.panicMode
       );
       this.particles[i].draw(this.ctx);
     }
 
-    if (!this.isSuperIdle) {
+    // Connect close particles (only if not in battery saver or not panic)
+    if (!this.isMobile && !this.panicMode) {
       this.ctx.lineWidth = 0.5;
       for (let i = 0; i < this.particles.length; i++) {
         for (let j = i + 1; j < this.particles.length; j++) {
@@ -228,8 +215,20 @@ export class ParticleCanvasComponent implements AfterViewInit, OnDestroy {
       }
     }
     
-    this.animationFrameId = requestAnimationFrame(this.animate);
+    if (this.isBatterySaver) {
+      setTimeout(() => {
+        this.animationFrameId = requestAnimationFrame(this.animate);
+      }, 1000 / 30); // Cap at 30fps for battery saver
+    } else {
+      this.animationFrameId = requestAnimationFrame(this.animate);
+    }
   }
+}
+
+enum ParticleRole {
+  EXPLORER,
+  PROTECTOR,
+  MESSENGER
 }
 
 class Particle {
@@ -239,264 +238,163 @@ class Particle {
   vy: number;
   size: number;
   color: string;
-  baseVx: number;
-  baseVy: number;
-  phase: number;
-  isDeserter: boolean;
+  role: ParticleRole;
   z: number;
-  targetT: number;
 
   constructor(width: number, height: number, index: number, totalParticles: number) {
     this.x = Math.random() * width;
     this.y = Math.random() * height;
-    this.baseVx = (Math.random() - 0.5) * 2.0;
-    this.baseVy = (Math.random() - 0.5) * 2.0;
-    this.vx = this.baseVx;
-    this.vy = this.baseVy;
+    this.vx = (Math.random() - 0.5) * 2;
+    this.vy = (Math.random() - 0.5) * 2;
     
+    // Distribute roles
+    const r = Math.random();
+    if (r < 0.1) this.role = ParticleRole.MESSENGER;
+    else if (r < 0.4) this.role = ParticleRole.PROTECTOR;
+    else this.role = ParticleRole.EXPLORER;
+
+    // Distribute depth
     const layerRand = Math.random();
-    if (layerRand < 0.15) this.z = 3; 
-    else if (layerRand < 0.5) this.z = 2; 
+    if (layerRand < 0.2) this.z = 3; 
+    else if (layerRand < 0.6) this.z = 2; 
     else this.z = 1; 
 
     this.size = (Math.random() * 1.5 + 0.5) * this.z;
-    this.color = `rgba(148, 163, 184, ${Math.random() * 0.4 + 0.2})`; 
-    this.phase = Math.random() * Math.PI * 2;
-    this.isDeserter = Math.random() < 0.05; 
-    this.targetT = (index / totalParticles) * Math.PI * 2;
+    this.color = `rgba(99, 102, 241, ${Math.random() * 0.4 + 0.2})`; // Base Indigo
   }
 
   update(
     mouse: {x: number, y: number}, 
     particles: Particle[], 
     interactRect: DOMRect | null, 
-    scrollVelocity: number, 
-    isIdle: boolean,
-    isSuperIdle: boolean,
     isMouseDown: boolean,
     clickWaves: {x: number, y: number, radius: number}[],
-    selectionRect: DOMRect | null,
     primaryBtnRect: DOMRect | null,
-    riverStones: DOMRect[]
+    riverStones: DOMRect[],
+    hasWaitlist: boolean,
+    hasNoShows: boolean,
+    panicMode: boolean
   ) {
-    let separation = { x: 0, y: 0 };
-    let alignment = { x: 0, y: 0 };
-    let cohesion = { x: 0, y: 0 };
-    let localCount = 0;
+    let maxSpeed = 3;
 
-    const perceptionRadius = 60;
-    const separationRadius = 25;
-
-    this.vy -= scrollVelocity * 0.03 * this.z;
-
-    if (isMouseDown) {
-      const mdx = mouse.x - this.x;
-      const mdy = mouse.y - this.y;
-      const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
-      if (mdist > 10) {
-        this.vx += (mdx / mdist) * 2.0;
-        this.vy += (mdy / mdist) * 2.0;
-        this.vx += (-mdy / mdist) * 1.5;
-        this.vy += (mdx / mdist) * 1.5;
-      }
-      this.applyVelocityAndBorders(15); 
-      return; 
+    // 1. STATE OVERRIDES (Panic & Business Logic)
+    if (panicMode || hasNoShows) {
+      // Panic / NoShow alert: Move fast, turn red, erratic behavior
+      maxSpeed = 8;
+      this.color = `rgba(239, 68, 68, ${Math.random() * 0.6 + 0.4})`; // Red
+      this.vx += (Math.random() - 0.5) * 2;
+      this.vy += (Math.random() - 0.5) * 2;
+    } else {
+      this.color = `rgba(99, 102, 241, ${Math.random() * 0.4 + 0.2})`; // Indigo
     }
 
-    if (isSuperIdle) {
-      const cx = window.innerWidth / 2;
-      const cy = window.innerHeight / 2;
-      const scale = Math.min(window.innerWidth, window.innerHeight) * 0.35;
-      
-      this.targetT += 0.01; 
-      const t = this.targetT;
-      const targetX = cx + (scale * Math.cos(t)) / (1 + Math.pow(Math.sin(t), 2));
-      const targetY = cy + (scale * Math.cos(t) * Math.sin(t)) / (1 + Math.pow(Math.sin(t), 2));
-      
-      const dx = targetX - this.x;
-      const dy = targetY - this.y;
-      this.vx += dx * 0.01;
-      this.vy += dy * 0.01;
-      
-      this.vx *= 0.95; 
-      this.vy *= 0.95;
-      
-      this.applyVelocityAndBorders(10);
-      return;
-    }
-
-    clickWaves.forEach(wave => {
-      const dx = this.x - wave.x;
-      const dy = this.y - wave.y;
-      const dist = Math.sqrt(dx*dx + dy*dy);
-      if (Math.abs(dist - wave.radius) < 40) {
-        const force = (40 - Math.abs(dist - wave.radius)) / 40;
-        this.vx += (dx / dist) * force * 5.0; 
-        this.vy += (dy / dist) * force * 5.0;
-      }
-    });
-
-    riverStones.forEach(rect => {
-      const margin = 20; 
-      if (this.x > rect.left - margin && this.x < rect.right + margin && 
-          this.y > rect.top - margin && this.y < rect.bottom + margin) {
-        
-        const cx = rect.left + rect.width/2;
-        const cy = rect.top + rect.height/2;
-        const dx = this.x - cx;
-        const dy = this.y - cy;
-        const dist = Math.sqrt(dx*dx + dy*dy);
-        if (dist > 0) {
-          this.vx += (dx / dist) * 1.5;
-          this.vy += (dy / dist) * 1.5;
-        }
-      }
-    });
-
-    if (selectionRect) {
-      const targetY = selectionRect.bottom + 5;
-      if (this.x >= selectionRect.left && this.x <= selectionRect.right) {
-        const dy = this.y - targetY;
-        this.vy -= dy * 0.1; 
-        this.vx *= 0.9; 
-      }
-    }
-
-    if (isIdle && this.isDeserter && primaryBtnRect) {
+    // 2. WAITLIST BEHAVIOR (Flock around primary button)
+    if (hasWaitlist && primaryBtnRect && !panicMode) {
       const cx = primaryBtnRect.left + primaryBtnRect.width / 2;
       const cy = primaryBtnRect.top + primaryBtnRect.height / 2;
       const dx = cx - this.x;
       const dy = cy - this.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
       
-      if (dist > 50) {
-        this.vx += (dx / dist) * 0.5; 
-        this.vy += (dy / dist) * 0.5;
+      if (dist > 60) {
+        this.vx += (dx / dist) * 0.8; 
+        this.vy += (dy / dist) * 0.8;
       } else {
-        this.vx += -dy * 0.05;
-        this.vy += dx * 0.05;
+        // Orbit
+        this.vx += -dy * 0.1;
+        this.vy += dx * 0.1;
       }
-      
-      this.applyVelocityAndBorders(5);
-      return; 
+      this.color = `rgba(16, 185, 129, ${Math.random() * 0.6 + 0.4})`; // Green to signify opportunity
     }
 
-    for (let i = 0; i < particles.length; i++) {
-      const other = particles[i];
-      if (other === this || other.isDeserter) continue;
-      
-      const dx = this.x - other.x;
-      const dy = this.y - other.y;
+    // 3. WAVES REACTION (Click repulsion)
+    clickWaves.forEach(wave => {
+      const dx = this.x - wave.x;
+      const dy = this.y - wave.y;
       const dist = Math.sqrt(dx*dx + dy*dy);
+      if (Math.abs(dist - wave.radius) < 40) {
+        const force = (40 - Math.abs(dist - wave.radius)) / 40;
+        this.vx += (dx / dist) * force * 10.0; 
+        this.vy += (dy / dist) * force * 10.0;
+      }
+    });
 
-      if (dist < perceptionRadius) {
-        alignment.x += other.vx;
-        alignment.y += other.vy;
-        
-        cohesion.x += other.x;
-        cohesion.y += other.y;
-        
-        if (dist < separationRadius && dist > 0) {
-          separation.x += dx / dist;
-          separation.y += dy / dist;
+    // 4. MOUSE INTERACTION (Curiosity vs Repulsion)
+    if (!panicMode && !hasWaitlist) {
+      const mdx = mouse.x - this.x;
+      const mdy = mouse.y - this.y;
+      const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
+      
+      if (mdist < 100 && mdist > 0) {
+        if (this.role === ParticleRole.EXPLORER) {
+          // Explorers are curious, follow cursor gently
+          this.vx += (mdx / mdist) * 0.2;
+          this.vy += (mdy / mdist) * 0.2;
+        } else {
+          // Others move away
+          const force = (100 - mdist) / 100;
+          this.vx -= (mdx / mdist) * force * 0.5;
+          this.vy -= (mdy / mdist) * force * 0.5;
         }
-        
-        localCount++;
       }
     }
 
-    if (localCount > 0) {
-      alignment.x = (alignment.x / localCount) * 0.05;
-      alignment.y = (alignment.y / localCount) * 0.05;
-
-      cohesion.x = ((cohesion.x / localCount) - this.x) * 0.01;
-      cohesion.y = ((cohesion.y / localCount) - this.y) * 0.01;
-
-      this.vx += alignment.x + cohesion.x + separation.x * 0.15;
-      this.vy += alignment.y + cohesion.y + separation.y * 0.15;
-    }
-
-    if (interactRect) {
-      const cx = interactRect.left + interactRect.width / 2;
-      const cy = interactRect.top + interactRect.height / 2;
-      const rX = interactRect.width / 2 + 15; 
-      const rY = interactRect.height / 2 + 15;
-      
-      const dx = this.x - cx;
-      const dy = this.y - cy;
-      
-      const distE = Math.sqrt((dx*dx)/(rX*rX) + (dy*dy)/(rY*rY));
-      
-      if (distE > 0) {
-        const tangentX = -dy / distE;
-        const tangentY = dx / distE;
-        this.vx += tangentX * 0.25;
-        this.vy += tangentY * 0.25;
-
-        const force = (distE - 1) * 1.5; 
-        this.vx -= (dx / distE) * force * 0.05;
-        this.vy -= (dy / distE) * force * 0.05;
+    // 5. ROLE BEHAVIORS (Boids & Avoidance)
+    if (!panicMode) {
+      if (this.role === ParticleRole.PROTECTOR) {
+        // Protectors avoid cards and stay in gaps
+        riverStones.forEach(rect => {
+          const cx = rect.left + rect.width/2;
+          const cy = rect.top + rect.height/2;
+          const dx = this.x - cx;
+          const dy = this.y - cy;
+          const dist = Math.sqrt(dx*dx + dy*dy);
+          if (dist > 0 && dist < (rect.width/2 + 50)) {
+            this.vx += (dx / dist) * 1.5;
+            this.vy += (dy / dist) * 1.5;
+          }
+        });
       }
 
-      if (distE < 1.5) {
-        this.color = `rgba(66, 133, 244, ${Math.random() * 0.6 + 0.4})`; 
-      } else {
-        this.color = `rgba(148, 163, 184, ${Math.random() * 0.6 + 0.3})`; 
+      if (this.role === ParticleRole.MESSENGER) {
+        maxSpeed = 6;
+        // Messengers occasionally speed up randomly to simulate data transfer
+        if (Math.random() < 0.01) {
+          this.vx *= 2;
+          this.vy *= 2;
+        }
       }
-    } else if (isIdle && !isSuperIdle) {
-      const mdx = this.x - mouse.x;
-      const mdy = this.y - mouse.y;
-      const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
-      
-      const time = Date.now() / 400;
-      const pulseRadius = 60 + Math.sin(time) * 20; 
 
-      if (mdist > 0) {
-        const tangentX = -mdy / mdist;
-        const tangentY = mdx / mdist;
-        this.vx += tangentX * 0.8;
-        this.vy += tangentY * 0.8;
-
-        const force = (mdist - pulseRadius) * 0.1;
-        this.vx -= (mdx / mdist) * force;
-        this.vy -= (mdy / mdist) * force;
+      // Flock basics (Cohesion, Separation)
+      let sepX = 0, sepY = 0;
+      let count = 0;
+      for (let i = 0; i < Math.min(particles.length, 50); i++) { // Sample subset for perf
+        const other = particles[i];
+        if (other === this) continue;
+        const dx = this.x - other.x;
+        const dy = this.y - other.y;
+        const dist = dx*dx + dy*dy; // avoid sqrt for perf
+        if (dist < 400 && dist > 0) { // 20px radius
+          sepX += dx / dist;
+          sepY += dy / dist;
+          count++;
+        }
       }
-    } else {
-      const mdx = this.x - mouse.x;
-      const mdy = this.y - mouse.y;
-      const mdist = Math.sqrt(mdx*mdx + mdy*mdy);
-      
-      if (mdist < 400 && mdist > 80) { 
-        const mforce = (400 - mdist) / 320; 
-        this.vx -= (mdx / mdist) * mforce * 0.15;
-        this.vy -= (mdy / mdist) * mforce * 0.15;
-      }
-      else if (mdist <= 80 && mdist > 0) {
-        const mforce = (80 - mdist) / 80;
-        this.vx += (mdx / mdist) * mforce * 0.5;
-        this.vy += (mdy / mdist) * mforce * 0.5;
+      if (count > 0) {
+        this.vx += sepX * 1.5;
+        this.vy += sepY * 1.5;
       }
     }
 
-    this.vx += this.baseVx * 0.02;
-    this.vy += this.baseVy * 0.02;
-
-    if (!interactRect) {
-      this.color = `rgba(148, 163, 184, ${Math.random() * 0.6 + 0.3})`;
-    }
-
-    this.applyVelocityAndBorders(5);
-  }
-
-  private applyVelocityAndBorders(maxSpeed: number = 5) {
+    // 6. KINEMATICS & BORDERS
     const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
     if (speed > maxSpeed) {
       this.vx = (this.vx / speed) * maxSpeed;
       this.vy = (this.vy / speed) * maxSpeed;
     }
 
-    const margin = 100;
-    const turnFactor = 0.2;
+    const margin = 20;
+    const turnFactor = 0.5;
     if (this.x < margin) this.vx += turnFactor;
     if (this.x > window.innerWidth - margin) this.vx -= turnFactor;
     if (this.y < margin) this.vy += turnFactor;
@@ -509,24 +407,7 @@ class Particle {
   draw(ctx: CanvasRenderingContext2D) {
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-    
-    let alpha = 0.3 + Math.sin(this.phase + Date.now() / 400) * 0.3; 
-    
-    if (this.z === 1) alpha *= 0.5;
-    else if (this.z === 3) alpha = Math.min(1.0, alpha + 0.3);
-
     ctx.fillStyle = this.color;
-    ctx.globalAlpha = alpha > 0 ? alpha : 0;
-    
-    if (this.z === 3) {
-      ctx.shadowBlur = 4;
-      ctx.shadowColor = this.color;
-    } else {
-      ctx.shadowBlur = 0;
-    }
-
     ctx.fill();
-    ctx.globalAlpha = 1.0;
-    ctx.shadowBlur = 0; 
   }
 }

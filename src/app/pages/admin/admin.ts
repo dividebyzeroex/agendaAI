@@ -9,12 +9,13 @@ import { ClienteService } from '../../services/cliente.service';
 import { NotificationService } from '../../services/notification.service';
 import { MultiAgentService } from '../../services/multi-agent.service';
 import { AuthService } from '../../services/auth.service';
+import { ParticleCanvasComponent } from '../../components/particle-canvas/particle-canvas.component';
 import { map, Subscription, interval, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule],
+  imports: [CommonModule, ButtonModule, CardModule, TableModule, ParticleCanvasComponent],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
