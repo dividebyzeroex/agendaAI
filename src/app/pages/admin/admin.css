@@ -50,10 +50,11 @@
   backdrop-filter: blur(var(--glass-blur));
   border: 1px solid var(--glass-border);
   border-radius: 24px;
-  padding: 1.5rem;
+  padding: 1.25rem 1.5rem;
   display: flex;
-  align-items: center;
-  gap: 1.25rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
   box-shadow: var(--elite-shadow);
   transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
@@ -86,10 +87,10 @@
 .stat-icon-ent.green { background: rgba(16, 185, 129, 0.1); color: #10b981; }
 .stat-icon-ent.violet { background: rgba(161, 66, 244, 0.1); color: #a142f4; }
 
-.stat-body-ent { display: flex; flex-direction: column; gap: 4px; justify-content: center; }
-.stat-label-ent { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-.stat-value-wrap { display: flex; align-items: baseline; gap: 4px; flex-wrap: wrap; }
-.stat-number { font-size: 1.6rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
+.stat-body-ent { display: flex; flex-direction: column; gap: 6px; justify-content: center; width: 100%; }
+.stat-label-ent { font-size: 0.75rem; color: var(--text-muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.stat-value-wrap { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.stat-number { font-size: 1.75rem; font-weight: 800; color: var(--text-main); letter-spacing: -1px; line-height: 1; }
 .stat-subtext { font-size: 0.85rem; font-weight: 600; color: var(--text-muted); line-height: 1; }
 
 /* Grid Layout for Main Content — BENTO CORE */
