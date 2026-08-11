@@ -220,7 +220,7 @@ import { ClienteService } from '../../services/cliente.service';
          <div class="comanda-link-box" *ngIf="comandaToken">
             <p>Comanda gerada com sucesso!</p>
             <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Ver Comanda do Cliente</a>
-            <button class="btn-ghost" (click)="fechar()">Concluir</button>
+            <button class="btn-primary primary" (click)="concluirEFechar()" style="width: 100%; margin-top: 8px;">Concluir Atendimento</button>
          </div>
       </div>
     </div>
@@ -454,6 +454,13 @@ export class EventoModalComponent implements OnInit {
     if (!this.evento?.id) return;
     if (!this.confirmDelete) { this.confirmDelete = true; return; }
     await this.agendaService.removeEvent(this.evento.id);
+    this.fechar();
+  }
+
+  async concluirEFechar() {
+    if (this.evento?.id) {
+      await this.agendaService.updateStatus(this.evento.id, 'concluido');
+    }
     this.fechar();
   }
 
