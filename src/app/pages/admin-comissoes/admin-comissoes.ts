@@ -73,19 +73,27 @@ export class AdminComissoes implements OnInit {
       }
 
       const raw = data || [];
-      this.comissoes = await Promise.all(raw.map(async (c: any) => ({
-        id: c.id,
-        evento_id: c.evento_id,
-        profissional_id: c.profissionais?.id,
-        profissional_nome: c.profissionais?.nome || 'Desconhecido',
-        servico_nome: c.servicos?.titulo || 'Serviço Excluído/Avulso',
-        valor_servico: c.valor_servico,
-        taxa_aplicada: c.taxa_aplicada,
-        tipo_comissao: c.tipo_comissao,
-        valor_comissao: c.valor_comissao,
-        status: c.status,
-        data_evento: c.agenda_events?.start
-      })));
+      this.comissoes = await Promise.all(raw.map(async (c: any) => {
+        let profNome = 'Desconhecido';
+        if (c.profissionais?.nome) {
+          const decryptedProf = await this.security.decryptObject({ nome: c.profissionais.nome }, ['nome']);
+          profNome = decryptedProf.nome;
+        }
+
+        return {
+          id: c.id,
+          evento_id: c.evento_id,
+          profissional_id: c.profissionais?.id,
+          profissional_nome: profNome,
+          servico_nome: c.servicos?.titulo || 'Serviço Excluído/Avulso',
+          valor_servico: c.valor_servico,
+          taxa_aplicada: c.taxa_aplicada,
+          tipo_comissao: c.tipo_comissao,
+          valor_comissao: c.valor_comissao,
+          status: c.status,
+          data_evento: c.agenda_events?.start
+        };
+      }));
 
       this.calcularTotais();
     } catch (err) {
