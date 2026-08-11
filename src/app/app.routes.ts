@@ -14,6 +14,7 @@ import { AdminConfiguracoes } from './pages/admin-configuracoes/admin-configurac
 import { AdminAnalytics } from './pages/admin-analytics/admin-analytics';
 import { AdminProfissionais } from './pages/admin-profissionais/admin-profissionais';
 import { AdminProdutos } from './pages/admin-produtos/admin-produtos';
+import { AdminCaixa } from './pages/admin-caixa/admin-caixa';
 import { AdminComissoes } from './pages/admin-comissoes/admin-comissoes';
 import { AdminBilling } from './pages/admin-billing/admin-billing';
 import { AdminChatbots } from './pages/admin-chatbots/admin-chatbots';
@@ -69,6 +70,12 @@ export const routes: Routes = [
         component: AdminProdutos, 
         canActivate: [roleGuard], 
         data: { roles: ['dono', 'gerente'] } 
+      },
+      { 
+        path: 'caixa', 
+        component: AdminCaixa, 
+        canActivate: [roleGuard], 
+        data: { roles: ['dono', 'financeiro', 'recepcionista'] } 
       },
       { 
         path: 'comissoes', 

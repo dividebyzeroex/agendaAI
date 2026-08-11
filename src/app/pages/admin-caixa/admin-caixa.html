@@ -1,0 +1,185 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Dashboard de <span class="gradient-text">Caixa</span></h2>
+      <p>Gerencie pagamentos, adicione produtos e emita comandas.</p>
+    </div>
+  </div>
+
+  <div class="caixa-container">
+    
+    <!-- LADO ESQUERDO: FILA DE PAGAMENTOS -->
+    <div class="caixa-left bento-card custom-scroll">
+      <h3 style="margin-top:0; color:var(--text-color); font-size:1.1rem; border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;">
+        Aguardando Pagamento
+      </h3>
+
+      <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 200px;">
+        <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
+      </div>
+
+      <ng-container *ngIf="!isLoading">
+        <div class="empty-state" *ngIf="eventosPendentes.length === 0">
+          Nenhum cliente aguardando pagamento no momento.
+        </div>
+
+        <div class="caixa-list">
+          <div class="caixa-item" *ngFor="let evento of eventosPendentes" 
+               [class.active]="eventoSelecionado?.id === evento.id"
+               (click)="selecionarEvento(evento)">
+            
+            <div class="ci-icon" [style.color]="evento.backgroundColor || 'var(--primary-color)'">
+              <i class="pi pi-user"></i>
+            </div>
+            
+            <div class="ci-info">
+              <strong>{{ evento.title ? evento.title.replace(' - ' + evento.profissional_nome, '') : 'Cliente' }}</strong>
+              <div class="ci-meta">
+                <span>{{ formatTime(evento.start) }}</span>
+                <span>•</span>
+                <span>{{ evento.profissional_nome }}</span>
+              </div>
+            </div>
+            
+            <div class="ci-action">
+              <i class="pi pi-chevron-right"></i>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+
+    <!-- LADO DIREITO: CHECKOUT E COMANDA -->
+    <div class="caixa-right bento-card custom-scroll">
+      
+      <!-- SE NENHUM SELECIONADO -->
+      <div class="empty-checkout" *ngIf="!eventoSelecionado">
+        <div class="empty-icon"><i class="pi pi-shopping-cart"></i></div>
+        <h3>Nenhum atendimento selecionado</h3>
+        <p>Selecione um cliente na lista ao lado para iniciar o fechamento e pagamento.</p>
+      </div>
+
+      <!-- SUCESSO -->
+      <div class="checkout-success" *ngIf="eventoSelecionado && comandaToken">
+        <div class="success-icon"><i class="pi pi-check-circle"></i></div>
+        <h3>Pagamento Registrado!</h3>
+        <p>A comanda digital foi gerada com sucesso e a comissão computada.</p>
+        
+        <div class="comanda-link-box">
+          <p>Link de acesso público (recibo):</p>
+          <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Ver Comanda do Cliente</a>
+        </div>
+        
+        <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">Voltar para a Fila</button>
+      </div>
+
+      <!-- CHECKOUT ATIVO -->
+      <div class="checkout-active" *ngIf="eventoSelecionado && !comandaToken">
+        <div class="chk-header">
+          <h3>Fechamento de Conta</h3>
+          <button class="btn-ghost" style="padding:6px 12px;" (click)="cancelarCheckout()">Cancelar</button>
+        </div>
+
+        <div class="chk-section">
+           <h4>Serviço Realizado</h4>
+           <div class="chk-item" *ngIf="servicoPrincipal">
+             <span>{{ servicoPrincipal.titulo }}</span>
+             <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
+           </div>
+           
+           <div class="fidelidade-card" *ngIf="visitasMeta > 0 && eventoSelecionado && eventoSelecionado.cliente_id">
+             <div class="fid-head">
+               <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
+             </div>
+             <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 10px 0;">
+               Este cliente possui <b>{{ visitasFidelidade }}</b> visitas de <b>{{ visitasMeta }}</b> necessárias.
+             </p>
+             <div class="fid-progress-bg">
+               <div class="fid-progress-fill" [style.width]="(visitasFidelidade / visitasMeta) * 100 + '%'"></div>
+             </div>
+             
+             <div *ngIf="visitasFidelidade >= visitasMeta" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+               <label class="ag-checkbox" style="font-size: 0.9rem; font-weight: 500; color: #10b981; cursor: pointer;">
+                 <input type="checkbox" [(ngModel)]="aplicarFidelidade" style="margin-right: 8px;">
+                 Aplicar desconto de {{ descontoPercentual }}% no serviço!
+               </label>
+             </div>
+           </div>
+        </div>
+
+        <div class="chk-section">
+           <h4>Adicionar Produtos</h4>
+           <div class="add-prod-row">
+             <select [(ngModel)]="prodSelecionadoId" class="ag-select" style="flex:1;">
+               <option value="">Selecione um produto...</option>
+               <option *ngFor="let p of produtosCatalogo" [value]="p.id">
+                 {{ p.nome }} - R$ {{ p.preco | number:'1.2-2' }} (Estoque: {{p.estoque}})
+               </option>
+             </select>
+             <button class="btn-primary" (click)="addProdutoNaComanda()" style="width: auto; padding: 0 16px;"><i class="pi pi-plus"></i></button>
+           </div>
+
+           <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
+              <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">
+                <div class="c-item-info">
+                  <span class="c-name">{{ cp.produto.nome }}</span>
+                  <span class="c-price">R$ {{ cp.produto.preco | number:'1.2-2' }} x {{ cp.quantidade }}</span>
+                </div>
+                <div class="c-item-actions">
+                   <button class="btn-icon" (click)="cp.quantidade = cp.quantidade + 1" [disabled]="cp.quantidade >= cp.produto.estoque"><i class="pi pi-plus"></i></button>
+                   <button class="btn-icon" (click)="diminuirQtd(i)"><i class="pi pi-minus"></i></button>
+                </div>
+              </div>
+           </div>
+        </div>
+
+        <div class="chk-section">
+           <h4>Pagamento</h4>
+           <div class="form-group">
+             <label>Forma de Pagamento *</label>
+             <select [(ngModel)]="formaPagamento" class="ag-select">
+               <option value="">Selecione...</option>
+               <option value="pix">PIX</option>
+               <option value="dinheiro">Dinheiro</option>
+               <option value="cartao_credito">Cartão de Crédito</option>
+               <option value="cartao_debito">Cartão de Débito</option>
+             </select>
+           </div>
+        </div>
+
+        <div class="chk-section" style="margin-bottom: 24px;">
+           <details>
+             <summary style="cursor: pointer; color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">Informações Opcionais</summary>
+             <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
+                <div class="form-group">
+                  <label>Nº Comanda Física</label>
+                  <input type="text" [(ngModel)]="comandaFisica" class="ag-input" placeholder="Ex: 145">
+                </div>
+                <div class="form-group">
+                  <label>E-mail do Cliente (Envio de recibo)</label>
+                  <input type="email" [(ngModel)]="emailCliente" class="ag-input" placeholder="cliente@email.com">
+                </div>
+             </div>
+           </details>
+        </div>
+
+        <div class="chk-total">
+           <span>Total a Receber</span>
+           <div style="display: flex; flex-direction: column; align-items: flex-end;">
+             <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
+               R$ {{ (servicoPrincipal?.preco || 0) + (comandaProdutos.length > 0 ? getValorTotalCheckout() - (servicoPrincipal?.preco || 0) + getDescontoFidelidade() : 0) | number:'1.2-2' }}
+             </strong>
+             <strong style="color: var(--primary-color);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
+           </div>
+        </div>
+
+        <button class="btn-primary primary" style="width: 100%; margin-top: 16px;" [disabled]="isFinalizing || !formaPagamento" (click)="finalizarEGerarComanda()">
+            <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
+            <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
+            Finalizar e Gerar Comanda
+        </button>
+
+      </div>
+    </div>
+  </div>
+</div>

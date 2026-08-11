@@ -13,7 +13,7 @@ import { ClienteService } from '../../services/cliente.service';
   imports: [CommonModule, FormsModule],
   template: `
   <div class="modal-backdrop" (click)="fechar()">
-    <div class="evento-modal-box" [class.checkout-mode]="isCheckoutMode" (click)="$event.stopPropagation()">
+    <div class="evento-modal-box" (click)="$event.stopPropagation()">
       <div class="evento-header" [style.border-left-color]="evento?.backgroundColor || '#1a73e8'">
         <div class="evento-icon">{{ getEmoji() }}</div>
         <div class="evento-info">
@@ -26,7 +26,7 @@ import { ClienteService } from '../../services/cliente.service';
         <button class="close-btn" (click)="fechar()"><i class="pi pi-times"></i></button>
       </div>
 
-      <div class="evento-body" *ngIf="!isCheckoutMode && !isRecoveryMode">
+      <div class="evento-body" *ngIf="!isRecoveryMode">
         <div class="status-summary">
           <div class="ss-item">
             <span class="ss-label">Status Atual</span>
@@ -46,7 +46,7 @@ import { ClienteService } from '../../services/cliente.service';
         </div>
       </div>
 
-      <div class="evento-footer-ent" *ngIf="!isCheckoutMode && !isRecoveryMode">
+      <div class="evento-footer-ent" *ngIf="!isRecoveryMode">
         
         <!-- Casos onde o atendimento ainda não começou -->
         <ng-container *ngIf="evento?.status === 'confirmado' || !evento?.status">
@@ -60,7 +60,7 @@ import { ClienteService } from '../../services/cliente.service';
 
         <!-- Caso onde o atendimento está em curso -->
         <ng-container *ngIf="evento?.status === 'em_atendimento'">
-          <button class="btn-primary success" (click)="iniciarCheckout()">
+          <button class="btn-primary success" (click)="concluirEFechar()">
             <i class="pi pi-check-circle"></i> Finalizar Atendimento
           </button>
         </ng-container>
@@ -119,110 +119,7 @@ import { ClienteService } from '../../services/cliente.service';
          <button class="btn-ghost" (click)="fechar()">Fechar</button>
       </div>
 
-      <!-- VISÃO: CHECKOUT / COMANDA -->
-      <div class="checkout-body custom-scroll" *ngIf="isCheckoutMode">
-        <div class="chk-section">
-           <h4>Serviço Realizado</h4>
-           <div class="chk-item" *ngIf="servicoPrincipal">
-             <span>{{ servicoPrincipal.titulo }}</span>
-             <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
-           </div>
-           
-           <div class="fidelidade-card" *ngIf="visitasMeta > 0 && evento?.cliente_id">
-             <div class="fid-head">
-               <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
-             </div>
-             <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 10px 0;">
-               Este cliente possui <b>{{ visitasFidelidade }}</b> visitas de <b>{{ visitasMeta }}</b> necessárias.
-             </p>
-             <div class="fid-progress-bg">
-               <div class="fid-progress-fill" [style.width]="(visitasFidelidade / visitasMeta) * 100 + '%'"></div>
-             </div>
-             
-             <div *ngIf="visitasFidelidade >= visitasMeta" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-               <label class="ag-checkbox" style="font-size: 0.9rem; font-weight: 500; color: #10b981; cursor: pointer;">
-                 <input type="checkbox" [(ngModel)]="aplicarFidelidade" style="margin-right: 8px;">
-                 Aplicar desconto de {{ descontoPercentual }}% no serviço!
-               </label>
-             </div>
-           </div>
 
-           <div class="chk-item" *ngIf="!servicoPrincipal">
-             <span class="loading-text">Carregando serviço...</span>
-           </div>
-        </div>
-
-        <div class="chk-section">
-           <h4>Adicionar Produtos</h4>
-           <div class="add-prod-row">
-             <select [(ngModel)]="prodSelecionadoId" class="prod-select">
-               <option value="">Selecione um produto...</option>
-               <option *ngFor="let p of produtosCatalogo" [value]="p.id">
-                 {{ p.nome }} - R$ {{ p.preco | number:'1.2-2' }} (Estoque: {{p.estoque}})
-               </option>
-             </select>
-             <button class="btn-add-prod" (click)="addProdutoNaComanda()"><i class="pi pi-plus"></i></button>
-           </div>
-
-           <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
-              <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">
-                <div class="c-item-info">
-                  <span class="c-name">{{ cp.produto.nome }}</span>
-                  <span class="c-price">R$ {{ cp.produto.preco | number:'1.2-2' }} x {{ cp.quantidade }}</span>
-                </div>
-                <div class="c-item-actions">
-                   <button (click)="cp.quantidade = cp.quantidade + 1" [disabled]="cp.quantidade >= cp.produto.estoque"><i class="pi pi-plus"></i></button>
-                   <button (click)="diminuirQtd(i)"><i class="pi pi-minus"></i></button>
-                </div>
-              </div>
-           </div>
-        </div>
-
-        <div class="chk-section">
-           <h4>Informações Opcionais</h4>
-           <label class="input-label">Nº Comanda Física</label>
-           <input type="text" [(ngModel)]="comandaFisica" class="prod-select" placeholder="Ex: 145" style="margin-bottom: 12px;">
-           
-           <label class="input-label">E-mail do Cliente (Envio de recibo)</label>
-           <input type="email" [(ngModel)]="emailCliente" class="prod-select" placeholder="cliente@email.com" style="margin-bottom: 12px;">
-
-           <label class="input-label">Forma de Pagamento</label>
-           <select [(ngModel)]="formaPagamento" class="prod-select">
-             <option value="">Ainda não pagou (Pendente)</option>
-             <option value="pix">PIX</option>
-             <option value="dinheiro">Dinheiro</option>
-             <option value="cartao_credito">Cartão de Crédito</option>
-             <option value="cartao_debito">Cartão de Débito</option>
-           </select>
-        </div>
-
-        <div class="chk-total">
-           <span>Total a Receber</span>
-           <div style="display: flex; flex-direction: column; align-items: flex-end;">
-             <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
-               R$ {{ (servicoPrincipal?.preco || 0) + (comandaProdutos.length > 0 ? getValorTotalCheckout() - (servicoPrincipal?.preco || 0) + getDescontoFidelidade() : 0) | number:'1.2-2' }}
-             </strong>
-             <strong style="color: var(--primary);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
-           </div>
-        </div>
-      </div>
-
-      <div class="evento-footer-ent" *ngIf="isCheckoutMode">
-         <button class="btn-primary success" [disabled]="isFinalizing" (click)="finalizarEGerarComanda()">
-            <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
-            <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
-            Gerar Comanda Digital
-         </button>
-         <div class="footer-secondary">
-           <button class="btn-ghost" (click)="isCheckoutMode = false">Voltar</button>
-         </div>
-         
-         <div class="comanda-link-box" *ngIf="comandaToken">
-            <p>Comanda gerada com sucesso!</p>
-            <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Ver Comanda do Cliente</a>
-            <button class="btn-primary primary" (click)="concluirEFechar()" style="width: 100%; margin-top: 8px;">Concluir Atendimento</button>
-         </div>
-      </div>
     </div>
   </div>
   `,
@@ -383,33 +280,19 @@ export class EventoModalComponent implements OnInit {
 
   confirmDelete = false;
 
-  isCheckoutMode = false;
   isRecoveryMode = false;
   isFinalizing = false;
   isLoadingRecovery = false;
-
-  formaPagamento: string = '';
-
-  isSendingEmail = false;
   
-  servicoPrincipal: any;
-  produtosCatalogo: Produto[] = [];
-  prodSelecionadoId = '';
-  comandaProdutos: { produto: Produto, quantidade: number }[] = [];
+  isSendingEmail = false;
+
   comandaToken = '';
-  comandaFisica = '';
   emailCliente = '';
   recoveredCaixa: any = null;
 
-  visitasFidelidade = 0;
-  visitasMeta = 10;
-  descontoPercentual = 0;
-  aplicarFidelidade = false;
   isAniversariante = false;
 
   ngOnInit() {
-    this.prodService.produtos$.subscribe(p => this.produtosCatalogo = p.filter(x => x.ativo && x.estoque > 0));
-    
     if (this.evento?.cliente_id) {
       const clientes = this.clienteService.getClientes();
       const cli = clientes.find((c: any) => c.id === this.evento!.cliente_id);
@@ -466,19 +349,6 @@ export class EventoModalComponent implements OnInit {
 
   fechar() { this.fechado.emit(); }
 
-  async iniciarCheckout() {
-    this.isCheckoutMode = true;
-    if (this.evento?.servico_id) {
-      const servicos = this.estService.servicos$.value;
-      this.servicoPrincipal = servicos.find((s: any) => s.id === this.evento!.servico_id);
-    }
-    const config = this.estService.estabelecimento$.value?.config_fidelidade;
-    if (config?.ativo && this.evento?.cliente_id) {
-      this.visitasMeta = config.visitas_meta || 10;
-      this.descontoPercentual = config.desconto_percentual || 0;
-      this.visitasFidelidade = await this.clienteService.getVisitasFidelidadePendentes(this.evento.cliente_id);
-    }
-  }
 
   async iniciarRecuperacao() {
     this.isLoadingRecovery = true;
@@ -505,70 +375,6 @@ export class EventoModalComponent implements OnInit {
     }
   }
 
-  addProdutoNaComanda() {
-    if (!this.prodSelecionadoId) return;
-    const prod = this.produtosCatalogo.find(p => p.id === this.prodSelecionadoId);
-    if (!prod) return;
-
-    const exist = this.comandaProdutos.find(cp => cp.produto.id === prod.id);
-    if (exist) {
-      if (exist.quantidade < prod.estoque) exist.quantidade++;
-    } else {
-      this.comandaProdutos.push({ produto: prod, quantidade: 1 });
-    }
-    this.prodSelecionadoId = '';
-  }
-
-  diminuirQtd(index: number) {
-    this.comandaProdutos[index].quantidade--;
-    if (this.comandaProdutos[index].quantidade <= 0) {
-      this.comandaProdutos.splice(index, 1);
-    }
-  }
-
-  getValorTotalCheckout(): number {
-    const servico = this.servicoPrincipal?.preco || 0;
-    const fidelidadeDesc = this.aplicarFidelidade ? (servico * (this.descontoPercentual / 100)) : 0;
-    const produtos = this.comandaProdutos.reduce((sum, cp) => sum + (cp.produto.preco * cp.quantidade), 0);
-    return Math.max(0, servico - fidelidadeDesc) + produtos;
-  }
-
-  getDescontoFidelidade(): number {
-    const servico = this.servicoPrincipal?.preco || 0;
-    return this.aplicarFidelidade ? (servico * (this.descontoPercentual / 100)) : 0;
-  }
-
-  async finalizarEGerarComanda() {
-    this.isFinalizing = true;
-    try {
-      const clienteNome = this.evento?.title?.replace(/ - .*/, '') || 'Cliente';
-      const caixaItem = await this.profService.finalizarEEnviarCaixa({
-        eventId: this.evento!.id!,
-        clienteNome: clienteNome,
-        servicoPrincipal: this.servicoPrincipal ? { titulo: this.servicoPrincipal.titulo, preco: this.servicoPrincipal.preco } as any : { titulo: 'Serviço', preco: 0 } as any,
-        servicosExtras: [],
-        produtos: this.comandaProdutos.map(cp => ({ id: cp.produto.id!, nome: cp.produto.nome, preco: cp.produto.preco, quantidade: cp.quantidade })),
-        profissional: this.evento?.profissional_nome || 'Profissional',
-        comandaFisica: this.comandaFisica,
-        emailCliente: this.emailCliente,
-        formaPagamento: this.formaPagamento,
-        fidelidadeDesconto: this.getDescontoFidelidade(),
-        clienteId: this.evento?.cliente_id,
-        profissionalId: this.evento?.profissional_id,
-        servicoId: this.evento?.servico_id,
-        estabelecimentoId: this.estService.estabelecimento$.value?.id
-      });
-      this.comandaToken = caixaItem.token_publico || '';
-
-      if (this.emailCliente && this.comandaToken) {
-        await this.enviarComandaEmailApi(this.emailCliente, this.comandaToken, caixaItem.valor_total);
-      }
-    } catch (e: any) {
-      alert('Erro: ' + e.message);
-    } finally {
-      this.isFinalizing = false;
-    }
-  }
 
   async enviarComandaEmailApi(email: string, token: string, valorTotal: number) {
     const estNome = this.estService.estabelecimento$.value?.nome || 'Estabelecimento';

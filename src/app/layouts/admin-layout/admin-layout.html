@@ -29,6 +29,9 @@
       <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
         <i class="pi pi-id-card"></i><span>{{ (segmentoConfig.config$ | async)?.labelProfissionalPlural || 'Profissionais' }}</span>
       </a>
+      <a routerLink="/admin/caixa" routerLinkActive="active" *ngIf="(isDono | async) || (isAdminOrFin | async)" (click)="closeSidebar()">
+        <i class="pi pi-receipt"></i><span>Caixa (PDV)</span>
+      </a>
       <a routerLink="/admin/comissoes" routerLinkActive="active" *ngIf="(isDono | async) || (isAdminOrFin | async)" (click)="closeSidebar()">
         <i class="pi pi-percentage"></i><span>Comissões</span>
       </a>

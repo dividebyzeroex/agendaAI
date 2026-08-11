@@ -1,0 +1,341 @@
+.caixa-container {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .caixa-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+.caixa-left {
+  max-height: calc(100vh - 140px);
+}
+
+.caixa-right {
+  max-height: calc(100vh - 140px);
+}
+
+.caixa-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.caixa-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.caixa-item:hover {
+  background: var(--hover-bg, rgba(0,0,0,0.03));
+  border-color: var(--primary-color);
+}
+
+.caixa-item.active {
+  background: var(--primary-color);
+  color: #fff;
+  border-color: var(--primary-color);
+}
+
+.caixa-item.active .ci-icon {
+  background: rgba(255,255,255,0.2) !important;
+  color: #fff !important;
+}
+
+.caixa-item.active .ci-info strong {
+  color: #fff;
+}
+
+.caixa-item.active .ci-meta {
+  color: rgba(255,255,255,0.8);
+}
+
+.caixa-item.active .ci-action {
+  color: #fff;
+}
+
+.ci-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  background: rgba(0,0,0,0.05);
+}
+
+.ci-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.ci-info strong {
+  font-size: var(--font-base);
+  color: var(--text-color);
+  font-weight: 700;
+}
+
+.ci-meta {
+  font-size: var(--font-xs);
+  color: var(--text-muted);
+  display: flex;
+  gap: 6px;
+}
+
+.ci-action {
+  color: var(--text-muted);
+}
+
+/* Empty States */
+.empty-state {
+  padding: 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-sm);
+  background: rgba(0,0,0,0.02);
+  border-radius: var(--radius-md);
+  border: 1px dashed var(--glass-border);
+}
+
+.empty-checkout, .checkout-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 40px 20px;
+  min-height: 400px;
+}
+
+.empty-icon {
+  font-size: 3rem;
+  color: var(--glass-border);
+  margin-bottom: 16px;
+}
+
+.success-icon {
+  font-size: 4rem;
+  color: var(--success, #10b981);
+  margin-bottom: 16px;
+}
+
+.empty-checkout h3, .checkout-success h3 {
+  margin: 0 0 8px 0;
+  color: var(--text-color);
+  font-size: var(--font-lg);
+}
+
+.empty-checkout p, .checkout-success p {
+  color: var(--text-muted);
+  font-size: var(--font-base);
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+/* Checkout UI */
+.chk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--glass-border);
+}
+
+.chk-header h3 {
+  margin: 0;
+  color: var(--text-color);
+  font-size: var(--font-lg);
+}
+
+.chk-section {
+  margin-bottom: 24px;
+}
+
+.chk-section h4 {
+  margin: 0 0 12px 0;
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.chk-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--glass-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--glass-border);
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.add-prod-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.comanda-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.c-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+}
+
+.c-item-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.c-name {
+  font-weight: 600;
+  color: var(--text-color);
+  font-size: var(--font-base);
+}
+
+.c-price {
+  font-size: var(--font-sm);
+  color: var(--text-muted);
+}
+
+.c-item-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.c-item-actions button {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--glass-border);
+  background: var(--glass-bg);
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.c-item-actions button:hover:not([disabled]) {
+  background: var(--hover-bg, rgba(0,0,0,0.05));
+}
+
+.chk-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  background: var(--success-soft, #ecfdf5);
+  border-radius: var(--radius-lg);
+  color: var(--success, #065f46);
+  font-size: var(--font-lg);
+  border: 1px dashed var(--success, #34d399);
+  margin-top: 24px;
+}
+
+.chk-total strong {
+  font-size: var(--font-2xl);
+  font-weight: 800;
+}
+
+.comanda-link-box {
+  margin-top: 24px;
+  padding: 16px;
+  background: var(--success-soft, #f0fdf4);
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-md);
+  text-align: center;
+  width: 100%;
+}
+
+.comanda-link-box p {
+  margin: 0 0 12px 0;
+  color: #166534;
+  font-weight: 600;
+}
+
+.comanda-url {
+  display: inline-block;
+  padding: 12px 16px;
+  background: var(--success, #22c55e);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  width: 100%;
+  box-sizing: border-box;
+  text-align: center;
+  transition: opacity 0.2s;
+}
+
+.comanda-url:hover {
+  opacity: 0.9;
+}
+
+.fidelidade-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  padding: 16px;
+  margin-top: 16px;
+}
+
+.fid-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: var(--font-base);
+  color: var(--text-color);
+}
+
+.fid-progress-bg {
+  width: 100%;
+  height: 8px;
+  background: var(--glass-border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.fid-progress-fill {
+  height: 100%;
+  background: #10b981;
+  transition: width 0.3s ease;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: var(--font-sm);
+  font-weight: 600;
+  color: var(--text-color);
+}
