@@ -107,6 +107,9 @@ export class ProfissionalService {
     formaPagamento?: string;
     fidelidadeDesconto?: number;
     clienteId?: string;
+    profissionalId?: string;
+    servicoId?: string;
+    estabelecimentoId?: string;
   }): Promise<CaixaItem> {
     const todosServicos = [params.servicoPrincipal, ...params.servicosExtras];
     const valorServicos = todosServicos.reduce((sum, s) => sum + s.preco, 0);
@@ -159,6 +162,45 @@ export class ProfissionalService {
 
     if (params.fidelidadeDesconto && params.fidelidadeDesconto > 0 && params.clienteId) {
       await this.supabase.rpc('resgatar_fidelidade_cliente', { p_cliente_id: params.clienteId });
+    }
+
+    // 4. Calcular e Inserir Comissão
+    if (params.profissionalId && params.servicoId && params.estabelecimentoId) {
+      try {
+        const { data: regra } = await this.supabase
+          .from('profissional_servicos')
+          .select('taxa_comissao, tipo_comissao')
+          .eq('profissional_id', params.profissionalId)
+          .eq('servico_id', params.servicoId)
+          .maybeSingle();
+
+        const taxa = regra?.taxa_comissao || 0;
+        const tipo = regra?.tipo_comissao || 'percentual';
+        const valorServico = params.servicoPrincipal.preco;
+        let valorComissao = 0;
+
+        if (tipo === 'percentual') {
+          valorComissao = (valorServico * taxa) / 100;
+        } else {
+          valorComissao = taxa;
+        }
+
+        if (valorComissao >= 0) {
+          await this.supabase.from('comissoes').insert([{
+            estabelecimento_id: params.estabelecimentoId,
+            evento_id: params.eventId,
+            profissional_id: params.profissionalId,
+            servico_id: params.servicoId,
+            valor_servico: valorServico,
+            taxa_aplicada: taxa,
+            tipo_comissao: tipo,
+            valor_comissao: valorComissao,
+            status: 'pendente'
+          }]);
+        }
+      } catch (err) {
+        console.error('[ProSvc] Erro ao calcular comissão:', err);
+      }
     }
 
     await this.fetchCaixaPendente();

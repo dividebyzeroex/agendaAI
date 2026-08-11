@@ -553,7 +553,10 @@ export class EventoModalComponent implements OnInit {
         emailCliente: this.emailCliente,
         formaPagamento: this.formaPagamento,
         fidelidadeDesconto: this.getDescontoFidelidade(),
-        clienteId: this.evento?.cliente_id
+        clienteId: this.evento?.cliente_id,
+        profissionalId: this.evento?.profissional_id,
+        servicoId: this.evento?.servico_id,
+        estabelecimentoId: this.estService.estabelecimento$.value?.id
       });
       this.comandaToken = caixaItem.token_publico || '';
 
