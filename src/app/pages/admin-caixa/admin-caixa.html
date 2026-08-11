@@ -1,185 +1,330 @@
 <div class="ag-page">
-  <div class="page-header">
+  <div class="page-header flex-between">
     <div>
-      <h2>Dashboard de <span class="gradient-text">Caixa</span></h2>
-      <p>Gerencie pagamentos, adicione produtos e emita comandas.</p>
+      <h2>Dashboard de <span class="gradient-text">Frente de Caixa (PDV)</span></h2>
+      <p>Gerencie pagamentos, sessões e recebimentos diários.</p>
+    </div>
+    
+    <div class="header-actions" *ngIf="sessaoAtual">
+      <div class="status-pill open-badge"><div class="blob-green"></div> CAIXA ABERTO</div>
+      <button class="btn-ghost" (click)="iniciarVendaAvulsa()"><i class="pi pi-cart-plus"></i> Venda Avulsa</button>
+      <button class="btn-ghost" (click)="showSangriaModal = true; tipoMovimento = 'sangria';"><i class="pi pi-arrow-right-arrow-left"></i> Sangria / Suprimento</button>
+      <button class="btn-primary danger" (click)="prepararFechamento()"><i class="pi pi-lock"></i> Fechar Caixa</button>
     </div>
   </div>
 
-  <div class="caixa-container">
+  <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 400px;">
+    <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
     
-    <!-- LADO ESQUERDO: FILA DE PAGAMENTOS -->
-    <div class="caixa-left bento-card custom-scroll">
-      <h3 style="margin-top:0; color:var(--text-color); font-size:1.1rem; border-bottom:1px solid var(--glass-border); padding-bottom:12px; margin-bottom:16px;">
-        Aguardando Pagamento
-      </h3>
-
-      <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 200px;">
-        <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
+    <!-- TELA CAIXA FECHADO -->
+    <div class="caixa-fechado-screen" *ngIf="!sessaoAtual">
+      <div class="cf-content">
+        <i class="pi pi-lock lock-icon"></i>
+        <h3>O Caixa está Fechado</h3>
+        <p>Você precisa abrir um novo turno (sessão) para realizar vendas, receber pagamentos e gerar comandas.</p>
+        <button class="btn-primary primary btn-lg mt-4" (click)="showAberturaModal = true">
+          Abrir Caixa (Iniciar Turno)
+        </button>
       </div>
+    </div>
 
-      <ng-container *ngIf="!isLoading">
-        <div class="empty-state" *ngIf="eventosPendentes.length === 0">
-          Nenhum cliente aguardando pagamento no momento.
+    <!-- TELA CAIXA ABERTO -->
+    <div class="caixa-container" *ngIf="sessaoAtual">
+      
+      <!-- LADO ESQUERDO: FILA & MOVS -->
+      <div class="caixa-left bento-card custom-scroll">
+        <div class="tabs-header">
+          <div class="tab-item" [class.active]="currentTab === 'fila'" (click)="currentTab = 'fila'">
+            Fila de Pagamento <span class="badge" *ngIf="eventosPendentes.length > 0">{{eventosPendentes.length}}</span>
+          </div>
+          <div class="tab-item" [class.active]="currentTab === 'movimentacoes'" (click)="currentTab = 'movimentacoes'">
+            Movimentações ({{movimentacoes.length}})
+          </div>
         </div>
 
-        <div class="caixa-list">
-          <div class="caixa-item" *ngFor="let evento of eventosPendentes" 
-               [class.active]="eventoSelecionado?.id === evento.id"
-               (click)="selecionarEvento(evento)">
-            
-            <div class="ci-icon" [style.color]="evento.backgroundColor || 'var(--primary-color)'">
-              <i class="pi pi-user"></i>
-            </div>
-            
-            <div class="ci-info">
-              <strong>{{ evento.title ? evento.title.replace(' - ' + evento.profissional_nome, '') : 'Cliente' }}</strong>
-              <div class="ci-meta">
-                <span>{{ formatTime(evento.start) }}</span>
-                <span>•</span>
-                <span>{{ evento.profissional_nome }}</span>
+        <!-- TAB: FILA -->
+        <div class="tab-content" *ngIf="currentTab === 'fila'">
+          <div class="empty-state" *ngIf="eventosPendentes.length === 0">
+            Nenhum cliente aguardando pagamento no momento.
+          </div>
+
+          <div class="caixa-list">
+            <div class="caixa-item" *ngFor="let evento of eventosPendentes" 
+                 [class.active]="eventoSelecionado?.id === evento.id"
+                 (click)="selecionarEvento(evento)">
+              
+              <div class="ci-icon" [style.color]="evento.backgroundColor || 'var(--primary-color)'">
+                <i class="pi pi-user"></i>
               </div>
-            </div>
-            
-            <div class="ci-action">
-              <i class="pi pi-chevron-right"></i>
+              
+              <div class="ci-info">
+                <strong>{{ evento.title ? evento.title.replace(' - ' + evento.profissional_nome, '') : 'Cliente' }}</strong>
+                <div class="ci-meta">
+                  <span>{{ formatTime(evento.start) }}</span>
+                  <span>•</span>
+                  <span>{{ evento.profissional_nome }}</span>
+                </div>
+              </div>
+              
+              <div class="ci-action"><i class="pi pi-chevron-right"></i></div>
             </div>
           </div>
         </div>
-      </ng-container>
-    </div>
 
-    <!-- LADO DIREITO: CHECKOUT E COMANDA -->
-    <div class="caixa-right bento-card custom-scroll">
-      
-      <!-- SE NENHUM SELECIONADO -->
-      <div class="empty-checkout" *ngIf="!eventoSelecionado">
-        <div class="empty-icon"><i class="pi pi-shopping-cart"></i></div>
-        <h3>Nenhum atendimento selecionado</h3>
-        <p>Selecione um cliente na lista ao lado para iniciar o fechamento e pagamento.</p>
-      </div>
-
-      <!-- SUCESSO -->
-      <div class="checkout-success" *ngIf="eventoSelecionado && comandaToken">
-        <div class="success-icon"><i class="pi pi-check-circle"></i></div>
-        <h3>Pagamento Registrado!</h3>
-        <p>A comanda digital foi gerada com sucesso e a comissão computada.</p>
-        
-        <div class="comanda-link-box">
-          <p>Link de acesso público (recibo):</p>
-          <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Ver Comanda do Cliente</a>
-        </div>
-        
-        <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">Voltar para a Fila</button>
-      </div>
-
-      <!-- CHECKOUT ATIVO -->
-      <div class="checkout-active" *ngIf="eventoSelecionado && !comandaToken">
-        <div class="chk-header">
-          <h3>Fechamento de Conta</h3>
-          <button class="btn-ghost" style="padding:6px 12px;" (click)="cancelarCheckout()">Cancelar</button>
-        </div>
-
-        <div class="chk-section">
-           <h4>Serviço Realizado</h4>
-           <div class="chk-item" *ngIf="servicoPrincipal">
-             <span>{{ servicoPrincipal.titulo }}</span>
-             <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
+        <!-- TAB: MOVS -->
+        <div class="tab-content" *ngIf="currentTab === 'movimentacoes'">
+           <div class="elite-loader-container" *ngIf="isLoadingMovs">
+             <i class="pi pi-spin pi-spinner"></i>
            </div>
            
-           <div class="fidelidade-card" *ngIf="visitasMeta > 0 && eventoSelecionado && eventoSelecionado.cliente_id">
-             <div class="fid-head">
-               <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
+           <div class="mov-list" *ngIf="!isLoadingMovs">
+             <div class="empty-state" *ngIf="movimentacoes.length === 0">Nenhuma movimentação registrada.</div>
+             
+             <div class="mov-item" *ngFor="let m of movimentacoes" [ngClass]="m.tipo">
+                <div class="mov-icon">
+                  <i class="pi pi-shopping-bag" *ngIf="m.tipo === 'venda'"></i>
+                  <i class="pi pi-arrow-up-right" *ngIf="m.tipo === 'sangria'"></i>
+                  <i class="pi pi-arrow-down-left" *ngIf="m.tipo === 'suprimento'"></i>
+                  <i class="pi pi-refresh" *ngIf="m.tipo === 'estorno'"></i>
+                </div>
+                <div class="mov-info">
+                  <strong>{{ m.descricao }}</strong>
+                  <span class="mov-meta">{{ m.created_at | date:'HH:mm' }} • {{ m.forma_pagamento | uppercase }} • {{ m.operador_nome }}</span>
+                </div>
+                <div class="mov-valor" [class.positivo]="m.tipo==='venda' || m.tipo==='suprimento'" [class.negativo]="m.tipo==='sangria' || m.tipo==='estorno'">
+                  {{ (m.tipo==='venda' || m.tipo==='suprimento' ? '+' : '-') }} R$ {{ m.valor | number:'1.2-2' }}
+                </div>
+                <!-- <button class="btn-icon danger-icon" *ngIf="m.tipo === 'venda'" (click)="estornarMovimento(m)" title="Estornar Lançamento">
+                  <i class="pi pi-undo"></i>
+                </button> -->
              </div>
-             <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 10px 0;">
-               Este cliente possui <b>{{ visitasFidelidade }}</b> visitas de <b>{{ visitasMeta }}</b> necessárias.
-             </p>
-             <div class="fid-progress-bg">
-               <div class="fid-progress-fill" [style.width]="(visitasFidelidade / visitasMeta) * 100 + '%'"></div>
+           </div>
+        </div>
+      </div>
+
+      <!-- LADO DIREITO: CHECKOUT E COMANDA -->
+      <div class="caixa-right bento-card custom-scroll">
+        
+        <!-- SE NENHUM SELECIONADO -->
+        <div class="empty-checkout" *ngIf="!eventoSelecionado && !showVendaAvulsaModal">
+          <div class="empty-icon"><i class="pi pi-shopping-cart"></i></div>
+          <h3>Checkout do Caixa</h3>
+          <p>Selecione um cliente na lista ou inicie uma Venda Avulsa pelo menu superior.</p>
+        </div>
+
+        <!-- SUCESSO -->
+        <div class="checkout-success" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && comandaToken">
+          <div class="success-icon"><i class="pi pi-check-circle"></i></div>
+          <h3>Venda Registrada!</h3>
+          <p>Comanda gerada e caixa atualizado.</p>
+          
+          <button class="btn-ghost" style="margin-top: 16px; width: 100%; border-color: var(--primary-color); color: var(--primary-color);" (click)="imprimirComprovante({cliente_nome: eventoSelecionado?.title, profissional: eventoSelecionado?.profissional_nome}, getValorTotalCheckout(), showVendaAvulsaModal)">
+            <i class="pi pi-print"></i> Reimprimir Recibo (Térmica)
+          </button>
+          
+          <div class="comanda-link-box">
+            <p>Link de acesso público (recibo digital):</p>
+            <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Acessar Comanda Digital</a>
+          </div>
+          
+          <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">Nova Venda / Voltar</button>
+        </div>
+
+        <!-- CHECKOUT ATIVO -->
+        <div class="checkout-active" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && !comandaToken">
+          <div class="chk-header">
+            <h3>{{ showVendaAvulsaModal ? 'Venda Avulsa (Balcão)' : 'Fechamento de Conta' }}</h3>
+            <button class="btn-ghost" style="padding:6px 12px;" (click)="cancelarCheckout()">Cancelar</button>
+          </div>
+
+          <div class="chk-section" *ngIf="!showVendaAvulsaModal">
+             <h4>Serviço Realizado</h4>
+             <div class="chk-item" *ngIf="servicoPrincipal">
+               <span>{{ servicoPrincipal.titulo }}</span>
+               <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
              </div>
              
-             <div *ngIf="visitasFidelidade >= visitasMeta" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-               <label class="ag-checkbox" style="font-size: 0.9rem; font-weight: 500; color: #10b981; cursor: pointer;">
-                 <input type="checkbox" [(ngModel)]="aplicarFidelidade" style="margin-right: 8px;">
-                 Aplicar desconto de {{ descontoPercentual }}% no serviço!
-               </label>
+             <div class="fidelidade-card" *ngIf="visitasMeta > 0 && eventoSelecionado && eventoSelecionado.cliente_id">
+               <div class="fid-head">
+                 <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
+               </div>
+               <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 10px 0;">
+                 Este cliente possui <b>{{ visitasFidelidade }}</b> visitas de <b>{{ visitasMeta }}</b> necessárias.
+               </p>
+               <div class="fid-progress-bg">
+                 <div class="fid-progress-fill" [style.width]="(visitasFidelidade / visitasMeta) * 100 + '%'"></div>
+               </div>
+               
+               <div *ngIf="visitasFidelidade >= visitasMeta" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                 <label class="ag-checkbox" style="font-size: 0.9rem; font-weight: 500; color: #10b981; cursor: pointer;">
+                   <input type="checkbox" [(ngModel)]="aplicarFidelidade" style="margin-right: 8px;">
+                   Aplicar desconto de {{ descontoPercentual }}% no serviço!
+                 </label>
+               </div>
              </div>
-           </div>
-        </div>
+          </div>
 
-        <div class="chk-section">
-           <h4>Adicionar Produtos</h4>
-           <div class="add-prod-row">
-             <select [(ngModel)]="prodSelecionadoId" class="ag-select" style="flex:1;">
-               <option value="">Selecione um produto...</option>
-               <option *ngFor="let p of produtosCatalogo" [value]="p.id">
-                 {{ p.nome }} - R$ {{ p.preco | number:'1.2-2' }} (Estoque: {{p.estoque}})
-               </option>
-             </select>
-             <button class="btn-primary" (click)="addProdutoNaComanda()" style="width: auto; padding: 0 16px;"><i class="pi pi-plus"></i></button>
-           </div>
+          <div class="chk-section">
+             <h4>{{ showVendaAvulsaModal ? 'Itens da Venda' : 'Adicionar Produtos extras' }}</h4>
+             <div class="add-prod-row">
+               <select [(ngModel)]="prodSelecionadoId" class="ag-select" style="flex:1;">
+                 <option value="">Selecione um produto...</option>
+                 <option *ngFor="let p of produtosCatalogo" [value]="p.id">
+                   {{ p.nome }} - R$ {{ p.preco | number:'1.2-2' }} (Est: {{p.estoque}})
+                 </option>
+               </select>
+               <button class="btn-primary" (click)="addProdutoNaComanda()" style="width: auto; padding: 0 16px;"><i class="pi pi-plus"></i></button>
+             </div>
 
-           <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
-              <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">
-                <div class="c-item-info">
-                  <span class="c-name">{{ cp.produto.nome }}</span>
-                  <span class="c-price">R$ {{ cp.produto.preco | number:'1.2-2' }} x {{ cp.quantidade }}</span>
-                </div>
-                <div class="c-item-actions">
-                   <button class="btn-icon" (click)="cp.quantidade = cp.quantidade + 1" [disabled]="cp.quantidade >= cp.produto.estoque"><i class="pi pi-plus"></i></button>
-                   <button class="btn-icon" (click)="diminuirQtd(i)"><i class="pi pi-minus"></i></button>
-                </div>
-              </div>
-           </div>
-        </div>
-
-        <div class="chk-section">
-           <h4>Pagamento</h4>
-           <div class="form-group">
-             <label>Forma de Pagamento *</label>
-             <select [(ngModel)]="formaPagamento" class="ag-select">
-               <option value="">Selecione...</option>
-               <option value="pix">PIX</option>
-               <option value="dinheiro">Dinheiro</option>
-               <option value="cartao_credito">Cartão de Crédito</option>
-               <option value="cartao_debito">Cartão de Débito</option>
-             </select>
-           </div>
-        </div>
-
-        <div class="chk-section" style="margin-bottom: 24px;">
-           <details>
-             <summary style="cursor: pointer; color: var(--primary-color); font-weight: 600; font-size: 0.9rem;">Informações Opcionais</summary>
-             <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 12px;">
-                <div class="form-group">
-                  <label>Nº Comanda Física</label>
-                  <input type="text" [(ngModel)]="comandaFisica" class="ag-input" placeholder="Ex: 145">
-                </div>
-                <div class="form-group">
-                  <label>E-mail do Cliente (Envio de recibo)</label>
-                  <input type="email" [(ngModel)]="emailCliente" class="ag-input" placeholder="cliente@email.com">
+             <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
+                <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">
+                  <div class="c-item-info">
+                    <span class="c-name">{{ cp.produto.nome }}</span>
+                    <span class="c-price">R$ {{ cp.produto.preco | number:'1.2-2' }} x {{ cp.quantidade }}</span>
+                  </div>
+                  <div class="c-item-actions">
+                     <button class="btn-icon" (click)="cp.quantidade = cp.quantidade + 1" [disabled]="cp.quantidade >= cp.produto.estoque"><i class="pi pi-plus"></i></button>
+                     <button class="btn-icon" (click)="diminuirQtd(i)"><i class="pi pi-minus"></i></button>
+                  </div>
                 </div>
              </div>
-           </details>
+          </div>
+
+          <div class="chk-section">
+             <h4>Pagamento</h4>
+             <div class="form-group">
+               <label>Forma de Pagamento *</label>
+               <select [(ngModel)]="formaPagamento" class="ag-select">
+                 <option value="">Selecione...</option>
+                 <option value="pix">PIX</option>
+                 <option value="dinheiro">Dinheiro</option>
+                 <option value="cartao_credito">Cartão de Crédito</option>
+                 <option value="cartao_debito">Cartão de Débito</option>
+               </select>
+             </div>
+          </div>
+
+          <div class="chk-total">
+             <span>Total a Receber</span>
+             <div style="display: flex; flex-direction: column; align-items: flex-end;">
+               <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
+                 R$ {{ (servicoPrincipal?.preco || 0) + (comandaProdutos.length > 0 ? getValorTotalCheckout() - (servicoPrincipal?.preco || 0) + getDescontoFidelidade() : 0) | number:'1.2-2' }}
+               </strong>
+               <strong style="color: var(--primary-color);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
+             </div>
+          </div>
+
+          <button class="btn-primary primary" style="width: 100%; margin-top: 16px;" [disabled]="isFinalizing || !formaPagamento || getValorTotalCheckout() === 0" (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
+              <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
+              <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
+              {{ showVendaAvulsaModal ? 'Registrar Venda Avulsa' : 'Finalizar e Receber' }}
+          </button>
+
         </div>
+      </div>
+    </div>
+  </ng-container>
 
-        <div class="chk-total">
-           <span>Total a Receber</span>
-           <div style="display: flex; flex-direction: column; align-items: flex-end;">
-             <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
-               R$ {{ (servicoPrincipal?.preco || 0) + (comandaProdutos.length > 0 ? getValorTotalCheckout() - (servicoPrincipal?.preco || 0) + getDescontoFidelidade() : 0) | number:'1.2-2' }}
-             </strong>
-             <strong style="color: var(--primary-color);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
-           </div>
+  <!-- MODAL: ABERTURA DE CAIXA -->
+  <div class="modal-backdrop" *ngIf="showAberturaModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Abrir Turno do Caixa</h3>
+        <button class="btn-icon" (click)="showAberturaModal = false"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-top:0;">Informe o saldo/troco inicial em gaveta.</p>
+        <div class="form-group">
+          <label>Fundo de Caixa (R$)</label>
+          <input type="number" [(ngModel)]="trocoInicial" class="ag-input" placeholder="0.00" min="0">
         </div>
-
-        <button class="btn-primary primary" style="width: 100%; margin-top: 16px;" [disabled]="isFinalizing || !formaPagamento" (click)="finalizarEGerarComanda()">
-            <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
-            <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
-            Finalizar e Gerar Comanda
-        </button>
-
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="showAberturaModal = false">Cancelar</button>
+        <button class="btn-primary primary" (click)="abrirCaixa()"><i class="pi pi-unlock"></i> Abrir Caixa</button>
       </div>
     </div>
   </div>
+
+  <!-- MODAL: SANGRIA / SUPRIMENTO -->
+  <div class="modal-backdrop" *ngIf="showSangriaModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>Movimentação Manual</h3>
+        <button class="btn-icon" (click)="showSangriaModal = false"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select [(ngModel)]="tipoMovimento" class="ag-select">
+            <option value="sangria">Sangria (Saída / Retirada)</option>
+            <option value="suprimento">Suprimento (Entrada de Troco)</option>
+          </select>
+        </div>
+        <div class="form-group mt-3">
+          <label>Valor (R$)</label>
+          <input type="number" [(ngModel)]="valorMovimento" class="ag-input" placeholder="0.00" min="0">
+        </div>
+        <div class="form-group mt-3">
+          <label>Motivo</label>
+          <input type="text" [(ngModel)]="motivoMovimento" class="ag-input" placeholder="Ex: Pagamento de material, Troco...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="showSangriaModal = false">Cancelar</button>
+        <button class="btn-primary" [ngClass]="tipoMovimento === 'sangria' ? 'danger' : 'success'" (click)="registrarMovimentoManual()">
+          Registrar {{ tipoMovimento | titlecase }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FECHAMENTO COM CONFERÊNCIA -->
+  <div class="modal-backdrop" *ngIf="showFechamentoModal && fechamentoRelatorio">
+    <div class="modal-box">
+      <div class="modal-header" style="border-bottom-color: var(--danger-color, #ef4444);">
+        <h3>Fechamento de Caixa</h3>
+        <button class="btn-icon" (click)="showFechamentoModal = false"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+        
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <h4 style="margin:0 0 12px 0; color:var(--text-color);">Resumo do Turno (Apenas Dinheiro)</h4>
+          <div class="flex-between"><span>Fundo Abertura:</span> <strong>R$ {{ fechamentoRelatorio.saldoInicial | number:'1.2-2' }}</strong></div>
+          <div class="flex-between"><span>Entradas Dinheiro (+):</span> <strong style="color:var(--success, #10b981);">R$ {{ fechamentoRelatorio.totalEntradasDinheiro | number:'1.2-2' }}</strong></div>
+          <div class="flex-between"><span>Saídas Dinheiro (-):</span> <strong style="color:var(--danger, #ef4444);">R$ {{ fechamentoRelatorio.totalSaidasDinheiro | number:'1.2-2' }}</strong></div>
+          <hr style="border: 0; border-top: 1px dashed var(--glass-border); margin: 8px 0;">
+          <div class="flex-between">
+            <span>Saldo Calculado (Sistema):</span> 
+            <strong style="font-size:1.1rem; color:var(--primary-color);">R$ {{ fechamentoRelatorio.saldoCalculado | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="form-group highlight-input">
+          <label style="color: var(--danger, #ef4444); font-weight: 800;">Conferência de Gaveta (R$)</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 8px 0;">
+            Conte o dinheiro vivo na gaveta e digite o valor abaixo para comparar com o sistema.
+          </p>
+          <input type="number" [(ngModel)]="saldoInformado" class="ag-input" style="font-size: 1.5rem; text-align: right; padding: 12px; border-color: var(--danger, #ef4444);" placeholder="0.00">
+        </div>
+        
+        <div *ngIf="saldoInformado !== null" style="margin-top: 12px; text-align: right;">
+           <span *ngIf="saldoInformado === fechamentoRelatorio.saldoCalculado" style="color: var(--success, #10b981); font-weight:bold;"><i class="pi pi-check"></i> Caixa Bateu perfeitamente!</span>
+           <span *ngIf="saldoInformado < fechamentoRelatorio.saldoCalculado" style="color: var(--danger, #ef4444); font-weight:bold;"><i class="pi pi-exclamation-triangle"></i> Faltando R$ {{ (fechamentoRelatorio.saldoCalculado - saldoInformado) | number:'1.2-2' }} na gaveta.</span>
+           <span *ngIf="saldoInformado > fechamentoRelatorio.saldoCalculado" style="color: var(--warning, #f59e0b); font-weight:bold;"><i class="pi pi-exclamation-triangle"></i> Sobrando R$ {{ (saldoInformado - fechamentoRelatorio.saldoCalculado) | number:'1.2-2' }} na gaveta.</span>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="showFechamentoModal = false">Cancelar</button>
+        <button class="btn-primary danger" [disabled]="saldoInformado === null" (click)="fecharCaixa()">
+          <i class="pi pi-print"></i> Fechar e Imprimir (Z-Read)
+        </button>
+      </div>
+    </div>
+  </div>
+
 </div>

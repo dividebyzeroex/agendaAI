@@ -110,30 +110,35 @@ export class ProfissionalService {
     profissionalId?: string;
     servicoId?: string;
     estabelecimentoId?: string;
+    sessaoId?: string;
   }): Promise<CaixaItem> {
     const todosServicos = [params.servicoPrincipal, ...params.servicosExtras];
     const valorServicos = todosServicos.reduce((sum, s) => sum + s.preco, 0);
     const valorProdutos = (params.produtos || []).reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
     const valorTotal    = valorServicos + valorProdutos - (params.fidelidadeDesconto || 0);
 
-    // 1. Atualiza o evento como finalizado
-    await this.supabase
-      .from('agenda_events')
-      .update({
-        status: 'concluido',
-        servicos_extras: params.servicosExtras,
-        valor_total: valorTotal,
-        cobranca_enviada: true,
-        cobranca_enviada_at: new Date().toISOString(),
-        profissional_nome: params.profissional,
-      })
-      .eq('id', params.eventId);
+    // 1. Atualiza o evento como finalizado (se for venda de agenda)
+    if (params.eventId) {
+      await this.supabase
+        .from('agenda_events')
+        .update({
+          status: 'concluido',
+          servicos_extras: params.servicosExtras,
+          valor_total: valorTotal,
+          cobranca_enviada: true,
+          cobranca_enviada_at: new Date().toISOString(),
+          profissional_nome: params.profissional,
+        })
+        .eq('id', params.eventId);
+    }
 
     // 2. Cria o item de caixa
     const { data: caixaData, error } = await this.supabase
       .from('caixa_itens')
       .insert([{
-        agenda_event_id: params.eventId,
+        agenda_event_id: params.eventId || null,
+        origem:          params.eventId ? 'agenda' : 'avulso',
+        sessao_id:       params.sessaoId || null,
         cliente_nome:    params.clienteNome,
         servicos:        todosServicos,
         valor_total:     valorTotal,
