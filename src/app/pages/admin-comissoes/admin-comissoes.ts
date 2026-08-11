@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
@@ -30,6 +30,7 @@ export class AdminComissoes implements OnInit {
   private supabase = inject(SupabaseService).client;
   private estabService = inject(EstabelecimentoService);
   private security = inject(SecurityService);
+  private cdr = inject(ChangeDetectorRef);
 
   comissoes: Comissao[] = [];
   isLoading = true;
@@ -44,12 +45,16 @@ export class AdminComissoes implements OnInit {
     this.estabService.activeId$.subscribe(id => {
       if (id) {
         this.fetchComissoes(id);
+      } else {
+        this.isLoading = false;
+        this.cdr.detectChanges();
       }
     });
   }
 
   async fetchComissoes(estabId: string) {
     this.isLoading = true;
+    this.cdr.detectChanges();
     try {
       const { data, error } = await this.supabase
         .from('comissoes')
@@ -63,7 +68,7 @@ export class AdminComissoes implements OnInit {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching comissoes', error);
+        console.error('Erro detalhado ao buscar comissões:', error);
         return;
       }
 
@@ -71,9 +76,9 @@ export class AdminComissoes implements OnInit {
       this.comissoes = await Promise.all(raw.map(async (c: any) => ({
         id: c.id,
         evento_id: c.evento_id,
-        profissional_id: c.profissionais.id,
-        profissional_nome: c.profissionais.nome,
-        servico_nome: c.servicos?.titulo || 'Serviço',
+        profissional_id: c.profissionais?.id,
+        profissional_nome: c.profissionais?.nome || 'Desconhecido',
+        servico_nome: c.servicos?.titulo || 'Serviço Excluído/Avulso',
         valor_servico: c.valor_servico,
         taxa_aplicada: c.taxa_aplicada,
         tipo_comissao: c.tipo_comissao,
@@ -84,9 +89,10 @@ export class AdminComissoes implements OnInit {
 
       this.calcularTotais();
     } catch (err) {
-      console.error(err);
+      console.error('Exceção ao buscar comissões:', err);
     } finally {
       this.isLoading = false;
+      this.cdr.detectChanges();
     }
   }
 
