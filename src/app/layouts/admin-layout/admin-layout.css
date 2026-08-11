@@ -1,9 +1,9 @@
-/* Antigravity Admin Shell — Light Mode */
+/* Antigravity Admin Shell */
 .ag-admin-shell {
   display: flex;
   min-height: 100vh;
   background: transparent;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: var(--font-family);
   color: var(--text-main);
   text-shadow: var(--text-shadow);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
@@ -27,8 +27,8 @@
   gap: 12px;
   padding: 1.5rem 1.25rem 2rem 1.25rem;
 }
-.logo-mark { color: var(--primary-color); font-size: 1.5rem; }
-.logo-text { font-size: 1.35rem; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+.logo-mark { color: var(--primary-color); font-size: var(--font-xl); }
+.logo-text { font-size: var(--font-xl); font-weight: var(--weight-black); color: var(--text-main); letter-spacing: -0.5px; }
 
 .sidebar-nav {
   display: flex;
@@ -40,16 +40,16 @@
 .sidebar-nav a {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: var(--space-md);
+  padding: var(--space-md) 14px;
   text-decoration: none;
   color: var(--text-muted);
-  border-radius: 12px;
-  font-weight: 600;
-  font-size: 0.95rem;
+  border-radius: var(--radius-md);
+  font-weight: var(--weight-medium);
+  font-size: var(--font-base);
   transition: all 0.3s ease;
 }
-.sidebar-nav a i { font-size: 1.1rem; width: 20px; text-align: center; opacity: 0.8; transition: opacity 0.3s ease; }
+.sidebar-nav a i { font-size: var(--font-lg); width: 20px; text-align: center; opacity: 0.8; transition: opacity 0.3s ease; }
 .sidebar-nav a:hover {
   background: var(--hover-bg);
   color: var(--primary-color);
@@ -328,7 +328,7 @@
 .ag-page-content {
   flex: 1;
   overflow-y: auto;
-  padding: 2.5rem 3rem;
+  padding: var(--space-2xl) var(--space-3xl);
 }
 
 /* --- PRESENCE SYNC (Live Crew Elite UI) --- */
