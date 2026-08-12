@@ -78,3 +78,26 @@
   </div>
 
 </div>
+
+<!-- MODAL COMANDA FISICA -->
+<div class="modal-backdrop" *ngIf="showComandaModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Concluir Serviço</h3>
+      <button class="btn-icon" (click)="fecharModalComanda()"><i class="pi pi-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color: var(--text-muted); margin-top:0;">Opcional: Informe o número da comanda física caso o cliente vá pagar no caixa levando a ficha.</p>
+      <div class="form-group">
+        <label>Número da Comanda</label>
+        <input type="text" class="ag-input" [(ngModel)]="comandaFisicaInput" placeholder="Ex: 142">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-ghost" (click)="fecharModalComanda()">Cancelar</button>
+      <button class="btn-primary primary" (click)="confirmarConclusao()">
+        <i class="pi pi-check"></i> Concluir
+      </button>
+    </div>
+  </div>
+</div>

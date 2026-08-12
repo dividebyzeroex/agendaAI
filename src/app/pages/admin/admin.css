@@ -180,6 +180,27 @@
 .ai-body h4 { margin: 0 0 6px 0; font-size: var(--font-md); font-weight: var(--weight-bold); position: relative; color: var(--text-main); }
 .ai-body p { margin: 0; font-size: var(--font-sm); color: var(--text-muted); line-height: 1.5; position: relative; }
 
+.ai-action {
+  background: rgba(var(--primary-rgb), 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(var(--primary-rgb), 0.2);
+  padding: 8px 16px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-weight: var(--weight-bold);
+  font-size: var(--font-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  transition: all var(--transition-fast);
+}
+.ai-action:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
 
 /* No-Show Alert Card */
 .no-show-alert-card {

@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ButtonModule } from 'primeng/button';
 import { AuthService } from '../../services/auth.service';
 import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.service';
@@ -10,7 +11,7 @@ import { Subscription, combineLatest } from 'rxjs';
 @Component({
   selector: 'app-portal-profissional',
   standalone: true,
-  imports: [CommonModule, ButtonModule],
+  imports: [CommonModule, FormsModule, ButtonModule],
   templateUrl: './portal-profissional.html',
   styleUrls: ['./portal-profissional.css']
 })
@@ -106,17 +107,34 @@ export class PortalProfissionalComponent implements OnInit, OnDestroy {
       .reduce((acc, curr) => acc + (curr.valor_total || 0) * this.commissionRate, 0);
   }
 
-  async concluirServico(event: AgendaEvent) {
+  showComandaModal = false;
+  comandaFisicaInput = '';
+  eventToConclude: AgendaEvent | null = null;
+
+  concluirServico(event: AgendaEvent) {
     if (!event.id) return;
+    this.eventToConclude = event;
+    this.comandaFisicaInput = '';
+    this.showComandaModal = true;
+  }
+
+  fecharModalComanda() {
+    this.showComandaModal = false;
+    this.eventToConclude = null;
+    this.comandaFisicaInput = '';
+  }
+
+  async confirmarConclusao() {
+    if (!this.eventToConclude?.id) return;
     try {
-      const comanda = window.prompt('Número da Comanda Física (Opcional):');
+      const comanda = this.comandaFisicaInput;
       
       const changes: Partial<AgendaEvent> = { status: 'concluido' };
       if (comanda !== null && comanda.trim() !== '') {
         changes.comanda_fisica = comanda.trim();
       }
 
-      await this.agendaService.updateEvent(event.id, changes);
+      await this.agendaService.updateEvent(this.eventToConclude.id, changes);
       
       this.notifService.showToast({
         type: 'SUCCESS',
@@ -124,6 +142,7 @@ export class PortalProfissionalComponent implements OnInit, OnDestroy {
         message: 'Comanda enviada para o Caixa com sucesso!',
         icon: 'pi pi-check'
       });
+      this.fecharModalComanda();
     } catch (e: any) {
       this.notifService.showToast({ type: 'WARNING', title: 'Erro', message: e.message });
     }
