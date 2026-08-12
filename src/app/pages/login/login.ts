@@ -10,7 +10,7 @@ import { EstabelecimentoPublicoService } from '../../services/estabelecimento-pu
 import { ProfissionaisService } from '../../services/profissionais.service';
 import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 
-type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
+type OnboardingStep = 'overview' | 'conclusao';
 
 @Component({
   selector: 'app-login',
@@ -46,26 +46,9 @@ export class Login implements OnInit {
 
   form: any = {
     nome: '',
-    cnpj: '',
-    segmento: '',
-    volume_clientes: '',
-    endereco_completo: '',
-    cidade: '',
-    telefone: '',
     email: '',
-    cor_primaria: '#6366f1',
     slug: ''
   };
-
-  segmentOptions = SEGMENTO_OPTIONS;
-
-  volumeOptions = [
-    { label: 'Começando', value: 'iniciante', desc: 'Até 50 / mês' },
-    { label: 'Crescendo', value: 'intermediario', desc: '51 a 200 / mês' },
-    { label: 'Alto Volume', value: 'avanzado', desc: '200+ / mês' }
-  ];
-
-  suggestedColors = ['#6366f1', '#a142f4', '#10b981', '#f43f5e', '#facc15', '#0f172a'];
   
   async ngOnInit() {
     this.isLoading = true;
@@ -149,7 +132,7 @@ export class Login implements OnInit {
   // --- Lógica do Wizard Interno ao Card ---
   
   getStepIndex(): number {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
+    const steps: OnboardingStep[] = ['overview', 'conclusao'];
     return steps.indexOf(this.onStep);
   }
 
@@ -160,27 +143,14 @@ export class Login implements OnInit {
   }
 
   nextStep() {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
-    const idx = this.getStepIndex();
-    if (idx < steps.length - 1) {
-      if (this.onStep === 'link') {
-        this.finalizarOnboarding();
-      } else {
-        this.onStep = steps[idx + 1];
-        this.flipAngle -= 180;
-        this.cdr.detectChanges();
-      }
+    if (this.onStep === 'overview') {
+      this.finalizarOnboarding();
     }
   }
 
   backStep() {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link'];
-    const idx = this.getStepIndex();
-    if (idx > 0) {
-      this.onStep = steps[idx - 1];
-      this.flipAngle += 180;
-      this.cdr.detectChanges();
-    }
+    this.isDoingOnboarding = false;
+    this.isSignupMode = false;
   }
 
   async finalizarOnboarding() {
@@ -200,8 +170,7 @@ export class Login implements OnInit {
     } catch (err: any) {
       this.errorMessage = err.message || 'Houve um problema ao processar seu cadastro.';
       this.isLoading = false;
-      this.onStep = 'link';
-      this.flipAngle += 180;
+      this.onStep = 'overview';
       this.cdr.detectChanges();
     }
   }
