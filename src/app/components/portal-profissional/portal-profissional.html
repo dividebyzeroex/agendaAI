@@ -1,0 +1,80 @@
+<div class="portal-wrapper">
+  
+  <div class="portal-header">
+    <h2 class="greeting-text">{{ saudacao }}</h2>
+    <p class="greeting-sub">Tenha um excelente dia de trabalho!</p>
+  </div>
+
+  <div class="stats-grid">
+    <!-- Atendimentos do Dia -->
+    <div class="stat-card">
+      <div class="stat-icon purple"><i class="pi pi-calendar-clock"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Meus Atendimentos</span>
+        <div class="stat-value">
+          <span class="number">{{ totalAtendimentos }}</span>
+          <span class="subtext">hoje</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comissões Hoje -->
+    <div class="stat-card">
+      <div class="stat-icon green"><i class="pi pi-wallet"></i></div>
+      <div class="stat-info">
+        <span class="stat-label">Comissões (Estimativa)</span>
+        <div class="stat-value">
+          <span class="number">R$ {{ estimatedCommissions | number:'1.2-2' }}</span>
+          <span class="subtext">ganhos hoje</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="agenda-section">
+    <div class="section-header">
+      <h3>Meu Radar de Hoje</h3>
+      <p class="subtitle">Acompanhe sua fila de clientes.</p>
+    </div>
+
+    <div class="empty-state" *ngIf="todayAppointments.length === 0">
+      <div class="empty-icon"><i class="pi pi-calendar"></i></div>
+      <h4>Sem atendimentos hoje</h4>
+      <p>Sua agenda está livre por enquanto.</p>
+    </div>
+
+    <div class="timeline-list" *ngIf="todayAppointments.length > 0">
+      <div class="timeline-item" *ngFor="let event of todayAppointments; let i = index" 
+           [class.active]="event.id === nextAppointment?.id"
+           [class.completed]="event.status === 'concluido'">
+        
+        <div class="time-block">
+          <span class="time">{{ formatDateHour(event.start) }}</span>
+          <div class="time-line"></div>
+        </div>
+
+        <div class="event-card">
+          <div class="event-header">
+            <h4>{{ event.title }}</h4>
+            <span class="status-badge" [ngClass]="event.status">{{ event.status }}</span>
+          </div>
+          
+          <div class="event-details">
+            <span class="detail-item" *ngIf="event.cliente_id"><i class="pi pi-user"></i> Cliente Cadastrado</span>
+            <span class="detail-item"><i class="pi pi-tag"></i> R$ {{ event.valor_total | number:'1.2-2' }}</span>
+          </div>
+
+          <div class="event-actions" *ngIf="event.status !== 'concluido' && event.status !== 'cancelado' && event.status !== 'noshow'">
+            <button class="btn-secondary" (click)="adicionarNaAgenda(event)" title="Adicionar à agenda do meu celular">
+              <i class="pi pi-calendar-plus"></i> Agenda
+            </button>
+            <button class="btn-primary" (click)="concluirServico(event)">
+              <i class="pi pi-check"></i> Concluir / Gerar Comanda
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

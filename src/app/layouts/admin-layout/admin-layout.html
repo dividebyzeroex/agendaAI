@@ -14,8 +14,8 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-home"></i><span>Painel</span>
+      <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebar()">
+        <i class="pi pi-home"></i><span>Meu Painel</span>
       </a>
       <a routerLink="/admin/agenda" routerLinkActive="active" (click)="closeSidebar()">
         <i class="pi pi-calendar-times"></i><span>Agenda</span>

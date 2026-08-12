@@ -1,4 +1,4 @@
-
+<ng-container *ngIf="isAdminOrFin | async; else portalProfissional">
 <div class="ag-dashboard" *ngIf="!isLoading; else loading">
 
   <div class="dashboard-greeting">
@@ -195,4 +195,9 @@
     <div class="elite-scissor-wrap"></div>
     <div class="loader-text">Sincronizando com o Centro de Comando...</div>
   </div>
+</ng-template>
+</ng-container>
+
+<ng-template #portalProfissional>
+  <app-portal-profissional></app-portal-profissional>
 </ng-template>
