@@ -62,6 +62,7 @@ export class AdminCaixa implements OnInit {
   comandaFisica = '';
   emailCliente = '';
   formaPagamento: string = '';
+  valorRecebido: number | null = null;
   clienteSelecionadoId: string = '';
   clientesLista: any[] = [];
   
@@ -414,6 +415,7 @@ export class AdminCaixa implements OnInit {
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
+    this.valorRecebido = null;
     this.clienteSelecionadoId = '';
     this.aplicarFidelidade = false;
     this.isAniversariante = false;
@@ -485,6 +487,12 @@ export class AdminCaixa implements OnInit {
   getDescontoFidelidade(): number {
     const servico = this.servicoPrincipal?.preco || 0;
     return this.aplicarFidelidade ? (servico * (this.descontoPercentual / 100)) : 0;
+  }
+
+  getTroco(): number {
+    if (!this.valorRecebido) return 0;
+    const total = this.getValorTotalCheckout();
+    return Math.max(0, this.valorRecebido - total);
   }
 
   async finalizarEGerarComanda(isAvulso: boolean = false) {

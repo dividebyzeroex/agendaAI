@@ -215,6 +215,18 @@
                  <option value="cartao_debito">Cartão de Débito</option>
                </select>
              </div>
+             
+             <div class="form-group mt-3" *ngIf="formaPagamento === 'dinheiro'" style="margin-top: 16px;">
+               <label>Valor Recebido (R$)</label>
+               <input type="number" [(ngModel)]="valorRecebido" class="ag-input" placeholder="Ex: 50.00" min="0">
+               
+               <div *ngIf="valorRecebido && valorRecebido >= getValorTotalCheckout()" style="margin-top: 8px; color: var(--success); font-weight: 500; font-size: 0.9rem; padding: 8px; background: var(--success-soft); border-radius: 6px;">
+                 <i class="pi pi-money-bill"></i> Troco a devolver: <b>R$ {{ getTroco() | number:'1.2-2' }}</b>
+               </div>
+               <div *ngIf="valorRecebido && valorRecebido < getValorTotalCheckout()" style="margin-top: 8px; color: var(--danger); font-weight: 500; font-size: 0.9rem;">
+                 <i class="pi pi-exclamation-triangle"></i> Valor insuficiente
+               </div>
+             </div>
           </div>
 
           <div class="chk-total">
@@ -227,7 +239,9 @@
              </div>
           </div>
 
-          <button class="btn-primary primary" style="width: 100%; margin-top: 16px;" [disabled]="isFinalizing || !formaPagamento || getValorTotalCheckout() === 0" (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
+          <button class="btn-primary primary" style="width: 100%; margin-top: 16px;" 
+            [disabled]="isFinalizing || !formaPagamento || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))" 
+            (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
               <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
               <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
               {{ showVendaAvulsaModal ? 'Registrar Venda Avulsa' : 'Finalizar e Receber' }}
