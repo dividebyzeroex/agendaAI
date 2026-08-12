@@ -177,7 +177,10 @@ export class AuthService {
     }
     const { data, error } = await this.supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: window.location.origin + '/admin'
+      }
     });
     if (error) throw error;
     return data;

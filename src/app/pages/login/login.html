@@ -44,6 +44,25 @@
                   </div>
                 </div>
 
+                <!-- ESCOLHA DE MÉTODO NO CADASTRO -->
+                <div class="field animate-in signup-method" *ngIf="isSignupMode && step === 'email' && !isOtpSent && email && isEmailValid">
+                  <label>Como prefere acessar?</label>
+                  <div class="method-toggles">
+                    <button class="method-btn" [class.active]="authType === 'email'" (click)="authType = 'email'">
+                      <i class="pi pi-envelope"></i> Link Mágico
+                    </button>
+                    <button class="method-btn" [class.active]="authType === 'password'" (click)="authType = 'password'">
+                      <i class="pi pi-lock"></i> Senha
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CAMPO DE SENHA NO CADASTRO -->
+                <div class="field animate-in" *ngIf="isSignupMode && step === 'email' && authType === 'password' && !isOtpSent && email && isEmailValid">
+                  <label for="new_password">Crie uma Senha</label>
+                  <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 6 caracteres" />
+                </div>
+
                 <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (SENHA) -->
                 <div class="field animate-in" *ngIf="step === 'auth' && authType === 'password' && !isOtpSent">
                   <div class="field-info-row">

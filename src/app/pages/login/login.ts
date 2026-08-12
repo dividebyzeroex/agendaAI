@@ -78,6 +78,12 @@ export class Login implements OnInit {
 
     try {
       if (this.isSignupMode) {
+         if (this.authType === 'password' && (!this.password || this.password.length < 6)) {
+           this.errorMessage = 'Sua senha deve ter no mínimo 6 caracteres.';
+           this.isLoading = false;
+           this.cdr.detectChanges();
+           return;
+         }
          this.isDoingOnboarding = true;
          this.onStep = 'overview';
          this.form.email = this.email;
@@ -163,7 +169,16 @@ export class Login implements OnInit {
         this.form.email = this.email;
       }
       localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-      await this.authService.signInWithOtp(this.form.email);
+      
+      if (this.authType === 'password') {
+        await this.authService.signUpWithPassword(this.form.email, this.password);
+        // Login immediately after signup
+        await this.authService.signInWithEmail(this.form.email, this.password);
+        await this.authService.redirectAfterLogin();
+      } else {
+        await this.authService.signInWithOtp(this.form.email);
+      }
+      
       await new Promise(r => setTimeout(r, 1500));
       this.isLoading = false;
       this.cdr.detectChanges();
