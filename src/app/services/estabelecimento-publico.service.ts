@@ -116,12 +116,22 @@ export class EstabelecimentoPublicoService {
       }
 
       // 4. Map professionals and decrypt their names
-      const profissionais: ProfissionalPublico[] = profs.map((p: any) => ({
-        ...p,
-        nome: this.securityService.decryptData(p.nome),
-        disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
-        servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
-      }));
+      const profissionais: ProfissionalPublico[] = await Promise.all(
+        profs.map(async (p: any) => {
+          let nomeDecrypted = p.nome;
+          try {
+            nomeDecrypted = await this.securityService.decryptData(p.nome);
+          } catch (e) {
+            console.warn('[PubService] Falha ao descriptografar nome:', e);
+          }
+          return {
+            ...p,
+            nome: nomeDecrypted,
+            disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
+            servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
+          };
+        })
+      );
 
       const data = {
         estabelecimento: estab,
