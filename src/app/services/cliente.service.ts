@@ -14,6 +14,7 @@ export interface Cliente {
   observacoes?: string;
   ultima_visita?: string;
   faltas?: number;
+  metadata?: any;
   created_at?: string;
 }
 

@@ -238,10 +238,111 @@
 /* Column Headers */
 ::ng-deep .fc-col-header-cell {
   padding: 16px 0 !important;
-  background: transparent !important;
-  border-bottom: 2px solid var(--glass-border) !important;
-  transition: background var(--transition-fast);
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
 }
+
+/* -------------------------------------
+   FILA DE ESPERA (Walk-in)
+-------------------------------------- */
+.view-toggles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.view-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--active-bg);
+  color: var(--text-muted);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.fila-container {
+  padding: 10px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  background: var(--active-bg);
+  border-radius: 16px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.fila-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fila-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fila-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  border-color: var(--primary-color);
+}
+
+.fila-pos {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin-right: 20px;
+  width: 40px;
+  text-align: center;
+}
+
+.fila-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fila-info strong {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.fila-pro {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fila-time {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--active-bg);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
 ::ng-deep .fc-col-header-cell:hover {
   background: var(--active-bg) !important;
 }

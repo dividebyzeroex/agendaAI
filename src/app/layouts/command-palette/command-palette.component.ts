@@ -145,7 +145,7 @@ export class CommandPaletteComponent implements AfterViewInit {
   ];
 
   logout() {
-    localStorage.removeItem('ag-mock-user');
+  // removed ag-mock-user
     this.goto('/login');
   }
 

@@ -24,6 +24,16 @@
   </div>
 
   <div class="calendar-card-premium">
+    <!-- Fila de Espera Toggle (Only for Barbearia/Salao) -->
+    <div class="view-toggles" *ngIf="segmentoConfig.current.id === 'barbearia' || segmentoConfig.current.id === 'salao_beleza'">
+      <button class="view-btn" [class.active]="viewMode === 'calendario'" (click)="viewMode = 'calendario'">
+        <i class="pi pi-calendar"></i> Calendário
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'fila'" (click)="viewMode = 'fila'">
+        <i class="pi pi-users"></i> Fila de Espera (Walk-in)
+      </button>
+    </div>
+
     <!-- Elite Loader -->
     <div *ngIf="agendaService.isLoading$ | async" class="elite-loader-container">
       <div class="elite-scissor-wrap"></div>
@@ -32,9 +42,30 @@
 
     <!-- FULL CALENDAR INSTANCE -->
     <full-calendar 
-      *ngIf="!(agendaService.isLoading$ | async)" 
+      *ngIf="!(agendaService.isLoading$ | async) && viewMode === 'calendario'" 
       [options]="calendarOptions" 
     ></full-calendar>
+
+    <!-- FILA DE ESPERA (Walk-in) -->
+    <div class="fila-container" *ngIf="!(agendaService.isLoading$ | async) && viewMode === 'fila'">
+      <div class="empty-state" *ngIf="filaEspera.length === 0">
+        <i class="pi pi-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 10px;"></i>
+        <p>Fila vazia! Ninguém aguardando no momento.</p>
+      </div>
+
+      <div class="fila-list" *ngIf="filaEspera.length > 0">
+        <div class="fila-card" *ngFor="let item of filaEspera; let i = index" (click)="eventoSelecionado = item; showEventoModal = true">
+          <div class="fila-pos">#{{ i + 1 }}</div>
+          <div class="fila-info">
+            <strong>{{ item.title }}</strong>
+            <span class="fila-pro"><i class="pi pi-user"></i> {{ item.profissional_nome || 'Primeiro disponível' }}</span>
+          </div>
+          <div class="fila-time">
+            Chegou às {{ item.start | date:'HH:mm' }}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

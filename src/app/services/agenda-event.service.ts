@@ -26,6 +26,7 @@ export interface AgendaEvent {
   valor_total?: number;
   cobranca_enviada?: boolean;
   comanda_fisica?: string;
+  metadata?: any;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -38,6 +39,7 @@ export class AgendaEventService {
 
   private eventsSubject = new BehaviorSubject<AgendaEvent[]>([]);
   events$ = this.eventsSubject.asObservable();
+  get currentEvents(): AgendaEvent[] { return this.eventsSubject.value; }
 
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();

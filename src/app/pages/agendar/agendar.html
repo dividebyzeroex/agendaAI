@@ -328,6 +328,28 @@
                    placeholder="(00) 00000-0000"
                    autocomplete="tel" maxlength="16" />
           </div>
+
+          <!-- Módulo: Ordem de Serviço (Assistência Técnica) -->
+          <ng-container *ngIf="config.id === 'assistencia'">
+            <div class="summary-divider"></div>
+            <div class="form-header" style="margin-top: 15px;">
+              <i class="pi pi-desktop"></i>
+              Sobre o Aparelho
+            </div>
+            
+            <div class="field">
+              <label for="aparelho">Modelo do Aparelho</label>
+              <input id="aparelho" type="text" [(ngModel)]="aparelho"
+                     placeholder="Ex: iPhone 13, Notebook Dell Inspiron" />
+            </div>
+
+            <div class="field">
+              <label for="defeito">Defeito Relatado</label>
+              <textarea id="defeito" [(ngModel)]="defeito" rows="3"
+                     placeholder="Ex: Tela trincada, não liga..."
+                     style="width: 100%; padding: 12px; border: 2px solid var(--glass-border); border-radius: 12px; font-family: inherit; resize: none; background: var(--active-bg); color: var(--text-main);"></textarea>
+            </div>
+          </ng-container>
         </div>
 
         <!-- CTA -->

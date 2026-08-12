@@ -23,7 +23,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       end,
       cliente_nome,
       cliente_telefone,
-      title
+      title,
+      event_metadata,
+      cliente_metadata
     } = req.body;
 
     // Validation
@@ -43,10 +45,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     if (existingClientes && existingClientes.length > 0) {
       clienteId = existingClientes[0].id;
-      // Update last visit
+      // Update last visit and metadata
       await supabase
         .from('clientes')
-        .update({ ultima_visita: new Date().toISOString().split('T')[0] })
+        .update({ 
+          ultima_visita: new Date().toISOString().split('T')[0],
+          metadata: cliente_metadata || {} 
+        })
         .eq('id', clienteId);
     } else {
       const { data: newCliente, error: clienteError } = await supabase
@@ -56,6 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           nome: cliente_nome,
           telefone: cliente_telefone,
           ultima_visita: new Date().toISOString().split('T')[0],
+          metadata: cliente_metadata || {}
         })
         .select('id')
         .single();
@@ -76,6 +82,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cliente_id: clienteId,
       servico_id,
       status: 'confirmado',
+      metadata: event_metadata || {}
     };
 
     if (profissional_id) {

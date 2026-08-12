@@ -56,6 +56,10 @@ export class Agendar implements OnInit {
   custName: string = '';
   custPhone: string = '';
 
+  // --- Extra Metadata (Nicho) ---
+  aparelho: string = '';
+  defeito: string = '';
+
   // --- Time Slots ---
   slots: { time: string; available: boolean }[] = [];
 
@@ -374,6 +378,15 @@ export class Agendar implements OnInit {
     this.errorMsg = '';
 
     try {
+      let eventMeta: any = null;
+      if (this.config.id === 'assistencia') {
+        if (!this.aparelho || !this.defeito) {
+          this.errorMsg = 'Por favor, informe o Aparelho e o Defeito.';
+          this.isSaving = false;
+          return;
+        }
+        eventMeta = { aparelho: this.aparelho, defeito: this.defeito };
+      }
       const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00`);
       const duration = this.selectedService?.duracao_min || 30;
       const endDt = new Date(startDt.getTime() + duration * 60000);
@@ -393,6 +406,7 @@ export class Agendar implements OnInit {
           cliente_nome: nameClean,
           cliente_telefone: phoneClean,
           title: eventTitle,
+          event_metadata: eventMeta
         }),
       });
 

@@ -39,7 +39,7 @@ export class Admin implements OnInit, OnDestroy {
   totalClientes = 0;
   revenue = 0;
   concurrentCount = 0;
-  waitlistCount = 2; // AI Waitlist Mock
+  waitlistCount = 0;
   isLoading = true;
   aiSuggestions: any[] = [];
   saudacao = '';
@@ -159,6 +159,9 @@ export class Admin implements OnInit, OnDestroy {
         const end = e.end ? new Date(e.end) : new Date(start.getTime() + 30*60000);
         return agora >= start && agora <= end && e.status !== 'cancelado';
     }).length;
+
+    // Fila de Espera (Walk-in ou Pendentes de Hoje)
+    this.waitlistCount = this.todayAppointments.filter(e => e.status === 'pendente' || e.status === 'confirmado').length;
 
     this.isLoading = false;
   }

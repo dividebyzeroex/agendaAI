@@ -40,6 +40,16 @@ import { ClienteService } from '../../services/cliente.service';
           </div>
         </div>
 
+        <div class="obs-box" *ngIf="evento?.metadata?.aparelho">
+          <span class="ss-label"><i class="pi pi-desktop"></i> Aparelho</span>
+          <p><strong>{{ evento?.metadata?.aparelho }}</strong></p>
+        </div>
+        
+        <div class="obs-box" *ngIf="evento?.metadata?.defeito">
+          <span class="ss-label"><i class="pi pi-wrench"></i> Defeito Relatado</span>
+          <p>{{ evento?.metadata?.defeito }}</p>
+        </div>
+
         <div class="obs-box" *ngIf="evento?.observacoes">
           <span class="ss-label">Observações</span>
           <p>{{ evento?.observacoes }}</p>
