@@ -21,10 +21,13 @@ export interface ProfissionalPublico {
   servicos?: string[];
 }
 
+import { SecurityService } from './security.service';
+
 @Injectable({ providedIn: 'root' })
 export class EstabelecimentoPublicoService {
   private supabase = inject(SupabaseService).client;
   private ngZone = inject(NgZone);
+  private securityService = inject(SecurityService);
 
   private lastSlug = '';
   data$ = new BehaviorSubject<{
@@ -112,9 +115,10 @@ export class EstabelecimentoPublicoService {
         svResData = svRes.data as any[] || [];
       }
 
-      // 4. Map professionals
+      // 4. Map professionals and decrypt their names
       const profissionais: ProfissionalPublico[] = profs.map((p: any) => ({
         ...p,
+        nome: this.securityService.decryptData(p.nome),
         disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
         servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
       }));
