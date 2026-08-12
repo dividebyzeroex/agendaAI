@@ -5,8 +5,9 @@ import { ActivatedRoute } from '@angular/router';
 import { EstabelecimentoPublicoService, EstabelecimentoPublico, ProfissionalPublico } from '../../services/estabelecimento-publico.service';
 import { Servico, Horario } from '../../services/estabelecimento.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
+import { NotificationService } from '../../services/notification.service';
 
-type BookingStep = 'step1' | 'step_pro' | 'step2' | 'step3' | 'done';
+type BookingStep = 'marketplace' | 'step0' | 'step1' | 'step_pro' | 'step2' | 'step3' | 'done';
 
 @Component({
   selector: 'app-agendar',
@@ -19,6 +20,7 @@ export class Agendar implements OnInit {
   private route      = inject(ActivatedRoute);
   private pubService = inject(EstabelecimentoPublicoService);
   private cdr        = inject(ChangeDetectorRef);
+  private notifService = inject(NotificationService);
 
   get config() {
     return SegmentoConfigService.forSegmento(this.estab?.segmento || '');
@@ -61,12 +63,14 @@ export class Agendar implements OnInit {
   calendarDays: { date: string; dayName: string; dayNum: number; monthShort: string; isToday: boolean; isSelected: boolean; isClosed: boolean }[] = [];
 
   get progressValue(): number {
-    const p: Record<BookingStep, number> = { step1: 25, step_pro: 50, step2: 75, step3: 90, done: 100 };
+    const p: Record<BookingStep, number> = { marketplace: 0, step0: 10, step1: 25, step_pro: 50, step2: 75, step3: 90, done: 100 };
     return p[this.step];
   }
 
   get stepLabel(): string {
     const labels: Record<BookingStep, string> = {
+      marketplace: 'Explorar',
+      step0: 'Perfil',
       step1: `Passo 1 de 4 · Escolha o ${this.config.labelServico}`,
       step_pro: `Passo 2 de 4 · Escolha o ${this.config.labelProfissional}`,
       step2: 'Passo 3 de 4 · Selecione o horário',
@@ -86,13 +90,26 @@ export class Agendar implements OnInit {
     return this.pros.filter(p => !p.servicos?.length || p.servicos.includes(this.selectedService!.id!));
   }
 
+  // --- Marketplace State ---
+  searchQuery: string = '';
+  searchResults: EstabelecimentoPublico[] = [];
+  isSearching: boolean = false;
+  private searchTimeout: any;
+
   async ngOnInit() {
     const slug = this.route.snapshot.paramMap.get('slug') || '';
+    const isDirect = this.route.snapshot.queryParamMap.get('direct') === 'true';
+
     if (!slug) {
       this.notFound = true;
+      this.step = 'marketplace';
       this.isLoading = false;
+      this.performSearch(); // Busca inicial vazia
       return;
     }
+
+    // Pré-configura o step correto para evitar flash de tela
+    this.step = isDirect ? 'step1' : 'step0';
 
     // Subscribe to realtime changes
     this.pubService.data$.subscribe(data => {
@@ -103,6 +120,11 @@ export class Agendar implements OnInit {
         this.pros     = data.profissionais || [];
         this.isLoading = false;
         this.notFound  = false;
+        
+        // Se estava no marketplace por algum erro prévio, e agora carregou dados via socket:
+        if (this.step === 'marketplace') {
+          this.step = isDirect ? 'step1' : 'step0';
+        }
 
         // Build categories from services
         const cats = new Set<string>();
@@ -131,12 +153,50 @@ export class Agendar implements OnInit {
       this.isLoading = false;
       if (!data || !data.estabelecimento) {
         this.notFound = true;
+        this.step = 'marketplace';
+        // Mostra um toast informando que não encontrou
+        try {
+          const notifService = (this as any)['notifService'] || inject(NotificationService);
+          notifService.showToast({
+            title: 'Não Encontrado',
+            message: 'O link acessado é inválido. Busque o estabelecimento abaixo.',
+            type: 'WARNING',
+            icon: 'pi pi-exclamation-triangle'
+          });
+        } catch (e) { console.error('Sem NotifService:', e); }
+        
+        this.performSearch(); // Busca inicial
       }
+      // Se encontrou, step já foi configurado no início do ngOnInit
       this.cdr.detectChanges();
     } catch (e: any) {
       this.errorMsg = 'Falha ao conectar com o servidor.';
       this.isLoading = false;
     }
+  }
+
+  // --- Marketplace Methods ---
+  onSearchInput() {
+    this.isSearching = true;
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch();
+    }, 500);
+  }
+
+  async performSearch() {
+    this.isSearching = true;
+    this.cdr.detectChanges();
+    this.searchResults = await this.pubService.searchEstabelecimentos(this.searchQuery);
+    this.isSearching = false;
+    this.cdr.detectChanges();
+  }
+
+  goToEstabelecimento(slug?: string) {
+    if (!slug) return;
+    // Just navigate by updating window location to force reload state correctly, 
+    // or use router.navigate. Since we don't have Router injected, we can use location.href
+    window.location.href = `/agendar/${slug}`;
   }
 
   // === STEP NAVIGATION ===

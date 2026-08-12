@@ -145,6 +145,16 @@ export class EstabelecimentoPublicoService {
     return (data as any[] || []).map((e: any) => e.start.substring(11, 16));
   }
 
+  async searchEstabelecimentos(query: string = ''): Promise<EstabelecimentoPublico[]> {
+    const { data, error } = await this.supabase
+      .rpc('search_public_estabelecimentos', { p_query: query });
+    if (error) {
+      console.error('[PubService] Erro ao buscar estabelecimentos:', error);
+      return [];
+    }
+    return data as EstabelecimentoPublico[];
+  }
+
   async getEventosDoProfissionalNoDia(profId: string, date: string): Promise<string[]> {
     // Note: Column 'profissional_id' is missing in DB - falling back to global day events
     return this.getEventosDoDia('', date);

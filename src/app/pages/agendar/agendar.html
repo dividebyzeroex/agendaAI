@@ -1,17 +1,48 @@
-<div class="ag-root">
+<div class="ag-root" [class.marketplace-mode]="step === 'marketplace'">
 
-  <!-- NOT FOUND -->
-  <div class="nf-screen" *ngIf="notFound">
-    <div class="nf-icon">🔍</div>
-    <h2>Estabelecimento não encontrado</h2>
-    <p>Verifique o link enviado ou entre em contato com o estabelecimento.</p>
+  <!-- MARKETPLACE / HOME PORTAL -->
+  <div class="marketplace-screen" *ngIf="step === 'marketplace'">
+    <div class="mp-header">
+      <h2>Encontre o seu lugar</h2>
+      <p>Busque por nome ou especialidade para agendar seu horário.</p>
+    </div>
+    
+    <div class="mp-search">
+      <div class="search-box">
+        <i class="pi pi-search"></i>
+        <input type="text" [(ngModel)]="searchQuery" (input)="onSearchInput()" placeholder="Buscar barbeiro, salão, clínica..." />
+      </div>
+    </div>
+
+    <div class="mp-results">
+      <div class="mp-loader" *ngIf="isSearching">
+        <i class="pi pi-spin pi-spinner"></i> Buscando...
+      </div>
+      
+      <div class="mp-grid" *ngIf="!isSearching">
+        <div class="mp-card" *ngFor="let result of searchResults" (click)="goToEstabelecimento(result.slug)">
+          <div class="mp-card-cover" [style.background]="result.cor_primaria || 'linear-gradient(135deg, #4f46e5, #9333ea)'">
+             <img *ngIf="result.logo_url" [src]="result.logo_url" class="mp-card-logo">
+          </div>
+          <div class="mp-card-info">
+            <h3>{{ result.nome }}</h3>
+            <span class="mp-city" *ngIf="result.cidade"><i class="pi pi-map-marker"></i> {{ result.cidade }}<span *ngIf="result.estado"> - {{ result.estado }}</span></span>
+            <p class="mp-desc">{{ result.descricao || 'Agendamento online disponível.' }}</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="mp-empty" *ngIf="!isSearching && searchResults.length === 0">
+        Nenhum estabelecimento encontrado para sua busca.
+      </div>
+    </div>
   </div>
 
   <!-- BOOKING APP -->
-  <div class="ag-app" *ngIf="!notFound">
+  <div class="ag-app" *ngIf="step !== 'marketplace'">
 
     <!-- HEADER -->
-    <header class="ag-header">
+    <header class="ag-header" *ngIf="step !== 'step0'">
       <div class="h-inner">
         <div class="h-logo" [style.background]="estab?.cor_primaria || 'linear-gradient(135deg, #4f46e5, #9333ea)'">
           <img *ngIf="estab?.logo_url" [src]="estab?.logo_url" [alt]="estab?.nome" class="h-logo-img">
@@ -25,12 +56,12 @@
     </header>
 
     <!-- PROGRESS BAR -->
-    <div class="ag-progress">
+    <div class="ag-progress" *ngIf="step !== 'step0'">
       <div class="p-fill" [style.width.%]="progressValue"></div>
     </div>
 
     <!-- STEP INDICATOR -->
-    <div class="step-indicator" *ngIf="step !== 'done' && !isLoading && !isTransitioning">
+    <div class="step-indicator" *ngIf="step !== 'step0' && step !== 'done' && !isLoading && !isTransitioning">
       <span class="step-label">{{ stepLabel }}</span>
     </div>
 
@@ -48,6 +79,40 @@
         <i class="pi pi-exclamation-triangle"></i>
         <span>{{ errorMsg }}</span>
         <button class="error-dismiss" (click)="errorMsg = ''">✕</button>
+      </div>
+
+      <!-- ============================================ -->
+      <!-- STEP 0: PERFIL DO ESTABELECIMENTO            -->
+      <!-- ============================================ -->
+      <div class="step-panel step-profile" *ngIf="step === 'step0' && !isLoading && !isTransitioning">
+        <div class="profile-header" [style.background]="estab?.cor_primaria || 'linear-gradient(135deg, #4f46e5, #9333ea)'">
+          <div class="profile-logo">
+            <img *ngIf="estab?.logo_url" [src]="estab?.logo_url" [alt]="estab?.nome">
+            <span *ngIf="!estab?.logo_url">{{ getInitials(estab?.nome) }}</span>
+          </div>
+        </div>
+        <div class="profile-info">
+          <h1>{{ estab?.nome }}</h1>
+          <p class="p-cidade" *ngIf="estab?.cidade"><i class="pi pi-map-marker"></i> {{ estab?.cidade }} <span *ngIf="estab?.estado">- {{ estab?.estado }}</span></p>
+          
+          <div class="p-desc" *ngIf="estab?.descricao">
+            <p>{{ estab?.descricao }}</p>
+          </div>
+
+          <button class="btn-agendar-cta" (click)="goToStep('step1', 'Iniciando agendamento...')">
+            Agendar Serviço <i class="pi pi-arrow-right"></i>
+          </button>
+        </div>
+
+        <div class="profile-services">
+          <h3>Nossos Serviços</h3>
+          <div class="services-list-mini">
+            <div class="svc-mini" *ngFor="let s of services">
+              <span class="svc-mini-name"><span *ngIf="s.emoji" style="margin-right:4px">{{s.emoji}}</span> {{ s.titulo }}</span>
+              <span class="svc-mini-price">R$ {{ formatPrice(s.preco) }}</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       <!-- ============================================ -->
