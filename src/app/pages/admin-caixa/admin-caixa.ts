@@ -330,7 +330,18 @@ export class AdminCaixa implements OnInit {
         
         let arr1 = data || [];
         let arr2 = dataTrue || [];
-        this.eventosPendentes = [...arr1, ...arr2];
+        const combined = [...arr1, ...arr2];
+        
+        this.eventosPendentes = await Promise.all(combined.map(async (e: any) => {
+          const security = (this.profService as any).security;
+          if (e.title) e.title = await security.decryptData(e.title);
+          if (e.clientes) {
+            if (e.clientes.nome) e.clientes.nome = await security.decryptData(e.clientes.nome);
+            if (e.clientes.telefone) e.clientes.telefone = await security.decryptData(e.clientes.telefone);
+          }
+          if (e.profissional_nome) e.profissional_nome = await security.decryptData(e.profissional_nome);
+          return e;
+        }));
       }
     } catch (e) {
       console.error(e);

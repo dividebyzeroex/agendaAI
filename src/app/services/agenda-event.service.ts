@@ -59,7 +59,7 @@ export class AgendaEventService {
       
       if (!error) {
         const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) => 
-          this.security.decryptObject(e, ['title', 'observacoes'])
+          this.security.decryptObject(e, ['title', 'observacoes', 'profissional_nome'])
         ));
 
         this.ngZone.run(() => {
@@ -171,7 +171,7 @@ export class AgendaEventService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) throw new Error('Contexto de estabelecimento não encontrado.');
 
-    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes']);
+    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes', 'profissional_nome']);
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('create_agenda_event_safe', { 
@@ -181,7 +181,7 @@ export class AgendaEventService {
     
     if (error) throw new Error(parseSupabaseError(error));
     
-    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes']);
+    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next([...this.getEvents(), decrypted]);
@@ -190,14 +190,14 @@ export class AgendaEventService {
   }
 
   async updateEvent(id: string, changes: Partial<AgendaEvent>): Promise<void> {
-    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes']);
+    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
     const { error } = await this.supabase
       .rpc('update_event_safe', { p_id: id, p_changes: encrypted });
     
     if (error) throw new Error(parseSupabaseError(error));
     
-    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes']);
+    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next(

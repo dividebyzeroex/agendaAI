@@ -15,7 +15,7 @@ import { map, Subscription, interval, Observable } from 'rxjs';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule, ParticleCanvasComponent],
+  imports: [CommonModule, ButtonModule, CardModule, TableModule],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })

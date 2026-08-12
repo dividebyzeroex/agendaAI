@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { SmsService } from './sms.service';
+import { SecurityService } from './security.service';
 
 export interface ServicoExtra {
   titulo: string;
@@ -31,6 +32,7 @@ export interface CaixaItem {
 export class ProfissionalService {
   private supabase = inject(SupabaseService).client;
   private smsService = inject(SmsService);
+  public security = inject(SecurityService);
 
   // Agenda do dia em tempo real
   agendaHoje$ = new BehaviorSubject<any[]>([]);
@@ -69,7 +71,18 @@ export class ProfissionalService {
         return;
       }
       
-      this.agendaHoje$.next(data || []);
+      const rawData = data || [];
+      const decryptedData = await Promise.all(rawData.map(async (e: any) => {
+        if (e.title) e.title = await this.security.decryptData(e.title);
+        if (e.clientes) {
+          if (e.clientes.nome) e.clientes.nome = await this.security.decryptData(e.clientes.nome);
+          if (e.clientes.telefone) e.clientes.telefone = await this.security.decryptData(e.clientes.telefone);
+        }
+        if (e.profissional_nome) e.profissional_nome = await this.security.decryptData(e.profissional_nome);
+        return e;
+      }));
+
+      this.agendaHoje$.next(decryptedData);
     } catch (err) {
       console.error('[ProSvc] Erro crítico na agenda:', err);
       this.agendaHoje$.next([]);
