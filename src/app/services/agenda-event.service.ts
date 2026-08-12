@@ -25,6 +25,7 @@ export interface AgendaEvent {
   servicos_extras?: any[];
   valor_total?: number;
   cobranca_enviada?: boolean;
+  comanda_fisica?: string;
 }
 
 @Injectable({ providedIn: 'root' })

@@ -140,7 +140,17 @@
             <button class="btn-ghost" style="padding:6px 12px;" (click)="cancelarCheckout()">Cancelar</button>
           </div>
 
-          <div class="chk-section" *ngIf="!showVendaAvulsaModal">
+          <div class="chk-section">
+            <h4>Identificação do Cliente <span style="color:var(--danger, #ef4444)">*</span></h4>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 8px;">É obrigatório associar um cliente à comanda.</p>
+            <select [(ngModel)]="clienteSelecionadoId" (change)="onClienteChange()" class="ag-select">
+              <option value="">Selecione um cliente cadastrado...</option>
+              <option *ngFor="let c of clientesLista" [value]="c.id">{{ c.nome }} ({{ c.telefone || 'S/N' }})</option>
+            </select>
+          </div>
+
+          <ng-container *ngIf="clienteSelecionadoId">
+            <div class="chk-section" *ngIf="!showVendaAvulsaModal">
              <h4>Serviço Realizado</h4>
              <div class="chk-item" *ngIf="servicoPrincipal">
                <span>{{ servicoPrincipal.titulo }}</span>
@@ -222,6 +232,7 @@
               <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
               {{ showVendaAvulsaModal ? 'Registrar Venda Avulsa' : 'Finalizar e Receber' }}
           </button>
+          </ng-container>
 
         </div>
       </div>

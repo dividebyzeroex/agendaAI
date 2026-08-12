@@ -109,8 +109,15 @@ export class PortalProfissionalComponent implements OnInit, OnDestroy {
   async concluirServico(event: AgendaEvent) {
     if (!event.id) return;
     try {
-      // Muda status para 'concluido' enviando para a recepção/caixa fechar a conta
-      await this.agendaService.updateStatus(event.id, 'concluido');
+      const comanda = window.prompt('Número da Comanda Física (Opcional):');
+      
+      const changes: Partial<AgendaEvent> = { status: 'concluido' };
+      if (comanda !== null && comanda.trim() !== '') {
+        changes.comanda_fisica = comanda.trim();
+      }
+
+      await this.agendaService.updateEvent(event.id, changes);
+      
       this.notifService.showToast({
         type: 'SUCCESS',
         title: 'Serviço Concluído',

@@ -62,6 +62,8 @@ export class AdminCaixa implements OnInit {
   comandaFisica = '';
   emailCliente = '';
   formaPagamento: string = '';
+  clienteSelecionadoId: string = '';
+  clientesLista: any[] = [];
   
   visitasFidelidade = 0;
   visitasMeta = 10;
@@ -83,6 +85,10 @@ export class AdminCaixa implements OnInit {
 
     this.prodService.produtos$.subscribe(p => {
       this.produtosCatalogo = p.filter(x => x.ativo && x.estoque > 0);
+      this.cdr.detectChanges();
+    });
+    this.clienteService.clientes$.subscribe(c => {
+      this.clientesLista = c || [];
       this.cdr.detectChanges();
     });
   }
@@ -373,6 +379,7 @@ export class AdminCaixa implements OnInit {
     }
     
     if (evento.cliente_id) {
+      this.clienteSelecionadoId = evento.cliente_id;
       const clientes = this.clienteService.getClientes();
       const cli = clientes.find((c: any) => c.id === evento.cliente_id);
       if (cli?.nascimento) {
@@ -407,6 +414,7 @@ export class AdminCaixa implements OnInit {
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
+    this.clienteSelecionadoId = '';
     this.aplicarFidelidade = false;
     this.isAniversariante = false;
     this.visitasFidelidade = 0;
@@ -417,6 +425,33 @@ export class AdminCaixa implements OnInit {
     if (!this.sessaoAtual) { alert('Abra o caixa primeiro.'); return; }
     this.resetCheckoutState();
     this.showVendaAvulsaModal = true;
+  }
+
+  async onClienteChange() {
+    this.aplicarFidelidade = false;
+    this.visitasFidelidade = 0;
+    this.isAniversariante = false;
+
+    if (!this.clienteSelecionadoId) return;
+
+    const clientes = this.clienteService.getClientes();
+    const cli = clientes.find((c: any) => c.id === this.clienteSelecionadoId);
+    if (cli?.nascimento) {
+      const [ano, mes] = cli.nascimento.split('-');
+      const currentMes = new Date().getMonth() + 1;
+      if (parseInt(mes, 10) === currentMes) {
+        this.isAniversariante = true;
+      }
+    }
+
+    const config = this.estService.estabelecimento$.value?.config_fidelidade;
+    if (config?.ativo) {
+      this.visitasMeta = config.visitas_meta || 10;
+      this.descontoPercentual = config.desconto_percentual || 0;
+      this.visitasFidelidade = await this.clienteService.getVisitasFidelidadePendentes(this.clienteSelecionadoId);
+    }
+    
+    this.cdr.detectChanges();
   }
 
   addProdutoNaComanda() {
@@ -463,12 +498,16 @@ export class AdminCaixa implements OnInit {
       let clienteId, profissionalId, servicoId;
       
       if (!isAvulso && this.eventoSelecionado) {
-        clienteNome = this.eventoSelecionado.title?.replace(/ - .*/, '') || 'Cliente';
         eventId = this.eventoSelecionado.id || '';
         profissionalNome = this.eventoSelecionado.profissional_nome || 'Profissional';
-        clienteId = this.eventoSelecionado.cliente_id;
         profissionalId = this.eventoSelecionado.profissional_id;
         servicoId = this.eventoSelecionado.servico_id;
+      }
+
+      if (this.clienteSelecionadoId) {
+        clienteId = this.clienteSelecionadoId;
+        const cli = this.clientesLista.find(c => c.id === this.clienteSelecionadoId);
+        if (cli) clienteNome = cli.nome;
       }
 
       const total = this.getValorTotalCheckout();
