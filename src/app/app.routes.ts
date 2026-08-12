@@ -30,6 +30,7 @@ import { PlatformObservability } from './pages/platform-observability/platform-o
 import { PlatformSocial } from './pages/platform-social/platform-social';
 import { PlatformBilling } from './pages/platform-billing/platform-billing';
 import { PlatformSettings } from './pages/platform-settings/platform-settings';
+import { PortalProfissionalComponent } from './components/portal-profissional/portal-profissional';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
@@ -50,6 +51,7 @@ export const routes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: Admin },
+      { path: 'portal', component: PortalProfissionalComponent },
       { path: 'agenda', component: AdminAgenda },
       { path: 'clientes', component: AdminClientes },
       { path: 'configuracoes', component: AdminConfiguracoes },
