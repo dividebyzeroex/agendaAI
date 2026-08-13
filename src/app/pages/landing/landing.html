@@ -1,150 +1,603 @@
-<div class="lp scrollable">
+<div class="landing-wrapper">
 
-  <!-- NAV -->
-  <nav class="lp-nav" [class.scrolled]="isScrolled">
-    <div class="nav-inner">
-      <div class="logo" (click)="scrollTo('top')">
-        <span class="logo-mark">▲</span> AgendaAi
+  <!-- ═══════════════ NAVBAR ═══════════════ -->
+  <header class="main-header" [class.scrolled]="isScrolled">
+    <div class="nav-container">
+      <div class="brand-logo" (click)="scrollTo('hero')">
+        <div class="logo-icon">
+          <span>▲</span>
+        </div>
+        <span class="brand-name">Agenda<strong>Ai</strong></span>
+        <span class="live-status-pill">
+          <span class="pulse-indicator"></span> 2.0 Live
+        </span>
       </div>
-      <div class="nav-links desktop-only">
-        <a (click)="scrollTo('funcionalidades')">Recursos</a>
-        <a (click)="scrollTo('nicho')">Segmentos</a>
-        <a (click)="scrollTo('precos')">Preços</a>
-        <a (click)="scrollTo('faq')">FAQ</a>
-      </div>
+
+      <nav class="nav-menu desktop-only">
+        <a (click)="scrollTo('demonstracao')" class="nav-item">Como Funciona</a>
+        <a (click)="scrollTo('nichos')" class="nav-item">Segmentos</a>
+        <a (click)="scrollTo('recursos')" class="nav-item">Recursos</a>
+        <a (click)="scrollTo('depoimentos')" class="nav-item">Resultados</a>
+        <a (click)="scrollTo('precos')" class="nav-item">Planos</a>
+        <a (click)="scrollTo('faq')" class="nav-item">FAQ</a>
+      </nav>
+
       <div class="nav-actions">
-        <button class="btn-ghost desktop-only" (click)="goToLogin()">Entrar</button>
-        <button class="btn-solid" (click)="goToLogin()">Começar Agora</button>
-        <button class="mobile-toggle" (click)="toggleMobileMenu()">
+        <button class="btn-ghost desktop-only" (click)="goToLogin()">
+          <i class="pi pi-lock"></i> Entrar
+        </button>
+        <button class="btn-primary-glow" (click)="goToLogin()">
+          <span>Testar 7 Dias Grátis</span>
+          <i class="pi pi-arrow-right"></i>
+        </button>
+        <button class="mobile-menu-toggle" (click)="toggleMobileMenu()" aria-label="Abrir Menu">
           <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
         </button>
       </div>
     </div>
-  </nav>
+  </header>
 
-  <!-- MOBILE MENU -->
-  <div class="mob-menu" [class.open]="isMobileMenuOpen">
-    <a (click)="scrollTo('funcionalidades'); toggleMobileMenu()">Recursos</a>
-    <a (click)="scrollTo('nicho'); toggleMobileMenu()">Segmentos</a>
-    <a (click)="scrollTo('precos'); toggleMobileMenu()">Preços</a>
-    <a (click)="scrollTo('faq'); toggleMobileMenu()">FAQ</a>
-    <button class="btn-solid w-full" (click)="goToLogin(); toggleMobileMenu()">Começar Agora</button>
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" [class.open]="isMobileMenuOpen">
+    <div class="drawer-links">
+      <a (click)="scrollTo('demonstracao'); toggleMobileMenu()"><i class="pi pi-bolt"></i> Como Funciona</a>
+      <a (click)="scrollTo('nichos'); toggleMobileMenu()"><i class="pi pi-th-large"></i> Segmentos</a>
+      <a (click)="scrollTo('recursos'); toggleMobileMenu()"><i class="pi pi-star"></i> Recursos</a>
+      <a (click)="scrollTo('depoimentos'); toggleMobileMenu()"><i class="pi pi-heart"></i> Depoimentos</a>
+      <a (click)="scrollTo('precos'); toggleMobileMenu()"><i class="pi pi-dollar"></i> Planos & Preços</a>
+      <a (click)="scrollTo('faq'); toggleMobileMenu()"><i class="pi pi-question-circle"></i> Dúvidas Frequentes</a>
+    </div>
+    <div class="drawer-footer">
+      <button class="btn-primary-glow w-full" (click)="goToLogin(); toggleMobileMenu()">
+        <span>Criar Conta Gratuita</span>
+        <i class="pi pi-arrow-right"></i>
+      </button>
+      <button class="btn-ghost w-full mt-2" (click)="goToLogin(); toggleMobileMenu()">
+        Já sou cliente • Entrar
+      </button>
+    </div>
   </div>
 
-  <main id="top">
+  <main class="page-body">
 
-    <!-- ═══════════════ HERO ═══════════════ -->
-    <section class="hero reveal">
-      <div class="hero-inner">
-        <div class="hero-pill"><span class="dot-pulse"></span> Assistente de Agendamentos Inteligente</div>
+    <!-- ═══════════════ HERO SECTION ═══════════════ -->
+    <section class="hero-section" id="hero">
+      <div class="hero-glow-bg"></div>
+      <div class="hero-glow-bg-2"></div>
 
-        <h1>
-          Seus clientes querem agendar.<br>
-          <span class="grad">Agora. Não amanhã.</span>
-        </h1>
-
-        <p class="hero-sub">
-          Uma IA que conversa com seus clientes, organiza sua agenda e confirma horários — enquanto você foca no que faz de melhor.
-        </p>
-
-        <div class="hero-cta">
-          <button class="btn-solid lg" (click)="goToLogin()">Começar Teste Gratuito</button>
-          <button class="btn-text" (click)="scrollTo('funcionalidades')">Ver em ação <i class="pi pi-arrow-right"></i></button>
-        </div>
-
-        <div class="social-proof reveal">
-          <div class="avatars">
-            <img src="https://ui-avatars.com/api/?name=J+P&background=0071e3&color=fff&size=36" alt="">
-            <img src="https://ui-avatars.com/api/?name=M+L&background=10b981&color=fff&size=36" alt="">
-            <img src="https://ui-avatars.com/api/?name=C+S&background=f59e0b&color=fff&size=36" alt="">
-            <img src="https://ui-avatars.com/api/?name=A+R&background=8b5cf6&color=fff&size=36" alt="">
+      <div class="container hero-container">
+        <!-- Hero Header -->
+        <div class="hero-header">
+          <div class="hero-chip">
+            <span class="chip-dot"></span>
+            <span>Inteligência Artificial Autônoma para WhatsApp</span>
+            <span class="chip-arrow"><i class="pi pi-sparkles"></i></span>
           </div>
-          <span>Mais de <strong>500 negócios</strong> já utilizam.</span>
-        </div>
-      </div>
 
-      <!-- Browser Mockup -->
-      <div class="browser-frame reveal">
-        <div class="browser-bar">
-          <div class="browser-dots"><span></span><span></span><span></span></div>
-          <div class="browser-url">agendaai.com.br/painel</div>
-        </div>
-        <div class="browser-body">
-          <div class="mock-sidebar">
-            <div class="mock-logo"></div>
-            <div class="mock-nav-item active"></div>
-            <div class="mock-nav-item"></div>
-            <div class="mock-nav-item"></div>
-            <div class="mock-nav-item"></div>
+          <h1 class="hero-headline">
+            Sua agenda lotada no automático.<br>
+            <span class="gradient-text-hero">Zero mensagens sem resposta.</span>
+          </h1>
+
+          <p class="hero-description">
+            A Inteligência Artificial que conversa com seus clientes 24 horas por dia, 
+            compreende áudios e textos, consulta seus horários livres e confirma agendamentos em menos de 1 segundo.
+          </p>
+
+          <div class="hero-buttons">
+            <button class="btn-hero-primary" (click)="goToLogin()">
+              <i class="pi pi-bolt"></i>
+              <span>Começar Teste Sem Risco</span>
+              <span class="btn-subtext">7 dias grátis • Sem fidelidade</span>
+            </button>
+
+            <button class="btn-hero-secondary" (click)="scrollTo('demonstracao')">
+              <i class="pi pi-play-circle"></i>
+              <span>Ver Demonstração</span>
+            </button>
           </div>
-          <div class="mock-content">
-            <div class="mock-topbar"></div>
-            <div class="mock-grid">
-              <div class="mock-card lg"></div>
-              <div class="mock-card sm"></div>
-              <div class="mock-card sm"></div>
-              <div class="mock-card md"></div>
-              <div class="mock-card md"></div>
+
+          <!-- Trust Badges -->
+          <div class="hero-trust">
+            <div class="trust-avatars">
+              <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=80&auto=format&fit=crop&q=80" alt="Cliente">
+              <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&auto=format&fit=crop&q=80" alt="Cliente">
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=80&auto=format&fit=crop&q=80" alt="Cliente">
+              <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&auto=format&fit=crop&q=80" alt="Cliente">
+            </div>
+            <div class="trust-text">
+              <div class="trust-stars">
+                <i class="pi pi-star-fill"></i>
+                <i class="pi pi-star-fill"></i>
+                <i class="pi pi-star-fill"></i>
+                <i class="pi pi-star-fill"></i>
+                <i class="pi pi-star-fill"></i>
+                <strong>4.9/5.0</strong>
+              </div>
+              <span>Mais de <strong>500 empresas</strong> confiam na AgendaAi</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero Interactive App Showcase Preview -->
+        <div class="hero-showcase">
+          <div class="showcase-window">
+            <!-- Window Header -->
+            <div class="window-header">
+              <div class="window-controls">
+                <span class="ctrl-dot red"></span>
+                <span class="ctrl-dot yellow"></span>
+                <span class="ctrl-dot green"></span>
+              </div>
+              <div class="window-address">
+                <i class="pi pi-shield"></i>
+                <span>app.agendaai.com.br/painel • Conexão Blindada RPC</span>
+              </div>
+              <div class="window-badge">
+                <span class="live-dot"></span> Online
+              </div>
+            </div>
+
+            <!-- Window Content -->
+            <div class="window-content">
+              <!-- KPI Ribbon -->
+              <div class="kpi-ribbon">
+                <div class="kpi-card">
+                  <div class="kpi-icon green"><i class="pi pi-dollar"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Faturamento do Mês</span>
+                    <strong class="kpi-value">R$ 18.940,00</strong>
+                    <span class="kpi-growth"><i class="pi pi-arrow-up-right"></i> +28.4% vs mês anterior</span>
+                  </div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-icon blue"><i class="pi pi-calendar"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">Agendamentos Hoje</span>
+                    <strong class="kpi-value">24 Horários</strong>
+                    <span class="kpi-status-tag">100% Confirmados</span>
+                  </div>
+                </div>
+
+                <div class="kpi-card">
+                  <div class="kpi-icon purple"><i class="pi pi-sparkles"></i></div>
+                  <div class="kpi-info">
+                    <span class="kpi-label">IA em Atendimento</span>
+                    <strong class="kpi-value">4 Conversas</strong>
+                    <span class="kpi-speed"><i class="pi pi-bolt"></i> Resposta em 0.8s</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Agenda Schedule Feed -->
+              <div class="schedule-preview">
+                <div class="schedule-header">
+                  <div class="schedule-title">
+                    <i class="pi pi-clock"></i>
+                    <strong>Linha do Tempo de Hoje</strong>
+                    <span class="date-badge">16 de Outubro</span>
+                  </div>
+                  <div class="schedule-filters">
+                    <span class="filter-tag active">Todos (8)</span>
+                    <span class="filter-tag">Confirmados</span>
+                    <span class="filter-tag">Finalizados</span>
+                  </div>
+                </div>
+
+                <div class="appointment-cards-list">
+                  <div class="app-card active-now">
+                    <div class="app-time">
+                      <strong>14:30</strong>
+                      <span>Agora</span>
+                    </div>
+                    <div class="app-avatar">
+                      <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=80&auto=format&fit=crop&q=80" alt="Juliana">
+                    </div>
+                    <div class="app-details">
+                      <strong>Juliana Mendes Ribeiro</strong>
+                      <span>Dermatologia • Dra. Camila Torres</span>
+                    </div>
+                    <div class="app-price">R$ 280,00</div>
+                    <div class="app-status live">
+                      <span class="pulse-dot-green"></span> Em Atendimento
+                    </div>
+                  </div>
+
+                  <div class="app-card highlight-ia">
+                    <div class="app-time">
+                      <strong>15:30</strong>
+                      <span>Próximo</span>
+                    </div>
+                    <div class="app-avatar">
+                      <img src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=80&auto=format&fit=crop&q=80" alt="Lucas">
+                    </div>
+                    <div class="app-details">
+                      <strong>Lucas Silveira</strong>
+                      <span>Corte Degradê + Barba Terapia • Rodrigo</span>
+                    </div>
+                    <div class="app-price">R$ 95,00</div>
+                    <div class="app-status confirmed">
+                      <i class="pi pi-check"></i> Agendado por IA
+                    </div>
+                  </div>
+
+                  <div class="app-card">
+                    <div class="app-time">
+                      <strong>16:30</strong>
+                      <span>Em 2h</span>
+                    </div>
+                    <div class="app-avatar">
+                      <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=80&auto=format&fit=crop&q=80" alt="Amanda">
+                    </div>
+                    <div class="app-details">
+                      <strong>Amanda Vasconcelos</strong>
+                      <span>Spa & Massagem Aromática • Clara</span>
+                    </div>
+                    <div class="app-price">R$ 190,00</div>
+                    <div class="app-status confirmed">
+                      <i class="pi pi-check"></i> Confirmado via WhatsApp
+                    </div>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══════════════ STATS BAR ═══════════════ -->
-    <section class="stats-bar reveal">
-      <div class="stat" *ngFor="let s of stats">
-        <strong>{{ s.value }}{{ s.suffix }}</strong>
-        <span>{{ s.label }}</span>
+    <!-- ═══════════════ STATS COUNTER BAR ═══════════════ -->
+    <section class="stats-bar-section">
+      <div class="container">
+        <div class="stats-grid">
+          <div class="stat-box" *ngFor="let stat of stats">
+            <div class="stat-number">
+              <span>{{ stat.value }}</span><small>{{ stat.suffix }}</small>
+            </div>
+            <strong class="stat-label">{{ stat.label }}</strong>
+            <p class="stat-desc">{{ stat.desc }}</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- ═══════════════ SCROLLYTELLING ═══════════════ -->
-    <section class="scrolly" id="funcionalidades">
-      <div class="scrolly-container">
-        <div class="scrolly-copy">
-          <h2>Veja o sistema trabalhando.</h2>
-          <p>
-            Enquanto você foca no seu trabalho, o AgendaAi conversa com o cliente, verifica a disponibilidade e confirma o horário — tudo em tempo real.
+    <!-- ═══════════════ INTERACTIVE SIMULATOR (SCROLLYTELLING) ═══════════════ -->
+    <section class="demo-section" id="demonstracao">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-bolt"></i> Simulação em Tempo Real</span>
+          <h2 class="section-heading">Veja o AgendaAi trabalhando por você</h2>
+          <p class="section-subheading">
+            O cliente envia mensagem pelo WhatsApp, a IA conversa naturalmente, checa a disponibilidade da agenda e finaliza o agendamento em segundos.
           </p>
-          <ul class="check-list">
-            <li><i class="pi pi-check-circle"></i> Respostas instantâneas, a qualquer hora.</li>
-            <li><i class="pi pi-check-circle"></i> Interpretação de áudio e texto.</li>
-            <li><i class="pi pi-check-circle"></i> Zero conflitos de horários.</li>
-          </ul>
         </div>
 
-        <div class="scrolly-visual">
-          <div class="vis-panel">
-            <!-- Chat -->
-            <div class="chat-sim">
-              <div class="chat-top">
-                <div class="chat-avatar"><i class="pi pi-whatsapp"></i></div>
-                <div class="chat-meta">
-                  <strong>Assistente</strong>
-                  <span>Online agora</span>
+        <div class="demo-interactive-grid">
+          <!-- WhatsApp Chat Simulator Frame -->
+          <div class="demo-chat-column">
+            <div class="phone-frame">
+              <!-- Phone Notch / Bar -->
+              <div class="phone-header">
+                <div class="chat-contact-info">
+                  <div class="contact-avatar">
+                    <i class="pi pi-whatsapp"></i>
+                  </div>
+                  <div class="contact-meta">
+                    <strong>Atendimento Inteligente</strong>
+                    <span class="status-online"><i class="pi pi-circle-fill"></i> Online 24h</span>
+                  </div>
+                </div>
+                <div class="chat-actions-icons">
+                  <i class="pi pi-phone"></i>
+                  <i class="pi pi-ellipsis-v"></i>
                 </div>
               </div>
-              <div class="chat-feed">
-                <ng-container *ngFor="let msg of visibleMessages">
-                  <div class="msg" [ngClass]="msg.type">{{ msg.text }}</div>
-                </ng-container>
-                <div class="typing" *ngIf="visibleMessages.length < chatMessages.length && visibleMessages.length > 0">
+
+              <!-- Chat Messages Flow -->
+              <div class="phone-chat-body">
+                <div class="chat-day-divider">
+                  <span>Hoje</span>
+                </div>
+
+                <div *ngFor="let msg of visibleSimMessages" class="chat-message" [ngClass]="msg.type">
+                  <div class="bubble-content">
+                    <p>{{ msg.text }}</p>
+                    <span class="message-time">
+                      {{ msg.time }}
+                      <i class="pi pi-check" *ngIf="msg.type === 'user'"></i>
+                    </span>
+                  </div>
+                </div>
+
+                <div class="typing-bubble" *ngIf="visibleSimMessages.length < chatSimMessages.length && visibleSimMessages.length > 0">
                   <span></span><span></span><span></span>
                 </div>
               </div>
-            </div>
-            <!-- Calendar -->
-            <div class="cal-sim">
-              <div class="cal-top"><strong>Hoje, 16 Out</strong></div>
-              <div class="cal-slots">
-                <div class="slot">14:00</div>
-                <div class="slot">15:00</div>
-                <div class="slot highlight" [class.booked]="eventBooked">
-                  <span>16:30</span>
-                  <div class="event-pill" *ngIf="eventBooked">Novo Agendamento</div>
+
+              <!-- Phone Footer -->
+              <div class="phone-footer">
+                <div class="input-fake">
+                  <i class="pi pi-paperclip"></i>
+                  <span>Mensagem...</span>
                 </div>
-                <div class="slot">18:00</div>
+                <div class="audio-btn">
+                  <i class="pi pi-microphone"></i>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Calendar Reaction Column -->
+          <div class="demo-calendar-column">
+            <div class="calendar-panel">
+              <div class="cal-panel-head">
+                <div class="cal-panel-title">
+                  <i class="pi pi-calendar-plus"></i>
+                  <div>
+                    <strong>Sua Agenda Atualizada</strong>
+                    <span>Sincronização em tempo real com a conversa</span>
+                  </div>
+                </div>
+                <span class="sync-status">
+                  <i class="pi pi-sync pi-spin"></i> Live Sync
+                </span>
+              </div>
+
+              <div class="slots-container">
+                <div class="slot-row past">
+                  <span class="slot-time">14:00</span>
+                  <div class="slot-card filled">
+                    <span class="service">Consulta de Rotina</span>
+                    <span class="person">Mariana Santos</span>
+                  </div>
+                </div>
+
+                <div class="slot-row past">
+                  <span class="slot-time">15:00</span>
+                  <div class="slot-card filled">
+                    <span class="service">Retorno Clínico</span>
+                    <span class="person">Carlos Eduardo</span>
+                  </div>
+                </div>
+
+                <!-- Active booking target slot -->
+                <div class="slot-row target-slot" [class.booked]="isSimEventBooked">
+                  <span class="slot-time">16:30</span>
+                  <div class="slot-card" [ngClass]="{'booked-card': isSimEventBooked, 'empty-card': !isSimEventBooked}">
+                    <ng-container *ngIf="!isSimEventBooked">
+                      <span class="empty-text"><i class="pi pi-plus-circle"></i> Horário Disponível</span>
+                    </ng-container>
+                    <ng-container *ngIf="isSimEventBooked">
+                      <div class="booked-info">
+                        <div class="booked-badge">
+                          <i class="pi pi-check-circle"></i> Novo Agendamento Confirmado!
+                        </div>
+                        <strong>Juliana Mendes Ribeiro</strong>
+                        <span>Consulta Dermatológica • Dra. Camila Torres</span>
+                        <div class="booked-tags">
+                          <span>WhatsApp</span>
+                          <span>Lembrete Ativo</span>
+                          <span>R$ 280,00</span>
+                        </div>
+                      </div>
+                    </ng-container>
+                  </div>
+                </div>
+
+                <div class="slot-row">
+                  <span class="slot-time">18:00</span>
+                  <div class="slot-card empty-card">
+                    <span class="empty-text">Horário Disponível</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Benefit Bullet Points -->
+              <div class="cal-benefits">
+                <div class="benefit-item">
+                  <i class="pi pi-check"></i>
+                  <span>Zero conflitos de agenda ou horários duplicados</span>
+                </div>
+                <div class="benefit-item">
+                  <i class="pi pi-check"></i>
+                  <span>Envio automático de lembretes com botão de confirmação</span>
+                </div>
+                <div class="benefit-item">
+                  <i class="pi pi-check"></i>
+                  <span>Encaixe instantâneo caso alguém cancele</span>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ CHAMELEON ARCHITECTURE SHOWCASE ═══════════════ -->
+    <section class="chameleon-section" id="nichos">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-sparkles"></i> Arquitetura Camaleão</span>
+          <h2 class="section-heading">O sistema que se molda às regras do seu negócio</h2>
+          <p class="section-subheading">
+            Diferente de agendas genéricas, o AgendaAi adapta o vocabulário, os campos de cadastro, os módulos clínicos e as regras específicas para o seu nicho de atuação.
+          </p>
+        </div>
+
+        <!-- Niche Selection Pills -->
+        <div class="niche-selector-tabs">
+          <button 
+            *ngFor="let niche of niches" 
+            class="niche-tab-btn" 
+            [class.active]="activeNicheId === niche.id"
+            (click)="setActiveNiche(niche.id)">
+            <i class="pi {{ niche.icon }}"></i>
+            <span>{{ niche.title }}</span>
+            <span class="tab-badge" *ngIf="activeNicheId === niche.id">{{ niche.badge }}</span>
+          </button>
+        </div>
+
+        <!-- Dynamic Niche Showcase Box -->
+        <div class="niche-showcase-box" [style.--niche-accent]="activeNiche.color">
+          <div class="niche-card-header">
+            <div class="business-profile">
+              <img [src]="activeNiche.clientAvatar" [alt]="activeNiche.clientName" class="business-img">
+              <div>
+                <div class="business-title-row">
+                  <h3>{{ activeNiche.clientName }}</h3>
+                  <span class="business-pill" [style.background]="activeNiche.color">{{ activeNiche.badge }}</span>
+                </div>
+                <span class="business-sub">Configuração personalizada ativa</span>
+              </div>
+            </div>
+
+            <div class="niche-header-action">
+              <span class="verified-tag"><i class="pi pi-verified"></i> Especializado</span>
+            </div>
+          </div>
+
+          <div class="niche-grid-content">
+            <!-- Simulated Dialogue -->
+            <div class="dialogue-box">
+              <div class="box-label"><i class="pi pi-comments"></i> Conversação com Linguagem do Segmento</div>
+              
+              <div class="dialogue-bubbles">
+                <div class="dialogue-bubble user">
+                  <p>{{ activeNiche.chatUser }}</p>
+                </div>
+                <div class="dialogue-bubble ai" [style.border-color]="activeNiche.color">
+                  <div class="ai-author"><i class="pi pi-sparkles"></i> Assistente Especialista</div>
+                  <p>{{ activeNiche.chatAi }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Customized Details Card -->
+            <div class="custom-module-box">
+              <div class="box-label"><i class="pi pi-sliders-h"></i> Módulo Exclusivo Ativado</div>
+
+              <div class="module-details-card">
+                <div class="detail-row">
+                  <span class="d-label">Serviço Solicitado:</span>
+                  <strong class="d-val">{{ activeNiche.serviceName }}</strong>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Profissional / Recurso:</span>
+                  <strong class="d-val">{{ activeNiche.professional }}</strong>
+                </div>
+                <div class="detail-row">
+                  <span class="d-label">Investimento & Duração:</span>
+                  <strong class="d-val price-highlight">{{ activeNiche.servicePrice }} • {{ activeNiche.duration }}</strong>
+                </div>
+
+                <div class="special-module-banner" [style.border-left-color]="activeNiche.color">
+                  <div class="sm-title">
+                    <i class="pi pi-cog"></i>
+                    <span>{{ activeNiche.specialModule }}</span>
+                  </div>
+                  <p>{{ activeNiche.specialValue }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════════ BENTO GRID (FEATURES & TECH) ═══════════════ -->
+    <section class="bento-section" id="recursos">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-shield"></i> Recursos Avançados</span>
+          <h2 class="section-heading">Tudo o que você precisa para crescer com tranquilidade</h2>
+          <p class="section-subheading">
+            Ferramentas profissionais projetadas para eliminar atritos operacionais e garantir mais lucro.
+          </p>
+        </div>
+
+        <div class="bento-layout">
+          <!-- Card 1: NLP de Alta Precisão (Large) -->
+          <div class="bento-box bento-large">
+            <div class="bento-text">
+              <div class="bento-icon-pill blue">
+                <i class="pi pi-sparkles"></i> IA Generativa de Ponta
+              </div>
+              <h3>Interpretação de Áudio e Texto Sem Falhas</h3>
+              <p>
+                Seus clientes não precisam navegar por menus chatos de "Digite 1 para isso". 
+                Eles mandam áudios ou textos com linguagem informal e nossa IA compreende contexto, gírias e horários com 99.4% de precisão.
+              </p>
+              <div class="bento-tags">
+                <span>Transcrições Instantâneas</span>
+                <span>Contexto Contínuo</span>
+                <span>Tom de Voz Customizável</span>
+              </div>
+            </div>
+            <div class="bento-visual visual-audio">
+              <div class="audio-waveform-card">
+                <div class="play-pill"><i class="pi pi-volume-up"></i> Áudio de 18s processado</div>
+                <div class="wave-bars">
+                  <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+                </div>
+                <div class="audio-transcription">
+                  "Oi, tem como marcar uma consulta pra quinta de tarde com a Dra Camila?"
+                </div>
+                <div class="intent-badge">
+                  <i class="pi pi-check"></i> Intenção: <strong>Agendamento Confirmado</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Blindagem Anti-Faltas -->
+          <div class="bento-box">
+            <div class="bento-icon-pill green">
+              <i class="pi pi-bell"></i> Blindagem de Faltas
+            </div>
+            <h3>Queda de 84% no "No-Show"</h3>
+            <p>
+              O sistema envia lembretes automáticos com botões de confirmação. Se o cliente desmarcar, a lista de espera é acionada na hora para preencher o buraco na sua agenda.
+            </p>
+            <div class="mini-metric-pill">
+              <strong class="green">+R$ 4.200/mês</strong> recuperados em média por cadeira
+            </div>
+          </div>
+
+          <!-- Card 3: Túnel Privado & Segurança -->
+          <div class="bento-box">
+            <div class="bento-icon-pill purple">
+              <i class="pi pi-shield"></i> Privacidade Bancária
+            </div>
+            <h3>Seus Dados Blindados</h3>
+            <p>
+              Utilizamos Túnel RPC Privado com criptografia de ponta a ponta. Seus contatos e histórico de clientes pertencem exclusivamente a você.
+            </p>
+            <div class="security-badges">
+              <span><i class="pi pi-lock"></i> SSL 256-bit</span>
+              <span><i class="pi pi-check-circle"></i> LGPD Total</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Gestão Financeira & Comissões (Wide) -->
+          <div class="bento-box bento-wide">
+            <div class="bento-text">
+              <div class="bento-icon-pill orange">
+                <i class="pi pi-chart-line"></i> Controle Operacional
+              </div>
+              <h3>Gestão de Comissões, Produtos & Faturamento</h3>
+              <p>
+                Fechamento de comanda simplificado, controle de produtos consumidos em cada atendimento e cálculo automático de repasse para seus colaboradores.
+              </p>
+            </div>
+            <div class="bento-visual visual-kpi">
+              <div class="kpi-mini-card">
+                <span class="label">Comissões Automáticas</span>
+                <strong class="value">R$ 4.380,00</strong>
+                <span class="sub-status">3 profissionais comissionados</span>
               </div>
             </div>
           </div>
@@ -152,147 +605,258 @@
       </div>
     </section>
 
-    <!-- ═══════════════ CHAMELEON ═══════════════ -->
-    <section class="chameleon reveal" id="nicho">
-      <div class="section-head">
-        <h2>Ele se adapta ao seu negócio.</h2>
-        <p>Vocabulário, métricas e formulários mudam automaticamente conforme o seu segmento.</p>
-      </div>
-
-      <div class="chameleon-box">
-        <div class="tabs">
-          <button *ngFor="let n of niches" class="tab" [class.on]="activeNicheId === n.id" (click)="setActiveNiche(n.id)">
-            <i class="pi {{ n.icon }}"></i> {{ n.title }}
-          </button>
+    <!-- ═══════════════ DEPOIMENTOS / PROVA SOCIAL ═══════════════ -->
+    <section class="testimonials-section" id="depoimentos">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-heart"></i> Casos Reais</span>
+          <h2 class="section-heading">O que dizem os donos de negócios</h2>
+          <p class="section-subheading">
+            Profissionais que recuperaram seu tempo livre e aumentaram seu faturamento com a AgendaAi.
+          </p>
         </div>
 
-        <div class="showcase" *ngIf="activeNiche" [style.--nc]="activeNiche.color">
-          <div class="showcase-chat">
-            <div class="msg user">{{ activeNiche.chat }}</div>
-            <div class="msg ai" [style.background]="activeNiche.color">Perfeito! Já reservei na agenda. Precisa de mais algo?</div>
-          </div>
-          <div class="showcase-dash">
-            <div class="mini-card">
-              <span class="lbl">Próximo Atendimento</span>
-              <strong>{{ activeNiche.event }}</strong>
+        <div class="testimonials-grid">
+          <div class="testimonial-card" *ngFor="let t of testimonials">
+            <div class="t-header">
+              <img [src]="t.avatar" [alt]="t.name" class="t-avatar">
+              <div class="t-author">
+                <strong>{{ t.name }}</strong>
+                <span>{{ t.role }}</span>
+              </div>
             </div>
-            <div class="mini-card accent" [style.border-left-color]="activeNiche.color">
-              <span class="lbl">Módulo Especial</span>
-              <strong><i class="pi pi-bolt"></i> {{ activeNiche.detail }}</strong>
+
+            <div class="t-stars">
+              <i class="pi pi-star-fill" *ngFor="let s of [1,2,3,4,5]"></i>
+            </div>
+
+            <p class="t-text">"{{ t.text }}"</p>
+
+            <div class="t-metric">
+              <i class="pi pi-arrow-up-right"></i>
+              <span>{{ t.metric }}</span>
             </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══════════════ BENTO GRID ═══════════════ -->
-    <section class="bento reveal">
-      <div class="section-head">
-        <h2>Menos retrabalho. Mais resultado.</h2>
-        <p>Automatize as tarefas que consomem o tempo da sua equipe e concentre-se no atendimento.</p>
-      </div>
+    <!-- ═══════════════ PRICING SECTION ═══════════════ -->
+    <section class="pricing-section" id="precos">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-tag"></i> Investimento Acessível</span>
+          <h2 class="section-heading">O braço direito da sua equipe</h2>
+          <p class="section-subheading">
+            Liberte seu time do trabalho repetitivo. Teste grátis por 7 dias sem taxa de adesão ou fidelidade.
+          </p>
 
-      <div class="bento-grid">
-        <div class="bento-item wide">
-          <div class="bento-glow"></div>
-          <div class="bento-text">
-            <h3>Analytics em tempo real</h3>
-            <p>Visualize faturamento, ocupação e retenção de clientes em painéis intuitivos. Tome decisões informadas, não baseadas em suposição.</p>
-          </div>
-          <div class="bento-accent"></div>
-        </div>
-        <div class="bento-item">
-          <div class="bento-glow"></div>
-          <div class="bento-text">
-            <h3>Confirmação inteligente</h3>
-            <p>Lembretes automáticos via SMS e WhatsApp reduzem faltas em até 80%. Cada horário livre é dinheiro que volta para o caixa.</p>
+          <!-- Billing Switch -->
+          <div class="billing-switch-wrap">
+            <button class="billing-tab" [class.active]="!isAnnual" (click)="toggleBilling(false)">
+              Mensal
+            </button>
+            <button class="billing-tab" [class.active]="isAnnual" (click)="toggleBilling(true)">
+              Anual <span class="discount-badge">-20% OFF</span>
+            </button>
           </div>
         </div>
-        <div class="bento-item">
-          <div class="bento-glow"></div>
-          <div class="bento-text">
-            <h3>Segurança de dados</h3>
-            <p>Comunicação criptografada ponta a ponta. A lista de clientes do seu negócio fica blindada contra acessos externos.</p>
+
+        <div class="pricing-cards-grid">
+          <!-- Starter Plan -->
+          <div class="pricing-plan-card">
+            <div class="plan-top">
+              <span class="plan-tier">Starter</span>
+              <div class="plan-price">
+                <span class="currency">R$</span>
+                <strong class="amount">{{ isAnnual ? '77' : '97' }}</strong>
+                <span class="period">/mês</span>
+              </div>
+              <p class="plan-desc">Para profissionais autônomos que desejam organizar a agenda sem dor de cabeça.</p>
+            </div>
+
+            <div class="plan-features-list">
+              <div class="feat-item"><i class="pi pi-check"></i> Até 100 agendamentos/mês</div>
+              <div class="feat-item"><i class="pi pi-check"></i> Assistente IA no WhatsApp 24/7</div>
+              <div class="feat-item"><i class="pi pi-check"></i> Lembretes automáticos anti-falta</div>
+              <div class="feat-item"><i class="pi pi-check"></i> 1 Profissional vinculado</div>
+              <div class="feat-item disabled"><i class="pi pi-times"></i> Fila de espera automática</div>
+            </div>
+
+            <button class="btn-plan-outline w-full" (click)="goToLogin()">
+              Testar Starter Grátis
+            </button>
+          </div>
+
+          <!-- Pro Plan (HIGHLIGHT) -->
+          <div class="pricing-plan-card popular-highlight">
+            <div class="popular-ribbon">
+              <i class="pi pi-star-fill"></i> MAIS ESCOLHIDO POR CLÍNICAS & SALÕES
+            </div>
+
+            <div class="plan-top">
+              <span class="plan-tier highlight">Plano Pro</span>
+              <div class="plan-price">
+                <span class="currency">R$</span>
+                <strong class="amount">{{ isAnnual ? '157' : '197' }}</strong>
+                <span class="period">/mês</span>
+              </div>
+              <p class="plan-desc">A solução completa para clínicas, barbearias, petshops e estúdios em crescimento.</p>
+            </div>
+
+            <div class="plan-features-list">
+              <div class="feat-item"><i class="pi pi-check-circle"></i> <strong>Até 500 agendamentos/mês</strong></div>
+              <div class="feat-item"><i class="pi pi-check-circle"></i> <strong>IA WhatsApp Completa (Áudio e Texto)</strong></div>
+              <div class="feat-item"><i class="pi pi-check-circle"></i> <strong>Fila de Espera Automática</strong></div>
+              <div class="feat-item"><i class="pi pi-check-circle"></i> Até 5 Profissionais vinculados</div>
+              <div class="feat-item"><i class="pi pi-check-circle"></i> Prontuário / Ficha Técnica do Nicho</div>
+              <div class="feat-item"><i class="pi pi-check-circle"></i> Gestão de Comissões & Comandas</div>
+            </div>
+
+            <button class="btn-plan-solid w-full" (click)="goToLogin()">
+              <span>Ativar 7 Dias Grátis</span>
+              <i class="pi pi-arrow-right"></i>
+            </button>
+          </div>
+
+          <!-- Business Plan -->
+          <div class="pricing-plan-card">
+            <div class="plan-top">
+              <span class="plan-tier">Business</span>
+              <div class="plan-price">
+                <span class="currency">R$</span>
+                <strong class="amount">{{ isAnnual ? '317' : '397' }}</strong>
+                <span class="period">/mês</span>
+              </div>
+              <p class="plan-desc">Para redes, franquias e operações de alto volume que exigem escala ilimitada.</p>
+            </div>
+
+            <div class="plan-features-list">
+              <div class="feat-item"><i class="pi pi-check"></i> <strong>Agendamentos Ilimitados</strong></div>
+              <div class="feat-item"><i class="pi pi-check"></i> <strong>Profissionais Ilimitados</strong></div>
+              <div class="feat-item"><i class="pi pi-check"></i> Múltiplos Números de WhatsApp</div>
+              <div class="feat-item"><i class="pi pi-check"></i> Suporte Prioritário VIP & Setup Assistido</div>
+              <div class="feat-item"><i class="pi pi-check"></i> Relatórios Financeiros Avançados</div>
+            </div>
+
+            <button class="btn-plan-outline w-full" (click)="goToLogin()">
+              Assinar Business
+            </button>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══════════════ PRICING ═══════════════ -->
-    <section class="pricing reveal" id="precos">
-      <div class="section-head">
-        <h2>O braço direito da sua equipe.</h2>
-        <p>Escolha o plano que acompanha o tamanho da sua operação.</p>
-      </div>
-
-      <div class="pricing-grid">
-        <div class="price-card">
-          <h3>Pro</h3>
-          <div class="price-value">R$&thinsp;197<span>/mês</span></div>
-          <p>Ideal para clínicas, estúdios e profissionais autônomos que precisam de organização imediata.</p>
-          <ul>
-            <li><i class="pi pi-check"></i> Até 500 agendamentos/mês</li>
-            <li><i class="pi pi-check"></i> Assistente Virtual 24/7</li>
-            <li><i class="pi pi-check"></i> 200 SMS inclusos</li>
-            <li><i class="pi pi-check"></i> Analytics Avançado</li>
-          </ul>
-          <button class="btn-solid w-full" (click)="goToLogin()">Testar 7 Dias Gratuitos</button>
+    <!-- ═══════════════ FAQ SECTION ═══════════════ -->
+    <section class="faq-section" id="faq">
+      <div class="container">
+        <div class="section-title-wrap text-center">
+          <span class="section-badge"><i class="pi pi-question-circle"></i> Dúvidas Frequentes</span>
+          <h2 class="section-heading">Tudo o que você precisa saber</h2>
+          <p class="section-subheading">
+            Respostas transparentes para as dúvidas mais comuns sobre o AgendaAi.
+          </p>
         </div>
 
-        <div class="price-card dark">
-          <div class="pop-badge">Recomendado</div>
-          <h3>Business</h3>
-          <div class="price-value">R$&thinsp;397<span>/mês</span></div>
-          <p>Para redes e operações com múltiplos profissionais que exigem volume e integração completa.</p>
-          <ul>
-            <li><i class="pi pi-check"></i> Agendamentos ilimitados</li>
-            <li><i class="pi pi-check"></i> Frota de 4 Agentes</li>
-            <li><i class="pi pi-check"></i> 500 SMS inclusos</li>
-            <li><i class="pi pi-check"></i> Integrações exclusivas</li>
-          </ul>
-          <button class="btn-solid w-full inv" (click)="goToLogin()">Desbloquear Acesso Total</button>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════ FAQ ═══════════════ -->
-    <section class="faq-section reveal" id="faq">
-      <div class="section-head">
-        <h2>Perguntas frequentes.</h2>
-      </div>
-      <div class="faq-list">
-        <div class="faq-item" *ngFor="let faq of faqs; let i = index" [class.open]="faq.expanded">
-          <button class="faq-q" (click)="toggleFaq(i)">
-            {{ faq.question }}
-            <i class="pi pi-plus"></i>
-          </button>
-          <div class="faq-a">
-            <p>{{ faq.answer }}</p>
+        <div class="faq-accordion">
+          <div class="faq-card" *ngFor="let faq of faqs; let i = index" [class.expanded]="faq.expanded">
+            <button class="faq-question-btn" (click)="toggleFaq(i)">
+              <span>{{ faq.question }}</span>
+              <div class="faq-icon-circle">
+                <i class="pi" [class.pi-plus]="!faq.expanded" [class.pi-minus]="faq.expanded"></i>
+              </div>
+            </button>
+            <div class="faq-answer-body" *ngIf="faq.expanded">
+              <p>{{ faq.answer }}</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ═══════════════ CTA ═══════════════ -->
-    <section class="final-cta reveal">
-      <h2>Dê o próximo passo.</h2>
-      <p>Simplifique a rotina da sua equipe e ofereça uma experiência de agendamento que seus clientes vão adorar.</p>
-      <button class="btn-solid lg dark" (click)="goToLogin()">Começar Agora — É Gratuito</button>
-    </section>
+    <!-- ═══════════════ FINAL BANNER CTA ═══════════════ -->
+    <section class="final-cta-section">
+      <div class="container">
+        <div class="final-cta-card">
+          <div class="cta-content">
+            <span class="cta-chip"><i class="pi pi-bolt"></i> Comece Hoje Mesmo</span>
+            <h2>Pronto para recuperar seu tempo e acelerar seu negócio?</h2>
+            <p>Junte-se a mais de 500 empresas que já colocaram os agendamentos no piloto automático.</p>
+            
+            <div class="cta-btn-group">
+              <button class="btn-hero-primary" (click)="goToLogin()">
+                <i class="pi pi-bolt"></i>
+                <span>Iniciar Teste Gratuito de 7 Dias</span>
+              </button>
+            </div>
 
-    <!-- ═══════════════ FOOTER ═══════════════ -->
-    <footer class="lp-footer">
-      <div class="footer-inner">
-        <div class="footer-brand"><span class="logo-mark">▲</span> AgendaAi</div>
-        <div class="footer-nav">
-          <a (click)="scrollTo('funcionalidades')">Recursos</a>
-          <a (click)="scrollTo('precos')">Preços</a>
-          <a href="#">Privacidade</a>
-          <a href="#">Termos</a>
+            <div class="cta-guarantee">
+              <span><i class="pi pi-check"></i> Sem cartão no cadastro</span>
+              <span><i class="pi pi-check"></i> Cancele quando quiser</span>
+              <span><i class="pi pi-check"></i> Ativação em 2 minutos</span>
+            </div>
+          </div>
         </div>
       </div>
-      <p class="footer-copy">&copy; 2026 AgendaAi. Todos os direitos reservados.</p>
-    </footer>
+    </section>
 
   </main>
+
+  <!-- ═══════════════ FOOTER ═══════════════ -->
+  <footer class="main-footer">
+    <div class="container">
+      <div class="footer-top-grid">
+        <div class="footer-col-brand">
+          <div class="brand-logo" (click)="scrollTo('hero')">
+            <div class="logo-icon"><span>▲</span></div>
+            <span class="brand-name">Agenda<strong>Ai</strong></span>
+          </div>
+          <p class="footer-bio">
+            A plataforma líder de atendimento autônomo e agendamentos inteligentes para negócios locais e prestadores de serviços.
+          </p>
+          <div class="footer-security">
+            <i class="pi pi-shield"></i>
+            <span>Plataforma 100% em Conformidade com a LGPD</span>
+          </div>
+        </div>
+
+        <div class="footer-col-links">
+          <h4>Navegação</h4>
+          <a (click)="scrollTo('demonstracao')">Como Funciona</a>
+          <a (click)="scrollTo('nichos')">Segmentos & Nichos</a>
+          <a (click)="scrollTo('recursos')">Recursos da Plataforma</a>
+          <a (click)="scrollTo('precos')">Tabela de Preços</a>
+          <a (click)="scrollTo('faq')">Perguntas Frequentes</a>
+        </div>
+
+        <div class="footer-col-links">
+          <h4>Segmentos</h4>
+          <a (click)="setActiveNiche('clinica'); scrollTo('nichos')">Clínicas & Consultórios</a>
+          <a (click)="setActiveNiche('barbearia'); scrollTo('nichos')">Barbearias & Salões</a>
+          <a (click)="setActiveNiche('petshop'); scrollTo('nichos')">Pet Shops & Veterinárias</a>
+          <a (click)="setActiveNiche('estetica'); scrollTo('nichos')">Estética & Spas</a>
+          <a (click)="setActiveNiche('assistencia'); scrollTo('nichos')">Assistência Técnica & Oficinas</a>
+        </div>
+
+        <div class="footer-col-links">
+          <h4>Acesso</h4>
+          <a (click)="goToLogin()">Entrar no Painel</a>
+          <a (click)="goToLogin()">Criar Nova Conta</a>
+          <a href="mailto:contato@agendaai.com.br">Suporte Técnico</a>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <p>&copy; 2026 AgendaAi Tecnologia e Inteligência Artificial Ltda. Todos os direitos reservados.</p>
+        <div class="footer-legal-links">
+          <a href="#">Termos de Uso</a>
+          <span>•</span>
+          <a href="#">Política de Privacidade</a>
+          <span>•</span>
+          <a href="#">Segurança & LGPD</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
 </div>
