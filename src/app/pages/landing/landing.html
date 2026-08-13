@@ -1,285 +1,296 @@
-<div class="antigravity-layout scrollable">
+<div class="apple-layout scrollable">
 
   <!-- NAVIGATION -->
-  <nav class="ag-nav" [class.scrolled]="isScrolled">
-    <div class="logo" (click)="scrollTo('top')">
-      <span class="logo-mark">▲</span> AgendaAi
+  <nav class="apple-nav" [class.scrolled]="isScrolled">
+    <div class="nav-content">
+      <div class="logo" (click)="scrollTo('top')">
+        <span class="logo-mark">▲</span> AgendaAi
+      </div>
+      <div class="nav-links desktop-only">
+        <a (click)="scrollTo('funcionalidades')">Recursos</a>
+        <a (click)="scrollTo('nicho')">Adaptação</a>
+        <a (click)="scrollTo('precos')">Preços</a>
+        <a (click)="scrollTo('faq')">FAQ</a>
+      </div>
+      <div class="nav-actions">
+        <button class="btn-apple-outline desktop-only" (click)="goToLogin()">Entrar</button>
+        <button class="btn-apple-primary" (click)="goToLogin()">Começar Agora</button>
+        <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
+          <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
+        </button>
+      </div>
     </div>
-    <div class="nav-links desktop-only">
-      <a (click)="scrollTo('funcionalidades')">Recursos</a>
-      <a (click)="scrollTo('beneficios')">Benefícios</a>
-      <a (click)="scrollTo('precos')">Preços</a>
-      <a (click)="scrollTo('faq')">FAQ</a>
-      <button class="btn-primary" (click)="goToLogin()">Acessar Painel</button>
-    </div>
-    <button class="mobile-menu-btn" (click)="toggleMobileMenu()">
-      <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
-    </button>
   </nav>
 
   <!-- MOBILE MENU -->
   <div class="mobile-menu" [class.open]="isMobileMenuOpen">
     <div class="mobile-menu-content">
       <a (click)="scrollTo('funcionalidades')" (click)="toggleMobileMenu()">Recursos</a>
-      <a (click)="scrollTo('beneficios')" (click)="toggleMobileMenu()">Benefícios</a>
+      <a (click)="scrollTo('nicho')" (click)="toggleMobileMenu()">Adaptação</a>
       <a (click)="scrollTo('precos')" (click)="toggleMobileMenu()">Preços</a>
       <a (click)="scrollTo('faq')" (click)="toggleMobileMenu()">FAQ</a>
-      <button class="btn-primary" style="font-size: 1.2rem; margin-top: 1rem;" (click)="goToLogin()">Acessar Painel</button>
+      <button class="btn-apple-primary w-full mt-4" (click)="goToLogin()">Começar Agora</button>
     </div>
   </div>
 
-  <main class="ag-content" id="top">
+  <main class="apple-content" id="top">
     
     <!-- HERO SECTION -->
     <section class="hero-section reveal">
-      <div class="badge">
-        <div class="badge-dot"></div> Gestão de Ponta a Ponta
-      </div>
-      
-      <h1 class="hero-title">
-        Conheça o AgendaAi:<br>
-        <span class="gradient-text">O seu assistente de agendamentos.</span>
-      </h1>
-      
-      <p class="hero-subtitle">
-        Um assistente virtual que organiza seus agendamentos 24h por dia. Simples, rápido e eficiente.
-      </p>
-
-      <div class="hero-actions">
-        <button class="btn-primary" (click)="goToLogin()">🚀 Organizar Minha Agenda</button>
-        <button class="btn-secondary" (click)="scrollTo('funcionalidades')">👀 Veja como funciona</button>
-      </div>
-
-      <!-- SCROLL INDICATOR -->
-      <div class="hero-scroll-indicator reveal" style="font-size: 3rem; text-align: center; margin-top: 3rem; animation: floatImg 2s ease-in-out infinite;">
-        <i class="pi pi-angle-double-down" style="color: var(--text-muted); cursor: pointer; transition: color 0.3s;" (click)="scrollTo('funcionalidades')" onmouseover="this.style.color='var(--accent-primary)'" onmouseout="this.style.color='var(--text-muted)'"></i>
-      </div>
-    </section>
-
-    <!-- SEGMENTS MARQUEE -->
-    <section class="marquee-section reveal">
-      <div class="marquee-track">
-        <div class="marquee-item">💈 Barbearias Organizadas</div>
-        <div class="marquee-item">💅 Salões Sem Furos</div>
-        <div class="marquee-item">✨ Clínicas Eficientes</div>
-        <div class="marquee-item">🐾 Pet Shops Autônomos</div>
-        <div class="marquee-item">🧁 Docerias Organizadas</div>
-        <div class="marquee-item">🖋️ Estúdios Profissionais</div>
-        <div class="marquee-item">💆 Spas Focados</div>
-        <div class="marquee-item">🛠️ Oficinas Aceleradas</div>
+      <div class="hero-container">
+        <div class="hero-badge">
+          <span class="pulse-dot"></span> Inteligência Artificial Autônoma
+        </div>
         
-        <!-- Duplicated for infinite scroll -->
-        <div class="marquee-item">💈 Barbearias Organizadas</div>
-        <div class="marquee-item">💅 Salões Sem Furos</div>
-        <div class="marquee-item">✨ Clínicas Eficientes</div>
-        <div class="marquee-item">🐾 Pet Shops Autônomos</div>
-        <div class="marquee-item">🧁 Docerias Organizadas</div>
-        <div class="marquee-item">🖋️ Estúdios Profissionais</div>
-        <div class="marquee-item">💆 Spas Focados</div>
-        <div class="marquee-item">🛠️ Oficinas Aceleradas</div>
+        <h1 class="hero-title">
+          Você perde dinheiro<br>
+          <span class="gradient-text">por não responder na hora.</span>
+        </h1>
+        
+        <p class="hero-subtitle">
+          Deixe nossa Inteligência Artificial atender seus clientes em 1 segundo, 24h por dia. Recupere seu tempo livre e nunca mais perca um agendamento.
+        </p>
+
+        <div class="hero-actions">
+          <button class="btn-apple-primary lg" (click)="goToLogin()">Começar Teste Sem Risco</button>
+          <button class="btn-apple-text lg" (click)="scrollTo('funcionalidades')">Veja o sistema trabalhando <i class="pi pi-angle-right"></i></button>
+        </div>
+        
+        <div class="trust-badge reveal" style="margin-top: 24px; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 0.85rem; color: var(--text-muted);">
+          <div style="display: flex; margin-right: 8px;">
+            <img src="https://ui-avatars.com/api/?name=João&background=random" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
+            <img src="https://ui-avatars.com/api/?name=Maria&background=random" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
+            <img src="https://ui-avatars.com/api/?name=Carlos&background=random" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; margin-right: -10px;">
+            <img src="https://ui-avatars.com/api/?name=Ana&background=random" style="width: 28px; height: 28px; border-radius: 50%; border: 2px solid white;">
+          </div>
+          <span>Junte-se a <strong>+500 negócios</strong> de sucesso.</span>
+        </div>
+      </div>
+      
+      <!-- HERO MOCKUP (Minimalist UI representation) -->
+      <div class="hero-mockup reveal">
+        <div class="mockup-glass">
+          <div class="mockup-header">
+            <div class="dots"><span></span><span></span><span></span></div>
+            <div class="title">AgendaAi Panel</div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-sidebar"></div>
+            <div class="mockup-main">
+              <div class="mockup-card top"></div>
+              <div class="mockup-grid">
+                <div class="mockup-card"></div>
+                <div class="mockup-card"></div>
+                <div class="mockup-card"></div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- FEITO PARA O SEU NEGOCIO -->
-    <section class="niche-section reveal" id="beneficios">
-      <h2 class="section-title">Feito para o seu negócio</h2>
-      <p class="section-subtitle">Esqueça os sistemas complexos. O assistente adapta-se facilmente às regras do seu estabelecimento.</p>
-      
-      <div class="niche-grid">
-        <div class="niche-card">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">💼</div>
-          <h3>Vocabulário Flexível</h3>
-          <p>O assistente entende termos como "consultas", "atendimentos" ou "cortes". Ele usa a linguagem que seu cliente já conhece.</p>
-          <div class="niche-tag">Ultra-Customizável</div>
+    <!-- SCROLLYTELLING (Chat vs Calendar) -->
+    <section class="scrolly-section" id="funcionalidades">
+      <div class="scrolly-container">
+        <div class="scrolly-text-column">
+          <h2 class="section-title">Como a mágica acontece.</h2>
+          <p class="section-subtitle">
+            Enquanto você foca no seu trabalho, o AgendaAi conversa com o cliente, encontra os horários disponíveis e registra tudo no seu calendário de forma invisível.
+          </p>
+          <ul class="scrolly-features">
+            <li><i class="pi pi-check-circle"></i> Respostas em milissegundos.</li>
+            <li><i class="pi pi-check-circle"></i> Interpretação de áudio e texto.</li>
+            <li><i class="pi pi-check-circle"></i> Zero conflitos de horários.</li>
+          </ul>
         </div>
-        <div class="niche-card">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">📈</div>
-          <h3>Organização em Qualquer Nicho</h3>
-          <p>O assistente guia o agendamento sem fricção, mantendo sua agenda sempre alinhada e organizada.</p>
-          <div class="niche-tag">Multi-segmento</div>
-        </div>
-        <div class="niche-card">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">⚙️</div>
-          <h3>Regras Personalizadas</h3>
-          <p>Defina o tempo de cada serviço, margem de atraso e intervalos. O sistema organiza tudo automaticamente.</p>
-          <div class="niche-tag">Controle Absoluto</div>
+        
+        <div class="scrolly-visual-column">
+          <div class="visual-glass-panel">
+            
+            <!-- Chat Side -->
+            <div class="chat-simulation">
+              <div class="chat-header">
+                <div class="avatar"><i class="pi pi-whatsapp"></i></div>
+                <div>
+                  <strong>Assistente IA</strong>
+                  <span>Online agora</span>
+                </div>
+              </div>
+              <div class="chat-body">
+                <ng-container *ngFor="let msg of visibleMessages">
+                  <div class="chat-bubble" [ngClass]="msg.type">
+                    {{ msg.text }}
+                  </div>
+                </ng-container>
+                <div class="typing-indicator" *ngIf="visibleMessages.length < chatMessages.length && visibleMessages.length > 0">
+                  <span></span><span></span><span></span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Calendar Side -->
+            <div class="calendar-simulation">
+              <div class="cal-header">
+                <strong>Hoje, 16 de Out</strong>
+              </div>
+              <div class="cal-body">
+                <div class="cal-slot">14:00</div>
+                <div class="cal-slot">15:00</div>
+                <div class="cal-slot active-slot" [class.booked]="eventBooked">
+                  <span class="time">16:30</span>
+                  <div class="event-block" *ngIf="eventBooked">
+                    Novo Agendamento
+                  </div>
+                </div>
+                <div class="cal-slot">18:00</div>
+              </div>
+            </div>
+            
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- BENTO GRID (RECURSOS + IMAGEM DASHBOARD) -->
-    <section class="features-section reveal" id="funcionalidades">
-      <h2 class="section-title text-center" style="text-align: center;">Ferramentas para o seu crescimento</h2>
-      <p class="section-subtitle text-center" style="text-align: center; margin: 0 auto 3rem;">Abandone as planilhas manuais. Tenha acesso a tecnologia moderna para facilitar o seu dia a dia.</p>
-      
+    <!-- CHAMELEON SHOWCASE -->
+    <section class="chameleon-section reveal" id="nicho">
+      <div class="section-header center">
+        <h2 class="section-title">Ele se molda ao seu negócio.</h2>
+        <p class="section-subtitle">Não importa o seu segmento, a plataforma adapta o vocabulário, as métricas e as informações essenciais que você precisa capturar.</p>
+      </div>
+
+      <div class="chameleon-interactive">
+        <div class="niche-selector">
+          <button *ngFor="let niche of niches" class="niche-btn" [class.active]="activeNicheId === niche.id" (click)="setActiveNiche(niche.id)">
+            <i class="pi {{ niche.icon }}"></i> {{ niche.title }}
+          </button>
+        </div>
+
+        <div class="niche-showcase-panel" *ngIf="activeNiche" [style.--niche-color]="activeNiche.color">
+          
+          <div class="showcase-chat">
+            <div class="chat-bubble user">{{ activeNiche.chat }}</div>
+            <div class="chat-bubble ai">Perfeito! Já reservei na agenda. Tem algo mais?</div>
+          </div>
+
+          <div class="showcase-dashboard">
+            <div class="dash-card">
+              <span class="label">Próximo Atendimento</span>
+              <strong class="value">{{ activeNiche.event }}</strong>
+            </div>
+            <div class="dash-card detail-card">
+              <span class="label">Módulo Especial Ativado</span>
+              <strong class="value"><i class="pi pi-bolt"></i> {{ activeNiche.detail }}</strong>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- BENTO GRID -->
+    <section class="bento-section reveal">
+      <div class="section-header center">
+        <h2 class="section-title">O fim do retrabalho invisível.</h2>
+        <p class="section-subtitle">Você não abriu um negócio para virar escravo do WhatsApp. Automatize a burocracia e foque no que importa.</p>
+      </div>
+
       <div class="bento-grid">
-        
-        <!-- DASHBOARD EMOJI CARD (Largo) -->
-        <div class="bento-card bento-wide" style="display: flex; align-items: center; justify-content: center; flex-direction: column; text-align: center; gap: 1rem;">
-          <div style="font-size: 4rem;">📊</div>
-          <h3>Painel de Gestão Inteligente</h3>
-          <p>Acompanhe todos os seus agendamentos e dados em tempo real. Tudo organizado em um só lugar.</p>
+        <div class="bento-item wide">
+          <div class="bento-content">
+            <h3>Analytics Avançado</h3>
+            <p>Decisões baseadas em achismos custam caro. Tenha clareza total sobre faturamento, retenção e saúde do seu negócio em tempo real.</p>
+          </div>
+          <div class="bento-bg analytics-bg"></div>
         </div>
 
-        <div class="bento-card">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">🔒</div>
-          <h3>Privacidade e Segurança</h3>
-          <p>O único do mercado com Túnel RPC Privado. Os dados dos seus clientes são blindados contra rastreadores externos. Seus dados estão protegidos.</p>
+        <div class="bento-item">
+          <div class="bento-content">
+            <h3>Blindagem de Faltas</h3>
+            <p>Cada cliente que falta é dinheiro perdido. O sistema cobra confirmação e envia lembretes agressivos, reduzindo "no-shows" em até 80%.</p>
+          </div>
         </div>
-        
-        <div class="bento-card">
-          <div style="font-size: 2.5rem; margin-bottom: 1rem;">💬</div>
-          <h3>Suporte Constante</h3>
-          <p>O assistente responde rapidamente e auxilia o cliente até a confirmação do horário, garantindo um bom atendimento a qualquer momento.</p>
+
+        <div class="bento-item">
+          <div class="bento-content">
+            <h3>Túnel Privado RPC</h3>
+            <p>Seus dados valem ouro. Nossa tecnologia de ponta a ponta garante que sua lista de clientes jamais seja vazada ou rastreada.</p>
+          </div>
         </div>
       </div>
     </section>
 
-    <!-- COMPARATIVO E ESTATÍSTICAS -->
-    <section class="compare-section reveal">
-      <h2 class="section-title text-center" style="text-align: center;">A matemática da eficiência</h2>
-      <p class="section-subtitle text-center" style="text-align: center; margin: 0 auto 4rem;">Veja o que acontece quando você troca o processo manual pela automação.</p>
-      
-      <div class="compare-grid">
-        <div class="compare-card compare-bad">
-          <h3>❌ Como é o agendamento manual</h3>
-          <ul class="compare-list">
-            <li>🔴 Clientes desistem por demora na resposta</li>
-            <li>🔴 Desorganização e perda de tempo com "No-shows" (agendam e não aparecem)</li>
-            <li>🔴 Tempo perdido respondendo mensagens fora do horário</li>
-            <li>🔴 Dados valiosos perdidos por falhas humanas</li>
-          </ul>
-        </div>
-        <div class="compare-card compare-good">
-          <h3>✅ Com o sistema AgendaAi</h3>
-          <ul class="compare-list">
-            <li>🟢 Dúvidas respondidas rapidamente, a qualquer hora</li>
-            <li>🟢 Menos faltas com o envio de lembretes automáticos</li>
-            <li>🟢 Mais tempo livre para focar no seu trabalho</li>
-            <li>🟢 Segurança RPC que garante a integridade dos dados</li>
-          </ul>
-        </div>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-value">24/7</div>
-          <div class="stat-label">Atendimento e Reservas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">80%</div>
-          <div class="stat-label">Queda em Faltas</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">Eficiência</div>
-          <div class="stat-label">Comunicação Rápida</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">0s</div>
-          <div class="stat-label">Fila de Espera no Chat</div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PRICING SECTION -->
+    <!-- PRICING -->
     <section class="pricing-section reveal" id="precos">
-      <h2 class="section-title text-center" style="text-align: center;">Escolha o plano ideal</h2>
-      <p class="section-subtitle text-center" style="text-align: center; margin: 0 auto 4rem;">Automatize processos repetitivos e ganhe tempo. Escolha a melhor opção para a sua necessidade.</p>
-      
+      <div class="section-header center">
+        <h2 class="section-title">Custa menos que uma secretária.</h2>
+        <p class="section-subtitle" style="margin-bottom: 2rem;">Uma recepcionista custa cerca de R$ 2.000 mensais + encargos e só trabalha 8h por dia. A Inteligência Artificial trabalha 24h/7d por uma fração do preço.</p>
+      </div>
+
       <div class="pricing-grid">
+        <!-- Pro Plan -->
         <div class="pricing-card">
-          <div class="plan-name">Starter</div>
-          <div class="plan-price">R$ 97<span>/mês</span></div>
-          <p class="plan-desc">A porta de entrada para profissionais que precisam simplificar a rotina.</p>
-          <ul class="plan-features">
-            <li>✅ Até 100 agendamentos/mês</li>
-            <li>✅ Portal de agendamento online</li>
-            <li>✅ Assistente Virtual 24/7</li>
-            <li>✅ 50 SMS para reduzir faltas</li>
-            <li class="disabled">❌ Analytics NLP</li>
-          </ul>
-          <button class="btn-primary" (click)="goToLogin()">Testar 7 Dias Sem Risco</button>
-        </div>
-        
-        <div class="pricing-card popular">
-          <div class="popular-badge">Mais Escolhido</div>
-          <div class="plan-name">Pro</div>
-          <div class="plan-price">R$ 197<span>/mês</span></div>
-          <p class="plan-desc">O sistema ideal para donos de clínicas e estúdios ganharem mais organização.</p>
-          <ul class="plan-features">
-            <li>✅ Até 500 agendamentos/mês</li>
-            <li>✅ Assistente Virtual 24/7</li>
-            <li>✅ 200 SMS para reduzir faltas</li>
-            <li>✅ <b>Analytics NLP Avançado</b></li>
-            <li>✅ <b>2 Agentes simultâneos</b></li>
-          </ul>
-          <button class="btn-primary" (click)="goToLogin()">🚀 Ativar Plano Pro</button>
+          <div class="plan-header">
+            <h3>Pro</h3>
+            <div class="price">R$ 197<span>/mês</span></div>
+            <p>O equivalente a menos de R$ 7 por dia. Perfeito para escalar sua clínica ou estúdio.</p>
+          </div>
+          <div class="plan-features">
+            <ul>
+              <li><i class="pi pi-check"></i> Até 500 agendamentos/mês</li>
+              <li><i class="pi pi-check"></i> Assistente Virtual 24/7</li>
+              <li><i class="pi pi-check"></i> 200 SMS inclusos</li>
+              <li><i class="pi pi-check"></i> Analytics Avançado</li>
+            </ul>
+          </div>
+          <button class="btn-apple-primary w-full" (click)="goToLogin()">Testar 7 Dias Sem Custo</button>
         </div>
 
-        <div class="pricing-card">
-          <div class="plan-name">Business</div>
-          <div class="plan-price">R$ 397<span>/mês</span></div>
-          <p class="plan-desc">Acesso completo. Para redes e franquias que precisam de operação estruturada.</p>
-          <ul class="plan-features">
-            <li>✅ Agendamentos <b>ilimitados</b></li>
-            <li>✅ Assistente Virtual 24/7</li>
-            <li>✅ 500 SMS para reduzir faltas</li>
-            <li>✅ Gestão de todos os indicadores</li>
-            <li>✅ <b>Frota Completa de 4 Agentes</b></li>
-          </ul>
-          <button class="btn-primary" (click)="goToLogin()">Ativar Plano Business</button>
+        <!-- Business Plan -->
+        <div class="pricing-card highlight">
+          <div class="badge">A Escolha dos Líderes</div>
+          <div class="plan-header">
+            <h3>Business</h3>
+            <div class="price">R$ 397<span>/mês</span></div>
+            <p>Para redes estruturadas. Evite o colapso operacional suportando alto volume com segurança.</p>
+          </div>
+          <div class="plan-features">
+            <ul>
+              <li><i class="pi pi-check"></i> Agendamentos ilimitados</li>
+              <li><i class="pi pi-check"></i> Frota de 4 Agentes simultâneos</li>
+              <li><i class="pi pi-check"></i> 500 SMS inclusos</li>
+              <li><i class="pi pi-check"></i> Integrações exclusivas</li>
+            </ul>
+          </div>
+          <button class="btn-apple-primary w-full inverse" (click)="goToLogin()">Desbloquear Acesso Total</button>
         </div>
       </div>
     </section>
 
-    <!-- FAQ SECTION -->
-    <section class="faq-section reveal" id="faq">
-      <h2 class="section-title text-center" style="text-align: center;">Dúvidas Frequentes</h2>
-      
-      <div class="faq-list">
-        <div class="faq-item" *ngFor="let faq of faqs; let i = index" [class.expanded]="faq.expanded">
-          <div class="faq-question" (click)="toggleFaq(i)">
-            {{ faq.question }}
-            <i class="pi pi-chevron-down" style="transition: transform 0.3s;"></i>
-          </div>
-          <div class="faq-answer">
-            {{ faq.answer }}
-          </div>
-        </div>
+    <!-- CTA -->
+    <section class="cta-section reveal">
+      <div class="cta-container">
+        <h2>Seu negócio merece paz.</h2>
+        <p>A cada dia que você adia a automação, está deixando dinheiro na mesa. Dê o primeiro passo agora.</p>
+        <button class="btn-apple-primary lg inverse" (click)="goToLogin()">Automatizar Meu Negócio Hoje</button>
       </div>
-    </section>
-
-    <!-- FOOTER CTA -->
-    <section class="cta-footer reveal">
-      <h2>Simplifique a sua rotina diária.</h2>
-      <p>Tenha mais tempo livre e a sua agenda sob controle absoluto. Teste gratuitamente e veja os resultados.</p>
-      <button class="btn-secondary" (click)="goToLogin()">Iniciar Teste Gratuito <i class="pi pi-arrow-right"></i></button>
     </section>
 
     <!-- FOOTER -->
-    <footer class="footer-bottom">
-      <div class="footer-grid">
+    <footer class="apple-footer">
+      <div class="footer-content">
         <div class="footer-brand">
-          <h3>AgendaAi</h3>
-          <p>Um sistema moderno de agendamentos automatizados. Feito para facilitar a sua rotina.</p>
+          <span class="logo-mark">▲</span> AgendaAi
         </div>
         <div class="footer-links">
-          <h4>Navegação</h4>
           <a (click)="scrollTo('funcionalidades')">Recursos</a>
           <a (click)="scrollTo('precos')">Preços</a>
-          <a (click)="scrollTo('faq')">FAQ</a>
-        </div>
-        <div class="footer-links">
-          <h4>Legal</h4>
-          <a href="#">Termos de Serviço</a>
-          <a href="#">Política de Privacidade</a>
-          <a href="#">Contato</a>
+          <a href="#">Privacidade</a>
+          <a href="#">Termos</a>
         </div>
       </div>
-      <div class="footer-copy">
-        &copy; 2026 AgendaAi. Todos os direitos reservados.
+      <div class="footer-bottom">
+        <p>&copy; 2026 AgendaAi. Desenvolvido para produtividade.</p>
       </div>
     </footer>
-
   </main>
 </div>

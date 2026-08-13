@@ -28,13 +28,6 @@
                   <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
                 </div>
 
-                <!-- GOOGLE SSO (Ação principal — caminho mais rápido) -->
-                <div class="sso-buttons" *ngIf="!isOtpSent">
-                  <p-button icon="pi pi-google" label="Entrar com Google" styleClass="w-full btn-sso" (onClick)="loginComGoogle()"></p-button>
-                </div>
-
-                <div class="divider" *ngIf="!isOtpSent"><span>ou entre com e-mail</span></div>
-                
                 <!-- PASSO 1: E-MAIL -->
                 <div class="field" *ngIf="step === 'email' && !isOtpSent">
                   <label for="email">E-mail Profissional</label>
