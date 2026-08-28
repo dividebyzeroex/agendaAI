@@ -40,6 +40,28 @@ export class PrimeiroAcesso implements OnInit {
       if (profile) {
         this.userRole = profile.role;
         
+        // --- BYPASS OPERACIONAL (Fricção Zero) ---
+        // Se for um cargo operacional (não é dono nem financeiro), 
+        // pula a criação de senha e pula o tour, indo direto pro painel.
+        if (this.userRole !== 'dono' && this.userRole !== 'financeiro') {
+          if (profile.primeiro_acesso || !profile.onboarding_concluido) {
+            this.profSvc.atualizarProfissional(profile.id, {
+              primeiro_acesso: false,
+              onboarding_concluido: true
+            }).then(() => {
+              window.location.replace('/admin'); // Force refresh to load layout properly
+            }).catch(e => {
+              console.error('Bypass Erro:', e);
+              window.location.replace('/admin');
+            });
+            return;
+          } else {
+            this.router.navigate(['/admin']);
+            return;
+          }
+        }
+        // ------------------------------------------
+
         // Se o nome vier criptografado (base64 ou hash longo), limpamos para o usuário preencher
         if (profile.nome && (profile.nome.length > 30 || profile.nome.includes('==') || profile.nome.includes('+'))) {
           this.userName = '';

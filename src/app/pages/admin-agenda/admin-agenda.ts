@@ -9,6 +9,7 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.service';
 import { AgendarModalComponent } from '../../components/agendar-modal/agendar-modal.component';
 import { EventoModalComponent } from '../../components/evento-modal/evento-modal.component';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-admin-agenda',
@@ -19,12 +20,22 @@ import { EventoModalComponent } from '../../components/evento-modal/evento-modal
 })
 export class AdminAgenda implements OnInit {
   public agendaService = inject(AgendaEventService);
+  public segmentoConfig = inject(SegmentoConfigService);
   private cdr = inject(ChangeDetectorRef);
 
   showAgendarModal = false;
   showEventoModal  = false;
   selectInfo: any  = null;
   eventoSelecionado: AgendaEvent | null = null;
+  viewMode: 'calendario' | 'fila' = 'calendario';
+
+  get filaEspera(): AgendaEvent[] {
+    const hoje = new Date().toISOString().split('T')[0];
+    const eventos = this.agendaService.currentEvents;
+    return eventos
+      .filter(e => e.start.startsWith(hoje) && (e.status === 'pendente' || e.status === 'confirmado'))
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  }
 
   calendarOptions: CalendarOptions = {
     plugins: [timeGridPlugin, interactionPlugin, dayGridPlugin],
@@ -96,6 +107,9 @@ export class AdminAgenda implements OnInit {
         observacoes: info.event.extendedProps?.['observacoes'],
         cliente_id: info.event.extendedProps?.['cliente_id'],
         servico_id: info.event.extendedProps?.['servico_id'],
+        profissional_id: info.event.extendedProps?.['profissional_id'],
+        profissional_nome: info.event.extendedProps?.['profissional_nome'],
+        metadata: info.event.extendedProps?.['metadata'],
       };
       this.showEventoModal = true;
     },

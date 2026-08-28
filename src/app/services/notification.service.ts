@@ -37,13 +37,7 @@ export class NotificationService {
   toasts$ = this.toastsSource.asObservable();
 
   constructor() {
-    // Carrega notificações iniciais (mock)
-    this.addNotification({
-      type: 'INFO',
-      title: 'Bem-vindo ao Dashboard',
-      message: 'Sua agenda está sincronizada e pronta para novos agendamentos.',
-      action: { label: 'Ver Agenda', link: '/admin/agenda' }
-    });
+    // In production, notifications will be loaded from the database via an effect or service initialization.
   }
 
   get notifications(): AppNotification[] {

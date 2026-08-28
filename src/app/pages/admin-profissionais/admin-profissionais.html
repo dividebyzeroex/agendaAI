@@ -443,7 +443,7 @@
                 (click)="salvarAtual()">
           <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
           <i class="pi pi-check" *ngIf="!isSaving"></i>
-          <span>{{ isNovo && panelTab === 'dados' ? 'Próximo Passo' : (panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar Alterações') }}</span>
+          <span>{{ panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar & Avançar' }}</span>
         </button>
       </div>
 

@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { SecurityService } from './security.service';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface AgendaEvent {
   id: string;
@@ -24,6 +25,8 @@ export interface AgendaEvent {
   servicos_extras?: any[];
   valor_total?: number;
   cobranca_enviada?: boolean;
+  comanda_fisica?: string;
+  metadata?: any;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -36,6 +39,7 @@ export class AgendaEventService {
 
   private eventsSubject = new BehaviorSubject<AgendaEvent[]>([]);
   events$ = this.eventsSubject.asObservable();
+  get currentEvents(): AgendaEvent[] { return this.eventsSubject.value; }
 
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();
@@ -58,7 +62,7 @@ export class AgendaEventService {
       
       if (!error) {
         const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) => 
-          this.security.decryptObject(e, ['title', 'observacoes'])
+          this.security.decryptObject(e, ['title', 'observacoes', 'profissional_nome'])
         ));
 
         this.ngZone.run(() => {
@@ -170,7 +174,7 @@ export class AgendaEventService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) throw new Error('Contexto de estabelecimento não encontrado.');
 
-    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes']);
+    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes', 'profissional_nome']);
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('create_agenda_event_safe', { 
@@ -178,9 +182,9 @@ export class AgendaEventService {
       })
       .maybeSingle<AgendaEvent>();
     
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     
-    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes']);
+    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next([...this.getEvents(), decrypted]);
@@ -189,14 +193,14 @@ export class AgendaEventService {
   }
 
   async updateEvent(id: string, changes: Partial<AgendaEvent>): Promise<void> {
-    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes']);
+    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
     const { error } = await this.supabase
       .rpc('update_event_safe', { p_id: id, p_changes: encrypted });
     
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     
-    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes']);
+    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next(
@@ -207,7 +211,7 @@ export class AgendaEventService {
 
   async removeEvent(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('delete_event_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.eventsSubject.next(this.getEvents().filter(e => e.id !== id));
     });

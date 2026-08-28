@@ -67,14 +67,7 @@ export class AuthService {
           });
         });
       } else {
-        console.warn('⚠️ [Supabase Auth] Chaves provisórias detectadas. Modo Mock (Local) Ativado.');
-        // Load mock user from session
-        const saved = localStorage.getItem('ag-mock-user');
-        if (saved) {
-          try {
-            this.currentUserSubject.next(JSON.parse(saved));
-          } catch (e) { localStorage.removeItem('ag-mock-user'); }
-        }
+        console.error('⛔ [Supabase Auth] Credenciais ausentes. Impossível iniciar sessão.');
       }
     } catch (e) {
       console.error('Failed to init Supabase auth', e);
@@ -90,12 +83,6 @@ export class AuthService {
     if (this.isAuthed_Sync) return true;
 
     if (!this.supabase) {
-      // Check local storage for mock session
-      const saved = localStorage.getItem('ag-mock-user');
-      if (saved) {
-        this.currentUserSubject.next(JSON.parse(saved));
-        return true;
-      }
       return false;
     }
 
@@ -190,7 +177,10 @@ export class AuthService {
     }
     const { data, error } = await this.supabase.auth.signUp({
       email,
-      password
+      password,
+      options: {
+        emailRedirectTo: window.location.origin + '/admin'
+      }
     });
     if (error) throw error;
     return data;
@@ -198,11 +188,7 @@ export class AuthService {
 
   async signIn(email: string, password: string) {
     if (!this.supabase) {
-      // Mock Bypass for local dev
-      const mockAdmin: User = { id: 'test-admin', email } as User;
-      this.currentUserSubject.next(mockAdmin);
-      localStorage.setItem('ag-mock-user', JSON.stringify(mockAdmin));
-      return { data: { user: mockAdmin }, error: null };
+      return { data: null, error: new Error('Supabase Client not initialized (check env)') };
     }
     
     const { data, error } = await this.supabase.auth.signInWithPassword({
@@ -215,30 +201,26 @@ export class AuthService {
 
   async signInWithOtp(email: string) {
     if (!this.supabase) {
-      // Mock mode
-      console.log('Mock: OTP Sent to', email);
-      return;
+      return { data: null, error: new Error('Supabase not initialized') };
     }
-    const { error } = await this.supabase.auth.signInWithOtp({
+    const { data, error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: window.location.origin + '/admin'
       }
     });
-    if (error) throw error;
+    return { data, error };
   }
 
   async signInWithEmail(email: string, password: string) {
     if (!this.supabase) {
-      // Mock mode
-      if (password === 'admin123') return;
-      throw new Error('Senha incorreta no modo simulado.');
+      throw new Error('Supabase not initialized.');
     }
-    const { error } = await this.supabase.auth.signInWithPassword({
+    const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password
     });
-    if (error) throw error;
+    return { data, error };
   }
 
   async signInWithPhone(phone: string) {
@@ -315,7 +297,6 @@ export class AuthService {
       this.security.logSecurityEvent('LOGOUT');
       await this.supabase.auth.signOut();
     }
-    localStorage.removeItem('ag-mock-user');
     this.currentUserSubject.next(null);
     this.userProfileSubject.next(null);
     this.ngZone.run(() => this.router.navigate(['/login']));

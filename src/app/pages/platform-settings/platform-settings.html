@@ -1,0 +1,69 @@
+<div class="settings-container">
+  <div class="header">
+    <h2>Configurações da Plataforma</h2>
+    <p>Gerenciamento de chaves de API, variáveis de ambiente e flags globais (Vercel Style).</p>
+  </div>
+
+  <div class="settings-grid">
+    <!-- Environment Variables -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Environment Variables</h3>
+        <button class="btn-primary"><i class="pi pi-plus"></i> Add New</button>
+      </div>
+      <div class="keys-list">
+        <div class="key-item" *ngFor="let k of keys; let i = index">
+          <div class="key-info">
+            <span class="key-env">{{ k.env }}</span>
+            <span class="key-name">{{ k.name }}</span>
+          </div>
+          <div class="key-value-box">
+            <input type="text" [value]="k.masked ? '••••••••••••••••••••••••' : k.value" readonly class="secret-input" />
+            <button class="btn-icon" (click)="toggleMask(i)">
+              <i class="pi" [ngClass]="k.masked ? 'pi-eye' : 'pi-eye-slash'"></i>
+            </button>
+            <button class="btn-icon"><i class="pi pi-copy"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Global Flags -->
+    <div class="panel">
+      <div class="panel-header">
+        <h3>Feature Flags (Global)</h3>
+      </div>
+      <div class="flags-list">
+        <div class="flag-item">
+          <div class="flag-info">
+            <h4>Global AI Engine</h4>
+            <p>Permite que os assistentes de IA de todos os tenants respondam ao WhatsApp.</p>
+          </div>
+          <div class="toggle-switch" [class.active]="toggles.aiGloballyEnabled" (click)="toggleSwitch('aiGloballyEnabled')">
+            <div class="slider"></div>
+          </div>
+        </div>
+        
+        <div class="flag-item">
+          <div class="flag-info">
+            <h4>Social Media Zernio Queue</h4>
+            <p>Processa a fila de postagens agendadas. Desative para pausar publicações.</p>
+          </div>
+          <div class="toggle-switch" [class.active]="toggles.socialPostingEnabled" (click)="toggleSwitch('socialPostingEnabled')">
+            <div class="slider"></div>
+          </div>
+        </div>
+
+        <div class="flag-item danger-zone">
+          <div class="flag-info">
+            <h4 class="danger-text">Maintenance Mode</h4>
+            <p>Bloqueia o acesso ao painel para todos os lojistas (exibe tela de manutenção).</p>
+          </div>
+          <div class="toggle-switch danger" [class.active]="toggles.maintenanceMode" (click)="toggleSwitch('maintenanceMode')">
+            <div class="slider"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

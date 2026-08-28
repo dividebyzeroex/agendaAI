@@ -1,0 +1,110 @@
+<div class="ag-page">
+  <!-- Header -->
+  <header class="page-header">
+    <div class="header-left">
+      <h2><span class="gradient-text">Produtos</span></h2>
+      <p>Gerencie o catálogo de produtos e controle de estoque</p>
+    </div>
+    <div class="header-right">
+      <button class="btn-primary" (click)="abrirNovo()">
+        <i class="pi pi-plus"></i> Novo Produto
+      </button>
+    </div>
+  </header>
+
+  <div class="content-wrapper" [class.panel-open]="panelAberto">
+    <!-- Lista de Produtos -->
+    <div class="main-content">
+      <div *ngIf="isLoading" class="loading-state">
+        <i class="pi pi-spin pi-spinner"></i> Carregando produtos...
+      </div>
+      
+      <div *ngIf="!isLoading && produtos.length === 0" class="empty-state">
+        <div class="empty-icon"><i class="pi pi-box"></i></div>
+        <h3>Nenhum produto cadastrado</h3>
+        <p>Adicione produtos para vende-los avulsos ou adicioná-los na comanda.</p>
+        <button class="btn-primary" (click)="abrirNovo()">Cadastrar Produto</button>
+      </div>
+
+      <div class="grid-cards" *ngIf="produtos.length > 0">
+        <div class="card-item" *ngFor="let p of produtos" (click)="abrirEditar(p)">
+          <div class="card-header">
+            <h3>{{ p.nome }}</h3>
+            <span class="status-badge" [class.active]="p.ativo" [class.inactive]="!p.ativo">
+              {{ p.ativo ? 'Ativo' : 'Inativo' }}
+            </span>
+          </div>
+          <div class="card-body">
+            <p class="price">R$ {{ p.preco | number:'1.2-2' }}</p>
+            <p class="stock">Estoque: <strong>{{ p.estoque }}</strong> unid.</p>
+          </div>
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <button class="btn-icon danger" (click)="confirmarDelete = p.id!" title="Excluir">
+              <i class="pi pi-trash"></i>
+            </button>
+            <div class="confirm-del-bubble" *ngIf="confirmarDelete === p.id">
+               <button class="btn-yes" (click)="deletarProduto(p.id!)">Sim</button>
+               <button class="btn-no" (click)="cancelarDelete()">Não</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Painel Lateral -->
+    <aside class="side-panel" *ngIf="panelAberto">
+      <div class="panel-header">
+        <h2>{{ isNovo ? 'Novo Produto' : 'Editar Produto' }}</h2>
+        <button class="btn-icon" (click)="fecharPainel()"><i class="pi pi-times"></i></button>
+      </div>
+      
+      <div class="panel-body custom-scroll">
+        <div *ngIf="erro" class="error-msg">
+          <i class="pi pi-exclamation-triangle"></i> {{ erro }}
+        </div>
+
+        <div class="form-group">
+          <label>Nome do Produto</label>
+          <input type="text" [(ngModel)]="prodAtual.nome" placeholder="Ex: Pomada Modeladora Efeito Matte" />
+        </div>
+
+        <div class="form-group">
+          <label>Descrição (Opcional)</label>
+          <textarea [(ngModel)]="prodAtual.descricao" rows="3" placeholder="Detalhes do produto..."></textarea>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group half">
+            <label>Preço de Venda (R$)</label>
+            <input type="number" [(ngModel)]="prodAtual.preco" step="0.01" min="0" />
+          </div>
+          <div class="form-group half">
+            <label>Estoque Atual</label>
+            <input type="number" [(ngModel)]="prodAtual.estoque" min="0" />
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Código de Barras (Opcional)</label>
+          <input type="text" [(ngModel)]="prodAtual.codigo_barras" placeholder="Leitor de código de barras..." />
+        </div>
+
+        <div class="form-group toggle">
+          <label>Ativo para Venda</label>
+          <label class="switch">
+            <input type="checkbox" [(ngModel)]="prodAtual.ativo">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="panel-footer">
+        <button class="btn-secondary" (click)="fecharPainel()">Cancelar</button>
+        <button class="btn-primary" [disabled]="isSaving" (click)="salvar()">
+          <i class="pi pi-spin pi-spinner" *ngIf="isSaving"></i>
+          <span *ngIf="!isSaving">Salvar Produto</span>
+        </button>
+      </div>
+    </aside>
+  </div>
+</div>

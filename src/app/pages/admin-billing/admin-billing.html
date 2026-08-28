@@ -194,6 +194,20 @@
           </table>
         </div>
       </div>
+
+      <!-- DANGER ZONE -->
+      <div class="simple-section glass danger-zone" *ngIf="status === 'ACTIVE'">
+        <div class="sec-head">
+          <h3 style="color: #ef4444;">Zona de Perigo</h3>
+          <p>Se você não deseja mais utilizar o AgendaAI Premium, você pode cancelar a renovação automática a qualquer momento. Você continuará com acesso até o fim do ciclo pago atual (zero pegadinhas).</p>
+        </div>
+        <div style="margin-top: 1rem;">
+          <button class="btn-danger" (click)="confirmCancel()" [disabled]="isProcessing">
+            <span *ngIf="!isProcessing">Cancelar Assinatura</span>
+            <i *ngIf="isProcessing" class="pi pi-spin pi-spinner"></i>
+          </button>
+        </div>
+      </div>
     </div>
   </ng-container>
 

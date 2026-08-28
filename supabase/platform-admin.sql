@@ -1,6 +1,11 @@
 -- Supabase RPCs for Platform Admin (SaaS Owner)
 -- These functions return platform-wide metrics across all tenants.
 
+-- 0. Garantir que as colunas existam
+ALTER TABLE public.estabelecimento 
+  ADD COLUMN IF NOT EXISTS active boolean DEFAULT true,
+  ADD COLUMN IF NOT EXISTS slug text;
+
 CREATE OR REPLACE FUNCTION get_platform_metrics()
 RETURNS json
 LANGUAGE plpgsql
@@ -66,10 +71,9 @@ BEGIN
       'status', CASE WHEN active THEN 'active' ELSE 'blocked' END,
       'plano', 'pro', -- mock for now
       'created_at', created_at
-    )
+    ) ORDER BY created_at DESC
   ) INTO v_result
-  FROM public.estabelecimento
-  ORDER BY created_at DESC;
+  FROM public.estabelecimento;
 
   RETURN COALESCE(v_result, '[]'::json);
 END;

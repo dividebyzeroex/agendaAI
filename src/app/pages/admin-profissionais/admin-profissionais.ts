@@ -163,6 +163,10 @@ export class AdminProfissionais implements OnInit {
 
         await this.svc.atualizarProfissional(this.profAtual.id!, this.profAtual);
         this.showSuccess('Dados atualizados!');
+        this.ngZone.run(() => {
+          this.panelTab = 'disponibilidade';
+          this.cdr.detectChanges();
+        });
       }
     } catch (e: any) { this.erro = e.message; }
     finally { this.isSaving = false; }
@@ -288,6 +292,10 @@ export class AdminProfissionais implements OnInit {
         await this.salvarDados();
       } else if (this.panelTab === 'disponibilidade') {
         await this.salvarDisponibilidade();
+      } else if (this.panelTab === 'servicos') {
+        // Serviços já salvam via chamadas diretas (adicionar/remover)
+        // O botão aqui atua apenas como navegação para o próximo passo.
+        this.panelTab = 'financeiro';
       } else if (this.panelTab === 'financeiro') {
         await this.svc.atualizarProfissional(this.profAtual.id!, this.profAtual);
         this.showSuccess('Dados financeiros salvos!');

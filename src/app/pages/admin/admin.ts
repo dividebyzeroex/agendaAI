@@ -9,12 +9,14 @@ import { ClienteService } from '../../services/cliente.service';
 import { NotificationService } from '../../services/notification.service';
 import { MultiAgentService } from '../../services/multi-agent.service';
 import { AuthService } from '../../services/auth.service';
+import { ParticleCanvasComponent } from '../../components/particle-canvas/particle-canvas.component';
+import { PortalProfissionalComponent } from '../../components/portal-profissional/portal-profissional';
 import { map, Subscription, interval, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule],
+  imports: [CommonModule, ButtonModule, CardModule, TableModule, PortalProfissionalComponent],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
@@ -37,10 +39,11 @@ export class Admin implements OnInit, OnDestroy {
   totalClientes = 0;
   revenue = 0;
   concurrentCount = 0;
-  waitlistCount = 2; // AI Waitlist Mock
+  waitlistCount = 0;
   isLoading = true;
   aiSuggestions: any[] = [];
   saudacao = '';
+  aniversariantes: any[] = [];
   
   private sub = new Subscription();
 
@@ -81,7 +84,15 @@ export class Admin implements OnInit, OnDestroy {
         }));
       })
     );
+
+    // 5. Busca aniversariantes do mês
+    this.carregarAniversariantes();
   }
+
+  async carregarAniversariantes() {
+    this.aniversariantes = await this.clienteService.getAniversariantesDoMes();
+  }
+
 
   get isAdminOrFin(): Observable<boolean> {
     return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
@@ -148,6 +159,9 @@ export class Admin implements OnInit, OnDestroy {
         const end = e.end ? new Date(e.end) : new Date(start.getTime() + 30*60000);
         return agora >= start && agora <= end && e.status !== 'cancelado';
     }).length;
+
+    // Fila de Espera (Walk-in ou Pendentes de Hoje)
+    this.waitlistCount = this.todayAppointments.filter(e => e.status === 'pendente' || e.status === 'confirmado').length;
 
     this.isLoading = false;
   }

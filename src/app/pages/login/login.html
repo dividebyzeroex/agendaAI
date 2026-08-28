@@ -14,15 +14,7 @@
           <p-card styleClass="login-card">
             
             <!-- Timeline (Apenas no Onboarding) -->
-            <div class="on-timeline" *ngIf="isDoingOnboarding && onStep !== 'conclusao'">
-             <div class="t-step" [class.active]="getStepIndex() >= 0">1</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 1"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 1">2</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 2"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 2">3</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 3"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 3">4</div>
-            </div>
+
 
             <!-- MODO LOGIN/SIGNUP PADRÃO -->
             <ng-container *ngIf="!isDoingOnboarding">
@@ -36,13 +28,6 @@
                   <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
                 </div>
 
-                <!-- GOOGLE SSO (Ação principal — caminho mais rápido) -->
-                <div class="sso-buttons" *ngIf="!isOtpSent">
-                  <p-button icon="pi pi-google" label="Entrar com Google" styleClass="w-full btn-sso" (onClick)="loginComGoogle()"></p-button>
-                </div>
-
-                <div class="divider" *ngIf="!isOtpSent"><span>ou entre com e-mail</span></div>
-                
                 <!-- PASSO 1: E-MAIL -->
                 <div class="field" *ngIf="step === 'email' && !isOtpSent">
                   <label for="email">E-mail Profissional</label>
@@ -50,6 +35,25 @@
                     <input pInputText id="email" [(ngModel)]="email" (ngModelChange)="validateEmail()" type="email" class="w-full prime-input" [ngClass]="{'ng-invalid ng-dirty': email && !isEmailValid, 'is-valid': email && isEmailValid}" placeholder="seu@email.com" />
                     <i class="pi pi-check" *ngIf="email && isEmailValid" style="color: #10b981; position: absolute; right: 10px; top: 50%; transform: translateY(-50%);"></i>
                   </div>
+                </div>
+
+                <!-- ESCOLHA DE MÉTODO NO CADASTRO -->
+                <div class="field animate-in signup-method" *ngIf="isSignupMode && step === 'email' && !isOtpSent && email && isEmailValid">
+                  <label>Como prefere acessar?</label>
+                  <div class="method-toggles">
+                    <button class="method-btn" [class.active]="authType === 'email'" (click)="authType = 'email'">
+                      <i class="pi pi-envelope"></i> Link Mágico
+                    </button>
+                    <button class="method-btn" [class.active]="authType === 'password'" (click)="authType = 'password'">
+                      <i class="pi pi-lock"></i> Senha
+                    </button>
+                  </div>
+                </div>
+
+                <!-- CAMPO DE SENHA NO CADASTRO -->
+                <div class="field animate-in" *ngIf="isSignupMode && step === 'email' && authType === 'password' && !isOtpSent && email && isEmailValid">
+                  <label for="new_password">Crie uma Senha</label>
+                  <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 6 caracteres" />
                 </div>
 
                 <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (SENHA) -->
@@ -100,51 +104,26 @@
               </div>
             </ng-container>
 
-            <!-- ONBOARDING STEP 1: Empresa & CNPJ -->
+            <!-- ONBOARDING STEP 1: Empresa & Slug -->
             <ng-container *ngIf="isDoingOnboarding && onStep === 'overview'">
               <div class="on-hero">
-                <span class="emoji">🏢</span>
+                <span class="emoji">🚀</span>
                 <h1>Sua Empresa</h1>
-                <p>Certifique sua conta com dados fiscais.</p>
+                <p>Como seus clientes vão te conhecer?</p>
               </div>
               <div class="field">
                 <input pInputText [(ngModel)]="form.nome" (ngModelChange)="onNameChange()" placeholder="Nome do Negócio" class="super-input" />
               </div>
-              <div class="field">
-                <input pInputText [(ngModel)]="form.cnpj" placeholder="CNPJ (Somente números)" class="super-input" maxlength="14" />
-              </div>
-              <div class="field">
-                <label>Segmento</label>
-                <div class="chip-grid">
-                  <div class="m-chip" *ngFor="let s of segmentOptions" [class.active]="form.segmento === s.value" (click)="form.segmento = s.value">
-                    <span class="c-label">{{s.label}}</span>
-                  </div>
+              <div class="field mt-4">
+                <label>Seu link exclusivo</label>
+                <div class="slug-wrap-login mt-2">
+                   <span>agendaai.app/</span>
+                   <input pInputText [(ngModel)]="form.slug" placeholder="seu-nome" />
                 </div>
               </div>
-              <p-button label="Próximo" styleClass="w-full btn-login-main" [disabled]="!form.nome || !form.cnpj" (onClick)="nextStep()"></p-button>
-            </ng-container>
-
-            <!-- ONBOARDING STEP 3: Contato -->
-            <ng-container *ngIf="isDoingOnboarding && onStep === 'identidade'">
-              <div class="on-hero">
-                <span class="emoji">📱</span>
-                <h1>Contato Direto</h1>
-                <p>Configurações de atendimento.</p>
-              </div>
-              <div class="field">
-                <input pInputText [(ngModel)]="form.telefone" placeholder="WhatsApp (11) 99999-0000" class="super-input" />
-              </div>
-              <div class="field">
-                <label>Cor da Marca</label>
-                <div class="color-grid">
-                   <button *ngFor="let c of suggestedColors" [style.background]="c" [class.active]="form.cor_primaria === c" (click)="form.cor_primaria = c">
-                     <i class="pi pi-check" *ngIf="form.cor_primaria === c"></i>
-                   </button>
-                </div>
-              </div>
-              <div class="btn-group-row">
+              <div class="btn-group-row mt-4">
                 <button class="btn-back-auth" (click)="backStep()"><i class="pi pi-arrow-left"></i></button>
-                <p-button label="Próximo" styleClass="btn-login-main flex-1" [disabled]="!form.telefone" (onClick)="nextStep()"></p-button>
+                <p-button label="Criar Espaço" styleClass="btn-login-main flex-1" [loading]="isLoading" [disabled]="!form.nome || !form.slug" (onClick)="nextStep()"></p-button>
               </div>
             </ng-container>
 
@@ -155,62 +134,7 @@
         <div class="on-face on-back">
           <p-card styleClass="login-card">
             
-            <!-- Timeline (Apenas no Onboarding) -->
-            <div class="on-timeline" *ngIf="isDoingOnboarding && onStep !== 'conclusao'">
-             <div class="t-step" [class.active]="getStepIndex() >= 0">1</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 1"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 1">2</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 2"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 2">3</div>
-             <div class="t-line" [class.active]="getStepIndex() >= 3"></div>
-             <div class="t-step" [class.active]="getStepIndex() >= 3">4</div>
-            </div>
 
-            <!-- ONBOARDING STEP 2: Endereço -->
-            <ng-container *ngIf="isDoingOnboarding && onStep === 'operacao'">
-              <div class="on-hero">
-                <span class="emoji">📍</span>
-                <h1>Localização</h1>
-                <p>Onde seu negócio acontece.</p>
-              </div>
-              <div class="field">
-                <input pInputText [(ngModel)]="form.endereco_completo" placeholder="Endereço Completo" class="super-input" />
-              </div>
-              <div class="field">
-                <input pInputText [(ngModel)]="form.cidade" placeholder="Cidade" class="super-input" />
-              </div>
-              <div class="field">
-                <label>Volume Mês</label>
-                <div class="chip-grid">
-                  <div class="m-chip" *ngFor="let v of volumeOptions" [class.active]="form.volume_clientes === v.value" (click)="form.volume_clientes = v.value">
-                    <span class="c-label">{{v.label}}</span>
-                  </div>
-                </div>
-              </div>
-              <div class="btn-group-row">
-                <button class="btn-back-auth" (click)="backStep()"><i class="pi pi-arrow-left"></i></button>
-                <p-button label="Próximo" styleClass="btn-login-main flex-1" [disabled]="!form.endereco_completo" (onClick)="nextStep()"></p-button>
-              </div>
-            </ng-container>
-
-            <!-- ONBOARDING STEP 4: Link -->
-            <ng-container *ngIf="isDoingOnboarding && onStep === 'link'">
-              <div class="on-hero">
-                <span class="emoji">🔗</span>
-                <h1>Seu Link</h1>
-                <p>Sua agenda online em um clique.</p>
-              </div>
-              <div class="field">
-                <div class="slug-wrap-login">
-                   <span>agendaai.app/</span>
-                   <input pInputText [(ngModel)]="form.slug" placeholder="seu-nome" />
-                </div>
-              </div>
-              <div class="btn-group-row">
-                <button class="btn-back-auth" (click)="backStep()"><i class="pi pi-arrow-left"></i></button>
-                <p-button label="Finalizar" styleClass="btn-login-main flex-1" [loading]="isLoading" (onClick)="nextStep()"></p-button>
-              </div>
-            </ng-container>
 
             <!-- CONCLUSÃO -->
             <ng-container *ngIf="onStep === 'conclusao'">

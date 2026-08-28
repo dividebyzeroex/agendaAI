@@ -672,3 +672,33 @@
   font-size: 1.1rem !important;
   margin-right: 8px !important;
 }
+
+/* Escolha de Senha no Cadastro */
+.signup-method {
+  margin-bottom: 20px;
+}
+.method-toggles {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.method-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--active-bg);
+  color: var(--text-muted);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.method-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}

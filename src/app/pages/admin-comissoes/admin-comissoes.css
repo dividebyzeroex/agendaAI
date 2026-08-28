@@ -1,0 +1,106 @@
+/* ── Admin Comissões ─────────────────────────── */
+
+.ag-page {
+  padding: 0;
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-xl);
+  margin-bottom: var(--space-2xl);
+}
+
+.metric-card {
+  padding: var(--space-xl);
+  display: flex;
+  align-items: center;
+  gap: var(--space-xl);
+}
+.m-icon {
+  width: 50px; height: 50px;
+  border-radius: var(--radius-md);
+  display: flex; align-items: center; justify-content: center;
+  font-size: var(--font-xl);
+}
+.m-content label {
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+  font-weight: var(--weight-bold);
+  color: var(--text-muted);
+  letter-spacing: 0.5px;
+}
+.m-content h3 {
+  font-size: var(--font-2xl);
+  font-weight: var(--weight-black);
+  margin-top: var(--space-xs);
+}
+
+.filters-bar {
+  display: flex;
+  gap: var(--space-lg);
+  padding: var(--space-lg) var(--space-xl);
+  margin-bottom: var(--space-2xl);
+  align-items: center;
+}
+.f-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  flex: 1;
+}
+.f-group i { color: var(--text-muted); }
+.f-group input, .f-group select {
+  width: 100%;
+  padding: 10px var(--space-lg);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--glass-border);
+  font-family: var(--font-family);
+  font-size: var(--font-base);
+  background: var(--active-bg);
+  color: var(--text-main);
+  outline: none;
+  transition: all var(--transition-fast);
+}
+.f-group input:focus, .f-group select:focus {
+  border-color: var(--primary-color);
+  background: var(--glass-bg);
+}
+
+.table-container {
+  overflow-x: auto;
+  padding: var(--space-lg);
+}
+
+.badge {
+  background: var(--active-bg);
+  padding: var(--space-xs) var(--space-sm);
+  border-radius: 6px;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-medium);
+  color: var(--text-muted);
+}
+
+.status-pill[data-status="pendente"] { background: var(--warning-soft); color: var(--warning); }
+.status-pill[data-status="pago"]     { background: var(--success-soft); color: var(--success); }
+.status-pill[data-status="estornado"]{ background: var(--danger-soft); color: var(--danger); }
+
+.actions-cell {
+  display: flex;
+  gap: var(--space-sm);
+}
+.btn-action {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  border: none;
+  display: inline-flex;
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  color: white;
+  font-size: var(--font-base);
+}
+.btn-action.success { background: var(--success); }
+.btn-action.success:hover { filter: brightness(1.1); }
+.btn-action.danger  { background: var(--danger); }
+.btn-action.danger:hover { filter: brightness(1.1); }

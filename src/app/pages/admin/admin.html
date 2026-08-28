@@ -1,3 +1,4 @@
+<ng-container *ngIf="isAdminOrFin | async; else portalProfissional">
 <div class="ag-dashboard" *ngIf="!isLoading; else loading">
 
   <div class="dashboard-greeting">
@@ -91,7 +92,9 @@
 
       <div class="sec-header">
         <h3>Radar de Atendimentos</h3>
-        <p-button icon="pi pi-plus" label="Novo Agendamento" styleClass="p-button-rounded p-button-sm shadow-2" (click)="abrirAgenda()"></p-button>
+        <button class="btn-primary" (click)="abrirAgenda()">
+          <i class="pi pi-plus"></i> Novo Agendamento
+        </button>
       </div>
 
       <div *ngIf="todayAppointments.length === 0" class="empty-state">
@@ -144,6 +147,19 @@
           </div>
       </div>
 
+      <!-- Aniversariantes do Mês -->
+      <div class="bento-card" *ngIf="aniversariantes.length > 0" style="padding: 1.5rem; background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.2);">
+        <h4 style="font-size: 0.9rem; font-weight: 800; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+          <i class="pi pi-gift" style="color: #a855f7"></i> Aniversariantes do Mês ({{ aniversariantes.length }})
+        </h4>
+        <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; display: flex; flex-direction: column; gap: 6px;">
+          <div *ngFor="let ani of aniversariantes" style="display: flex; justify-content: space-between; padding-bottom: 4px; border-bottom: 1px solid rgba(168,85,247,0.1);">
+            <b>{{ ani.nome }}</b>
+            <span style="color: #a855f7">{{ ani.nascimento | date:'dd/MM' }}</span>
+          </div>
+        </div>
+      </div>
+
       <div class="ai-insight-card" *ngFor="let suggestion of aiSuggestions">
         <div class="ai-head">
           <i class="pi pi-sparkles"></i>
@@ -179,4 +195,9 @@
     <div class="elite-scissor-wrap"></div>
     <div class="loader-text">Sincronizando com o Centro de Comando...</div>
   </div>
+</ng-template>
+</ng-container>
+
+<ng-template #portalProfissional>
+  <app-portal-profissional></app-portal-profissional>
 </ng-template>

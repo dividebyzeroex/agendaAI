@@ -1,8 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+/* ── Admin Agenda ─────────────────────────────── */
 
 .agenda-wrapper {
-  padding: 1.5rem;
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  padding: 0;
   animation: fadeIn 0.4s ease-out;
 }
 
@@ -15,62 +14,54 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 2rem;
-  padding: 1rem 1.5rem;
+  margin-bottom: var(--space-3xl);
+  padding: var(--space-xl) var(--space-2xl);
   background: var(--glass-bg);
   backdrop-filter: blur(var(--glass-blur));
-  border-radius: 20px;
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
-  border-top: 1px solid var(--glass-edge);
   box-shadow: var(--elite-shadow);
-  text-shadow: var(--text-shadow);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all var(--transition-smooth);
 }
 
 .header-text h2 {
   margin: 0;
-  font-size: 1.8rem;
-  font-weight: 800;
+  font-size: var(--font-2xl);
+  font-weight: var(--weight-black);
   letter-spacing: -0.5px;
   color: var(--text-main);
 }
 
 .header-text p {
   margin: 4px 0 0 0;
-  font-size: 0.95rem;
+  font-size: var(--font-base);
   color: var(--text-muted);
-  font-weight: 500;
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #4f46e5, #9333ea);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-weight: var(--weight-medium);
 }
 
 .stat-chip-premium {
   display: flex;
   align-items: center;
-  gap: 12px;
-  background: var(--glass-bg);
+  gap: var(--space-md);
+  background: var(--active-bg);
   padding: 12px 20px;
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--elite-shadow);
   border: 1px solid var(--glass-border);
-  border-top: 1px solid var(--glass-edge);
 }
 
 .chip-icon {
   width: 48px;
   height: 48px;
-  border-radius: 12px;
-  background: var(--active-bg);
+  border-radius: var(--radius-md);
+  background: var(--glass-bg);
   color: var(--primary-color);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: var(--font-xl);
+  border: 1.5px solid var(--glass-border);
 }
 
 .chip-info {
@@ -79,16 +70,16 @@
 }
 
 .chip-label {
-  font-size: 0.75rem;
+  font-size: var(--font-xs);
   color: var(--text-muted);
   text-transform: uppercase;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   letter-spacing: 0.5px;
 }
 
 .chip-num {
-  font-size: 1.6rem;
-  font-weight: 800;
+  font-size: var(--font-xl);
+  font-weight: var(--weight-black);
   color: var(--text-main);
   line-height: 1.1;
 }
@@ -99,24 +90,24 @@
 .header-stats {
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: var(--space-2xl);
 }
 
 .legend-stats {
   display: flex;
-  gap: 1.5rem;
-  padding: 10px 16px;
+  gap: var(--space-xl);
+  padding: 12px 20px;
   background: var(--active-bg);
-  border-radius: 12px;
-  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--glass-border);
 }
 
 .legend-item {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-bold);
   color: var(--text-muted);
 }
 
@@ -127,38 +118,38 @@
   display: inline-block;
 }
 
-.color-dot.status-confirmado { background: #3b82f6; }
-.color-dot.status-atendimento { background: #10b981; }
-.color-dot.status-noshow { background: #f59e0b; }
+.color-dot.status-confirmado { background: var(--info); }
+.color-dot.status-atendimento { background: var(--success); }
+.color-dot.status-noshow { background: var(--warning); }
 
 @media (max-width: 768px) {
   .agenda-header-premium {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
+    gap: var(--space-xl);
   }
   .header-stats {
     flex-direction: column;
     align-items: flex-start;
     width: 100%;
-    gap: 1rem;
+    gap: var(--space-xl);
   }
   .legend-stats {
     width: 100%;
     justify-content: space-between;
-    padding: 10px;
+    padding: var(--space-md);
   }
 }
 
 .calendar-card-premium {
   background: var(--glass-bg);
-  padding: 1.5rem;
-  border-radius: 20px;
+  padding: var(--space-3xl);
+  border-radius: var(--radius-xl);
   border: 1px solid var(--glass-border);
-  border-top: 1px solid var(--glass-edge);
   box-shadow: var(--elite-shadow);
   backdrop-filter: blur(var(--glass-blur));
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  transition: all var(--transition-smooth);
 }
 
 /* ────────────────────────────────────────────────────────── */
@@ -167,56 +158,56 @@
 
 /* Remove standard borders and apply soft aesthetics natively */
 ::ng-deep .fc {
-  --fc-border-color: var(--glass-border, rgba(0,0,0,0.1)) !important;
+  --fc-border-color: var(--glass-border) !important;
   --fc-page-bg-color: transparent !important;
   --fc-neutral-bg-color: transparent !important;
   --fc-list-event-hover-bg-color: transparent !important;
-  --fc-today-bg-color: var(--active-bg, rgba(59, 130, 246, 0.05)) !important;
+  --fc-today-bg-color: var(--active-bg) !important;
+  font-family: var(--font-family) !important;
 }
 
 ::ng-deep .fc-theme-standard td,
 ::ng-deep .fc-theme-standard th {
-  border-color: var(--glass-border, rgba(0,0,0,0.1)) !important;
+  border-color: var(--glass-border) !important;
   background: transparent !important;
 }
 
 ::ng-deep .fc-scrollgrid {
-  border-radius: 16px;
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
 }
 
-
-
 /* Hover effects for time slots */
 ::ng-deep .fc-timegrid-slot:hover,
 ::ng-deep .fc-daygrid-day:hover {
-  background: var(--active-bg, rgba(99, 102, 241, 0.05)) !important;
+  background: var(--active-bg) !important;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: background var(--transition-fast);
 }
 
 /* Header Text */
 ::ng-deep .fc .fc-toolbar-title {
-  font-size: 1.25rem !important;
+  font-size: var(--font-lg) !important;
   color: var(--text-main);
-  font-weight: 800;
+  font-weight: var(--weight-black);
   text-transform: capitalize;
   letter-spacing: -0.5px;
-  transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color var(--transition-smooth);
 }
 
 /* Modern Header Buttons */
 ::ng-deep .fc .fc-button-primary {
   background: var(--glass-bg) !important;
   color: var(--text-main) !important;
-  border: 1px solid var(--glass-border) !important;
-  font-weight: 600 !important;
-  border-radius: 12px !important;
+  border: 1.5px solid var(--glass-border) !important;
+  font-weight: var(--weight-bold) !important;
+  border-radius: var(--radius-sm) !important;
   padding: 8px 16px !important;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  transition: all var(--transition-fast) !important;
   text-transform: capitalize;
   box-shadow: 0 1px 2px rgba(0,0,0,0.05) !important;
+  font-family: var(--font-family) !important;
 }
 
 ::ng-deep .fc .fc-button-primary:hover {
@@ -230,7 +221,7 @@
   background: var(--primary-color) !important;
   color: white !important;
   border-color: var(--primary-color) !important;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3) !important;
+  box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3) !important;
 }
 
 /* Slot Lines */
@@ -247,49 +238,150 @@
 /* Column Headers */
 ::ng-deep .fc-col-header-cell {
   padding: 16px 0 !important;
-  background: transparent !important;
-  border-bottom: 2px solid var(--glass-border, rgba(0,0,0,0.1)) !important;
-  transition: background 0.3s;
+  background-color: #2563eb;
+  color: white;
+  border-color: #2563eb;
 }
+
+/* -------------------------------------
+   FILA DE ESPERA (Walk-in)
+-------------------------------------- */
+.view-toggles {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.view-btn {
+  padding: 8px 16px;
+  border: 1px solid var(--glass-border);
+  background: var(--active-bg);
+  color: var(--text-muted);
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.fila-container {
+  padding: 10px 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px;
+  background: var(--active-bg);
+  border-radius: 16px;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.fila-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.fila-card {
+  display: flex;
+  align-items: center;
+  background: #ffffff;
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.fila-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  border-color: var(--primary-color);
+}
+
+.fila-pos {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--primary-color);
+  margin-right: 20px;
+  width: 40px;
+  text-align: center;
+}
+
+.fila-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.fila-info strong {
+  font-size: 1.1rem;
+  color: var(--text-main);
+  margin-bottom: 4px;
+}
+
+.fila-pro {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.fila-time {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  background: var(--active-bg);
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+
 ::ng-deep .fc-col-header-cell:hover {
-  background: var(--active-bg, rgba(0,0,0,0.04)) !important;
+  background: var(--active-bg) !important;
 }
 ::ng-deep .fc .fc-timegrid-axis-cushion,
 ::ng-deep .fc .fc-timegrid-slot-label-cushion {
   color: var(--text-muted) !important;
-  font-weight: 600 !important;
-  font-size: 0.8rem !important;
+  font-weight: var(--weight-bold) !important;
+  font-size: var(--font-sm) !important;
 }
 ::ng-deep .fc-col-header-cell-cushion {
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   color: var(--text-main);
-  font-size: 0.9rem;
+  font-size: var(--font-sm);
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  transition: color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color var(--transition-smooth);
 }
 ::ng-deep .fc-day-today .fc-col-header-cell-cushion {
   color: var(--primary-color) !important;
   background: var(--active-bg);
   padding: 4px 12px;
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 /* Now Indicator */
 ::ng-deep .fc-now-indicator-line {
-  border-color: #ef4444 !important;
+  border-color: var(--danger) !important;
   border-width: 2px !important;
   z-index: 4 !important;
 }
 ::ng-deep .fc-now-indicator-arrow {
-  border-color: transparent transparent transparent #ef4444 !important;
+  border-color: transparent transparent transparent var(--danger) !important;
   border-width: 6px 0 6px 6px !important;
 }
 
 /* Highlight (Drag and Select) */
 ::ng-deep .fc-highlight {
-  background: rgba(79, 70, 229, 0.08) !important;
-  border-radius: 8px;
+  background: rgba(var(--primary-rgb), 0.08) !important;
+  border-radius: var(--radius-sm);
 }
 
 /* General Event Wrapper */
@@ -303,13 +395,13 @@
 ::ng-deep .premium-event-card {
   position: absolute;
   top: 1px; left: 1px; right: 1px; bottom: 1px;
-  border-radius: 10px;
+  border-radius: var(--radius-sm);
   padding: 6px 8px;
   color: white;
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-family);
   overflow: hidden;
   box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform var(--transition-fast);
   border-left: 4px solid rgba(255,255,255,0.4);
 }
 
@@ -320,9 +412,9 @@
 }
 
 ::ng-deep .premium-event-card .ev-time {
-  font-size: 0.7rem;
-  font-weight: 700;
-  opacity: 0.85;
+  font-size: var(--font-xs);
+  font-weight: var(--weight-bold);
+  opacity: 0.9;
   margin-bottom: 2px;
   display: flex;
   align-items: center;
@@ -330,8 +422,8 @@
 }
 
 ::ng-deep .premium-event-card .ev-title {
-  font-size: 0.85rem;
-  font-weight: 700;
+  font-size: var(--font-sm);
+  font-weight: var(--weight-bold);
   line-height: 1.2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -342,10 +434,10 @@
 }
 
 ::ng-deep .premium-event-card .ev-prof {
-  font-size: 0.7rem;
+  font-size: var(--font-xs);
   margin-top: 4px;
   opacity: 0.9;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 
 /* Skeletons */
@@ -353,7 +445,7 @@
   height: 600px;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: var(--space-xl);
 }
 .calendar-header-skeleton {
   display: flex;
@@ -369,9 +461,10 @@
   height: 100%;
 }
 .ag-skeleton {
-  background: linear-gradient(90deg, var(--glass-border) 25%, var(--glass-border) 50%, var(--glass-border) 75%);
+  background: linear-gradient(90deg, var(--glass-border) 25%, rgba(0,0,0,0.05) 50%, var(--glass-border) 75%);
   background-size: 200% 100%;
   animation: shine 1.5s infinite;
+  border-radius: var(--radius-sm);
 }
 @keyframes shine {
   0% { background-position: 200% 0; }

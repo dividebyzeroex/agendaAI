@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { AuthService } from './auth.service';
 import { SecurityService } from './security.service';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface Profissional {
   id?: string;
@@ -182,7 +183,7 @@ export class ProfissionaisService {
         p_data: { ...encrypted, estabelecimento_id: estId } 
       })
       .maybeSingle<Profissional>();
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
 
     const disps = DIAS_SEMANA.map(d => ({ ...d, profissional_id: created?.id, estabelecimento_id: estId }));
     await this.supabase.rpc('save_disponibilidades_safe', { 
@@ -216,7 +217,7 @@ export class ProfissionaisService {
     if (Object.keys(controlFields).length > 0) {
       const { error: ctrlErr } = await this.supabase
         .rpc('update_profissional_controles', { p_id: id, p_changes: controlFields });
-      if (ctrlErr) throw ctrlErr;
+      if (ctrlErr) throw new Error(parseSupabaseError(ctrlErr));
     }
 
     // 2. Campos Sensíveis (PII) -> Criptografia + RPC Safe
@@ -227,7 +228,7 @@ export class ProfissionaisService {
       const encrypted = await this.security.encryptObject(payload, piiFields);
       const { error } = await this.supabase
         .rpc('update_profissional_safe', { p_id: id, p_changes: encrypted });
-      if (error) throw error;
+      if (error) throw new Error(parseSupabaseError(error));
     }
 
     await this.fetchAll();
@@ -253,7 +254,7 @@ export class ProfissionaisService {
       p_prof_id: profissionalId, 
       p_rows: rows 
     });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     await this.fetchAll();
   }
 
@@ -283,7 +284,7 @@ export class ProfissionaisService {
 
   async deletarProfissional(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('delete_profissional_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     await this.fetchAll();
   }
 

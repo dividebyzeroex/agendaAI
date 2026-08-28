@@ -12,6 +12,10 @@ create table if not exists public.estabelecimento (
   endereco text,
   cidade text,
   logo_url text,
+  cor_primaria text default '#3b82f6',
+  onboarding_completo boolean default false,
+  user_id uuid,
+  config_fidelidade jsonb default '{"ativo": false, "visitas_meta": 10, "desconto_percentual": 15}'::jsonb,
   created_at timestamptz default now()
 );
 
@@ -53,6 +57,7 @@ create table if not exists public.agenda_events (
   status_confirmacao text default 'pendente' check (status_confirmacao in ('pendente', 'aceito', 'recusado')),
   token_confirmacao uuid default gen_random_uuid(),
   observacoes text,
+  fidelidade_resgatada boolean default false,
   created_at timestamptz default now()
 );
 
@@ -446,7 +451,8 @@ begin
     cidade = coalesce(p_changes->>'cidade', cidade),
     logo_url = coalesce(p_changes->>'logo_url', logo_url),
     cor_primaria = coalesce(p_changes->>'cor_primaria', cor_primaria),
-    onboarding_completo = coalesce((p_changes->>'onboarding_completo')::boolean, onboarding_completo)
+    onboarding_completo = coalesce((p_changes->>'onboarding_completo')::boolean, onboarding_completo),
+    config_fidelidade = coalesce(p_changes->'config_fidelidade', config_fidelidade)
   where id = p_id;
   return query select * from public.estabelecimento where id = p_id;
 end; $$;
@@ -478,8 +484,8 @@ returns setof public.horarios_funcionamento language plpgsql security invoker as
 begin
   update public.horarios_funcionamento 
   set 
-    abre = coalesce(p_changes->>'abre', abre),
-    fecha = coalesce(p_changes->>'fecha', fecha),
+    abre = coalesce((p_changes->>'abre')::time, abre),
+    fecha = coalesce((p_changes->>'fecha')::time, fecha),
     ativo = coalesce((p_changes->>'ativo')::boolean, ativo)
   where id = p_id;
   return query select * from public.horarios_funcionamento where id = p_id;
@@ -1352,3 +1358,52 @@ BEGIN
     END IF;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 5. RPC para Fidelidade e Aniversários
+CREATE OR REPLACE FUNCTION get_aniversariantes_do_mes(p_estab_id uuid)
+RETURNS SETOF public.clientes
+LANGUAGE plpgsql
+SECURITY INVOKER
+AS $$
+BEGIN
+  RETURN QUERY 
+  SELECT * FROM public.clientes 
+  WHERE estabelecimento_id = p_estab_id 
+  AND EXTRACT(MONTH FROM nascimento) = EXTRACT(MONTH FROM CURRENT_DATE)
+  ORDER BY EXTRACT(DAY FROM nascimento) ASC;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION get_visitas_fidelidade_pendentes(p_cliente_id uuid)
+RETURNS integer
+LANGUAGE plpgsql
+SECURITY INVOKER
+AS $$
+DECLARE
+  v_count integer;
+BEGIN
+  SELECT COUNT(*) INTO v_count 
+  FROM public.agenda_events 
+  WHERE cliente_id = p_cliente_id 
+  AND status = 'concluido' 
+  AND fidelidade_resgatada = false;
+  
+  RETURN v_count;
+END;
+$$;
+
+CREATE OR REPLACE FUNCTION resgatar_fidelidade_cliente(p_cliente_id uuid)
+RETURNS boolean
+LANGUAGE plpgsql
+SECURITY INVOKER
+AS $$
+BEGIN
+  UPDATE public.agenda_events
+  SET fidelidade_resgatada = true
+  WHERE cliente_id = p_cliente_id
+  AND status = 'concluido'
+  AND fidelidade_resgatada = false;
+  
+  RETURN true;
+END;
+$$;

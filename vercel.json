@@ -1,4 +1,5 @@
 {
+  "name": "agenda-ai",
   "version": 2,
   "rewrites": [
     { "source": "/api/checkout", "destination": "/api/billing?action=checkout" },
