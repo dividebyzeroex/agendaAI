@@ -1,59 +1,11 @@
 <div class="tenants-container">
-  <div class="header">
-    <h1>Estabelecimentos (Tenants)</h1>
-    <p>Gestão completa de todas as barbearias, clínicas e salões utilizando a AgendaAI.</p>
-  </div>
-
-  <div class="table-card">
-    <p-table [value]="tenants" [loading]="isLoading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-platform">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>ID / Estabelecimento</th>
-          <th>Slug</th>
-          <th>Plano</th>
-          <th>Data de Criação</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-t>
-        <tr>
-          <td>
-            <div class="tenant-name-col">
-              <strong>{{ t.nome }}</strong>
-              <span class="tenant-id">#{{ t.id }}</span>
-            </div>
-          </td>
-          <td class="slug-col">/{{ t.slug }}</td>
-          <td>
-            <span class="plan-badge" [ngClass]="t.plano">{{ t.plano | uppercase }}</span>
-          </td>
-          <td>{{ t.created_at | date:'dd/MM/yyyy' }}</td>
-          <td>
-            <p-tag [value]="t.status | uppercase" [severity]="getSeverity(t.status)"></p-tag>
-          </td>
-          <td>
-            <button pButton icon="pi pi-cog" class="p-button-text p-button-sm p-button-secondary" title="Configurar Inquilino"></button>
-            <button pButton icon="pi pi-ban" class="p-button-text p-button-sm p-button-danger" *ngIf="t.status === 'active'" title="Bloquear Conta"></button>
-            <button pButton icon="pi pi-check" class="p-button-text p-button-sm p-button-success" *ngIf="t.status === 'blocked'" title="Desbloquear Conta"></button>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center p-4">Nenhum estabelecimento encontrado.</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
-  
-  <div class="error-state" *ngIf="hasError">
-    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
-    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
-    <p>Para exibir a lista de estabelecimentos reais, execute o script SQL abaixo no painel Supabase (SQL Editor).</p>
-    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
-      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
-      -- Execute-o para criar a função get_platform_tenants().
-    </code>
-  </div>
+  <div class="header"><div><h1>Clientes</h1><p>Acompanhe cada estabelecimento, seu plano e o período de teste.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
+  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar a lista de clientes. Tente novamente.</p>
+  <p class="error-state" role="alert" *ngIf="actionError">{{ actionError }}</p><p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
+  <div class="filters"><label>Buscar cliente<input [(ngModel)]="query" placeholder="Nome, endereço ou ID"></label><label>Situação<select [(ngModel)]="status"><option value="">Todos</option><option value="trial">Em teste</option><option value="paid">Pagantes</option><option value="expired">Teste vencido</option><option value="blocked">Bloqueados</option></select></label><span>{{ filteredTenants.length }} de {{ tenants.length }} clientes</span></div>
+  <div class="table-card"><p-table [value]="filteredTenants" [loading]="isLoading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-platform">
+    <ng-template pTemplate="header"><tr><th>Estabelecimento</th><th>Plano</th><th>Cadastro</th><th>Fim do teste</th><th>Situação</th><th>Acesso</th></tr></ng-template>
+    <ng-template pTemplate="body" let-t><tr><td><div class="tenant-name-col"><strong>{{ t.nome }}</strong><span class="tenant-id">/{{ t.slug }} · {{ t.id }}</span></div></td><td><span class="plan-badge">{{ t.plano || 'Não definido' }}</span></td><td>{{ t.created_at | date:'dd/MM/yyyy' }}</td><td>{{ t.trial_ends_at ? (t.trial_ends_at | date:'dd/MM/yyyy') : '—' }}</td><td><span class="status" [class]="'status ' + t.status">{{ statusLabel(t.status) }}</span></td><td><button class="action" (click)="toggleTenant(t)" [disabled]="busyId !== null">{{ busyId === t.id ? 'Salvando…' : t.status === 'blocked' ? 'Desbloquear' : 'Bloquear' }}</button></td></tr></ng-template>
+    <ng-template pTemplate="emptymessage"><tr><td colspan="6">{{ hasError ? 'Lista indisponível no momento.' : 'Nenhum cliente encontrado com estes filtros.' }}</td></tr></ng-template>
+  </p-table></div><p class="footnote">O bloqueio controla o acesso à plataforma. Não altera nem cancela cobranças.</p>
 </div>

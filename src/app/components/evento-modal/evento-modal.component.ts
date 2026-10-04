@@ -1,3 +1,4 @@
+import { SupabaseService } from '../../services/supabase.service';
 import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -18,7 +19,7 @@ import { ClienteService } from '../../services/cliente.service';
         <div class="evento-icon">{{ getEmoji() }}</div>
         <div class="evento-info">
           <strong>
-            {{ evento?.title }} 
+            {{ evento?.title }}
             <span *ngIf="isAniversariante" class="ani-badge" title="Aniversariante do Mês!"><i class="pi pi-gift"></i></span>
           </strong>
           <span class="evento-time">{{ formatTime(evento?.start) }} → {{ formatTime(evento?.end) }}</span>
@@ -44,7 +45,7 @@ import { ClienteService } from '../../services/cliente.service';
           <span class="ss-label"><i class="pi pi-desktop"></i> Aparelho</span>
           <p><strong>{{ evento?.metadata?.aparelho }}</strong></p>
         </div>
-        
+
         <div class="obs-box" *ngIf="evento?.metadata?.defeito">
           <span class="ss-label"><i class="pi pi-wrench"></i> Defeito Relatado</span>
           <p>{{ evento?.metadata?.defeito }}</p>
@@ -57,7 +58,7 @@ import { ClienteService } from '../../services/cliente.service';
       </div>
 
       <div class="evento-footer-ent" *ngIf="!isRecoveryMode">
-        
+
         <!-- Casos onde o atendimento ainda não começou -->
         <ng-container *ngIf="evento?.status === 'confirmado' || !evento?.status">
           <button class="btn-primary primary" (click)="mudarStatus('em_atendimento')">
@@ -98,7 +99,7 @@ import { ClienteService } from '../../services/cliente.service';
             <h3 style="margin-bottom: 4px; color: #1e293b;">Comanda Digital</h3>
             <p style="margin-top: 0; color: #64748b; font-size: 0.9rem;">Gerada em: {{ recoveredCaixa?.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
          </div>
-         
+
          <div class="chk-total" style="margin-top: 0; margin-bottom: 24px;">
            <span>Valor Total</span>
            <strong>R$ {{ recoveredCaixa?.valor_total | number:'1.2-2' }}</strong>
@@ -118,7 +119,7 @@ import { ClienteService } from '../../services/cliente.service';
          <div class="comanda-link-box">
             <p>Link de acesso público:</p>
             <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Acessar Comanda</a>
-            
+
             <div style="display:flex; justify-content:center; gap: 10px; margin-top: 16px;">
               <button class="btn-ghost" (click)="copiarLink()"><i class="pi pi-copy"></i> Copiar Link</button>
             </div>
@@ -154,7 +155,7 @@ import { ClienteService } from '../../services/cliente.service';
     padding: 2px 6px;
     border-radius: 12px;
   }
-  
+
   .fidelidade-card {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -186,9 +187,9 @@ import { ClienteService } from '../../services/cliente.service';
     display: flex;
     align-items: center;
   }
-  
+
   .evento-modal-box {
-      background: var(--glass-bg, rgba(255,255,255,0.95)); 
+      background: var(--glass-bg, rgba(255,255,255,0.95));
       backdrop-filter: blur(var(--glass-blur, 20px));
       -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
       border-radius: 28px; width: 100%; max-width: 440px;
@@ -214,8 +215,8 @@ import { ClienteService } from '../../services/cliente.service';
     .ss-label { font-size: 0.72rem; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
     .ss-val { font-size: 0.95rem; font-weight: 600; color: #1e293b; }
 
-    .status-pill-ent { 
-      padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800; 
+    .status-pill-ent {
+      padding: 6px 12px; border-radius: 12px; font-size: 0.75rem; font-weight: 800;
       width: fit-content; text-transform: uppercase;
     }
     .status-pill-ent.confirmado { background: #ecfdf5; color: #059669; }
@@ -255,7 +256,7 @@ import { ClienteService } from '../../services/cliente.service';
     .chk-section h4 { margin: 0 0 12px 0; font-size: 0.9rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; }
     .input-label { display: block; font-size: 0.8rem; font-weight: 700; color: #64748b; margin-bottom: 4px; }
     .chk-item { display: flex; justify-content: space-between; padding: 12px 16px; background: #f8fafc; border-radius: 12px; border: 1px solid #e2e8f0; font-weight: 600; color: #0f172a; }
-    
+
     .add-prod-row { display: flex; gap: 8px; margin-bottom: 12px; }
     .prod-select { flex: 1; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; font-size: 0.95rem; }
     .btn-add-prod { background: #3b82f6; color: white; border: none; border-radius: 8px; width: 42px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
@@ -269,7 +270,7 @@ import { ClienteService } from '../../services/cliente.service';
     .c-item-actions { display: flex; gap: 4px; }
     .c-item-actions button { width: 28px; height: 28px; border-radius: 6px; border: 1px solid #e2e8f0; background: #f8fafc; cursor: pointer; color: #64748b; }
     .c-item-actions button:hover:not([disabled]) { background: #e2e8f0; }
-    
+
     .chk-total { display: flex; justify-content: space-between; align-items: center; padding: 20px; background: #ecfdf5; border-radius: 16px; color: #065f46; font-size: 1.1rem; border: 1px dashed #34d399; margin-top: 24px; }
     .chk-total strong { font-size: 1.4rem; font-weight: 800; }
 
@@ -282,6 +283,7 @@ export class EventoModalComponent implements OnInit {
   @Input() evento: AgendaEvent | null = null;
   @Output() fechado = new EventEmitter<void>();
 
+  private apiSupabase = inject(SupabaseService).client;
   private agendaService = inject(AgendaEventService);
   private prodService = inject(ProdutosService);
   private estService = inject(EstabelecimentoService);
@@ -293,7 +295,7 @@ export class EventoModalComponent implements OnInit {
   isRecoveryMode = false;
   isFinalizing = false;
   isLoadingRecovery = false;
-  
+
   isSendingEmail = false;
 
   comandaToken = '';
@@ -326,10 +328,10 @@ export class EventoModalComponent implements OnInit {
   }
 
   statusLabel(s?: string): string {
-    const map: Record<string, string> = { 
-      confirmado: 'Agendado', 
-      pendente: 'Pendente', 
-      cancelado: 'Cancelado', 
+    const map: Record<string, string> = {
+      confirmado: 'Agendado',
+      pendente: 'Pendente',
+      cancelado: 'Cancelado',
       concluido: 'Concluído',
       em_atendimento: 'Em Atendimento',
       noshow: 'Faltou (No-Show)'
@@ -370,9 +372,9 @@ export class EventoModalComponent implements OnInit {
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
-        
+
       if (error) throw error;
-      
+
       this.recoveredCaixa = data;
       this.comandaToken = data.token_publico;
       this.emailCliente = data.email_cliente || '';
@@ -387,18 +389,16 @@ export class EventoModalComponent implements OnInit {
 
 
   async enviarComandaEmailApi(email: string, token: string, valorTotal: number) {
-    const estNome = this.estService.estabelecimento$.value?.nome || 'Estabelecimento';
-    try {
-      const res = await fetch('/api/send-comanda', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, token, estabelecimento: estNome, valorTotal })
-      });
-      if (!res.ok) {
-        console.error('Falha ao enviar e-mail', await res.text());
-      }
-    } catch (e) {
-      console.error('Erro de rede ao enviar e-mail', e);
+    const { data: { session } } = await this.apiSupabase.auth.getSession();
+    if (!session) throw new Error('Sessão necessária.');
+    const res = await fetch('/api/send-comanda', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+      body: JSON.stringify({ email, token, estabelecimento_id: this.estService.estabelecimento$.value?.id })
+    });
+    if (!res.ok) {
+      const result = await res.json();
+      throw new Error(result.error || 'Não foi possível enviar o e-mail.');
     }
   }
 

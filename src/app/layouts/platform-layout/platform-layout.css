@@ -179,3 +179,5 @@
   padding: 32px;
   background-color: #0f1115;
 }
+
+@media(max-width:800px){.platform-layout{height:auto;min-height:100vh;display:block;overflow:visible}.sidebar{width:100%;height:auto}.nav-menu{display:flex;overflow-x:auto;padding:8px;gap:6px}.nav-item{white-space:nowrap;flex-shrink:0;padding:12px}.sidebar-footer{display:none}.brand{height:56px}.content{width:100%;overflow:visible}.topbar{display:none}.page-content{padding:20px}}

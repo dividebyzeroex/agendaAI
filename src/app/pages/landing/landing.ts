@@ -29,7 +29,7 @@ interface SegmentDetail {
 export class Landing implements OnInit {
   isScrolled = false;
   isMobileMenuOpen = false;
-  isAnnualBilling = true;
+  isAnnualBilling = false;
 
   // Active Segment in Chameleon section
   activeSegmentId = 'saude';
@@ -38,12 +38,12 @@ export class Landing implements OnInit {
       id: 'saude',
       name: 'Clínicas & Consultórios',
       category: 'Saúde & Medicina',
-      headline: 'Prontuário integrado, retorno programado e confirmação de consultas.',
-      description: 'A IA atende pacientes com discrição e cordialidade, tira dúvidas sobre preparo de exames e agenda consultas diretamente na grade dos médicos ou especialistas.',
+      headline: 'Organize consultas e a agenda dos profissionais.',
+      description: 'Centralize os horários de consultas e o cadastro de clientes. Configure orientações administrativas e mantenha decisões clínicas sob responsabilidade do profissional.',
       terms: [
         { label: 'Vocabulário', value: 'Consultas, Retornos, Procedimentos' },
-        { label: 'Documentação', value: 'Prontuário digital e histórico de atendimentos' },
-        { label: 'Regra de Encaixe', value: 'Priorização de retornos e pós-operatórios' }
+        { label: 'Documentação', value: 'Cadastro de clientes e serviços' },
+        { label: 'Regra de Encaixe', value: 'Horários definidos pelo estabelecimento' }
       ],
       chatExample: {
         client: 'Dra. Camila, teria horário para consulta dermatológica esta semana?',
@@ -53,21 +53,21 @@ export class Landing implements OnInit {
         timeTag: 'Quinta, 15:30'
       },
       features: [
-        'Envio de orientações pré-consulta (jejum, exames)',
-        'Bloqueio automático de intervalos entre cirurgias',
-        'Controle de múltiplos profissionais e salas'
+        'Cadastro de serviços e duração das consultas',
+        'Organização da disponibilidade dos profissionais',
+        'Acompanhamento dos agendamentos da equipe'
       ]
     },
     {
       id: 'barbearia',
       name: 'Barbearias & Salões',
       category: 'Beleza & Estilo',
-      headline: 'Fila de espera inteligente, cálculo de comissões e comandas.',
-      description: 'Linguagem rápida e direta. A IA compreende termos como degradê, barba terapia ou química, consulta a cadeira do barbeiro preferido do cliente e confirma em segundos.',
+      headline: 'Agenda, equipe e serviços em um só lugar.',
+      description: 'Linguagem rápida e direta. A IA compreende termos como degradê, barba terapia ou química, consulta a cadeira do barbeiro preferido do cliente e auxilia na confirmação.',
       terms: [
         { label: 'Vocabulário', value: 'Cortes, Barbas, Cadeiras, Horários' },
-        { label: 'Operação', value: 'Fila de espera ativa com preenchimento de desistências' },
-        { label: 'Financeiro', value: 'Rateio de comissão por profissional e comanda integrada' }
+        { label: 'Operação', value: 'Visualização dos horários de atendimento' },
+        { label: 'Financeiro', value: 'Acompanhamento de comandas e comissões' }
       ],
       chatExample: {
         client: 'Tem horário com o Rodrigo hoje?',
@@ -77,57 +77,57 @@ export class Landing implements OnInit {
         timeTag: 'Hoje, 18:00'
       },
       features: [
-        'Preenchimento automático de horários cancelados',
-        'Comanda digital com consumo de bar e produtos',
-        'Lembrete 1h antes com confirmação rápida por botão'
+        'Visualização dos horários disponíveis',
+        'Cadastro de serviços e produtos',
+        'Configuração das automações disponíveis'
       ]
     },
     {
       id: 'estetica',
       name: 'Estética & Bem-estar',
       category: 'Estética & Spa',
-      headline: 'Controle de pacotes, fichas de anamnese e sessões recorrentes.',
-      description: 'Gerencie pacotes de 5 ou 10 sessões (drenagem, depilação a laser, massagens) com abatimento automático e acompanhamento do progresso de cada cliente.',
+      headline: 'Dê mais clareza à rotina dos atendimentos.',
+      description: 'Cadastre os serviços e os profissionais e acompanhe seus agendamentos. Valide durante o teste as necessidades específicas do seu espaço.',
       terms: [
         { label: 'Vocabulário', value: 'Sessões, Protocolos, Pacotes, Salas' },
-        { label: 'Acompanhamento', value: 'Ficha de anamnese e contraindicações' },
-        { label: 'Recorrência', value: 'Controle de saldo de sessões contratadas' }
+        { label: 'Acompanhamento', value: 'Histórico de agendamentos' },
+        { label: 'Recorrência', value: 'Organização dos próximos atendimentos' }
       ],
       chatExample: {
         client: 'Quero agendar a sessão 3 do meu pacote',
         clientMsg: 'Boa tarde! Gostaria de marcar a minha terceira sessão de drenagem com a Clara.',
-        aiResponse: 'Olá Juliana! Localizei seu pacote Drenagem Ouro (restam 3 sessões). A terapeuta Clara tem horário amanhã às 16h ou quinta às 10h. Qual prefere?',
-        serviceTag: 'Sessão 3/5 • Drenagem Linfática',
+        aiResponse: 'Olá Juliana! Vamos consultar os horários da Clara para sua próxima sessão. Você prefere atendimento pela manhã ou à tarde?',
+        serviceTag: 'Drenagem Linfática',
         timeTag: 'Amanhã, 16:00'
       },
       features: [
-        'Aviso de término de pacote para renovação',
-        'Reserva automática de equipamentos específicos por sala',
-        'Instruções pós-procedimento enviadas via WhatsApp'
+        'Cadastro de clientes e profissionais',
+        'Definição de serviços e sua duração',
+        'Configuração de orientações administrativas'
       ]
     },
     {
       id: 'pet',
       name: 'Pet Shops & Veterinárias',
       category: 'Mercado Pet',
-      headline: 'Ficha completa do animal, porte, táxi pet e preferências de tosa.',
-      description: 'Cadastro vinculado ao tutor e aos animais (cão, gato, raça, porte). A IA pergunta o nome do pet e personaliza o atendimento conforme o histórico.',
+      headline: 'Organize os serviços e os horários da equipe.',
+      description: 'Cadastre serviços como banho e tosa e organize a disponibilidade da equipe. Adapte as orientações do atendimento ao seu estabelecimento.',
       terms: [
         { label: 'Vocabulário', value: 'Banho, Tosa, Porte, Vacinas, Táxi Dog' },
-        { label: 'Identificação', value: 'Perfil individual de cada pet do mesmo tutor' },
-        { label: 'Logística', value: 'Horário de coleta e entrega (leva e traz)' }
+        { label: 'Identificação', value: 'Cadastro de contato dos clientes' },
+        { label: 'Logística', value: 'Organização da disponibilidade da equipe' }
       ],
       chatExample: {
         client: 'Banho e tosa pro Thor no sábado',
         clientMsg: 'Oi! Preciso marcar banho e tosa na tesoura pro Thor (Golden) neste sábado.',
-        aiResponse: 'Olá Paula! O Thor vai ser muito bem recebido. Temos vaga no sábado às 09h30 com a groomer Rafaela. Deseja incluir o serviço de busca e entrega (táxi dog)?',
+        aiResponse: 'Olá Paula! Vamos consultar a disponibilidade para o banho e tosa do Thor. Você prefere o período da manhã ou da tarde?',
         serviceTag: 'Banho & Tosa na Tesoura • Porte Grande',
         timeTag: 'Sábado, 09:30'
       },
       features: [
-        'Registro de comportamento (ex: animal idoso, medroso)',
-        'Controle de vacinas e alertas de reforço ao tutor',
-        'Aviso de "Pet pronto para retirada" automático'
+        'Cadastro dos serviços do estabelecimento',
+        'Consulta dos agendamentos da equipe',
+        'Configuração das mensagens de atendimento'
       ]
     }
   ];
@@ -136,33 +136,12 @@ export class Landing implements OnInit {
     return this.segments.find(s => s.id === this.activeSegmentId) || this.segments[0];
   }
 
-  // FAQ Accordion State
   faqs = [
-    {
-      q: 'Como funciona a integração com o WhatsApp?',
-      a: 'O AgendaAi conecta-se ao número oficial do seu estabelecimento via QR Code ou API oficial. Quando um cliente envia uma mensagem de texto ou áudio, o sistema compreende o pedido em linguagem natural, verifica sua disponibilidade em tempo real e realiza o agendamento de forma autônoma.',
-      open: true
-    },
-    {
-      q: 'O que acontece quando o cliente manda um áudio?',
-      a: 'O sistema transcreve o áudio instantaneamente, identifica a intenção (ex: marcar corte, remarcar consulta, saber preços) e responde em texto com precisão profissional, sem exigir que o cliente escute outro áudio.',
-      open: false
-    },
-    {
-      q: 'Minha equipe humana continuará tendo controle total?',
-      a: 'Sim, totalmente. O painel web permite que você e sua equipe visualizem a agenda completa, criem agendamentos manuais (para clientes presenciais ou por telefone), alterem horários e assumam conversas no WhatsApp com um único clique.',
-      open: false
-    },
-    {
-      q: 'Como o sistema reduz as faltas (no-shows)?',
-      a: 'O AgendaAi dispara lembretes automáticos com botões de confirmação simples no WhatsApp (ex: 24h e 2h antes). Se o cliente informar que não poderá comparecer, o horário é liberado imediatamente e a fila de espera é acionada para preencher a vaga.',
-      open: false
-    },
-    {
-      q: 'Existe contrato de fidelidade ou taxa de adesão?',
-      a: 'Não. Você pode testar a plataforma gratuitamente por 7 dias sem qualquer compromisso. Após o período de testes, você escolhe o plano que melhor se adapta ao seu volume e pode cancelar a qualquer momento sem taxas rescisórias.',
-      open: false
-    }
+    { q: 'O que está incluído nos 30 dias gratuitos?', a: 'Um período para avaliar a plataforma com sua empresa, configurar a agenda e conhecer os recursos disponíveis. Não pedimos cartão e não existe cobrança automática ao terminar o teste. A contratação de um plano é uma decisão separada.', open: true },
+    { q: 'Preciso configurar o WhatsApp?', a: 'Sim. O atendimento por WhatsApp depende da conexão do número e da configuração do provedor e dos agentes. Antes de divulgar o canal, valide mensagens, horários e respostas com sua equipe. Serviços externos podem ter custos próprios.', open: false },
+    { q: 'Minha equipe continua no controle?', a: 'O painel permite acompanhar clientes, profissionais e agendamentos. A equipe deve revisar as configurações e supervisionar respostas de IA, especialmente em situações que exigem julgamento humano.', open: false },
+    { q: 'Vocês garantem redução de faltas ou mais vendas?', a: 'Não prometemos resultados fixos. A proposta é apoiar a organização e o acompanhamento dos atendimentos. Use o teste para medir os efeitos na sua operação e decidir com dados reais.', open: false },
+    { q: 'Como funciona a contratação depois do teste?', a: 'Você escolhe um plano e confirma as condições e o pagamento quando a contratação estiver disponível. O teste não gera uma assinatura automática. Consulte os termos para entender os requisitos da operação comercial.', open: false }
   ];
 
   constructor(
@@ -192,7 +171,7 @@ export class Landing implements OnInit {
   }
 
   goToLogin() {
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login'], { queryParams: { trial: 30 } });
   }
 
   scrollTo(id: string) {

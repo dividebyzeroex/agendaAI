@@ -1,94 +1,19 @@
-<div class="dashboard-container" *ngIf="!isLoading && metrics; else loading">
-  <div class="header">
-    <h1>Visão Global da Plataforma</h1>
-    <p>Acompanhe o crescimento e saúde da AgendaAI em tempo real.</p>
-  </div>
-
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-icon blue"><i class="pi pi-building"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Total de Clientes (Tenants)</span>
-        <span class="metric-value">{{ metrics.totalTenants }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +12% este mês</span>
-      </div>
+<div class="dashboard-container">
+  <div class="header"><div><span class="eyebrow">PAINEL DO NEGÓCIO</span><h1>Seu negócio, em perspectiva.</h1><p>Clientes, receita e atividade em uma única visão.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar dados' }}</button></div>
+  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível carregar os indicadores. Verifique sua conexão e tente atualizar novamente.</p>
+  <p class="loading-state" role="status" *ngIf="isLoading && !metrics">Carregando indicadores…</p>
+  <ng-container *ngIf="metrics as m">
+    <p class="updated">Última atualização: {{ updatedAt | date:'dd/MM/yyyy HH:mm' }} <span *ngIf="hasError">· Dados anteriores à falha</span></p>
+    <div class="metrics-grid">
+      <div class="metric-card"><span class="metric-label">Clientes cadastrados</span><strong class="metric-value">{{ m.totalTenants | number }}</strong><span>{{ m.activeTenants }} com acesso ativo</span></div>
+      <div class="metric-card"><span class="metric-label">Em teste gratuito</span><strong class="metric-value">{{ m.trialTenants | number }}</strong><span>Experiência gratuita de 30 dias</span></div>
+      <div class="metric-card"><span class="metric-label">Clientes pagantes</span><strong class="metric-value">{{ m.payingTenants | number }}</strong><span>Assinaturas ativas</span></div>
+      <div class="metric-card accent"><span class="metric-label">Receita recorrente mensal</span><strong class="metric-value">{{ m.totalMrr | currency:'BRL' }}</strong><span>Valor mensalizado das assinaturas</span></div>
     </div>
-
-    <div class="metric-card">
-      <div class="metric-icon green"><i class="pi pi-dollar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">MRR Estimado</span>
-        <span class="metric-value">R$ {{ metrics.totalMrr | number:'1.2-2' }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +8.5% este mês</span>
-      </div>
+    <div class="charts-section">
+      <section class="chart-box"><h2>Carteira de clientes</h2><div class="portfolio-row"><span>Pagantes</span><strong>{{ m.payingTenants }}</strong></div><div class="track"><div [style.width.%]="share(m.payingTenants)"></div></div><div class="portfolio-row"><span>Em teste</span><strong>{{ m.trialTenants }}</strong></div><div class="track trial"><div [style.width.%]="share(m.trialTenants)"></div></div><p>Participação sobre todos os clientes cadastrados. Contas vencidas ou bloqueadas permanecem no total.</p></section>
+      <section class="chart-box"><h2>Atividade comercial</h2><div class="portfolio-row"><span>Prospects registrados</span><strong>{{ m.prospects | number }}</strong></div><div class="portfolio-row"><span>Comunicações enviadas</span><strong>{{ m.commercialSent | number }}</strong></div><div class="portfolio-row"><span>Recebido neste mês · BRL</span><strong>{{ m.revenueMonth | currency:'BRL' }}</strong></div></section>
     </div>
-
-    <div class="metric-card">
-      <div class="metric-icon purple"><i class="pi pi-calendar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Agendamentos Transacionados</span>
-        <span class="metric-value">{{ metrics.totalAppointments | number }}</span>
-        <span class="metric-trend">Total Histórico</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon orange"><i class="pi pi-sparkles"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Mensagens de IA (ZAP)</span>
-        <span class="metric-value">{{ metrics.aiMessagesSent | number }}</span>
-        <span class="metric-trend">Tokens consumidos</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="charts-section">
-    <div class="chart-box">
-      <h3>Crescimento de Assinaturas</h3>
-      <div class="mock-chart">
-        <!-- Mock de gráfico de barras -->
-        <div class="bar" style="height: 30%"></div>
-        <div class="bar" style="height: 50%"></div>
-        <div class="bar" style="height: 40%"></div>
-        <div class="bar" style="height: 70%"></div>
-        <div class="bar" style="height: 90%"></div>
-        <div class="bar" style="height: 85%"></div>
-        <div class="bar" style="height: 100%"></div>
-      </div>
-    </div>
-    <div class="chart-box">
-      <h3>Uso de IA por Estabelecimento</h3>
-      <div class="mock-list">
-        <div class="mock-list-item">
-          <span>Barbearia do João</span>
-          <strong>12.4k msgs</strong>
-        </div>
-        <div class="mock-list-item">
-          <span>Spa Zen</span>
-          <strong>8.2k msgs</strong>
-        </div>
-        <div class="mock-list-item">
-          <span>Tattoo Studio</span>
-          <strong>5.1k msgs</strong>
-        </div>
-      </div>
-    </div>
-  </div>
+    <section class="chart-box"><h2>Utilização da plataforma</h2><div class="portfolio-row"><span>Agendamentos registrados · total histórico</span><strong>{{ m.totalAppointments | number }}</strong></div><div class="portfolio-row"><span>Mensagens de IA registradas · total histórico</span><strong>{{ m.aiMessagesSent | number }}</strong></div></section>
+  </ng-container>
 </div>
-
-<ng-template #loading>
-  <div class="loading-state" *ngIf="!hasError">
-    <i class="pi pi-spin pi-spinner"></i>
-    <span>Carregando métricas da plataforma...</span>
-  </div>
-  
-  <div class="error-state" *ngIf="hasError">
-    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
-    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
-    <p>Para garantir o funcionamento geral com dados reais (sem mocks), execute o script SQL abaixo no seu painel Supabase (SQL Editor).</p>
-    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
-      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
-      -- Execute-o para criar as funções (RPCs) necessárias.
-    </code>
-  </div>
-</ng-template>

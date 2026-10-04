@@ -67,7 +67,7 @@ export class AdminLayout implements OnInit {
   showOnboarding = false;
   isNotifOpen = false;
   isSidebarOpen = false;
-  
+
   userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
   onlineUsers$ = this.presence.onlineUsers$;
   userMenuItems: MenuItem[] | undefined;
@@ -81,34 +81,34 @@ export class AdminLayout implements OnInit {
     }
 
     this.userMenuItems = [
-      { 
-        label: 'Minha Conta', 
+      {
+        label: 'Minha Conta',
         icon: 'pi pi-user',
         routerLink: ['/admin/configuracoes']
       },
-      { 
-        label: 'Configurações', 
+      {
+        label: 'Configurações',
         icon: 'pi pi-cog',
         routerLink: ['/admin/configuracoes']
       },
-      { 
-        label: 'Ver Página Pública', 
+      {
+        label: 'Ver Página Pública',
         icon: 'pi pi-external-link',
         url: urlPublica,
         target: '_blank'
       },
       { separator: true },
-      { 
-        label: 'Sair da Plataforma', 
-        icon: 'pi pi-sign-out', 
-        command: () => this.logout() 
+      {
+        label: 'Sair da Plataforma',
+        icon: 'pi pi-sign-out',
+        command: () => this.logout()
       }
     ];
-    
+
     await this.onboarding.checkOnboarding();
     this.onboarding.showOnboarding$.subscribe(show => (this.showOnboarding = show));
 
-    await this.processTempOnboarding();
+
   }
 
   get isDono(): Observable<boolean> {
@@ -127,34 +127,7 @@ export class AdminLayout implements OnInit {
     return this.userProfile$.pipe(map(p => p?.role === 'secretaria'));
   }
 
-  private async processTempOnboarding() {
-    const rawData = localStorage.getItem('ag_temp_onboarding_data');
-    if (rawData) {
-      try {
-        const onboardingData = JSON.parse(rawData);
-        await this.estabService.createEstabelecimento({
-          ...onboardingData,
-          onboarding_completo: true
-        });
 
-        // 🔗 REGRA: O Criador é o Dono Nato
-        // Criamos o primeiro registro de profissional para garantir a identidade no primeiro login
-        await this.profService.criarProfissional({
-          nome: onboardingData.nome || 'Proprietário',
-          email: onboardingData.email,
-          telefone: onboardingData.telefone,
-          role: 'dono',
-          ativo: true,
-          cargo: 'Proprietário'
-        });
-
-        localStorage.removeItem('ag_temp_onboarding_data');
-        localStorage.removeItem('ag_onboarding_email');
-      } catch (err) {
-        console.error('[Gatekeeper] Erro ao sincronizar onboarding:', err);
-      }
-    }
-  }
 
   logout() {
     this.authService.logout();

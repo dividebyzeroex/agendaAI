@@ -4,8 +4,9 @@
       <i class="pi pi-bolt"></i>
       <span>AgendaAI Owner</span>
     </div>
-    
+
     <nav class="nav-menu">
+      <a routerLink="/platform-admin/growth" routerLinkActive="active" class="nav-item"><i class="pi pi-users"></i> Comercial e agentes</a>
       <a routerLink="/platform-admin/dashboard" routerLinkActive="active" class="nav-item">
         <i class="pi pi-chart-pie"></i> Visão Global
       </a>
@@ -25,7 +26,7 @@
         <i class="pi pi-cog"></i> Configurações
       </a>
     </nav>
-    
+
     <div class="sidebar-footer">
       <div class="user-info" *ngIf="user$ | async as user">
         <div class="avatar">{{ user.nome ? user.nome.charAt(0).toUpperCase() : 'S' }}</div>
@@ -39,12 +40,12 @@
       </button>
     </div>
   </aside>
-  
+
   <main class="content">
     <header class="topbar">
       <h2>SaaS Command Center</h2>
       <div class="topbar-actions">
-        <span class="status-badge"><i class="pi pi-circle-fill"></i> Sistema Operacional</span>
+        <span class="status-badge"><i class="pi pi-circle-fill"></i> Painel do proprietário</span>
       </div>
     </header>
     <div class="page-content">

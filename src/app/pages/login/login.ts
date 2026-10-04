@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Card } from 'primeng/card';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { ProfissionaisService } from '../../services/profissionais.service';
@@ -21,6 +21,9 @@ type OnboardingStep = 'overview' | 'conclusao';
 })
 export class Login implements OnInit {
   isSignupMode = false;
+  termsAccepted = false;
+  marketingConsent = false;
+  private route = inject(ActivatedRoute);
   email = '';
   isLoading = false;
   errorMessage = '';
@@ -49,8 +52,9 @@ export class Login implements OnInit {
     email: '',
     slug: ''
   };
-  
+
   async ngOnInit() {
+    this.isSignupMode = this.route.snapshot.queryParamMap.get('trial') === '30';
     this.isLoading = true;
     try {
       const hasSession = await this.authService.checkSession();
@@ -78,6 +82,9 @@ export class Login implements OnInit {
 
     try {
       if (this.isSignupMode) {
+         if (!this.termsAccepted) throw new Error('Leia e aceite as condições do teste para continuar.');
+         localStorage.setItem('ag_terms_accepted', 'true');
+         localStorage.setItem('ag_marketing_consent', String(this.marketingConsent));
          if (this.authType === 'password' && (!this.password || this.password.length < 6)) {
            this.errorMessage = 'Sua senha deve ter no mínimo 6 caracteres.';
            this.isLoading = false;
@@ -94,19 +101,13 @@ export class Login implements OnInit {
 
       // LOGIN CAMALEÃO: Passo 1 - Identificar Preferência
       if (this.step === 'email') {
-        const { data, error } = await this.profService.getAuthPreference(this.email);
-        if (error) {
-           // Se não achar, assume o padrão de link mágico (pode ser novo)
-           this.authType = 'email';
-        } else {
-           this.authType = (data as any) || 'email';
-        }
+        this.authType = 'email';
         this.step = 'auth';
         this.isLoading = false;
         this.cdr.detectChanges();
         return;
       }
-      
+
       // LOGIN CAMALEÃO: Passo 2 - Autenticar de fato
       if (this.authType === 'password') {
         if (!this.password) {
@@ -121,7 +122,7 @@ export class Login implements OnInit {
         this.isOtpSent = true;
         this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
       }
-      
+
     } catch (error: any) {
       this.errorMessage = error.message || 'Houve um erro na autenticação.';
     } finally {
@@ -136,7 +137,7 @@ export class Login implements OnInit {
   }
 
   // --- Lógica do Wizard Interno ao Card ---
-  
+
   getStepIndex(): number {
     const steps: OnboardingStep[] = ['overview', 'conclusao'];
     return steps.indexOf(this.onStep);
@@ -169,16 +170,15 @@ export class Login implements OnInit {
         this.form.email = this.email;
       }
       localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-      
+
       if (this.authType === 'password') {
-        await this.authService.signUpWithPassword(this.form.email, this.password);
-        // Login immediately after signup
-        await this.authService.signInWithEmail(this.form.email, this.password);
-        await this.authService.redirectAfterLogin();
+        const signup = await this.authService.signUpWithPassword(this.form.email, this.password);
+        if (signup.session) await this.authService.redirectAfterLogin();
+        else this.successMessage = 'Confirme seu e-mail para ativar o teste gratuito.';
       } else {
         await this.authService.signInWithOtp(this.form.email);
       }
-      
+
       await new Promise(r => setTimeout(r, 1500));
       this.isLoading = false;
       this.cdr.detectChanges();

@@ -1,34 +1,16 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
-import { BillingService } from '../services/billing.service';
-import { map, take } from 'rxjs';
-
-/**
- * Guard para garantir que o estabelecimento tenha uma assinatura ativa 
- * ou esteja dentro do período de carência de 5 dias.
- */
-export const billingGuard: CanActivateFn = (route, state) => {
-  const billingService = inject(BillingService);
-  const router = inject(Router);
-
-  // Se o usuário já está tentando acessar a página de faturamento, permita sempre
-  if (state.url.includes('/admin/billing')) {
-    return true;
-  }
-
-  // BYPASS TEMPORÁRIO PARA FASE DE TESTES (ACESSO GRATUITO)
-  return true;
-
-  return billingService.canAccessAdmin().pipe(
-    take(1),
-    map(canAccess => {
-      if (canAccess) {
-        return true;
-      }
-
-      // Se não tem acesso, redireciona para a página de billing
-      console.warn('[BillingGuard] Acesso negado: Plano expirado há mais de 5 dias.');
-      return router.parseUrl('/admin/billing');
-    })
-  );
+import { SupabaseService } from '../services/supabase.service';
+export const billingGuard: CanActivateFn = async (_route, state) => {
+  const client=inject(SupabaseService).client; const router=inject(Router);
+  const {data:{user}}=await client.auth.getUser();
+  if(!user)return router.parseUrl('/login');
+  const {data:owned}=await client.from('estabelecimento').select('id').eq('user_id',user.id).limit(1).maybeSingle();
+  const {data:ids,error}=owned?{data:[owned.id],error:null}:await client.rpc('get_meus_estabelecimentos');
+  if(error||!ids?.length)return router.parseUrl('/login');
+  const {data:e,error:lookupError}=await client.from('estabelecimento').select('active,trial_ends_at,plano_expires_at').eq('id',ids[0]).single();
+  if(lookupError||!e)return router.parseUrl('/login');
+  if(state.url.includes('/admin/billing'))return true;
+  const until=Math.max(Date.parse(e.trial_ends_at||'')||0,Date.parse(e.plano_expires_at||'')||0);
+  return e.active&&until>Date.now() ? true : router.parseUrl('/admin/billing');
 };

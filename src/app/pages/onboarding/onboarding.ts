@@ -1,10 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { EstabelecimentoService, Estabelecimento } from '../../services/estabelecimento.service';
 import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
+import { SupabaseService } from '../../services/supabase.service';
 import { AuthService } from '../../services/auth.service';
 
 type Step = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
@@ -20,7 +21,14 @@ export class Onboarding implements OnInit {
   private estabService = inject(EstabelecimentoService);
   private pubService   = inject(EstabelecimentoPublicoService);
   private authService  = inject(AuthService);
-  private router       = inject(Router);
+  private cdr=inject(ChangeDetectorRef);
+  public bookingOrigin=window.location.origin+'/agendar/';
+  private router = inject(Router);
+  private supabase = inject(SupabaseService).client;
+  termsAccepted = localStorage.getItem('ag_terms_accepted') === 'true';
+  marketingConsent = localStorage.getItem('ag_marketing_consent') === 'true';
+  errorMessage = '';
+  completed = false;
 
   // Estado do wizard
   step: Step = 'overview';
@@ -51,7 +59,10 @@ export class Onboarding implements OnInit {
 
   suggestedColors = ['#6366f1', '#a142f4', '#10b981', '#f43f5e', '#facc15', '#0f172a'];
 
-  ngOnInit() {
+  async ngOnInit() {
+    const {data:{user}} = await this.supabase.auth.getUser();
+    if (user?.email) this.form.email=user.email;
+    try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); this.form={...this.form,...draft,email:user?.email||''}; } catch {}
     // Recupera o email vindo da tela de cadastro de login
     const savedEmail = localStorage.getItem('ag_onboarding_email');
     if (savedEmail) {
@@ -78,7 +89,7 @@ export class Onboarding implements OnInit {
   next() {
     const steps: Step[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
     const idx = this.getStepIndex();
-    
+
     if (idx < steps.length - 1) {
       if (this.step === 'link') {
         this.finalizar();
@@ -92,7 +103,7 @@ export class Onboarding implements OnInit {
   back() {
     const steps: Step[] = ['overview', 'operacao', 'identidade', 'link'];
     const idx = this.getStepIndex();
-    
+
     if (idx > 0) {
       this.step = steps[idx - 1];
       this.flipAngle += 180;
@@ -100,28 +111,24 @@ export class Onboarding implements OnInit {
   }
 
   async finalizar() {
-    this.isSaving = true;
-    this.step = 'conclusao';
-
+    if (!this.termsAccepted) { this.errorMessage='Aceite as condições para iniciar o teste.'; return; }
+    this.isSaving=true; this.errorMessage='';
     try {
-      // SALVAMENTO DIFERIDO: Salvamos tudo no localstorage.
-      // Quando o usuário clicar no Magic Link e o app inicializar na /admin, 
-      // detectamos este objeto e criamos a empresa vinculando ao novo ID do usuário.
-      localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-
-      // Agora enviamos o Magic Link (Isso atua como o Signup final)
-      await this.authService.signInWithOtp(this.form.email);
-
-      // Simulamos o carregamento "WOW" antes de mostrar a mensagem de sucesso do email
-      await new Promise(r => setTimeout(r, 2500));
-      
-      // A página de conclusão lidará com a mensagem de "Verifique seu E-mail"
-    } catch (error: any) {
-      console.error('[Onboarding] Erro ao disparar cadastro:', error);
-      this.isSaving = false;
-      this.step = 'link';
-      this.flipAngle += 180;
-      alert('Houve um problema ao processar seu cadastro. Verifique seu e-mail e tente novamente.');
-    }
+      const {data:{session}}=await this.supabase.auth.getSession();
+      if(!session)throw new Error('Sua sessão expirou. Entre novamente.');
+      // Save acceptance before creating a tenant; retrying never starts a second trial.
+      const response=await fetch('/api/commercial?action=enroll',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})});
+      if(!response.ok)throw new Error('Não foi possível registrar o aceite. Tente novamente.');
+      const {data:existing,error}=await this.supabase.rpc('get_estabelecimento_by_user',{p_user_id:session.user.id});
+      if(error)throw error;
+      if(!existing?.length) await this.estabService.createEstabelecimento({...this.form,onboarding_completo:true});
+      // Connect the newly created tenant to its explicitly consented commercial journey.
+      const enrolled=await fetch('/api/commercial?action=enroll',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})});
+      if(!enrolled.ok)throw new Error('Empresa criada; não foi possível concluir o cadastro comercial. Tente novamente.');
+      localStorage.removeItem('ag_temp_onboarding_data');
+      this.completed=true;
+      await this.authService.redirectAfterLogin();
+    } catch(error) { this.errorMessage=error instanceof Error?error.message:'Não foi possível concluir o cadastro.'; }
+    finally { this.isSaving=false; this.cdr.markForCheck(); }
   }
 }

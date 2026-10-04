@@ -10,6 +10,6 @@ export class SupabaseService {
   readonly client: SupabaseClient;
 
   constructor() {
-    this.client = createClient(environment.supabaseUrl, environment.supabaseKey);
+    this.client = createClient(environment.supabaseUrl, environment.supabaseKey, { auth: { storageKey: 'ag-auth-token', persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
   }
 }
