@@ -1,6 +1,6 @@
 # AgendaAI — operação comercial e implantação
 
-Situação: implementação preparada em branch de revisão. Produção ainda não alterada. Nenhum prospect foi contatado nesta execução.
+Situação em 04/10/2026: código preparado na PR #5, ainda sem merge/deploy. As três migrações foram autorizadas pelo proprietário e aplicadas no Supabase de produção. Nenhum prospect foi contatado nesta execução.
 
 ## Proposta comercial
 
@@ -18,7 +18,7 @@ Benefícios demonstráveis: agenda pública, organização de clientes e equipe,
 `/platform-admin/billing`: receitas brutas confirmadas e MRR mensalizado; taxas, impostos e estornos posteriores não são lucro calculado.
 `/platform-admin/settings`: configuração real, sem chaves fictícias ou botões de configuração sem efeito.
 
-A autorização é conferida no banco por uma lista privada de proprietários vinculada à identidade autenticada. O primeiro proprietário é provisionado a partir da conta de e-mail confirmado que já estava identificada no projeto. Confirme a existência dessa conta antes da publicação.
+A autorização é conferida no banco por uma lista privada de proprietários vinculada à identidade autenticada. A tentativa de provisionamento pela identidade anteriormente indicada no código não encontrou conta confirmada. A verificação de produção encontrou duas contas, ambas sem confirmação de e-mail, e nenhum proprietário provisionado. É necessário o titular indicar e confirmar seu e-mail para vinculação; nenhuma identidade foi promovida arbitrariamente.
 
 ## Agentes implementados
 
@@ -35,9 +35,9 @@ Descoberta pública não equivale a autorização de envio. Os contatos descober
 
 Cron Vercel preparado para execução horária. É necessário confirmar que o plano Vercel suporta essa frequência; não foi contratado upgrade. `COMMERCIAL_ENABLED` inicia em `false`.
 
-## Migrações que requerem aprovação
+## Migrações autorizadas e aplicadas
 
-A revisão automática rejeitou a aplicação no banco de produção por envolver alteração ampla de autorização, cobrança e estruturas. Não foi tentado contornar a rejeição.
+A revisão automática inicialmente rejeitou a aplicação ampla sem autorização específica. Após apresentação das três migrações, o proprietário autorizou expressamente, e todas foram aplicadas em ordem em `supabase-agendai` (`vvanjarfwdxtzklogysy`).
 
 1. `20261004141727_commercial_operations.sql`: tabelas CRM, mensagens, histórico, receitas, aceites; proprietário privado; período padrão de 30 dias; proteção de campos de assinatura; indicadores reais; bloqueio de atualizações de faturamento pelo navegador.
 2. `20261004141855_agenda_security_tenant_isolation.sql`: identidade verificada, isolamento de funções e políticas, retirada de acesso público a OTPs e projeção mínima dos dados públicos; novas colunas de proprietário/empresa nos workflows.
@@ -45,11 +45,11 @@ A revisão automática rejeitou a aplicação no banco de produção por envolve
 
 Nenhuma dessas migrações apaga clientes ou agendamentos. Permissões são restringidas. Workflows antigos sem atribuição confiável ficam sem acesso pelo navegador e precisam ser revisados, sem inferir a quem pertencem. Testes antigos não são reativados em massa. A migração de sobreposição deve falhar se houver conflitos históricos; a consulta de preflight encontrou zero pares sobrepostos na auditoria, mas precisa ser repetida antes da aplicação.
 
-Antes de aprovar: snapshot/backup recuperável do banco, conferir a identidade do proprietário, revisar workflows antigos e autorizar as três migrações sobre `supabase-agendai` (`vvanjarfwdxtzklogysy`). Após aprovação, aplicar em ordem e verificar isolamento com contas de teste. Não fazer merge em `develop` antes de preparar as dependências: essa é a branch usada em produção.
+Verificação após aplicação: um estabelecimento preservado, zero agendamentos, padrão de teste de 30 dias e constraint de sobreposição presentes. RLS habilitada nas tabelas comerciais; navegador sem INSERT de prospects; anônimo sem leitura de prospects/OTPs e sem execução do limite interno de reservas. O registro de migrações confirma as três aplicações. A homologação com identidades verificadas ainda está pendente. Não fazer merge em `develop` antes de preparar as dependências: essa é a branch usada em produção.
 
 ## Configuração necessária
 
-A auditoria da Vercel encontrou apenas as três variáveis Supabase. As demais não foram configuradas neste trabalho.
+A auditoria inicial da Vercel encontrou apenas as três variáveis Supabase. Foram acrescentados em produção/preview `PROJECT_URL`, `COMMERCIAL_ENABLED=false`, `CONTRACT_READY=false` e três segredos aleatórios distintos (`CRON_SECRET`, `COMMERCIAL_UNSUBSCRIBE_SECRET`, `PUBLIC_BOOKING_RATE_SECRET`), armazenados como variáveis criptografadas. As variáveis passam a valer em novos deployments; o código da PR ainda não foi publicado. Credenciais de provedores e dados do fornecedor continuam pendentes.
 
 - `PROJECT_URL`: URL HTTPS canônica.
 - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`: configurar inicialmente em modo de teste e validar cobrança, renovação, cancelamento e reembolso.
