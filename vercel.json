@@ -30,7 +30,7 @@
     },
     {
       "path": "/api/commercial?action=run",
-      "schedule": "0 * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "functions": {

@@ -33,7 +33,7 @@ Os agentes são rotinas de aquisição e relacionamento com textos aprovados e r
 
 Descoberta pública não equivale a autorização de envio. Os contatos descobertos entram em `new`, sem e-mail inferido nem consentimento. O envio usa contatos com autorização registrada, incluindo novos clientes que optem pelo acompanhamento. Portanto, configurar apenas Google Places não produz uma campanha fria automaticamente.
 
-Cron Vercel preparado para execução horária. É necessário confirmar que o plano Vercel suporta essa frequência; não foi contratado upgrade. `COMMERCIAL_ENABLED` inicia em `false`.
+O plano Hobby da Vercel rejeitou o cron horário na verificação do deploy. A rotina comercial foi ajustada para execução diária às 12h UTC (9h em São Paulo), compatível com o plano existente, sem upgrade. A pesquisa separada no ChatGPT tem execução horária. `COMMERCIAL_ENABLED` inicia em `false`.
 
 ## Migrações autorizadas e aplicadas
 
