@@ -1,6 +1,6 @@
 # AgendaAI — operação comercial e implantação
 
-Situação em 04/10/2026: código preparado na PR #5, ainda sem merge/deploy. As três migrações foram autorizadas pelo proprietário e aplicadas no Supabase de produção. Nenhum prospect foi contatado nesta execução.
+Situação em 04/10/2026: PR #5 integrada à branch develop após autorização de publicação. As três migrações foram autorizadas pelo proprietário e aplicadas no Supabase de produção. Deploy em preparação com cron diário compatível com o plano Hobby; envios comerciais e checkout continuam desativados. Nenhum prospect foi contatado nesta execução.
 
 ## Proposta comercial
 
