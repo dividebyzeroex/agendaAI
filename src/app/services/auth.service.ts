@@ -3,6 +3,7 @@ import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
+import { SupabaseService } from './supabase.service';
 import { SecurityService } from './security.service';
 
 @Injectable({
@@ -13,10 +14,10 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   userProfileSubject = new BehaviorSubject<{
     id: string,
-    nome: string, 
-    role: string, 
+    nome: string,
+    role: string,
     email?: string,
-    primeiro_acesso: boolean, 
+    primeiro_acesso: boolean,
     onboarding_concluido: boolean
   } | null>(null);
   userProfile$ = this.userProfileSubject.asObservable();
@@ -26,6 +27,7 @@ export class AuthService {
   }
   public profile$ = this.userProfileSubject.asObservable();
 
+  private sharedSupabase = inject(SupabaseService);
   private ngZone = inject(NgZone);
   private router = inject(Router);
   private security = inject(SecurityService);
@@ -37,16 +39,8 @@ export class AuthService {
   private initSupabase() {
     try {
       if (environment.supabaseUrl && environment.supabaseUrl !== 'REPLACE_WITH_YOUR_SUPABASE_URL') {
-        this.supabase = createClient(environment.supabaseUrl, environment.supabaseKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-            detectSessionInUrl: true,
-            storageKey: 'ag-auth-token',
-            storage: localStorage
-          }
-        });
-        
+        this.supabase = this.sharedSupabase.client;
+
         this.supabase.auth.onAuthStateChange((event, session) => {
           if (event === 'SIGNED_IN') {
             console.log('🛡️ [Identidade] Acesso Soberano Concedido.');
@@ -56,15 +50,15 @@ export class AuthService {
             console.log('🔄 [Segurança] Chave Bearer Rotacionada com Sucesso.');
             this.security.logSecurityEvent('TOKEN_REFRESHED');
           }
-          
-          this.ngZone.run(async () => {
+
+          setTimeout(() => this.ngZone.run(async () => {
             this.currentUserSubject.next(session?.user || null);
             if (session?.user) {
               await this.loadUserProfile(session.user.id);
             } else {
               this.userProfileSubject.next(null);
             }
-          });
+          }), 0);
         });
       } else {
         console.error('⛔ [Supabase Auth] Credenciais ausentes. Impossível iniciar sessão.');
@@ -80,7 +74,7 @@ export class AuthService {
 
   async checkSession(): Promise<boolean> {
     // If we already have a user in memory (or mock), it's authed
-    if (this.isAuthed_Sync) return true;
+    if (this.isAuthed_Sync && this.userProfileValue) return true;
 
     if (!this.supabase) {
       return false;
@@ -98,75 +92,29 @@ export class AuthService {
 
   private async loadUserProfile(userId: string) {
     if (!this.supabase) return;
-    
-    // 1. Tenta buscar pelo user_id via RPC Soberana
-    let { data, error } = await this.supabase.rpc('get_user_profile_safe', { p_user_id: userId });
-
-    // 2. Se não encontrou, tenta buscar pelo e-mail do usuário autenticado (Primeiro acesso)
-    if (!data && !error) {
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (user?.email) {
-        const { data: profByEmail, error: emailErr } = await this.supabase.rpc('get_user_profile_safe', { p_email: user.email });
-
-        if (profByEmail && !emailErr) {
-          data = profByEmail;
-          // Linkage de Identidade Soberano (RPC)
-          await this.supabase.rpc('link_user_to_professional', { p_professional_id: profByEmail.id, p_user_id: userId });
-          console.log(`[AuthService] Identidade vinculada: ${user.email} -> ${profByEmail.role}`);
-        }
+    const { data: { user }, error: authError } = await this.supabase.auth.getUser();
+    if (authError || !user || user.id !== userId) { this.userProfileSubject.next(null); return; }
+    const { data: isOwner, error: ownerError } = await this.supabase.rpc('is_platform_owner');
+    if (!ownerError && isOwner === true) {
+      this.userProfileSubject.next({id:user.id,nome:'Proprietário AgendaAI',role:'superadmin',email:user.email,primeiro_acesso:false,onboarding_concluido:true});
+      return;
+    }
+    let { data, error } = await this.supabase.rpc('get_user_profile_safe', { p_user_id: user.id });
+    if (error) throw new Error('Não foi possível verificar suas permissões. Tente novamente.');
+    if (!data && (user.email_confirmed_at || user.phone_confirmed_at)) {
+      const lookup = user.email_confirmed_at ? {p_email:user.email} : {p_phone:user.phone};
+      const result = await this.supabase.rpc('get_user_profile_safe', lookup);
+      if (result.error) throw result.error;
+      if (result.data) {
+        const linked = await this.supabase.rpc('link_user_to_professional', {p_professional_id:result.data.id,p_user_id:user.id});
+        if (linked.error) throw linked.error;
+        data = result.data;
       }
     }
-
-    if (data) {
-      const p = data as any;
-      
-      const { data: { user } } = await this.supabase.auth.getUser();
-      let finalRole = p.role;
-      if (user?.email === 'joao.almeida_msbrasil@outlook.com') {
-          finalRole = 'superadmin';
-      }
-
-      this.userProfileSubject.next({ 
-        id: p.id,
-        nome: p.nome, 
-        role: finalRole,
-        email: user?.email,
-        primeiro_acesso: p.primeiro_acesso || false,
-        onboarding_concluido: p.onboarding_concluido || false
-      });
-    } else {
-      // 3. Fallback: Tenta buscar pelo Telefone do usuário autenticado
-      const { data: { user } } = await this.supabase.auth.getUser();
-      if (user?.phone) {
-        const { data: profByPhone, error: phoneErr } = await this.supabase.rpc('get_user_profile_safe', { p_phone: user.phone });
-
-        if (profByPhone && !phoneErr) {
-          const p = profByPhone as any;
-          this.userProfileSubject.next({ 
-            id: p.id,
-            nome: p.nome, 
-            role: user?.email === 'joao.almeida_msbrasil@outlook.com' ? 'superadmin' : p.role,
-            email: user?.email,
-            primeiro_acesso: p.primeiro_acesso || false,
-            onboarding_concluido: p.onboarding_concluido || false
-          });
-          // Linkage Automático (RPC)
-          await this.supabase.rpc('link_user_to_professional', { p_professional_id: p.id, p_user_id: userId });
-          return;
-        }
-      }
-
-      const { data: { user: fallbackUser } } = await this.supabase.auth.getUser();
-      // Fallback para admin genérico
-      this.userProfileSubject.next({ 
-        id: 'admin-legacy',
-        nome: fallbackUser?.email === 'joao.almeida_msbrasil@outlook.com' ? 'João (Dono AgendaAI)' : 'Admin', 
-        role: fallbackUser?.email === 'joao.almeida_msbrasil@outlook.com' ? 'superadmin' : 'dono',
-        email: fallbackUser?.email,
-        primeiro_acesso: false,
-        onboarding_concluido: true
-      });
-    }
+    this.userProfileSubject.next(data ? {
+      id:data.id,nome:data.nome,role:data.role,email:user.email,
+      primeiro_acesso:!!data.primeiro_acesso,onboarding_concluido:!!data.onboarding_concluido
+    } : {id:user.id,nome:'Novo negócio',role:'new',email:user.email,primeiro_acesso:false,onboarding_concluido:false});
   }
 
   // --- Real Auth Flow ---
@@ -179,7 +127,8 @@ export class AuthService {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin + '/admin'
+        emailRedirectTo: window.location.origin + '/admin',
+        data: { terms_version: '2026-10-04', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
       }
     });
     if (error) throw error;
@@ -190,7 +139,7 @@ export class AuthService {
     if (!this.supabase) {
       return { data: null, error: new Error('Supabase Client not initialized (check env)') };
     }
-    
+
     const { data, error } = await this.supabase.auth.signInWithPassword({
       email,
       password
@@ -206,9 +155,11 @@ export class AuthService {
     const { data, error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
-        emailRedirectTo: window.location.origin + '/admin'
+        emailRedirectTo: window.location.origin + '/admin',
+        data: { terms_version: '2026-10-04', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
       }
     });
+    if (error) throw error;
     return { data, error };
   }
 
@@ -220,6 +171,7 @@ export class AuthService {
       email,
       password
     });
+    if (error) throw error;
     return { data, error };
   }
 
@@ -270,6 +222,7 @@ export class AuthService {
 
   async redirectAfterLogin() {
     // 🔗 Inteligência de Redirecionamento de Identidade
+    if (this.currentUserSubject.value) await this.loadUserProfile(this.currentUserSubject.value.id);
     const profile = this.userProfileSubject.value;
     if (!profile) {
       this.ngZone.run(() => this.router.navigate(['/login']));
@@ -279,6 +232,8 @@ export class AuthService {
     this.ngZone.run(() => {
       if (profile.role === 'superadmin') {
         this.router.navigate(['/platform-admin/dashboard']);
+      } else if (profile.role === 'new') {
+        this.router.navigate(['/onboarding']);
       } else if (profile.role === 'dono') {
         this.router.navigate(['/admin/dashboard']);
       } else if (profile.role === 'secretaria') {

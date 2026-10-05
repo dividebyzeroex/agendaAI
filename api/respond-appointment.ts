@@ -1,110 +1,24 @@
-/**
- * api/respond-appointment.ts — Vercel Serverless
- * Processa a resposta do colaborador (Aceitar/Recusar) via e-mail.
- */
-import { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { randomUUID } from 'node:crypto';
+import { adminClient, escapeHtml, handleError, HttpError, isUuid } from '../server/security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  const { token, action } = req.query;
-
-  if (!token || !action) {
-    return res.status(400).send('Token ou ação inválidos.');
-  }
-
-  const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-  const supabaseKey = process.env['SUPABASE_SERVICE_ROLE_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY']!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
-  // 1. Busca o agendamento pelo token
-  const { data: event, error: eventErr } = await supabase
-    .from('agenda_events')
-    .select('*, profissionais!profissional_id(nome, email)')
-    .eq('token_confirmacao', token)
-    .single();
-
-  if (eventErr || !event) {
-    return res.status(404).send('Agendamento não localizado ou link expirado.');
-  }
-
-  if (action === 'aceitar') {
-    // Apenas aceita se ainda estiver pendente ou se quem está aceitando é o próprio (evita roubo de slot se já estiver aceito)
-    if (event.status_confirmacao === 'aceito') {
-      return res.send(`<html><body><h2 style="color: #34a853;">Agendamento já foi aceito!</h2><p>Você já confirmou este atendimento. Obrigado!</p></body></html>`);
-    }
-
-    await supabase
-      .from('agenda_events')
-      .update({ status_confirmacao: 'aceito', status: 'confirmado' })
-      .eq('id', event.id);
-
-    return res.send(`
-      <html>
-        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-          <h1 style="color: #1a73e8;">✅ Confirmado!</h1>
-          <p>O agendamento de <strong>${event.title}</strong> foi confirmado na sua agenda.</p>
-          <p>Você pode fechar esta página agora.</p>
-        </body>
-      </html>
-    `);
-  }
-
-  if (action === 'recusar') {
-    // 1. Marca como recusado e limpa o profissional_id atual
-    await supabase
-      .from('agenda_events')
-      .update({ 
-        status_confirmacao: 'pendente', // Volta para pendente no leilão
-        profissional_id: null,
-        profissional_nome: 'Aguardando Colaborador'
-      })
-      .eq('id', event.id);
-
-    // 2. BROADCAST: Envia e-mail para todos os outros profissionais ativos
-    const { data: outrosProfs } = await supabase
-      .from('profissionais')
-      .select('nome, email')
-      .eq('ativo', true);
-
-    const { Resend } = require('resend');
-    const resend = new Resend(process.env['RESEND_API_KEY']);
-    
-    if (outrosProfs && outrosProfs.length > 0) {
-      for (const p of outrosProfs) {
-        if (p.email === event.profissionais?.email) continue; // Pula quem recusou
-
-        const baseUrl = process.env['PROJECT_URL'] || `https://${req.headers.host}`;
-        const takeUrl = `${baseUrl}/api/respond-appointment?token=${event.token_confirmacao}&action=aceitar`;
-
-        await resend.emails.send({
-          from: 'AgendaAi <oportunidade@agendaai.com.br>',
-          to: p.email,
-          subject: `🔥 Oportunidade: Novo Serviço Disponível`,
-          html: `
-            <div style="font-family: sans-serif; padding: 20px;">
-              <h2>Olá, ${p.nome}!</h2>
-              <p>Um novo serviço ficou disponível na equipe e você pode assumi-lo:</p>
-              <div style="background: #fffbeb; border: 1px solid #f9ab00; padding: 15px; border-radius: 8px;">
-                <strong>${event.title}</strong><br>
-                📅 ${new Date(event.start).toLocaleString('pt-BR')}
-              </div>
-              <p>O primeiro que aceitar fica com a vaga!</p>
-              <a href="${takeUrl}" style="background: #202124; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; margin-top: 20px;">ASSUMIR SERVIÇO</a>
-            </div>
-          `
-        });
-      }
-    }
-
-    return res.send(`
-      <html>
-        <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-          <h1 style="color: #64748b;">Agendamento Recusado</h1>
-          <p>Entendido. O serviço foi liberado para outros colaboradores.</p>
-        </body>
-      </html>
-    `);
-  }
-
-  return res.status(400).send('Ação desconhecida.');
+  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Referrer-Policy', 'no-referrer');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'");
+  if (!['GET', 'POST'].includes(req.method || '')) return res.status(405).send('Método inválido.');
+  try {
+    const token = req.method === 'POST' ? req.body?.token : req.query.token;
+    if (!isUuid(token)) throw new HttpError(400, 'Token inválido.');
+    const db = adminClient();
+    const { data: event } = await db.from('agenda_events').select('id,title,start,status,status_confirmacao,profissional_id').eq('token_confirmacao', token).single();
+    if (!event || !event.profissional_id || new Date(event.start).getTime() <= Date.now() || ['cancelado', 'concluido'].includes(event.status)) throw new HttpError(404, 'Link expirado ou agendamento indisponível.');
+    if (req.method === 'GET') return res.status(200).send(`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Confirmar agendamento</title><body><h1>${escapeHtml(event.title)}</h1><p>Confirme sua decisão abaixo.</p><form method="post"><input type="hidden" name="token" value="${token}"><button name="action" value="aceitar">Aceitar</button><button name="action" value="recusar">Recusar</button></form></body></html>`);
+    const action = req.body?.action;
+    if (!['aceitar', 'recusar'].includes(action)) throw new HttpError(400, 'Ação inválida.');
+    const update = action === 'aceitar' ? { status_confirmacao: 'aceito', status: 'confirmado', token_confirmacao: randomUUID() } : { status_confirmacao: 'recusado', status: 'pendente', profissional_id: null, token_confirmacao: randomUUID() };
+    const { data: changed, error } = await db.from('agenda_events').update(update).eq('id', event.id).eq('token_confirmacao', token).select('id').maybeSingle();
+    if (error || !changed) throw new HttpError(409, 'Resposta já processada ou agendamento alterado.');
+    return res.status(200).send(action === 'aceitar' ? 'Atendimento confirmado. Obrigado!' : 'Recusa registrada. O responsável poderá atribuir outro profissional.');
+  } catch (error) { return handleError(res, error); }
 }

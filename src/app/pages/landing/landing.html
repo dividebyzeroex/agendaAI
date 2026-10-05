@@ -29,11 +29,11 @@
   <!-- Mobile Menu Drawer -->
   <div class="mobile-nav" [class.open]="isMobileMenuOpen">
     <div class="mobile-links">
-      <a (click)="scrollTo('como-funciona'); toggleMobileMenu()">Como funciona</a>
-      <a (click)="scrollTo('segmentos'); toggleMobileMenu()">Segmentos</a>
-      <a (click)="scrollTo('recursos'); toggleMobileMenu()">Recursos</a>
-      <a (click)="scrollTo('precos'); toggleMobileMenu()">Preços</a>
-      <a (click)="scrollTo('faq'); toggleMobileMenu()">Dúvidas frequentes</a>
+      <a (click)="scrollTo('como-funciona')">Como funciona</a>
+      <a (click)="scrollTo('segmentos')">Segmentos</a>
+      <a (click)="scrollTo('recursos')">Recursos</a>
+      <a (click)="scrollTo('precos')">Preços</a>
+      <a (click)="scrollTo('faq')">Dúvidas frequentes</a>
     </div>
     <div class="mobile-actions">
       <button class="btn-primary w-full" (click)="goToLogin(); toggleMobileMenu()">Criar conta grátis</button>
@@ -51,16 +51,16 @@
         </div>
 
         <h1 class="hero-title">
-          Sua agenda funcionando 24 horas por dia, direto no WhatsApp.
+          Menos tempo organizando horários. Mais atenção a cada cliente.
         </h1>
 
         <p class="hero-subtitle">
-          Atendimento imediato em linguagem natural, confirmação ativa de horários e gestão completa para clínicas, consultórios, salões e prestadores de serviços.
+          Organize agenda, clientes e equipe em um só lugar. Configure o atendimento pelo WhatsApp e descubra, durante 30 dias gratuitos, como o AgendaAi se adapta à sua rotina.
         </p>
 
         <div class="hero-cta-group">
           <button class="btn-primary btn-lg" (click)="goToLogin()">
-            Começar teste de 7 dias
+            Começar teste de 30 dias
           </button>
           <button class="btn-outline btn-lg" (click)="scrollTo('como-funciona')">
             Ver demonstração
@@ -68,25 +68,11 @@
         </div>
 
         <div class="hero-metrics-row">
-          <div class="metric-item">
-            <span class="m-val">24/7</span>
-            <span class="m-lbl">Atendimento contínuo</span>
-          </div>
+          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na sua operação</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item">
-            <span class="m-val">-84%</span>
-            <span class="m-lbl">Taxa de faltas (no-show)</span>
-          </div>
+          <div class="metric-item"><span class="m-val">Sem cartão</span><span class="m-lbl">Sem cobrança automática no teste</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item">
-            <span class="m-val">&lt; 2s</span>
-            <span class="m-lbl">Tempo médio de resposta</span>
-          </div>
-          <div class="metric-divider"></div>
-          <div class="metric-item">
-            <span class="m-val">+500</span>
-            <span class="m-lbl">Empresas ativas</span>
-          </div>
+          <div class="metric-item"><span class="m-val">Seu controle</span><span class="m-lbl">Agenda, clientes e equipe reunidos</span></div>
         </div>
       </div>
 
@@ -98,11 +84,11 @@
             <div class="chrome-title">
               <span class="chrome-crumb">AgendaAi</span>
               <span class="chrome-sep">/</span>
-              <span class="chrome-active">Painel Principal • Quarta-feira, 16 de Outubro</span>
+              <span class="chrome-active">Demonstração ilustrativa • Dados fictícios</span>
             </div>
             <div class="chrome-actions">
               <span class="status-indicator">
-                <span class="indicator-dot"></span> WhatsApp Conectado
+                <span class="indicator-dot"></span> Exemplo de integração
               </span>
             </div>
           </div>
@@ -184,7 +170,7 @@
                   <div class="user-avatar">JM</div>
                   <div>
                     <strong>Juliana Mendes</strong>
-                    <span class="user-phone">+55 11 98412-3390</span>
+                    <span class="user-phone">Contato fictício</span>
                   </div>
                 </div>
                 <span class="badge-auto">Automação Ativa</span>
@@ -198,7 +184,7 @@
 
                 <div class="msg-bubble bot">
                   <p>Olá Juliana! A Dra. Camila tem horário livre nesta quarta às 14h00. Deseja que eu reserve este horário para você?</p>
-                  <span class="msg-time">13:42 • Respondido em 1s</span>
+                  <span class="msg-time">13:42 • Exemplo de resposta</span>
                 </div>
 
                 <div class="msg-bubble client">
@@ -237,19 +223,19 @@
           <div class="step-card">
             <div class="step-number">01</div>
             <h3>O cliente manda mensagem</h3>
-            <p>Por texto ou mensagem de voz no WhatsApp. A IA transcreve áudios e interpreta pedidos com gírias, dúvidas de preço ou pedidos específicos de profissionais.</p>
+            <p>Conecte o canal de atendimento e configure os serviços oferecidos. Teste conversas com sua equipe para validar as respostas antes de atender clientes.</p>
           </div>
 
           <div class="step-card">
             <div class="step-number">02</div>
-            <h3>Checagem instantânea de agenda</h3>
-            <p>O sistema consulta suas regras de intervalo, disponibilidade de salas, grade dos colaboradores e sugere os horários ideais sem conflitos.</p>
+            <h3>Organização da agenda</h3>
+            <p>Cadastre serviços, duração dos atendimentos e profissionais. Acompanhe os horários disponíveis e revise as regras de agendamento.</p>
           </div>
 
           <div class="step-card">
             <div class="step-number">03</div>
-            <h3>Confirmação & Lembretes ativos</h3>
-            <p>O agendamento entra na linha do tempo e lembretes automáticos são enviados antes do atendimento. Se o cliente desmarcar, a vaga é ofertada para quem está na fila.</p>
+            <h3>Acompanhamento dos atendimentos</h3>
+            <p>Consulte o status de cada agendamento e mantenha os registros atualizados. Configure as automações disponíveis e acompanhe sua execução.</p>
           </div>
         </div>
       </div>
@@ -260,15 +246,15 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Especialização por Segmento</span>
-          <h2>O software adapta vocabulário, regras e formulários ao seu nicho</h2>
-          <p>Cada mercado possui dinâmicas próprias. O AgendaAi não força um modelo genérico sobre o seu estabelecimento.</p>
+          <h2>Uma agenda que acompanha a rotina do seu negócio</h2>
+          <p>Conheça exemplos de aplicação. Valide os recursos e as integrações necessários durante seu período de teste.</p>
         </div>
 
         <!-- Segment Selector -->
         <div class="segment-tabs">
-          <button 
-            *ngFor="let seg of segments" 
-            class="seg-tab" 
+          <button
+            *ngFor="let seg of segments"
+            class="seg-tab"
             [class.active]="activeSegmentId === seg.id"
             (click)="selectSegment(seg.id)">
             <span>{{ seg.name }}</span>
@@ -288,7 +274,7 @@
           <div class="seg-body-grid">
             <!-- Left: Terms & Rules -->
             <div class="seg-info-col">
-              <h4>Particularidades configuradas:</h4>
+              <h4>Exemplos de configuração:</h4>
               <div class="term-list">
                 <div class="term-row" *ngFor="let t of activeSegment.terms">
                   <span class="t-key">{{ t.label }}:</span>
@@ -297,7 +283,7 @@
               </div>
 
               <div class="features-checklist">
-                <h4>Recursos ativos para este segmento:</h4>
+                <h4>Possibilidades a validar no teste:</h4>
                 <ul>
                   <li *ngFor="let f of activeSegment.features">
                     <i class="pi pi-check"></i> {{ f }}
@@ -310,7 +296,7 @@
             <div class="seg-dialogue-col">
               <div class="dialogue-box-clean">
                 <div class="box-caption">Simulação de atendimento no WhatsApp</div>
-                
+
                 <div class="dialogue-snippet">
                   <div class="d-msg client">
                     <p>{{ activeSegment.chatExample.clientMsg }}</p>
@@ -350,14 +336,14 @@
         <div class="features-grid">
           <div class="feature-card">
             <div class="f-num">01</div>
-            <h3>Compreensão de Áudio e Texto</h3>
-            <p>O motor de processamento de linguagem natural transcreve notas de voz e entende mensagens complexas com múltiplos pedidos, dúvidas de valores e preferências de horário.</p>
+            <h3>Atendimento com apoio de IA</h3>
+            <p>Configure instruções para o atendimento e conecte seus provedores. Valide as respostas e os formatos de mensagem suportados no seu ambiente.</p>
           </div>
 
           <div class="feature-card">
             <div class="f-num">02</div>
-            <h3>Blindagem de Faltas (No-Show)</h3>
-            <p>Disparo programado de mensagens de confirmação 24h e 2h antes. Em caso de cancelamento, a fila de espera é acionada automaticamente para repor o faturamento daquele horário.</p>
+            <h3>Confirmação e acompanhamento</h3>
+            <p>Acompanhe o status dos agendamentos e configure lembretes conforme a integração disponível. Resultados dependem da operação e da participação dos clientes.</p>
           </div>
 
           <div class="feature-card">
@@ -368,20 +354,20 @@
 
           <div class="feature-card">
             <div class="f-num">04</div>
-            <h3>Segurança & Privacidade (LGPD)</h3>
-            <p>Os dados de contato, prontuários e históricos pertencem exclusivamente ao seu estabelecimento. Conexão criptografada e controle rigoroso de permissões por perfil de usuário.</p>
+            <h3>Acesso e privacidade</h3>
+            <p>Gerencie o acesso da sua equipe e consulte as condições de tratamento de dados. Informações sensíveis exigem avaliação e configuração adequadas antes do uso.</p>
           </div>
 
           <div class="feature-card">
             <div class="f-num">05</div>
             <h3>Acesso Multi-Dispositivo</h3>
-            <p>Funciona em qualquer navegador de computador, tablet ou celular. Não exige instalação de servidores locais ou manutenção técnica complexa.</p>
+            <p>Acesse pelo navegador no computador, tablet ou celular. Não exige instalação de servidores locais ou manutenção técnica complexa.</p>
           </div>
 
           <div class="feature-card">
             <div class="f-num">06</div>
             <h3>Controle Manual Sempre Disponível</h3>
-            <p>Sua equipe pode intervir em qualquer conversa do WhatsApp ou criar agendamentos manuais para clientes que ligarem ou comparecerem presencialmente na recepção.</p>
+            <p>Sua equipe acompanha a agenda e pode criar agendamentos manuais para clientes que ligarem ou comparecerem presencialmente.</p>
           </div>
         </div>
       </div>
@@ -392,8 +378,8 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Planos & Investimento</span>
-          <h2>Valores claros, sem taxa de adesão ou taxas ocultas</h2>
-          <p>Experimente por 7 dias grátis. Cancele quando quiser sem multa rescisória.</p>
+          <h2>Teste primeiro. Escolha seu plano depois.</h2>
+          <p>30 dias grátis, sem cartão e sem cobrança automática. A assinatura exige sua confirmação. Integrações e consumo de serviços externos podem ter custos próprios.</p>
 
           <div class="billing-toggle-container">
             <button class="b-toggle-btn" [class.active]="!isAnnualBilling" (click)="toggleBilling(false)">
@@ -412,57 +398,57 @@
               <span class="tier-name">Starter</span>
               <div class="tier-cost">
                 <span class="currency">R$</span>
-                <span class="val">{{ isAnnualBilling ? '77' : '97' }}</span>
-                <span class="cycle">/mês</span>
+                <span class="val">{{ isAnnualBilling ? '77,60' : '97' }}</span>
+                <span class="cycle">/mês {{ isAnnualBilling ? '(equivalente)' : '' }}</span>
               </div>
               <p class="tier-description">Para profissionais individuais e autônomos iniciando a digitalização da agenda.</p>
             </div>
 
             <ul class="tier-checklist">
               <li><i class="pi pi-check"></i> Até 100 agendamentos por mês</li>
-              <li><i class="pi pi-check"></i> Atendente IA no WhatsApp 24/7</li>
-              <li><i class="pi pi-check"></i> Lembretes automáticos anti-falta</li>
+              <li><i class="pi pi-check"></i> Atendimento IA com integração configurada</li>
+              <li><i class="pi pi-check"></i> Configuração de lembretes</li>
               <li><i class="pi pi-check"></i> 1 Profissional vinculado</li>
-              <li><i class="pi pi-check"></i> Suporte por e-mail e WhatsApp</li>
+              <li><i class="pi pi-check"></i> Configuração guiada da conta</li>
             </ul>
 
-            <button class="btn-outline w-full" (click)="goToLogin()">Testar 7 dias grátis</button>
+            <button class="btn-outline w-full" (click)="goToLogin()">Testar 30 dias grátis</button>
           </div>
 
           <!-- Pro (Destaque) -->
           <div class="pricing-tier featured">
-            <div class="featured-badge">Mais Escolhido</div>
-            
+            <div class="featured-badge">Para equipes</div>
+
             <div class="tier-head">
               <span class="tier-name">Profissional</span>
               <div class="tier-cost">
                 <span class="currency">R$</span>
-                <span class="val">{{ isAnnualBilling ? '157' : '197' }}</span>
-                <span class="cycle">/mês</span>
+                <span class="val">{{ isAnnualBilling ? '157,60' : '197' }}</span>
+                <span class="cycle">/mês {{ isAnnualBilling ? '(equivalente)' : '' }}</span>
               </div>
               <p class="tier-description">Para clínicas, barbearias, petshops e espaços com equipe e fluxo contínuo.</p>
             </div>
 
             <ul class="tier-checklist">
               <li><i class="pi pi-check"></i> <strong>Até 500 agendamentos por mês</strong></li>
-              <li><i class="pi pi-check"></i> <strong>Compreensão de áudio e texto no WhatsApp</strong></li>
-              <li><i class="pi pi-check"></i> <strong>Fila de espera com encaixe automático</strong></li>
+              <li><i class="pi pi-check"></i> <strong>Configuração de atendimento com IA</strong></li>
+              <li><i class="pi pi-check"></i> <strong>Gestão da agenda da equipe</strong></li>
               <li><i class="pi pi-check"></i> Até 5 profissionais vinculados</li>
-              <li><i class="pi pi-check"></i> Módulos específicos do nicho (prontuário/fichas)</li>
+              <li><i class="pi pi-check"></i> Cadastro de clientes e serviços</li>
               <li><i class="pi pi-check"></i> Controle de comissões e comandas</li>
             </ul>
 
-            <button class="btn-primary w-full" (click)="goToLogin()">Começar teste de 7 dias</button>
+            <button class="btn-primary w-full" (click)="goToLogin()">Começar teste de 30 dias</button>
           </div>
 
           <!-- Business -->
           <div class="pricing-tier">
             <div class="tier-head">
-              <span class="tier-name">Business</span>
+              <span class="tier-name">Premium</span>
               <div class="tier-cost">
                 <span class="currency">R$</span>
-                <span class="val">{{ isAnnualBilling ? '317' : '397' }}</span>
-                <span class="cycle">/mês</span>
+                <span class="val">{{ isAnnualBilling ? '279,20' : '349' }}</span>
+                <span class="cycle">/mês {{ isAnnualBilling ? '(equivalente)' : '' }}</span>
               </div>
               <p class="tier-description">Para redes, franquias ou empresas com alta demanda e múltiplos atendimentos simultâneos.</p>
             </div>
@@ -470,14 +456,15 @@
             <ul class="tier-checklist">
               <li><i class="pi pi-check"></i> <strong>Agendamentos ilimitados</strong></li>
               <li><i class="pi pi-check"></i> <strong>Profissionais ilimitados</strong></li>
-              <li><i class="pi pi-check"></i> Múltiplas salas e recursos</li>
+              <li><i class="pi pi-check"></i> Gestão de serviços e equipe</li>
               <li><i class="pi pi-check"></i> Relatórios gerenciais avançados</li>
-              <li><i class="pi pi-check"></i> Suporte prioritário com onboarding assistido</li>
+              <li><i class="pi pi-check"></i> Recursos de gestão ampliados</li>
             </ul>
 
-            <button class="btn-outline w-full" (click)="goToLogin()">Falar com consultor</button>
+            <button class="btn-outline w-full" (click)="goToLogin()">Testar 30 dias grátis</button>
           </div>
         </div>
+        <p class="pricing-disclosure" *ngIf="isAnnualBilling">Contratação anual: Starter R$ 931,20/ano; Profissional R$ 1.891,20/ano; Premium R$ 3.350,40/ano. Confira condições e disponibilidade de cobrança antes de contratar.</p>
       </div>
     </section>
 
@@ -508,13 +495,13 @@
       <div class="container">
         <div class="cta-box">
           <h2>Pronto para organizar seus atendimentos?</h2>
-          <p>Crie sua conta em 2 minutos e teste todas as funcionalidades gratuitamente por 7 dias.</p>
+          <p>Crie sua conta, cadastre seus serviços e avalie o AgendaAi na rotina real do seu negócio por 30 dias.</p>
           <div class="cta-actions">
             <button class="btn-primary btn-lg" (click)="goToLogin()">
               Criar conta gratuita agora
             </button>
           </div>
-          <span class="cta-micro">Sem necessidade de cartão de crédito para o teste • Cancele quando desejar</span>
+          <span class="cta-micro">Sem cartão de crédito • Sem cobrança automática ao encerrar o teste</span>
         </div>
       </div>
     </section>
@@ -556,16 +543,16 @@
           <strong>Acesso</strong>
           <a (click)="goToLogin()">Entrar no sistema</a>
           <a (click)="goToLogin()">Cadastro de nova empresa</a>
-          <a href="mailto:suporte@agendaai.com.br">Suporte por e-mail</a>
+          <a href="/termos#privacidade">Dados e privacidade</a>
         </div>
       </div>
 
       <div class="footer-bottom">
-        <span>&copy; 2026 AgendaAi Tecnologia Ltda. Todos os direitos reservados.</span>
+        <span>&copy; 2026 AgendaAi. Todos os direitos reservados.</span>
         <div class="footer-legal">
-          <a href="#">Privacidade</a>
-          <a href="#">Termos de Uso</a>
-          <a href="#">Segurança & LGPD</a>
+          <a href="/termos#privacidade">Privacidade</a>
+          <a href="/termos">Condições do teste e assinatura</a>
+
         </div>
       </div>
     </div>

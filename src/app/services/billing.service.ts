@@ -39,7 +39,7 @@ export class BillingService {
   private supabase = inject(SupabaseService).client;
 
   // Official structure for Pagar.me integration
-  private readonly ENCRYPTION_KEY = 'ek_test_6D1y1x9z0A2B3C4D5E6F'; 
+  private readonly ENCRYPTION_KEY = 'ek_test_6D1y1x9z0A2B3C4D5E6F';
 
   plans: BillingPlan[] = [
     {
@@ -96,8 +96,8 @@ export class BillingService {
     if (cycleMonths === 6) discount = 10;
     if (cycleMonths === 12) discount = 20;
 
-    const totalPrice = Math.round(((plan.basePrice || plan.price || 0) * cycleMonths) * (1 - discount / 100));
-    
+    const totalPrice = Math.round(((plan.basePrice || plan.price || 0) * cycleMonths) * (1 - discount / 100) * 100) / 100;
+
     return {
       ...plan,
       months: cycleMonths,
@@ -118,7 +118,7 @@ export class BillingService {
   async refreshInvoices() {
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) return;
-    
+
   try {
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
@@ -141,7 +141,7 @@ export class BillingService {
     }
   }
 
-  /** 
+  /**
    * Official Stripe Checkout Integration
    */
   async processStripeCheckout(planId: string, months: number): Promise<string | undefined> {
@@ -163,7 +163,7 @@ export class BillingService {
 
       const response = await fetch('/api/billing?action=checkout', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -192,22 +192,23 @@ export class BillingService {
     if (!current?.id) throw new Error('Estabelecimento não encontrado.');
 
     try {
-      const response = await fetch(`/api/billing?action=verify&session_id=${sessionId}`);
+      const { data: { session } } = await this.supabase.auth.getSession();
+      const response = await fetch(`/api/billing?action=verify&session_id=${encodeURIComponent(sessionId)}`, { headers: { Authorization: `Bearer ${session?.access_token || ''}` } });
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.error || `Erro de Servidor (${response.status})`);
       }
-      
+
       if (data.status === 'success') {
         // Refresh local establishment data (Bypass cache)
         (this.estabService as any)._estabelecimentoCache.clear();
         await this.estabService.fetchEstabelecimento();
-        
+
         // Refresh Invoices [NEW]
         await this.refreshInvoices();
       }
-      
+
       return data;
     } catch (err) {
       console.error('[Stripe Billing] Error verifying session:', err);
@@ -228,7 +229,7 @@ export class BillingService {
 
       const response = await fetch('/api/billing?action=cancel', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
@@ -236,13 +237,13 @@ export class BillingService {
       });
 
       const data = await response.json();
-      
+
       if (data.status === 'cancelled') {
         // Refresh local establishment data to show cancelled status
         (this.estabService as any)._estabelecimentoCache.clear();
         await this.estabService.fetchEstabelecimento();
       }
-      
+
       return data;
     } catch (err) {
       console.error('[Stripe Billing] Error cancelling subscription:', err);
@@ -292,7 +293,7 @@ export class BillingService {
         graceEnd.setDate(graceEnd.getDate() + 5);
 
         if (now <= expires) return 5; // Hasn't started grace period yet
-        
+
         const diff = graceEnd.getTime() - now.getTime();
         return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
       })
@@ -309,7 +310,7 @@ export class BillingService {
     return this.estabService.estabelecimento$.pipe(
       map((e: Estabelecimento | null) => {
         if (!e) return undefined;
-        
+
         // 1. Check if user has an active paid plan based on plano_expires_at
         if (e.plano_expires_at) {
           const now = new Date();
@@ -318,17 +319,17 @@ export class BillingService {
             return this.plans.find(p => p.id === e.plano);
           }
         }
-        
+
         // 2. Check if Trial is still active
         if (e.trial_ends_at) {
           const now = new Date();
           const ends = new Date(e.trial_ends_at);
           if (ends > now) {
             // Give default 1_month features during trial
-            return this.plans.find(p => p.id === '1_month');
+            return this.plans.find(p => p.id === 'completo');
           }
         }
-        
+
         return undefined;
       })
     );
@@ -348,7 +349,7 @@ export class BillingService {
 
   isTrialActive(): Observable<boolean> {
     return this.estabService.estabelecimento$.pipe(
-      map((e: Estabelecimento | null) => !!e?.trial_ends_at && !e.plano && new Date(e.trial_ends_at) > new Date())
+      map((e: Estabelecimento | null) => !!e?.trial_ends_at && !e.plano_expires_at && new Date(e.trial_ends_at) > new Date())
     );
   }
 

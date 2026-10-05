@@ -7,12 +7,12 @@
 
     <div class="on-scene">
       <div class="on-card-3d" [class.flipped]="flipAngle !== 0" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
-        
+
         <!-- FRENTE: Login, Signup, Step 1, Step 3 -->
         <div class="on-face on-front">
-          
+
           <p-card styleClass="login-card">
-            
+
             <!-- Timeline (Apenas no Onboarding) -->
 
 
@@ -56,6 +56,10 @@
                   <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 6 caracteres" />
                 </div>
 
+                <div class="method-toggles" *ngIf="!isSignupMode && step === 'auth' && !isOtpSent">
+                  <button class="method-btn" (click)="authType='email'">Entrar por e-mail</button>
+                  <button class="method-btn" (click)="authType='password'">Entrar com senha</button>
+                </div>
                 <!-- PASSO 2: AUTENTICAÇÃO ADAPTATIVA (SENHA) -->
                 <div class="field animate-in" *ngIf="step === 'auth' && authType === 'password' && !isOtpSent">
                   <div class="field-info-row">
@@ -64,7 +68,7 @@
                   </div>
                   <input pInputText id="password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="••••••••" />
                   <div style="text-align: right; margin-top: 8px;">
-                    <a href="javascript:void(0)" class="btn-forgot-password">Esqueceu sua senha?</a>
+                    <a href="javascript:void(0)" class="btn-forgot-password" (click)="authType='email'">Entrar por link de acesso</a>
                   </div>
                 </div>
 
@@ -77,10 +81,15 @@
                    </div>
                 </div>
 
-                <p-button 
+                <div class="field" *ngIf="isSignupMode && !isOtpSent">
+                  <p>30 dias grátis, sem cartão e sem cobrança automática.</p>
+                  <label><input type="checkbox" [(ngModel)]="termsAccepted" /> Li e aceito as <a href="/termos" target="_blank" rel="noopener">condições do teste e privacidade</a>.</label>
+                  <label style="display:block;margin-top:12px"><input type="checkbox" [(ngModel)]="marketingConsent" /> Quero receber dicas e ofertas da AgendaAI (opcional).</label>
+                </div>
+                <p-button
                     *ngIf="!isOtpSent"
-                    [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar com E-mail' : 'Entrar no Sistema')" 
-                    styleClass="w-full btn-login-main" 
+                    [label]="isSignupMode ? 'Começar Cadastro' : (step === 'email' ? 'Continuar com E-mail' : 'Entrar no Sistema')"
+                    styleClass="w-full btn-login-main"
                     [loading]="isLoading"
                     [outlined]="true"
                     severity="secondary"
@@ -96,7 +105,7 @@
                 </div>
 
                 <div class="signup-link" *ngIf="!isOtpSent">
-                  {{ isSignupMode ? 'Já tem uma conta empresarial?' : 'Quer levar o AgendaAi para seu negócio?' }} 
+                  {{ isSignupMode ? 'Já tem uma conta empresarial?' : 'Quer levar o AgendaAi para seu negócio?' }}
                   <a href="javascript:void(0)" (click)="toggleMode()">
                     {{ isSignupMode ? 'Faça o login' : 'Comece agora' }}
                   </a>
@@ -133,7 +142,7 @@
         <!-- TRÁS: Step 2, Step 4, Conclusão -->
         <div class="on-face on-back">
           <p-card styleClass="login-card">
-            
+
 
 
             <!-- CONCLUSÃO -->

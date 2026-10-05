@@ -15,10 +15,10 @@
     <!-- Contêiner 3D da Revolução -->
     <div class="on-scene" *ngIf="step !== 'conclusao'">
       <div class="on-card-3d" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
-        
+
         <!-- FRENTE (Steps Pares na lógica do giro: Overview: 0deg, Identidade: -360deg...) -->
         <div class="on-face on-front">
-          
+
           <!-- PASSO 1: Empresa, CNPJ & Segmento -->
           <ng-container *ngIf="step === 'overview'">
             <div class="on-hero">
@@ -63,8 +63,8 @@
             <div class="field">
               <label>Cor de Destaque</label>
               <div class="color-grid">
-                 <button *ngFor="let c of suggestedColors" 
-                   [style.background]="c" 
+                 <button *ngFor="let c of suggestedColors"
+                   [style.background]="c"
                    [class.active]="form.cor_primaria === c"
                    (click)="form.cor_primaria = c">
                    <i class="pi pi-check" *ngIf="form.cor_primaria === c"></i>
@@ -81,7 +81,7 @@
 
         <!-- COSTAS (Steps Ímpares na lógica do giro: Operação: -180deg, Link: -540deg...) -->
         <div class="on-face on-back">
-          
+
           <!-- PASSO 2: Operação (Volume e Local) -->
           <ng-container *ngIf="step === 'operacao'">
             <div class="on-hero">
@@ -119,15 +119,18 @@
             </div>
             <div class="field magic-link-field">
               <div class="slug-wrap">
-                 <span>agendaai.app/</span>
+                 <span>{{bookingOrigin}}</span>
                  <input type="text" [(ngModel)]="form.slug" placeholder="seu-negocio" />
               </div>
               <p class="hint"><i class="pi pi-info-circle"></i> Você pode enviar este link no Instagram ou WhatsApp.</p>
             </div>
             <div class="btn-group">
               <button class="btn-back" (click)="back()"><i class="pi pi-arrow-left"></i></button>
-              <button class="btn-next final" [disabled]="!form.slug" (click)="finalizar()">
-                <i class="pi pi-bolt"></i> Criar Infraestrutura
+              <p role="alert" *ngIf="errorMessage">{{ errorMessage }}</p>
+              <label><input type="checkbox" [(ngModel)]="termsAccepted" /> Li e aceito as <a href="/termos" target="_blank" rel="noopener">condições do teste de 30 dias</a>.</label>
+              <label style="display:block;margin:12px 0"><input type="checkbox" [(ngModel)]="marketingConsent" /> Quero receber dicas e ofertas (opcional).</label>
+              <button class="btn-next final" [disabled]="!form.slug || !termsAccepted || isSaving" (click)="finalizar()">
+                <i class="pi pi-bolt"></i> Iniciar teste de 30 dias
               </button>
             </div>
           </ng-container>
@@ -143,11 +146,11 @@
           <div class="pulse-circle second"></div>
           <i class="pi pi-sparkles loader-icon"></i>
        </div>
-       
+
        <div class="final-message" *ngIf="!isSaving">
           <div class="success-icon-wrap"><i class="pi pi-envelope"></i></div>
           <h1 class="glow-text">Verifique seu E-mail</h1>
-          <p>Enviamos um **Link Mágico** para o e-mail informado. <br> Clique nele para validar seus dados e soltar a IA no seu negócio.</p>
+          <p>Enviamos um **Link Mágico** para o e-mail informado. <br> Clique nele para validar seus dados e começar a configurar sua agenda.</p>
           <div class="email-badge">{{form.email}}</div>
           <button class="btn-next" (click)="step = 'link'">Voltar e corrigir e-mail</button>
        </div>

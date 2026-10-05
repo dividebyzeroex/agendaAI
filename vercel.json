@@ -2,16 +2,40 @@
   "name": "agenda-ai",
   "version": 2,
   "rewrites": [
-    { "source": "/api/checkout", "destination": "/api/billing?action=checkout" },
-    { "source": "/api/verify-session", "destination": "/api/billing?action=verify" },
-    { "source": "/api/get-invoices", "destination": "/api/billing?action=invoices" },
-    { "source": "/api/cancel-subscription", "destination": "/api/billing?action=cancel" },
-    { "source": "/((?!api/).*)", "destination": "/" }
+    {
+      "source": "/api/checkout",
+      "destination": "/api/billing?action=checkout"
+    },
+    {
+      "source": "/api/verify-session",
+      "destination": "/api/billing?action=verify"
+    },
+    {
+      "source": "/api/get-invoices",
+      "destination": "/api/billing?action=invoices"
+    },
+    {
+      "source": "/api/cancel-subscription",
+      "destination": "/api/billing?action=cancel"
+    },
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/"
+    }
   ],
   "crons": [
     {
       "path": "/api/cron/bot-recepcao",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/commercial?action=run",
+      "schedule": "0 12 * * *"
     }
-  ]
+  ],
+  "functions": {
+    "api/commercial.ts": {
+      "maxDuration": 60
+    }
+  }
 }
