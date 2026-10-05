@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SupabaseService } from '../../services/supabase.service';
 
-interface Prospect { id: string; business_name: string; email: string; segment: string | null; source_url: string | null; status: string; consent_at: string | null; unsubscribed_at: string | null; created_at: string; last_contact_at: string | null; }
+interface Prospect { id: string; business_name: string; email: string | null; segment: string | null; source_url: string | null; status: string; consent_at: string | null; unsubscribed_at: string | null; created_at: string; last_contact_at: string | null; }
+interface ResearchProspect { business_name: string; priority: string; observed_signal: string; pitch_draft: string; }
 interface AgentStatus { enabled: boolean; ready: boolean; missing: string[]; dailyLimit: number; counts: { prospects: number; contacted: number; trial: number; won: number }; lastRuns: Array<{id:string;agent:string;status:string;created_at:string;summary:unknown}>; }
 
 @Component({ selector: 'app-platform-growth', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './platform-growth.html', styleUrls: ['./platform-growth.css'] })
@@ -16,6 +17,22 @@ export class PlatformGrowth implements OnInit {
   form = { business_name: '', email: '', segment: '', source_url: '', consent: false };
   labels: Record<string, string> = {new:'Novo',qualified:'Qualificado',contacted:'Contatado',replied:'Respondeu',trial:'Em teste',won:'Cliente',lost:'Encerrado',unsubscribed:'Descadastrado'};
   get visibleProspects() { return this.prospects.filter(p => !this.filter || p.status === this.filter); }
+  get researchProspects(): ResearchProspect[] {
+    const found = new Map<string, ResearchProspect>();
+    for (const run of this.status?.lastRuns || []) {
+      if (run.agent !== 'research' || !run.summary || typeof run.summary !== 'object') continue;
+      const entries = (run.summary as Record<string, unknown>)['prospects'];
+      if (!Array.isArray(entries)) continue;
+      for (const item of entries) {
+        if (!item || typeof item !== 'object') continue;
+        const p = item as Record<string, unknown>;
+        if (typeof p['business_name'] !== 'string' || typeof p['observed_signal'] !== 'string' || typeof p['pitch_draft'] !== 'string') continue;
+        const name = p['business_name'];
+        if (!found.has(name)) found.set(name, {business_name: name, priority: typeof p['priority'] === 'string' ? p['priority'] : 'Não definida', observed_signal: p['observed_signal'], pitch_draft: p['pitch_draft']});
+      }
+    }
+    return [...found.values()];
+  }
   async ngOnInit() { await this.load(); }
   private async api(method: string, action: string, body?: unknown) {
     const {data: {session}} = await this.supabase.client.auth.getSession();
@@ -62,5 +79,11 @@ export class PlatformGrowth implements OnInit {
     catch(e){this.error=e instanceof Error?e.message:'Não foi possível atualizar a oportunidade.';}
     finally{this.cdr.markForCheck();}
   }
-  summarize(value: unknown): string { return typeof value === 'string' ? value : JSON.stringify(value ?? {}); }
+  summarize(value: unknown): string {
+    if (value && typeof value === 'object' && Array.isArray((value as Record<string, unknown>)['prospects'])) {
+      const summary = value as Record<string, unknown>;
+      return `${(summary['prospects'] as unknown[]).length} empresas pesquisadas. Contatadas: ${summary['contacted'] ?? 0}. Consulte as abordagens abaixo.`;
+    }
+    return typeof value === 'string' ? value : JSON.stringify(value ?? {});
+  }
 }
