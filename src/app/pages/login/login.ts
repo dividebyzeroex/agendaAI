@@ -38,7 +38,7 @@ export class Login implements OnInit {
 
   // Estados Camaleão
   step: 'email' | 'auth' = 'email';
-  authType: 'email' | 'phone' | 'password' = 'email';
+  authType: 'email' | 'phone' | 'password' = 'password';
   password = '';
 
   // Estados Onboarding Integrado (Elite Gatekeeper)
@@ -74,8 +74,9 @@ export class Login implements OnInit {
     this.successMessage = '';
     this.isLoading = true;
 
-    if (!this.email) {
-      this.errorMessage = 'Por favor, insira o seu e-mail corporativo.';
+    this.email = this.email.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+      this.errorMessage = 'Informe um e-mail válido.';
       this.isLoading = false;
       return;
     }
@@ -85,8 +86,8 @@ export class Login implements OnInit {
          if (!this.termsAccepted) throw new Error('Leia e aceite as condições do teste para continuar.');
          localStorage.setItem('ag_terms_accepted', 'true');
          localStorage.setItem('ag_marketing_consent', String(this.marketingConsent));
-         if (this.authType === 'password' && (!this.password || this.password.length < 6)) {
-           this.errorMessage = 'Sua senha deve ter no mínimo 6 caracteres.';
+         if (this.authType === 'password' && (!this.password || this.password.length < 8)) {
+           this.errorMessage = 'Sua senha deve ter no mínimo 8 caracteres.';
            this.isLoading = false;
            this.cdr.detectChanges();
            return;
@@ -101,7 +102,7 @@ export class Login implements OnInit {
 
       // LOGIN CAMALEÃO: Passo 1 - Identificar Preferência
       if (this.step === 'email') {
-        this.authType = 'email';
+        this.authType = 'password';
         this.step = 'auth';
         this.isLoading = false;
         this.cdr.detectChanges();
@@ -209,7 +210,7 @@ export class Login implements OnInit {
 
   resetSteps() {
     this.step = 'email';
-    this.authType = 'email';
+    this.authType = 'password';
     this.password = '';
     this.cdr.detectChanges();
   }

@@ -53,7 +53,7 @@
                 <!-- CAMPO DE SENHA NO CADASTRO -->
                 <div class="field animate-in" *ngIf="isSignupMode && step === 'email' && authType === 'password' && !isOtpSent && email && isEmailValid">
                   <label for="new_password">Crie uma Senha</label>
-                  <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 6 caracteres" />
+                  <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 8 caracteres" />
                 </div>
 
                 <div class="method-toggles" *ngIf="!isSignupMode && step === 'auth' && !isOtpSent">

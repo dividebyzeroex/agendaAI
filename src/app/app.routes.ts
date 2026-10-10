@@ -69,7 +69,7 @@ export const routes: Routes = [
       },
       {
         path: 'chatbots',
-        loadComponent: () => import('./pages/admin-chatbots/admin-chatbots').then(m => m.AdminChatbots),
+        redirectTo: 'configuracoes', pathMatch: 'full',
         canActivate: [roleGuard],
         data: { roles: ['dono'] }
       }
@@ -84,8 +84,8 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard').then(m => m.PlatformDashboard) },
       { path: 'growth', loadComponent: () => import('./pages/platform-growth/platform-growth').then(m => m.PlatformGrowth) },
       { path: 'tenants', loadComponent: () => import('./pages/platform-tenants/platform-tenants').then(m => m.PlatformTenants) },
-      { path: 'observability', loadComponent: () => import('./pages/platform-observability/platform-observability').then(m => m.PlatformObservability) },
-      { path: 'social', loadComponent: () => import('./pages/platform-social/platform-social').then(m => m.PlatformSocial) },
+      { path: 'observability', redirectTo: 'growth', pathMatch: 'full' },
+      { path: 'social', redirectTo: 'growth', pathMatch: 'full' },
       { path: 'billing', loadComponent: () => import('./pages/platform-billing/platform-billing').then(m => m.PlatformBilling) },
       { path: 'settings', loadComponent: () => import('./pages/platform-settings/platform-settings').then(m => m.PlatformSettings) }
     ]

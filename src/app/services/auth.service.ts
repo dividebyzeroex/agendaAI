@@ -73,7 +73,7 @@ export class AuthService {
   }
 
   async checkSession(): Promise<boolean> {
-    // If we already have a user in memory (or mock), it's authed
+    // Resolve the current authenticated profile.
     if (this.isAuthed_Sync && this.userProfileValue) return true;
 
     if (!this.supabase) {
@@ -128,7 +128,7 @@ export class AuthService {
       password,
       options: {
         emailRedirectTo: window.location.origin + '/admin',
-        data: { terms_version: '2026-10-04', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
+        data: { terms_version: '2026-10-10', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
       }
     });
     if (error) throw error;
@@ -156,7 +156,7 @@ export class AuthService {
       email,
       options: {
         emailRedirectTo: window.location.origin + '/admin',
-        data: { terms_version: '2026-10-04', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
+        data: { terms_version: '2026-10-10', terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true', marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true' }
       }
     });
     if (error) throw error;

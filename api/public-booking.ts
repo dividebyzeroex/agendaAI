@@ -45,9 +45,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (!Number.isFinite(starts) || !Number.isFinite(ends) || starts <= Date.now() || starts > Date.now() + 180 * 86400000 || ends <= starts) return res.status(400).json({ error: 'Horário inválido.' });
     const { data: service } = await supabase.from('servicos').select('titulo,duracao_min').eq('id', servico_id).eq('estabelecimento_id', estabelecimento_id).eq('ativo', true).single();
     if (!service || ends - starts !== service.duracao_min * 60000) return res.status(400).json({ error: 'Serviço ou duração inválidos.' });
+    const { data: professionals, error: professionalsError } = await supabase.from('profissionais').select('id').eq('estabelecimento_id', estabelecimento_id).eq('ativo', true);
+    if (professionalsError) return res.status(503).json({ error: 'Não foi possível verificar a equipe.' });
+    if (professionals?.length && !profissional_id) return res.status(400).json({ error: 'Escolha um profissional.' });
+    if (profissional_id && !professionals?.some(p => p.id === profissional_id)) return res.status(400).json({ error: 'Profissional inválido.' });
     if (profissional_id) {
-      const { data: professional } = await supabase.from('profissionais').select('id').eq('id', profissional_id).eq('estabelecimento_id', estabelecimento_id).eq('ativo', true).single();
-      if (!professional) return res.status(400).json({ error: 'Profissional inválido.' });
+      const { data: bindings, error: bindingsError } = await supabase.from('profissional_servicos').select('servico_id').eq('profissional_id', profissional_id).eq('estabelecimento_id', estabelecimento_id);
+      if (bindingsError) return res.status(503).json({ error: 'Não foi possível verificar os serviços.' });
+      if (bindings?.length && !bindings.some(b => b.servico_id === servico_id)) return res.status(400).json({ error: 'Serviço não atendido pelo profissional.' });
     }
     const zoned = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(start));
     const part = (type: string) => zoned.find(p => p.type === type)?.value || '';
@@ -56,8 +61,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const minutes = (value: string) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
     const startMinutes = minutes(`${part('hour')}:${part('minute')}`);
     if (!hours?.abre || !hours.fecha || startMinutes < minutes(hours.abre) || startMinutes + service.duracao_min > minutes(hours.fecha)) return res.status(400).json({ error: 'Horário fora do expediente.' });
+    if (profissional_id) {
+      const { data: availability, error: availabilityError } = await supabase.from('profissional_disponibilidades').select('ativo,hora_inicio,hora_fim,intervalo_inicio,intervalo_fim').eq('profissional_id', profissional_id).eq('estabelecimento_id', estabelecimento_id).eq('dia_semana', weekday).maybeSingle();
+      if (availabilityError) return res.status(503).json({ error: 'Não foi possível verificar o expediente.' });
+      if (!availability?.ativo || startMinutes < minutes(availability.hora_inicio) || startMinutes + service.duracao_min > minutes(availability.hora_fim)
+        || (availability.intervalo_inicio && availability.intervalo_fim && startMinutes < minutes(availability.intervalo_fim) && startMinutes + service.duracao_min > minutes(availability.intervalo_inicio)))
+        return res.status(400).json({ error: 'Profissional indisponível nesse horário.' });
+    }
     let conflict = supabase.from('agenda_events').select('id').eq('estabelecimento_id', estabelecimento_id).neq('status', 'cancelado').lt('start', end).gt('end', start);
-    if (profissional_id) conflict = conflict.eq('profissional_id', profissional_id);
+    if (profissional_id) conflict = conflict.or(`profissional_id.eq.${profissional_id},profissional_id.is.null`);
     const { data: conflicts, error: conflictError } = await conflict.limit(1);
     if (conflictError) return res.status(503).json({ error: 'Não foi possível verificar a disponibilidade.' });
     if (conflicts?.length) return res.status(409).json({ error: 'Horário indisponível.' });

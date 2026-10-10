@@ -1,10 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { authenticate, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
+import { authenticate, billingReadiness, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const action = req.query['action'];
+    if (action === 'status' && req.method === 'GET') return res.status(200).json(billingReadiness());
     const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET' };
     if (typeof action !== 'string' || !methods[action]) throw new BillingError(400, 'Ação inválida.');
     if (req.method !== methods[action]) { res.setHeader('Allow', methods[action]); throw new BillingError(405, 'Método não permitido.'); }
@@ -26,7 +27,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const estab = await ownedEstablishment(db, action === 'invoices' ? req.query['estabelecimentoId'] : req.body?.estabelecimentoId, user.id);
     if (action === 'checkout') {
-      if(process.env['CONTRACT_READY']!=='true'||!['BUSINESS_LEGAL_NAME','BUSINESS_TAX_ID','BUSINESS_CONTACT_EMAIL','BUSINESS_ADDRESS'].every(k=>process.env[k])) throw new BillingError(503,'Contratação indisponível enquanto os dados contratuais são finalizados.');
+      if(!billingReadiness().ready) throw new BillingError(503,'Contratação indisponível enquanto os dados contratuais são finalizados.');
+      if (req.body?.termsAccepted !== true) throw new BillingError(400, 'Aceite as condições da assinatura.');
+      if (req.body?.planId !== 'basico') throw new BillingError(400, 'Plano indisponível na oferta de lançamento.');
       const { planId, months, amount } = quote(req.body?.planId, req.body?.months);
       if (estab.stripe_subscription_id) {
         const current = await stripe.subscriptions.retrieve(estab.stripe_subscription_id);
@@ -39,6 +42,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!configuredUrl || new URL(configuredUrl).protocol !== 'https:') throw new BillingError(503, 'URL de faturamento não configurada.');
       const baseUrl = `${new URL(configuredUrl).origin}/admin/billing`;
       const metadata = { estabelecimentoId: estab.id, planId, months: String(months) };
+      const { error: acceptanceError } = await db.from('commercial_terms_acceptances').upsert({ user_id:user.id, version:'2026-10-10', marketing_consent:false }, { onConflict:'user_id,version', ignoreDuplicates:true });
+      if (acceptanceError) throw new BillingError(503, 'Não foi possível registrar as condições da assinatura.');
       const session = await stripe.checkout.sessions.create({
         mode: 'subscription', payment_method_types: ['card'],
         ...(estab.stripe_customer_id ? { customer: estab.stripe_customer_id } : { customer_email: user.email }),

@@ -1,3 +1,4 @@
+import { createHmac } from 'node:crypto';
 import type { VercelRequest,VercelResponse } from '@vercel/node';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { discoverBusinesses } from '../server/discovery.js';
@@ -30,6 +31,23 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
   const action=String(req.query['action']||'status');
   if(action==='terms'&&req.method==='GET') return res.status(200).json({name:env('BUSINESS_LEGAL_NAME'),taxId:env('BUSINESS_TAX_ID'),contact:env('BUSINESS_CONTACT_EMAIL'),address:env('BUSINESS_ADDRESS'),ready:env('CONTRACT_READY')==='true'});
   const sb=db();
+  if(action==='interest' && req.method==='POST') {
+   const b=req.body||{};
+   const name=String(b.business_name||'').trim();
+   const email=String(b.email||'').trim().toLowerCase();
+   if (b.website) return res.status(202).json({ok:true});
+   if (b.termsAccepted!==true || name.length<2 || name.length>160 || email.length>254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({error:'Informe seu negócio, um e-mail válido e aceite as condições.'});
+   const secret=env('PUBLIC_BOOKING_RATE_SECRET');
+   if(!secret)return res.status(503).json({error:'Cadastro temporariamente indisponível.'});
+   const ip=String(req.headers['x-vercel-forwarded-for']||req.headers['x-forwarded-for']||req.socket?.remoteAddress||'unknown').split(',')[0].trim();
+   const key=createHmac('sha256',secret).update(`pilot-interest:${ip}`).digest('hex');
+   const {data:allowed,error:limitError}=await sb.rpc('consume_public_booking_limit',{p_key:key});
+   if(limitError)return res.status(503).json({error:'Não foi possível registrar agora.'});
+   if(!allowed)return res.status(429).json({error:'Muitas tentativas. Tente novamente em 15 minutos.'});
+   // A public form is an interest request, not verified identity or marketing opt-in.
+   await checked(sb.from('commercial_prospects').upsert({business_name:name,email,segment:'beleza',source_url:env('PROJECT_URL'),status:'new',consent_at:null,consent_source:'pilot-interest:2026-10-10'},{onConflict:'email',ignoreDuplicates:true}));
+   return res.status(202).json({ok:true});
+  }
   if(action==='unsubscribe'){
    const id=String(req.query['id']||'');const token=String(req.query['token']||'');
    if(!validUnsubscribe(id,token,env('COMMERCIAL_UNSUBSCRIBE_SECRET'))) return res.status(400).send('Link inválido.');

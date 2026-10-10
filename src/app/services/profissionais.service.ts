@@ -175,8 +175,8 @@ export class ProfissionaisService {
     // Mantém o role se vier no form (para RBAC)
     const role = payload.role || 'barbeiro';
 
-    // Criptografia Zero-Knowledge
-    const encrypted = await this.security.encryptObject(payload, ['nome', 'bio', 'email', 'telefone', 'instagram', 'linkedin']);
+    // Public profile and verified invitation fields remain usable by the booking flow.
+    const encrypted = { ...payload };
 
     const { data: created, error } = await this.supabase
       .rpc('create_profissional_safe', { 
@@ -225,7 +225,7 @@ export class ProfissionaisService {
     const hasPii = Object.keys(payload).some(k => piiFields.includes(k));
 
     if (hasPii) {
-      const encrypted = await this.security.encryptObject(payload, piiFields);
+      const encrypted = { ...payload };
       const { error } = await this.supabase
         .rpc('update_profissional_safe', { p_id: id, p_changes: encrypted });
       if (error) throw new Error(parseSupabaseError(error));

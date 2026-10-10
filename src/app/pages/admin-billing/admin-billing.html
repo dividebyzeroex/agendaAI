@@ -14,7 +14,7 @@
     <div class="success-banner-modern" *ngIf="successMsg">
       <div class="s-icon-wrap"><i class="pi pi-check-circle"></i></div>
       <div class="s-info">
-        <h4>Assinatura Premium Ativada!</h4>
+        <h4>Atualização da assinatura</h4>
         <p>{{ successMsg }}</p>
       </div>
       <button class="s-close-btn" (click)="successMsg = ''"><i class="pi pi-times"></i></button>
@@ -38,65 +38,13 @@
     <div class="bento-header">
       <div>
         <h2>Gestão de <span class="gradient-text">Assinatura</span></h2>
-        <p>Acompanhe seu plano e créditos de IA em tempo real.</p>
+        <p>30 dias de teste sem cartão. A assinatura paga exige sua confirmação.</p>
       </div>
       <div class="header-actions-right" *ngIf="currentPlan$ | async as plan">
         <div class="status-pill active" [attr.data-tier]="plan.id">
           <i class="pi pi-check-circle"></i>
           <span>Plano {{ plan.name }}</span>
         </div>
-      </div>
-    </div>
-
-    <!-- COMPACT USAGE BAR -->
-    <div class="usage-summary-bar glass" *ngIf="usage$ | async as usage">
-      <div class="u-section">
-        <div class="u-info">
-          <i class="pi pi-bolt"></i>
-          <div class="u-text">
-            <label>Créditos IA (Tokens)</label>
-            <strong>{{ usage.tokensUsed | number }} / {{ usage.tokensLimit | number }}</strong>
-          </div>
-        </div>
-        <div class="u-progress-mini">
-          <div class="u-bar-fill" [style.width.%]="(usage.tokensUsed / usage.tokensLimit) * 100"></div>
-        </div>
-      </div>
-
-      <div class="u-divider"></div>
-
-      <div class="u-section">
-        <div class="u-info">
-          <i class="pi pi-envelope"></i>
-          <div class="u-text">
-            <label>Mensagens SMS</label>
-            <strong>{{ usage.smsUsed }} / {{ usage.smsLimit }}</strong>
-          </div>
-        </div>
-        <div class="u-progress-mini sms">
-          <div class="u-bar-fill" [style.width.%]="(usage.smsUsed / usage.smsLimit) * 100"></div>
-        </div>
-      </div>
-
-      <div class="u-divider"></div>
-
-      <div class="u-section expiry" *ngIf="estabService.estabelecimento$ | async as estab">
-        <div class="u-info">
-          <i class="pi pi-calendar"></i>
-          <div class="u-text">
-            <label>Renovação em</label>
-            <strong *ngIf="estab.plano_expires_at">{{ estab.plano_expires_at | date:'dd/MM/yyyy' }}</strong>
-            <strong *ngIf="!estab.plano_expires_at && (isTrialActive$ | async)" class="trial-text">
-              Trial: {{ trialDaysRemaining$ | async }} dias
-            </strong>
-          </div>
-        </div>
-      </div>
-
-      <div class="u-actions">
-        <button class="btn-ghost-action" (click)="manageCycle()" title="Histórico">
-          <i class="pi pi-history"></i>
-        </button>
       </div>
     </div>
 
@@ -115,6 +63,7 @@
         </div>
       </div>
 
+      <p role="status" *ngIf="!checkoutAvailable">{{ billingStatusMessage }}</p>
       <!-- PRICING OPTIONS -->
       <div class="plans-grid-modern">
         <div class="plan-card-pro" *ngFor="let plan of currentCyclePlans" 
@@ -145,7 +94,7 @@
           <div class="p-pro-footer">
             <button class="btn-pro-action" 
                     (click)="openUpgrade(plan)" 
-                    [disabled]="status === 'ACTIVE'">
+                    [disabled]="status === 'ACTIVE' || !checkoutAvailable">
               <span *ngIf="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
                 Plano em Uso
               </span>
@@ -158,7 +107,7 @@
       </div>
 
       <!-- COMPACT INVOICES -->
-      <div class="simple-section glass">
+      <div class="simple-section glass" id="invoice-history">
         <div class="sec-head">
           <h3>Histórico de Assinatura</h3>
           <p>Acesse seus comprovantes e períodos de faturamento.</p>
@@ -234,6 +183,7 @@
           <span>Você está economizando <b>R$ {{ summary.savings | number:'1.2-2' }}</b> neste ciclo!</span>
         </div>
 
+        <label><input type="checkbox" [(ngModel)]="subscriptionTermsAccepted" /> Li e aceito os <a href="/termos" target="_blank" rel="noopener">termos da assinatura</a>, o valor e a renovação a cada {{ selectedCycle }} mês(es).</label>
         <div class="security-note">
           <i class="pi pi-shield"></i>
           <span>Checkout processado via <b>Stripe Secure Payments</b>.</span>
@@ -242,7 +192,7 @@
 
       <div class="c-footer">
         <button class="btn-secondary" (click)="closeConfirmModal()">Cancelar</button>
-        <button class="btn-primary-pro" (click)="processStripeCheckout()" [disabled]="isProcessing">
+        <button class="btn-primary-pro" (click)="processStripeCheckout()" [disabled]="isProcessing || !checkoutAvailable || !subscriptionTermsAccepted">
           <span *ngIf="!isProcessing">Efetuar Pagamento</span>
           <i *ngIf="isProcessing" class="pi pi-spin pi-spinner"></i>
         </button>

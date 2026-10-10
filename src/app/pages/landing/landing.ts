@@ -1,4 +1,5 @@
 import { Component, HostListener, OnInit, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
@@ -22,17 +23,32 @@ interface SegmentDetail {
 @Component({
   selector: 'app-landing',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './landing.html',
   styleUrls: ['./landing.css']
 })
 export class Landing implements OnInit {
+  pilot = {business_name:'',email:'',website:'',termsAccepted:false};
+  pilotSending = false;
+  pilotMessage = '';
+  async requestPilot() {
+    if (this.pilotSending) return;
+    this.pilotSending = true; this.pilotMessage = '';
+    try {
+      const response = await fetch('/api/commercial?action=interest', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(this.pilot)});
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Não foi possível registrar agora.');
+      this.pilotMessage = 'Interesse registrado. Você pode iniciar seu cadastro gratuito pelo botão acima. Nenhuma cobrança foi criada.';
+      this.pilot = {business_name:'',email:'',website:'',termsAccepted:false};
+    } catch (error) { this.pilotMessage = error instanceof Error ? error.message : 'Tente novamente.'; }
+    finally { this.pilotSending = false; this.cdr.detectChanges(); }
+  }
   isScrolled = false;
   isMobileMenuOpen = false;
   isAnnualBilling = false;
 
   // Active Segment in Chameleon section
-  activeSegmentId = 'saude';
+  activeSegmentId = 'barbearia';
   segments: SegmentDetail[] = [
     {
       id: 'saude',
@@ -63,7 +79,7 @@ export class Landing implements OnInit {
       name: 'Barbearias & Salões',
       category: 'Beleza & Estilo',
       headline: 'Agenda, equipe e serviços em um só lugar.',
-      description: 'Linguagem rápida e direta. A IA compreende termos como degradê, barba terapia ou química, consulta a cadeira do barbeiro preferido do cliente e auxilia na confirmação.',
+      description: 'Cadastre cortes, barbas e tratamentos, organize os horários de cada profissional e compartilhe seu link de agendamento com os clientes.',
       terms: [
         { label: 'Vocabulário', value: 'Cortes, Barbas, Cadeiras, Horários' },
         { label: 'Operação', value: 'Visualização dos horários de atendimento' },
@@ -79,7 +95,7 @@ export class Landing implements OnInit {
       features: [
         'Visualização dos horários disponíveis',
         'Cadastro de serviços e produtos',
-        'Configuração das automações disponíveis'
+        'Cadastro de horários e pausas da equipe'
       ]
     },
     {
@@ -138,7 +154,7 @@ export class Landing implements OnInit {
 
   faqs = [
     { q: 'O que está incluído nos 30 dias gratuitos?', a: 'Um período para avaliar a plataforma com sua empresa, configurar a agenda e conhecer os recursos disponíveis. Não pedimos cartão e não existe cobrança automática ao terminar o teste. A contratação de um plano é uma decisão separada.', open: true },
-    { q: 'Preciso configurar o WhatsApp?', a: 'Sim. O atendimento por WhatsApp depende da conexão do número e da configuração do provedor e dos agentes. Antes de divulgar o canal, valide mensagens, horários e respostas com sua equipe. Serviços externos podem ter custos próprios.', open: false },
+    { q: 'Posso compartilhar a agenda no WhatsApp?', a: 'Sim. Compartilhe o link público do seu estabelecimento no WhatsApp, Instagram ou site. O cliente escolhe o serviço e o horário pelo link. Um robô de conversa no WhatsApp não está incluído nesta oferta.', open: false },
     { q: 'Minha equipe continua no controle?', a: 'O painel permite acompanhar clientes, profissionais e agendamentos. A equipe deve revisar as configurações e supervisionar respostas de IA, especialmente em situações que exigem julgamento humano.', open: false },
     { q: 'Vocês garantem redução de faltas ou mais vendas?', a: 'Não prometemos resultados fixos. A proposta é apoiar a organização e o acompanhamento dos atendimentos. Use o teste para medir os efeitos na sua operação e decidir com dados reais.', open: false },
     { q: 'Como funciona a contratação depois do teste?', a: 'Você escolhe um plano e confirma as condições e o pagamento quando a contratação estiver disponível. O teste não gera uma assinatura automática. Consulte os termos para entender os requisitos da operação comercial.', open: false }
@@ -150,7 +166,7 @@ export class Landing implements OnInit {
     private cdr: ChangeDetectorRef
   ) {}
 
-  ngOnInit() {}
+  ngOnInit() { this.segments = this.segments.filter(segment => ['barbearia', 'estetica'].includes(segment.id)); }
 
   @HostListener('window:scroll', [])
   onWindowScroll() {
@@ -169,6 +185,8 @@ export class Landing implements OnInit {
   toggleBilling(annual: boolean) {
     this.isAnnualBilling = annual;
   }
+
+  signIn() { this.router.navigate(['/login']); }
 
   goToLogin() {
     this.router.navigate(['/login'], { queryParams: { trial: 30 } });

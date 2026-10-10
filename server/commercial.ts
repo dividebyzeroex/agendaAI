@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-export const TERMS_VERSION = '2026-10-04';
+export const TERMS_VERSION = '2026-10-10';
 export function unsubscribeToken(id: string, secret: string): string { return createHmac('sha256',secret).update(`unsubscribe:${id}`).digest('hex'); }
 export function validUnsubscribe(id: string, token: string, secret: string): boolean {
  if (!secret || !/^[a-f0-9]{64}$/.test(token)) return false;

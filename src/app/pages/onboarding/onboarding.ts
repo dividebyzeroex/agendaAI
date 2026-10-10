@@ -64,7 +64,7 @@ export class Onboarding implements OnInit {
     if (user?.email) this.form.email=user.email;
     try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); this.form={...this.form,...draft,email:user?.email||''}; } catch {}
     // Recupera o email vindo da tela de cadastro de login
-    const savedEmail = localStorage.getItem('ag_onboarding_email');
+    const savedEmail = '';
     if (savedEmail) {
       this.form.email = savedEmail;
     }

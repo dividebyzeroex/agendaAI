@@ -30,7 +30,6 @@ export interface Invoice {
   pdfUrl?: string;
 }
 
-declare var pagarme: any;
 
 @Injectable({ providedIn: 'root' })
 export class BillingService {
@@ -38,57 +37,18 @@ export class BillingService {
   private costTracker = inject(CostTrackerService);
   private supabase = inject(SupabaseService).client;
 
-  // Official structure for Pagar.me integration
-  private readonly ENCRYPTION_KEY = 'ek_test_6D1y1x9z0A2B3C4D5E6F';
 
-  plans: BillingPlan[] = [
-    {
-      id: 'basico',
-      name: 'Starter',
-      basePrice: 97,
-      months: 1,
-      tokensLimit: 250000,
-      smsLimit: 50,
-      features: [
-        { text: 'Agenda Online Completa', included: true },
-        { text: '1 Profissional', included: true },
-        { text: 'Insights de IA Essenciais', included: true },
-        { text: 'Base de Clientes Premium', included: true },
-        { text: 'Sincronização Cloud', included: true },
-      ]
-    },
-    {
-      id: 'completo',
-      name: 'Business Pro',
-      basePrice: 197,
-      months: 1,
-      highlight: true,
-      tokensLimit: 1000000,
-      smsLimit: 200,
-      features: [
-        { text: 'Tudo do Starter', included: true },
-        { text: 'Até 5 Profissionais', included: true },
-        { text: 'IA de Agendamento Autônomo', included: true },
-        { text: 'Relatórios de Gestão V2', included: true },
-        { text: 'Customização de Design', included: true },
-      ]
-    },
-    {
-      id: 'premium',
-      name: 'Premium Enterprise',
-      basePrice: 349,
-      months: 1,
-      tokensLimit: 5000000,
-      smsLimit: 1000,
-      features: [
-        { text: 'Tudo do Business Pro', included: true },
-        { text: 'Profissionais Ilimitados', included: true },
-        { text: 'IA Preditiva de Faturamento', included: true },
-        { text: 'API de Integração Direta', included: true },
-        { text: 'Suporte VIP 24/7 Dedicado', included: true },
-      ]
-    }
-  ];
+  plans: BillingPlan[] = [{
+    id: 'basico', name: 'AgendaAI Essencial', basePrice: 97, months: 1,
+    highlight: true, tokensLimit: 0, smsLimit: 0,
+    features: [
+      { text: 'Agenda e link público de agendamento', included: true },
+      { text: 'Cadastro de clientes e serviços', included: true },
+      { text: 'Equipe com até 5 profissionais ativos', included: true },
+      { text: 'Histórico de atendimentos e gestão de caixa', included: true },
+      { text: 'Suporte por e-mail comercial', included: true }
+    ]
+  }];
 
   calculatePlanForCycle(plan: BillingPlan, cycleMonths: number): BillingPlan {
     let discount = 0;
@@ -144,7 +104,7 @@ export class BillingService {
   /**
    * Official Stripe Checkout Integration
    */
-  async processStripeCheckout(planId: string, months: number): Promise<string | undefined> {
+  async processStripeCheckout(planId: string, months: number, termsAccepted: boolean): Promise<string | undefined> {
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) return undefined;
 
@@ -171,7 +131,7 @@ export class BillingService {
           estabelecimentoId: current.id,
           planId: plan.id,
           price: plan.price,
-          months: plan.months,
+          months: plan.months, termsAccepted,
           title: plan.name
         })
       });
@@ -264,11 +224,9 @@ export class BillingService {
         // 1. Paid Plan Logic
         if (e.plano_expires_at) {
           const expires = new Date(e.plano_expires_at);
-          const graceEnd = new Date(expires);
-          graceEnd.setDate(graceEnd.getDate() + 5);
+
 
           if (now <= expires) return 'ACTIVE';
-          if (now > expires && now <= graceEnd) return 'GRACE_PERIOD';
           return 'EXPIRED';
         }
 
@@ -326,7 +284,7 @@ export class BillingService {
           const ends = new Date(e.trial_ends_at);
           if (ends > now) {
             // Give default 1_month features during trial
-            return this.plans.find(p => p.id === 'completo');
+            return this.plans.find(p => p.id === 'basico');
           }
         }
 

@@ -155,6 +155,7 @@ export class EstabelecimentoService {
     if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.estabelecimento$.next(created as Estabelecimento);
+      this.activeIdSubject.next(created?.id || null);
     });
     this._estabelecimentoCache.clear();
     return created;

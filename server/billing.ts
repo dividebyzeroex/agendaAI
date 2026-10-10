@@ -12,6 +12,15 @@ export function quote(planId: unknown, months: unknown) {
   }
   return { planId, months, amount: Math.round(PRICES[planId as keyof typeof PRICES] * months * (100 - DISCOUNTS[months]) / 100) };
 }
+export function billingReadiness(env: Record<string,string|undefined> = process.env) {
+  const key = env['STRIPE_SECRET_KEY'] || '';
+  const mode = /^sk_live_/.test(key) ? 'live' : /^sk_test_/.test(key) ? 'test' : 'unconfigured';
+  const ready = mode !== 'unconfigured' && !!env['STRIPE_WEBHOOK_SECRET']
+    && env['CONTRACT_READY'] === 'true'
+    && ['BUSINESS_LEGAL_NAME','BUSINESS_TAX_ID','BUSINESS_CONTACT_EMAIL','BUSINESS_ADDRESS'].every(k => !!env[k]);
+  return { ready, mode };
+}
+
 export function billingClients() {
   const url = process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'];
   const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
@@ -52,6 +61,7 @@ export function subscriptionPatch(subscription: Stripe.Subscription, invoice: St
     stripe_customer_id: objectId(subscription.customer),
     stripe_subscription_id: subscription.id,
     stripe_mrr_cents: 0,
+    stripe_livemode: subscription.livemode === true,
     stripe_current_period_end: subscriptionPeriodEnd(subscription),
   };
   // An active status alone is not proof that the renewed period was paid.
@@ -93,7 +103,7 @@ export async function recordPaidInvoice(db: SupabaseClient, invoice: Stripe.Invo
   if (!estab) return;
   const { error } = await db.from('commercial_payments').upsert({
     id: invoice.id, estabelecimento_id: estab.id, amount_cents: invoice.amount_paid,
-    currency: invoice.currency, status: 'paid',
+    currency: invoice.currency, status: 'paid', livemode: invoice.livemode === true,
     paid_at: new Date((invoice.status_transitions.paid_at || invoice.created) * 1000).toISOString(),
   }, { onConflict: 'id' });
   if (error) throw new BillingError(503, 'Falha ao registrar pagamento.');

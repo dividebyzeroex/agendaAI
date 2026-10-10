@@ -75,8 +75,8 @@ export class ClienteService {
       delete sanitized.nascimento;
     }
 
-    // Criptografia PII (Zero-Knowledge)
-    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
+    // Contact fields are protected by tenant RLS and required for verified invitations.
+    const encrypted = { ...sanitized };
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('create_cliente_safe', { 
@@ -101,7 +101,7 @@ export class ClienteService {
       delete sanitized.nascimento;
     }
 
-    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
+    const encrypted = { ...sanitized };
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('update_cliente_safe', { p_id: id, p_changes: encrypted })

@@ -38,6 +38,9 @@ export class AdminBilling implements OnInit {
   isProcessing = false;
   isVerifying = false;
   successMsg = '';
+  subscriptionTermsAccepted = false;
+  checkoutAvailable = false;
+  billingStatusMessage = 'Verificando disponibilidade de contratação…';
   showConfetti = false;
 
   // Multi-cycle Pricing
@@ -53,6 +56,17 @@ export class AdminBilling implements OnInit {
     window.scrollTo(0, 0);
     this.checkPaymentCallback();
     this.billing.refreshInvoices();
+    this.checkBillingAvailability();
+  }
+
+  async checkBillingAvailability() {
+    try {
+      const response = await fetch('/api/billing?action=status', { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const status = await response.json();
+      this.checkoutAvailable = status.ready === true && status.mode === 'live';
+      this.billingStatusMessage = this.checkoutAvailable ? '' : 'Seu teste é gratuito. A contratação paga ainda está em validação; nenhum débito será feito.';
+    } catch { this.billingStatusMessage = 'Contratação temporariamente indisponível. Seu teste não gera cobrança automática.'; }
   }
 
   get orderSummary() {
@@ -121,7 +135,7 @@ export class AdminBilling implements OnInit {
           console.error('Error verifying Stripe session:', e);
           // 403 Forbidden is common if RPC permissions are missing
           if (e.message?.includes('403') || e.status === 403) {
-            this.successMsg = 'Falha de Permissão (403): Re-execute o script SQL de segurança no Supabase.';
+            this.successMsg = 'Falha de Permissão (403): Entre novamente e tente verificar seu pagamento.';
           } else if (!this.successMsg) {
             this.successMsg = 'Erro ao processar ativação: ' + e.message;
           }
@@ -135,6 +149,8 @@ export class AdminBilling implements OnInit {
   }
 
   openUpgrade(plan: BillingPlan) {
+    if (!this.checkoutAvailable) return;
+    this.subscriptionTermsAccepted = false;
     this.selectedPlan = plan;
     this.showConfirmModal = true;
   }
@@ -145,7 +161,7 @@ export class AdminBilling implements OnInit {
   }
 
   async processStripeCheckout() {
-    if (!this.selectedPlan) return;
+    if (!this.selectedPlan || !this.checkoutAvailable || !this.subscriptionTermsAccepted) return;
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) {
        this.successMsg = 'Erro: Estabelecimento não encontrado. Tente novamente.';
@@ -154,7 +170,7 @@ export class AdminBilling implements OnInit {
 
     this.isProcessing = true;
     try {
-      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id, this.selectedCycle);
+      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id, this.selectedCycle, this.subscriptionTermsAccepted);
       
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
@@ -197,7 +213,8 @@ export class AdminBilling implements OnInit {
   }
 
   manageCycle() {
-    this.successMsg = 'Redirecionando para o portal de gerenciamento de faturamento...';
+    document.getElementById('invoice-history')?.scrollIntoView({ behavior: 'smooth' });
+    this.successMsg = 'Consulte suas faturas no histórico abaixo.';
     setTimeout(() => this.successMsg = '', 3000);
   }
 }

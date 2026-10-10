@@ -149,14 +149,18 @@ export class EstabelecimentoPublicoService {
     }
   }
 
+  async getBusyIntervals(estabelecimentoId: string, date: string): Promise<{start:string;end:string;profissional_id?:string|null}[]> {
+    const { data, error } = await this.supabase.rpc('get_public_events_by_day', {
+      p_estab_id: estabelecimentoId,
+      p_date_start: `${date}T00:00:00`, p_date_end: `${date}T23:59:59`
+    });
+    if (error) throw error;
+    return data || [];
+  }
+
   async getEventosDoDia(estabelecimentoId: string, date: string): Promise<string[]> {
-    const { data } = await this.supabase
-      .rpc('get_public_events_by_day', { 
-        p_estab_id: estabelecimentoId, 
-        p_date_start: `${date}T00:00:00`, 
-        p_date_end: `${date}T23:59:59` 
-      });
-    return (data as any[] || []).map((e: any) => e.start.substring(11, 16));
+    const events = await this.getBusyIntervals(estabelecimentoId, date);
+    return events.map(event => new Intl.DateTimeFormat('pt-BR', { timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit' }).format(new Date(event.start)));
   }
 
   async searchEstabelecimentos(query: string = ''): Promise<EstabelecimentoPublico[]> {
@@ -169,8 +173,4 @@ export class EstabelecimentoPublicoService {
     return data as EstabelecimentoPublico[];
   }
 
-  async getEventosDoProfissionalNoDia(profId: string, date: string): Promise<string[]> {
-    // Note: Column 'profissional_id' is missing in DB - falling back to global day events
-    return this.getEventosDoDia('', date);
-  }
 }

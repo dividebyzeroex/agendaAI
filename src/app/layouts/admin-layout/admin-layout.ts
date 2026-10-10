@@ -50,13 +50,9 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
 })
 export class AdminLayout implements OnInit {
   costTracker = inject(CostTrackerService);
-  swarmAgent = inject(AgentSwarmService);
   keybindings = inject(KeybindingService);
-  workflowEngine = inject(WorkflowService);
   onboarding = inject(OnboardingService);
   notifService = inject(NotificationService);
-  chatbotService = inject(ChatbotService);
-  aiInsights   = inject(AiInsightsService);
   billing = inject(BillingService);
   estabService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);

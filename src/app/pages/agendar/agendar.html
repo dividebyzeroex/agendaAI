@@ -122,7 +122,7 @@
 
         <div class="step-title">
           <h2>O que você <span class="accent">precisa?</span></h2>
-          <p>Selecione o serviço desejado e, opcionalmente, escolha um profissional.</p>
+          <p>Selecione o serviço desejado e escolha um profissional.</p>
         </div>
 
         <!-- Category Tabs -->
@@ -173,17 +173,6 @@
         </div>
 
         <div class="pro-grid" *ngIf="prosForSelectedService.length > 0">
-          <button class="pro-card" [class.active]="!selectedPro" (click)="pickPro(null); goStep2()">
-            <div class="pro-avatar any-avatar"><i class="pi pi-users"></i></div>
-            <div class="pro-info">
-              <strong>Qualquer Profissional</strong>
-              <span>Primeiro horário livre</span>
-            </div>
-            <div class="pro-check" *ngIf="!selectedPro">
-              <i class="pi pi-check"></i>
-            </div>
-          </button>
-
           <button class="pro-card" *ngFor="let p of prosForSelectedService"
                   [class.active]="selectedPro?.id === p.id"
                   (click)="pickPro(p); goStep2()">

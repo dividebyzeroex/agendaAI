@@ -1,3 +1,4 @@
+import { bookingDate, bookingMinutes, slotOverlaps, BusyInterval } from '../../utils/booking-slots';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -244,6 +245,7 @@ export class Agendar implements OnInit {
   
   goStepPro() {
     if (this.selectedService) {
+      if (!this.pros.length) { this.goStep2(); return; }
       this.step = 'step_pro';
     }
   }
@@ -254,7 +256,7 @@ export class Agendar implements OnInit {
 
   goStep2() {
     if (this.selectedService) {
-      if (!this.selectedDate) this.selectedDate = new Date().toISOString().split('T')[0];
+      if (!this.selectedDate) this.selectedDate = bookingDate();
       this.step = 'step2';
       this.buildCalendarDays();
       this.refreshSlots();
@@ -272,7 +274,7 @@ export class Agendar implements OnInit {
     for (let i = 0; i < 14; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
-      const dateStr = d.toISOString().split('T')[0];
+      const dateStr = bookingDate(d);
       const dow = d.getDay();
 
       // Check if this day is a working day
@@ -306,14 +308,17 @@ export class Agendar implements OnInit {
     const dow = new Date(this.selectedDate + 'T12:00:00').getDay();
     const dayConfig = this.schedule.find(h => h.dia_semana === dow && h.ativo);
 
-    const abre  = dayConfig?.abre  || '08:00';
-    const fecha = dayConfig?.fecha || '18:00';
+    if (!dayConfig) return;
+    const professionalDay = this.selectedPro?.disponibilidades?.find(d => d.dia_semana === dow);
+    if (professionalDay && !professionalDay.ativo) return;
+    const abre = dayConfig.abre;
+    const fecha = dayConfig.fecha;
     if (!abre || !fecha) return;
 
-    let busy: string[] = [];
+    let busy: BusyInterval[] = [];
     try {
-      busy = await this.pubService.getEventosDoDia(this.estab!.id!, this.selectedDate);
-    } catch (e) {}
+      busy = await this.pubService.getBusyIntervals(this.estab!.id!, this.selectedDate);
+    } catch { this.errorMsg = "Não foi possível consultar os horários. Tente novamente."; this.cdr.detectChanges(); return; }
 
     const [hA, mA] = abre.split(':').map(Number);
     const [hF, mF] = fecha.split(':').map(Number);
@@ -323,13 +328,15 @@ export class Agendar implements OnInit {
 
     // Filter past slots if today
     const now = new Date();
-    const isToday = this.selectedDate === now.toISOString().split('T')[0];
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    const isToday = this.selectedDate === bookingDate(now);
+    const currentMinutes = bookingMinutes(now);
 
     while (current + duration <= end) {
       const time = `${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
       const isPast = isToday && current <= currentMinutes;
-      this.slots.push({ time, available: !busy.includes(time) && !isPast });
+      const toMinutes = (value: string) => Number(value.slice(0,2))*60 + Number(value.slice(3,5));
+      const outsideProfessional = professionalDay && ((professionalDay.hora_inicio && current < toMinutes(professionalDay.hora_inicio)) || (professionalDay.hora_fim && current + duration > toMinutes(professionalDay.hora_fim)) || (professionalDay.intervalo_inicio && professionalDay.intervalo_fim && current < toMinutes(professionalDay.intervalo_fim) && current + duration > toMinutes(professionalDay.intervalo_inicio)));
+      this.slots.push({ time, available: !outsideProfessional && !slotOverlaps(this.selectedDate, time, duration, busy, this.selectedPro?.id) && !isPast });
       current += 30;
     }
     this.cdr.detectChanges();
@@ -387,7 +394,7 @@ export class Agendar implements OnInit {
         }
         eventMeta = { aparelho: this.aparelho, defeito: this.defeito };
       }
-      const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00`);
+      const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00-03:00`);
       const duration = this.selectedService?.duracao_min || 30;
       const endDt = new Date(startDt.getTime() + duration * 60000);
 
