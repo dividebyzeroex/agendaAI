@@ -8,8 +8,8 @@ Foram retirados os painéis sociais e de observabilidade simulados, a inicializa
 
 ## Validação concluída
 
-- Compilação Angular de produção e verificação TypeScript do backend.
-- 26 testes de preço, reconciliação, segurança, datas de São Paulo, intervalos ocupados e configuração de cobrança.
+- Compilação Angular de produção, verificação TypeScript do backend e inicialização real do Router Angular em teste de regressão.
+- 27 testes de preço, reconciliação, segurança, datas de São Paulo, intervalos ocupados e configuração de cobrança.
 - Seis migrações executadas em banco local; testes de isolamento, proteção de cobrança, limite de equipe, sobreposição, janela gratuita, limitação de tentativas e autorização do proprietário somente após confirmação do e-mail.
 - Migrações launch_readiness, restrict_internal_rpc e distinguish_test_contracts aplicadas ao Supabase de produção e colunas verificadas.
 - Campos de faturamento protegidos contra alterações pelo navegador. Pagamentos Stripe de teste excluídos dos indicadores e da lista financeira real.

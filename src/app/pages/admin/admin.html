@@ -125,26 +125,10 @@
     <!-- SIDE: AI INSIGHTS & AGENT ACTIVITY (BENTO AI) -->
     <div class="bento-ai">
       
-      <!-- Real-Time Agent Activity [DYNAMIC] -->
       <div class="bento-card bento-agent-activity">
-         <h4 class="bento-agent-title">
-           <span class="shield-status-icon"></span> AGENTES EM OPERAÇÃO
-         </h4>
-         <div class="agent-activity-list" *ngIf="(agentActivity$ | async) as activity">
-            <div *ngIf="activity.length === 0" class="agent-empty-msg">
-              Aguardando telemetria dos agentes...
-            </div>
-             <div *ngFor="let log of activity" class="agent-log-item"
-                  [style.border-left-color]="log.status === 'warning' ? '#f59e0b' : '#10b981'">
-               <div class="agent-log-icon">
-                 <i class="pi" [class.pi-check]="log.status === 'success'" [class.pi-exclamation-triangle]="log.status === 'warning'" 
-                    [style.color]="log.status === 'warning' ? '#f59e0b' : '#10b981'"></i> 
-               </div>
-               <div class="agent-log-text">
-                 <b>{{ log.agentName }}:</b> {{ log.message }}
-               </div>
-             </div>
-          </div>
+        <h4 class="bento-agent-title">Prepare sua agenda</h4>
+        <p>Cadastre serviços, horários e equipe antes de compartilhar seu link com os clientes.</p>
+        <a href="/admin/configuracoes">Configurar serviços e horários</a>
       </div>
 
       <!-- Aniversariantes do Mês -->
