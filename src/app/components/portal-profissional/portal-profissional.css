@@ -298,3 +298,11 @@
     min-width: 50px;
   }
 }
+
+@media(max-width:768px) {
+ .portal-wrapper {padding:0;}
+ .stats-grid {grid-template-columns:minmax(0,1fr); gap:12px;}
+ .greeting-text {font-size:24px;}
+ .stat-card {padding:16px; min-width:0;}
+ button {min-height:44px;}
+}

@@ -153,3 +153,20 @@
   .bento-grid { grid-template-columns: 1fr; }
   .bento-grid .bento-wide { grid-column: span 1; }
 }
+
+@media(max-width:768px) {
+ .config-card,.add-form {padding:16px; min-width:0;}
+ .add-form-grid {grid-template-columns:minmax(0,1fr);}
+ .horario-row {flex-direction:column; align-items:stretch; padding:14px; gap:12px;}
+ .dia-toggle {min-width:0; min-height:44px;}
+ .horario-fields {display:grid; grid-template-columns:1fr 1fr; gap:12px;}
+ .field-inline {flex-direction:column; align-items:stretch; min-width:0;}
+ .time-input {width:100%; min-width:0; min-height:44px;}
+ .servico-row {flex-wrap:wrap;}
+ .s-info {min-width:0; overflow-wrap:anywhere;}
+ .card-header-row {flex-wrap:wrap; gap:12px;}
+ .link-box {flex-direction:column; align-items:stretch;}
+ .link-url {overflow-wrap:anywhere; white-space:normal;}
+ .link-actions {flex-wrap:wrap;}
+ .tab-btn {flex-shrink:0; min-height:44px; padding:10px 14px;}
+}

@@ -422,3 +422,8 @@
   .usage-summary-bar { flex-direction: column; gap: var(--space-xl); align-items: flex-start; }
   .u-divider { display: none; }
 }
+
+@media(max-width:768px) {
+ .plans-grid {grid-template-columns:minmax(0,1fr);}
+ .billing-wrapper,.plan-card {min-width:0;}
+}

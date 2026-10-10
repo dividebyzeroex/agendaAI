@@ -293,3 +293,11 @@
   .ag-dashboard { padding: var(--space-lg); }
   .greeting-text { font-size: var(--font-xl); }
 }
+
+@media(max-width:768px) {
+ .ag-dashboard {padding:0;}
+ .stats-row,.dashboard-grid {grid-template-columns:minmax(0,1fr);}
+ .stat-card,.bento-card {min-width:0;}
+ .greeting-text {font-size:24px; overflow-wrap:anywhere;}
+ .page-header,.dashboard-header {flex-wrap:wrap;}
+}

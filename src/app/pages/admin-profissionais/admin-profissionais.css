@@ -403,3 +403,19 @@ textarea {
   background: var(--glass-bg); color: var(--primary-color); box-shadow: 0 4px 12px rgba(0,0,0,0.05);
 }
 .auth-btn i { font-size: var(--font-base); }
+
+@media(max-width:768px) {
+ .prof-grid-elite {grid-template-columns:minmax(0,1fr); gap:14px;}
+ .header-actions {flex-wrap:wrap; width:100%;}
+ .header-actions .search-box {width:100%;}
+ .edit-panel-glass {height:100dvh; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom);}
+ .panel-header-ent,.panel-body-ent {padding:16px;}
+ .panel-body-ent {min-height:0; overflow-y:auto;}
+ .form-grid-premium {grid-template-columns:minmax(0,1fr);}
+ .panel-stepper {overflow-x:auto; flex-shrink:0;}
+ .panel-footer-premium {padding:12px 16px; flex-wrap:wrap;}
+ .panel-footer-premium button {min-height:48px; flex:1;}
+ .color-picker-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
+ .color-picker-grid button {min-height:44px;}
+ .card-actions-ent {flex-wrap:wrap; gap:12px;}
+}

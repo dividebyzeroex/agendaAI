@@ -182,3 +182,14 @@ input:checked + .slider:before { transform: translateX(20px); }
   .content-wrapper.panel-open .main-content { display: none; }
   .side-panel { width: 100%; height: calc(100vh - 180px); }
 }
+
+@media(max-width:768px) {
+ .grid-cards {grid-template-columns:minmax(0,1fr);}
+ .content-wrapper {min-width:0;}
+ .side-panel {height:auto; max-height:none; position:relative; top:auto; min-width:0;}
+ .form-row {flex-direction:column;}
+ .form-group.half {width:100%;}
+ .panel-body {min-height:0; overflow:visible; padding:16px;}
+ .panel-footer {flex-wrap:wrap;}
+ .panel-footer button {min-height:48px; flex:1;}
+}
