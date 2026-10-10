@@ -1,0 +1,10 @@
+import {describe,it,expect} from 'vitest';
+import {eligible,nextStage,unsubscribeToken,validUnsubscribe,messageFor} from '../server/commercial.js';
+describe('Commercial contact controls',()=>{
+ it('never treats a discovered address as permission',()=>expect(eligible({status:'qualified',email:'business@example.test'})).toBe(false));
+ it('suppresses opted-out, lost and replied contacts',()=>{for(const status of ['lost','replied','unsubscribed'])expect(eligible({status,email:'business@example.test',consent_at:'2026-10-01'})).toBe(false);expect(eligible({status:'qualified',email:'business@example.test',consent_at:'2026-10-01',unsubscribed_at:'2026-10-02'})).toBe(false)});
+ it('checks unsubscribe signature and binds it to one prospect',()=>{const signed=unsubscribeToken('prospect-A','secret');expect(validUnsubscribe('prospect-A',signed,'secret')).toBe(true);expect(validUnsubscribe('prospect-B',signed,'secret')).toBe(false);expect(validUnsubscribe('prospect-A',signed,'')).toBe(false);expect(validUnsubscribe('prospect-A','invalid','secret')).toBe(false)});
+ it('respects contact cooldown and prioritizes expiring trial',()=>{const now=Date.parse('2026-10-04T12:00:00Z');expect(nextStage({status:'trial',created_at:'2026-09-05',last_contact_at:'2026-10-03'},'2026-10-06',now)).toBe(null);expect(nextStage({status:'trial',created_at:'2026-09-05'},'2026-10-06',now)).toBe('trial-ending');expect(nextStage({status:'trial',created_at:'2026-09-01'},'2026-10-01',now)).toBe('trial-ended')});
+ it('separates paying-customer retention from trial selling',()=>expect(nextStage({status:'won',created_at:'2026-08-01'},null,Date.parse('2026-10-04'))).toBe('retention'));
+ it('discloses automation and no automatic subscription',()=>{const m=messageFor('invitation','Test Business','https://example.test');expect(m.body).toContain('automatizado');expect(m.body).toContain('30 dias');expect(m.body).toContain('sem cobrança automática');expect(m.body).toContain('https://example.test/login?trial=30')});
+});

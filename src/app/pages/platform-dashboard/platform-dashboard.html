@@ -1,94 +1,24 @@
-<div class="dashboard-container" *ngIf="!isLoading && metrics; else loading">
-  <div class="header">
-    <h1>Visão Global da Plataforma</h1>
-    <p>Acompanhe o crescimento e saúde da AgendaAI em tempo real.</p>
-  </div>
-
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-icon blue"><i class="pi pi-building"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Total de Clientes (Tenants)</span>
-        <span class="metric-value">{{ metrics.totalTenants }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +12% este mês</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon green"><i class="pi pi-dollar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">MRR Estimado</span>
-        <span class="metric-value">R$ {{ metrics.totalMrr | number:'1.2-2' }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +8.5% este mês</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon purple"><i class="pi pi-calendar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Agendamentos Transacionados</span>
-        <span class="metric-value">{{ metrics.totalAppointments | number }}</span>
-        <span class="metric-trend">Total Histórico</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon orange"><i class="pi pi-sparkles"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Mensagens de IA (ZAP)</span>
-        <span class="metric-value">{{ metrics.aiMessagesSent | number }}</span>
-        <span class="metric-trend">Tokens consumidos</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="charts-section">
-    <div class="chart-box">
-      <h3>Crescimento de Assinaturas</h3>
-      <div class="mock-chart">
-        <!-- Mock de gráfico de barras -->
-        <div class="bar" style="height: 30%"></div>
-        <div class="bar" style="height: 50%"></div>
-        <div class="bar" style="height: 40%"></div>
-        <div class="bar" style="height: 70%"></div>
-        <div class="bar" style="height: 90%"></div>
-        <div class="bar" style="height: 85%"></div>
-        <div class="bar" style="height: 100%"></div>
-      </div>
-    </div>
-    <div class="chart-box">
-      <h3>Uso de IA por Estabelecimento</h3>
-      <div class="mock-list">
-        <div class="mock-list-item">
-          <span>Barbearia do João</span>
-          <strong>12.4k msgs</strong>
-        </div>
-        <div class="mock-list-item">
-          <span>Spa Zen</span>
-          <strong>8.2k msgs</strong>
-        </div>
-        <div class="mock-list-item">
-          <span>Tattoo Studio</span>
-          <strong>5.1k msgs</strong>
-        </div>
-      </div>
-    </div>
-  </div>
+<div class="dashboard-container">
+ <header class="header"><div><p class="eyebrow">VISÃO EXECUTIVA</p><h1>O pulso do seu negócio.</h1><p>Do primeiro contato à receita recorrente. Tudo em uma visão.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading"><i class="pi pi-refresh" aria-hidden="true"></i> {{isLoading?'Atualizando…':'Atualizar'}}</button></header>
+ <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar. Os dados anteriores, quando disponíveis, foram preservados.</p>
+ <div class="loading-state" role="status" *ngIf="isLoading&&!metrics">Carregando seu negócio…</div>
+ <ng-container *ngIf="metrics as m">
+ <div class="overview-strip"><span><span class="status-dot" [class.online]="billing?.ready"></span>{{billing?.ready&&billing?.mode==='live'?'Stripe pronto para cobranças':'Stripe: verificar configuração'}}</span><span>{{enabledAgents}} rotina(s) habilitada(s)</span><span class="updated">Atualizado {{updatedAt|date:'dd/MM HH:mm':'-0300'}}</span></div>
+ <div class="metrics-grid">
+  <article class="metric-card accent"><div class="metric-top"><span>Receita recorrente mensal</span><i class="pi pi-wallet"></i></div><strong class="metric-value">{{m.totalMrr|currency:'BRL'}}</strong><small>Valor mensalizado de contratos ativos</small><a routerLink="/platform-admin/billing">Ver financeiro <i class="pi pi-arrow-up-right"></i></a></article>
+  <article class="metric-card"><div class="metric-top"><span>Recebido neste mês</span><i class="pi pi-credit-card"></i></div><strong class="metric-value">{{m.revenueMonth|currency:'BRL'}}</strong><small>Pagamentos reais confirmados · BRL</small><span class="metric-note">Antes de taxas e impostos</span></article>
+  <article class="metric-card"><div class="metric-top"><span>Clientes ativos</span><i class="pi pi-building"></i></div><strong class="metric-value">{{m.activeTenants|number}}</strong><small>{{m.totalTenants}} cadastrados no total</small><a routerLink="/platform-admin/tenants">Gerenciar clientes <i class="pi pi-arrow-up-right"></i></a></article>
+  <article class="metric-card"><div class="metric-top"><span>Clientes pagantes</span><i class="pi pi-check-circle"></i></div><strong class="metric-value">{{m.payingTenants|number}}</strong><small>{{m.trialTenants}} em teste gratuito</small><span class="metric-note">Teste de 30 dias, sem cobrança automática</span></article>
+ </div>
+ <div class="executive-grid">
+  <section class="chart-box revenue-panel"><div class="section-title"><div><p class="eyebrow">RECEBIMENTOS</p><h2>Uma visão da receita</h2></div><span class="pill">Últimos 6 meses</span></div><div class="bar-chart" role="img" aria-label="Recebimentos em reais por mês"><div class="bar-column" *ngFor="let month of months"><strong>{{month.value|currency:'BRL':'symbol':'1.0-0'}}</strong><div class="bar-area"><div class="bar" [class.zero]="!month.value" [style.height.%]="month.height" [attr.title]="month.label+': R$ '+month.value"></div></div><span>{{month.label}}</span></div></div><p class="footnote">Pagamentos de produção, em reais. Até 1.000 registros recentes; pagamentos de teste ficam fora desta visão.</p></section>
+  <section class="chart-box"><div class="section-title"><div><p class="eyebrow">AQUISIÇÃO</p><h2>Funil comercial</h2></div><a routerLink="/platform-admin/growth" aria-label="Abrir oportunidades"><i class="pi pi-arrow-up-right"></i></a></div><div class="funnel-row" *ngFor="let stage of funnel"><span class="stage-dot" [ngClass]="stage.color"></span><span>{{stage.label}}</span><strong>{{stage.value}}</strong><div class="mini-track"><span [style.width.%]="funnel[0].value?stage.value/funnel[0].value*100:0"></span></div></div><p class="footnote">Taxa de resposta: {{replyRate|number:'1.0-1'}}%. Etapas registradas no CRM; até 1.000 oportunidades.</p></section>
+ </div>
+ <div class="executive-grid equal">
+  <section class="chart-box"><div class="section-title"><div><p class="eyebrow">RELACIONAMENTO</p><h2>Testes próximos do fim</h2></div><span class="pill">7 dias</span></div><div class="empty-state" *ngIf="!expiringTrials.length"><i class="pi pi-calendar"></i><strong>Nenhum teste vence nesta semana</strong><p>Novos pilotos aparecerão aqui com a data de encerramento.</p></div><a class="trial-row" routerLink="/platform-admin/tenants" *ngFor="let tenant of expiringTrials"><div><strong>{{tenant.nome}}</strong><small>Termina {{tenant.trial_ends_at|date:'dd/MM/yyyy':'-0300'}}</small></div><span class="pill">{{daysLeft(tenant)}} dia(s)</span></a></section>
+  <section class="chart-box"><div class="section-title"><div><p class="eyebrow">OPERAÇÃO</p><h2>Agentes de acompanhamento</h2></div><a routerLink="/platform-admin/settings" aria-label="Configuração dos agentes"><i class="pi pi-arrow-up-right"></i></a></div><div class="agent-row" *ngFor="let agent of agents"><div class="agent-icon"><i class="pi pi-sparkles"></i></div><div><strong>{{agent.title}}</strong><small>{{agent.cadence||'Execução agendada'}} · {{agent.enabled?'Habilitado':'Pausado'}}</small></div><span class="status-dot" [class.online]="agent.enabled"></span></div><div class="empty-state" *ngIf="!agents.length"><strong>Sem rotinas configuradas</strong><p>O histórico abaixo mostra somente execuções realmente registradas.</p></div><p class="footnote">Rotinas agendadas. O histórico confirma cada execução; não há agente permanentemente ativo.</p></section>
+ </div>
+ <section class="chart-box"><div class="section-title"><div><p class="eyebrow">CONVERSAS</p><h2>Últimas comunicações</h2></div><a routerLink="/platform-admin/growth">Ver oportunidades <i class="pi pi-arrow-up-right"></i></a></div><div class="table-wrap" *ngIf="overview?.messages?.length;else noMessages"><table><thead><tr><th>Empresa</th><th>Assunto</th><th>Data</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let message of overview?.messages?.slice(0,6)"><td><strong>{{prospectName(message.prospect_id)}}</strong></td><td>{{message.subject}}</td><td>{{(message.sent_at||message.created_at)|date:'dd/MM HH:mm':'-0300'}}</td><td><span class="pill" [class.ready]="message.status==='sent'">{{statusLabel(message.status)}}</span></td></tr></tbody></table></div><ng-template #noMessages><div class="empty-state"><strong>Nenhuma comunicação registrada</strong><p>Envios confirmados aparecerão aqui.</p></div></ng-template></section>
+ <section class="chart-box"><div class="section-title"><div><p class="eyebrow">RASTREABILIDADE</p><h2>Atividade recente</h2></div><span class="pill">Últimas execuções</span></div><div class="activity-row" *ngFor="let run of overview?.runs?.slice(0,5)"><span class="activity-icon"><i class="pi pi-history"></i></span><div><strong>{{runLabel(run.agent)}}</strong><small>{{runSummary(run.summary)}}</small></div><span class="pill" [class.ready]="run.status==='completed'">{{statusLabel(run.status)}}</span><time>{{run.created_at|date:'dd/MM HH:mm':'-0300'}}</time></div></section>
+ </ng-container>
 </div>
-
-<ng-template #loading>
-  <div class="loading-state" *ngIf="!hasError">
-    <i class="pi pi-spin pi-spinner"></i>
-    <span>Carregando métricas da plataforma...</span>
-  </div>
-  
-  <div class="error-state" *ngIf="hasError">
-    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
-    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
-    <p>Para garantir o funcionamento geral com dados reais (sem mocks), execute o script SQL abaixo no seu painel Supabase (SQL Editor).</p>
-    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
-      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
-      -- Execute-o para criar as funções (RPCs) necessárias.
-    </code>
-  </div>
-</ng-template>

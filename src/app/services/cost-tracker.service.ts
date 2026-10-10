@@ -13,6 +13,9 @@ export interface UsageQuota {
 }
 
 const PLAN_LIMITS: Record<string, any> = {
+  basico:{agendamentos:100,sms:50,tokens:250000},
+  completo:{agendamentos:500,sms:200,tokens:1000000},
+  premium:{agendamentos:9999,sms:1000,tokens:5000000},
   starter:  { agendamentos: 100,  sms: 50,  tokens: 50000 },
   pro:      { agendamentos: 500,  sms: 300, tokens: 250000 },
   business: { agendamentos: 9999, sms: 9999, tokens: 1000000 },
@@ -56,9 +59,9 @@ export class CostTrackerService {
     const limits = PLAN_LIMITS[plano] || PLAN_LIMITS['starter'];
 
     const { data } = await this.supabase
-      .rpc('get_usage_quotas_by_estab', { 
-        p_estab_id: estabId, 
-        p_month: monthKey 
+      .rpc('get_usage_quotas_by_estab', {
+        p_estab_id: estabId,
+        p_month: monthKey
       });
 
     const usageMap: Record<string, number> = {};
@@ -82,8 +85,8 @@ export class CostTrackerService {
 
     this.usageChannel = this.supabase
       .channel(`usage-counts-${estabId}`) // Nome único por estabelecimento
-      .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'usage_quotas', filter: `estabelecimento_id=eq.${estabId}` }, 
+      .on('postgres_changes',
+        { event: '*', schema: 'public', table: 'usage_quotas', filter: `estabelecimento_id=eq.${estabId}` },
         () => {
           const currentEstab = this.estabService.estabelecimento$.value;
           if (currentEstab) this.fetchUsage(currentEstab.id!, currentEstab.plano || 'starter');

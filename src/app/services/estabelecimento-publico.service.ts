@@ -21,10 +21,13 @@ export interface ProfissionalPublico {
   servicos?: string[];
 }
 
+import { SecurityService } from './security.service';
+
 @Injectable({ providedIn: 'root' })
 export class EstabelecimentoPublicoService {
   private supabase = inject(SupabaseService).client;
   private ngZone = inject(NgZone);
+  private securityService = inject(SecurityService);
 
   private lastSlug = '';
   data$ = new BehaviorSubject<{
@@ -112,12 +115,23 @@ export class EstabelecimentoPublicoService {
         svResData = svRes.data as any[] || [];
       }
 
-      // 4. Map professionals
-      const profissionais: ProfissionalPublico[] = profs.map((p: any) => ({
-        ...p,
-        disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
-        servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
-      }));
+      // 4. Map professionals and decrypt their names
+      const profissionais: ProfissionalPublico[] = await Promise.all(
+        profs.map(async (p: any) => {
+          let nomeDecrypted = p.nome;
+          try {
+            nomeDecrypted = await this.securityService.decryptData(p.nome);
+          } catch (e) {
+            console.warn('[PubService] Falha ao descriptografar nome:', e);
+          }
+          return {
+            ...p,
+            nome: nomeDecrypted,
+            disponibilidades: dResData.filter((d: any) => d.profissional_id === p.id),
+            servicos: svResData.filter((s: any) => s.profissional_id === p.id).map((s: any) => s.servico_id)
+          };
+        })
+      );
 
       const data = {
         estabelecimento: estab,
@@ -135,18 +149,28 @@ export class EstabelecimentoPublicoService {
     }
   }
 
-  async getEventosDoDia(estabelecimentoId: string, date: string): Promise<string[]> {
-    const { data } = await this.supabase
-      .rpc('get_public_events_by_day', { 
-        p_estab_id: estabelecimentoId, 
-        p_date_start: `${date}T00:00:00`, 
-        p_date_end: `${date}T23:59:59` 
-      });
-    return (data as any[] || []).map((e: any) => e.start.substring(11, 16));
+  async getBusyIntervals(estabelecimentoId: string, date: string): Promise<{start:string;end:string;profissional_id?:string|null}[]> {
+    const { data, error } = await this.supabase.rpc('get_public_events_by_day', {
+      p_estab_id: estabelecimentoId,
+      p_date_start: `${date}T00:00:00`, p_date_end: `${date}T23:59:59`
+    });
+    if (error) throw error;
+    return data || [];
   }
 
-  async getEventosDoProfissionalNoDia(profId: string, date: string): Promise<string[]> {
-    // Note: Column 'profissional_id' is missing in DB - falling back to global day events
-    return this.getEventosDoDia('', date);
+  async getEventosDoDia(estabelecimentoId: string, date: string): Promise<string[]> {
+    const events = await this.getBusyIntervals(estabelecimentoId, date);
+    return events.map(event => new Intl.DateTimeFormat('pt-BR', { timeZone:'America/Sao_Paulo',hour:'2-digit',minute:'2-digit' }).format(new Date(event.start)));
   }
+
+  async searchEstabelecimentos(query: string = ''): Promise<EstabelecimentoPublico[]> {
+    const { data, error } = await this.supabase
+      .rpc('search_public_estabelecimentos', { p_query: query });
+    if (error) {
+      console.error('[PubService] Erro ao buscar estabelecimentos:', error);
+      return [];
+    }
+    return data as EstabelecimentoPublico[];
+  }
+
 }

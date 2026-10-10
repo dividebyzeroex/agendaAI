@@ -1,0 +1,17 @@
+<div class="billing-container">
+  <div class="header"><div><h2>Visão financeira</h2><p>Receita recorrente e pagamentos confirmados do seu negócio.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
+  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar os dados financeiros. Tente novamente.</p>
+  <p role="status" *ngIf="isLoading && !metrics">Carregando dados financeiros…</p>
+  <ng-container *ngIf="metrics as m"><p class="updated">Atualizado em {{ updatedAt | date:'dd/MM/yyyy HH:mm' }} <span *ngIf="hasError">· Dados anteriores à falha</span></p>
+    <div class="metrics-grid">
+      <div class="metric-card highlight"><span class="label">MRR · receita recorrente mensal</span><strong class="value">{{ m.totalMrr | currency:'BRL' }}</strong><small>Assinaturas ativas, valor mensalizado</small></div>
+      <div class="metric-card"><span class="label">Recebido no mês · BRL</span><strong class="value">{{ m.revenueMonth | currency:'BRL' }}</strong><small>Pagamentos confirmados no mês corrente</small></div>
+      <div class="metric-card"><span class="label">Clientes pagantes</span><strong class="value">{{ m.payingTenants | number }}</strong><small>Assinaturas ativas</small></div>
+      <div class="metric-card"><span class="label">Receita média por pagante</span><strong class="value">{{ (m.payingTenants ? m.totalMrr / m.payingTenants : 0) | currency:'BRL' }}</strong><small>MRR dividido pelos clientes pagantes</small></div>
+    </div>
+    <section class="panel"><h3>Últimos pagamentos</h3><p class="empty" *ngIf="transactions.length === 0">Nenhum pagamento registrado. Os recebimentos aparecerão aqui após a confirmação pelo provedor de pagamento.</p>
+      <div class="table-wrap" *ngIf="transactions.length"><table><thead><tr><th>Cliente / referência</th><th>Data</th><th>Valor</th><th>Situação</th></tr></thead><tbody><tr *ngFor="let tx of transactions"><td><strong>{{ tenantName(tx.estabelecimento_id) }}</strong><small>{{ tx.id }}</small></td><td>{{ (tx.paid_at || tx.created_at) | date:'dd/MM/yyyy HH:mm' }}</td><td>{{ tx.amount_cents / 100 | currency:tx.currency.toUpperCase() }}</td><td><span [class.paid]="tx.status === 'paid'">{{ statusLabel(tx.status) }}</span></td></tr></tbody></table></div>
+      <p class="footnote">Até 100 registros mais recentes. MRR é receita recorrente contratada; recebimentos são pagamentos efetivos. Valores não descontam taxas, impostos ou estornos posteriores.</p>
+    </section>
+  </ng-container>
+</div>

@@ -24,17 +24,63 @@
   </div>
 
   <div class="calendar-card-premium">
+    <!-- Fila de Espera Toggle (Only for Barbearia/Salao) -->
+    <div class="view-toggles" *ngIf="segmentoConfig.current.id === 'barbearia' || segmentoConfig.current.id === 'salao_beleza'">
+      <button class="view-btn" [class.active]="viewMode === 'calendario'" (click)="viewMode = 'calendario'">
+        <i class="pi pi-calendar"></i> Calendário
+      </button>
+      <button class="view-btn" [class.active]="viewMode === 'fila'" (click)="viewMode = 'fila'">
+        <i class="pi pi-users"></i> Fila de Espera (Walk-in)
+      </button>
+    </div>
+
     <!-- Elite Loader -->
     <div *ngIf="agendaService.isLoading$ | async" class="elite-loader-container">
       <div class="elite-scissor-wrap"></div>
       <div class="loader-text">Sincronizando Agenda de Hoje...</div>
     </div>
 
+    <section class="mobile-day-agenda" *ngIf="!(agendaService.isLoading$ | async) && viewMode === 'calendario'" aria-label="Agenda diária">
+      <div class="day-navigation">
+        <button type="button" (click)="moveDay(-1)" aria-label="Dia anterior"><i class="pi pi-chevron-left"></i></button>
+        <label class="day-date">Dia da agenda<input type="date" [ngModel]="selectedDay" (ngModelChange)="selectedDay = $event || selectedDay" /></label>
+        <button type="button" (click)="moveDay(1)" aria-label="Próximo dia"><i class="pi pi-chevron-right"></i></button>
+      </div>
+      <div class="day-filters"><button type="button" class="btn-ghost" (click)="today()">Hoje</button><select aria-label="Filtrar por profissional" [(ngModel)]="selectedProfessional"><option value="">Todos os profissionais</option><option *ngFor="let p of dailyProfessionals" [value]="p.id">{{ p.nome }}</option></select></div>
+      <button type="button" class="btn-primary day-new" (click)="newAppointment()"><i class="pi pi-plus"></i> Novo agendamento</button>
+      <p class="day-count" aria-live="polite">{{ dailyEvents.length }} agendamento(s) neste dia</p>
+      <div class="day-empty" *ngIf="dailyEvents.length === 0">Nenhum horário cadastrado para este dia ou profissional.</div>
+      <button type="button" class="day-appointment" *ngFor="let e of dailyEvents" (click)="openAppointment(e)">
+        <span class="appointment-time">{{ e.start | date:'HH:mm':'-0300' }}<small>{{ e.end | date:'HH:mm':'-0300' }}</small></span>
+        <span class="appointment-info"><strong>{{ e.title }}</strong><span>{{ e.profissional_nome || 'Profissional não informado' }}</span><span class="status-pill" [ngClass]="e.status || 'pendente'">{{ statusLabel(e.status) }}</span></span><i class="pi pi-chevron-right" aria-hidden="true"></i>
+      </button>
+    </section>
     <!-- FULL CALENDAR INSTANCE -->
     <full-calendar 
-      *ngIf="!(agendaService.isLoading$ | async)" 
+      *ngIf="!(agendaService.isLoading$ | async) && viewMode === 'calendario'" 
       [options]="calendarOptions" 
     ></full-calendar>
+
+    <!-- FILA DE ESPERA (Walk-in) -->
+    <div class="fila-container" *ngIf="!(agendaService.isLoading$ | async) && viewMode === 'fila'">
+      <div class="empty-state" *ngIf="filaEspera.length === 0">
+        <i class="pi pi-check-circle" style="font-size: 3rem; color: #4ade80; margin-bottom: 10px;"></i>
+        <p>Fila vazia! Ninguém aguardando no momento.</p>
+      </div>
+
+      <div class="fila-list" *ngIf="filaEspera.length > 0">
+        <div class="fila-card" *ngFor="let item of filaEspera; let i = index" (click)="eventoSelecionado = item; showEventoModal = true">
+          <div class="fila-pos">#{{ i + 1 }}</div>
+          <div class="fila-info">
+            <strong>{{ item.title }}</strong>
+            <span class="fila-pro"><i class="pi pi-user"></i> {{ item.profissional_nome || 'Primeiro disponível' }}</span>
+          </div>
+          <div class="fila-time">
+            Chegou às {{ item.start | date:'HH:mm' }}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 

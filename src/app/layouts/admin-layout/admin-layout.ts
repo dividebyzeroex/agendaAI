@@ -7,15 +7,11 @@ import { MenuModule } from 'primeng/menu';
 import { AvatarModule } from 'primeng/avatar';
 import { MenuItem } from 'primeng/api';
 import { CostTrackerService } from '../../services/cost-tracker.service';
-import { AgentSwarmService } from '../../services/agent-swarm.service';
 import { KeybindingService } from '../../services/keybinding.service';
-import { WorkflowService } from '../../services/workflow.service';
 import { OnboardingService } from '../../services/onboarding.service';
 import { OnboardingModalComponent } from '../../components/onboarding-modal/onboarding-modal';
 import { UpdateNotifierComponent } from '../../components/update-notifier/update-notifier.component';
 import { NotificationService } from '../../services/notification.service';
-import { ChatbotService } from '../../services/chatbot.service';
-import { AiInsightsService } from '../../services/ai-insights.service';
 import { NotificationCenterComponent } from '../../components/notification-center/notification-center';
 import { BillingService } from '../../services/billing.service';
 import { ToastContainerComponent } from '../../components/toast-container/toast-container.component';
@@ -50,13 +46,9 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
 })
 export class AdminLayout implements OnInit {
   costTracker = inject(CostTrackerService);
-  swarmAgent = inject(AgentSwarmService);
   keybindings = inject(KeybindingService);
-  workflowEngine = inject(WorkflowService);
   onboarding = inject(OnboardingService);
   notifService = inject(NotificationService);
-  chatbotService = inject(ChatbotService);
-  aiInsights   = inject(AiInsightsService);
   billing = inject(BillingService);
   estabService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);
@@ -67,7 +59,7 @@ export class AdminLayout implements OnInit {
   showOnboarding = false;
   isNotifOpen = false;
   isSidebarOpen = false;
-  
+
   userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
   onlineUsers$ = this.presence.onlineUsers$;
   userMenuItems: MenuItem[] | undefined;
@@ -81,34 +73,34 @@ export class AdminLayout implements OnInit {
     }
 
     this.userMenuItems = [
-      { 
-        label: 'Minha Conta', 
+      {
+        label: 'Minha Conta',
         icon: 'pi pi-user',
         routerLink: ['/admin/configuracoes']
       },
-      { 
-        label: 'Configurações', 
+      {
+        label: 'Configurações',
         icon: 'pi pi-cog',
         routerLink: ['/admin/configuracoes']
       },
-      { 
-        label: 'Ver Página Pública', 
+      {
+        label: 'Ver Página Pública',
         icon: 'pi pi-external-link',
         url: urlPublica,
         target: '_blank'
       },
       { separator: true },
-      { 
-        label: 'Sair da Plataforma', 
-        icon: 'pi pi-sign-out', 
-        command: () => this.logout() 
+      {
+        label: 'Sair da Plataforma',
+        icon: 'pi pi-sign-out',
+        command: () => this.logout()
       }
     ];
-    
+
     await this.onboarding.checkOnboarding();
     this.onboarding.showOnboarding$.subscribe(show => (this.showOnboarding = show));
 
-    await this.processTempOnboarding();
+
   }
 
   get isDono(): Observable<boolean> {
@@ -127,34 +119,7 @@ export class AdminLayout implements OnInit {
     return this.userProfile$.pipe(map(p => p?.role === 'secretaria'));
   }
 
-  private async processTempOnboarding() {
-    const rawData = localStorage.getItem('ag_temp_onboarding_data');
-    if (rawData) {
-      try {
-        const onboardingData = JSON.parse(rawData);
-        await this.estabService.createEstabelecimento({
-          ...onboardingData,
-          onboarding_completo: true
-        });
 
-        // 🔗 REGRA: O Criador é o Dono Nato
-        // Criamos o primeiro registro de profissional para garantir a identidade no primeiro login
-        await this.profService.criarProfissional({
-          nome: onboardingData.nome || 'Proprietário',
-          email: onboardingData.email,
-          telefone: onboardingData.telefone,
-          role: 'dono',
-          ativo: true,
-          cargo: 'Proprietário'
-        });
-
-        localStorage.removeItem('ag_temp_onboarding_data');
-        localStorage.removeItem('ag_onboarding_email');
-      } catch (err) {
-        console.error('[Gatekeeper] Erro ao sincronizar onboarding:', err);
-      }
-    }
-  }
 
   logout() {
     this.authService.logout();

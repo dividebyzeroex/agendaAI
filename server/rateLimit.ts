@@ -10,12 +10,15 @@
  *   business: ilimitado
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { adminClient } from './security.js';
 
-export type PlanTier = 'starter' | 'pro' | 'business';
+export type PlanTier = 'starter' | 'basico' | 'completo' | 'premium' | 'pro' | 'business';
 export type QuotaResource = 'agendamentos' | 'sms' | 'automacoes';
 
 const PLAN_LIMITS: Record<PlanTier, Record<QuotaResource, number>> = {
+  basico: {agendamentos:100,sms:50,automacoes:5},
+  completo: {agendamentos:500,sms:200,automacoes:20},
+  premium: {agendamentos:9999,sms:1000,automacoes:100},
   starter:  { agendamentos: 100,  sms: 50,  automacoes: 5   },
   pro:      { agendamentos: 500,  sms: 300, automacoes: 20  },
   business: { agendamentos: -1,   sms: -1,  automacoes: -1  }, // -1 = ilimitado
@@ -30,11 +33,7 @@ export interface RateLimitResult {
   resetAt: string; // ISO date — primeiro dia do próximo mês
 }
 
-function getSupabase() {
-  const url  = process.env['NEXT_PUBLIC_SUPABASE_URL']!;
-  const key  = process.env['SUPABASE_SERVICE_ROLE_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY']!;
-  return createClient(url, key);
-}
+function getSupabase() { return adminClient(); }
 
 function firstDayNextMonth(): string {
   const d = new Date();
@@ -57,12 +56,13 @@ export async function checkAndIncrement(
   // Busca plano do estabelecimento (campo `plano` na tabela estabelecimento)
   const { data: estab } = await supabase
     .from('estabelecimento')
-    .select('plano')
+    .select('plano,active,trial_ends_at,plano_expires_at')
     .eq('id', estabelecimentoId)
     .maybeSingle();
 
-  const plan: PlanTier = (estab?.plano as PlanTier) ?? 'starter';
+  const plan: PlanTier = (['starter','basico','completo','premium','pro','business'].includes(estab?.plano) ? estab.plano : 'starter') as PlanTier;
   const limit = PLAN_LIMITS[plan][resource];
+  if(!estab?.active||Math.max(Date.parse(estab.trial_ends_at||'')||0,Date.parse(estab.plano_expires_at||'')||0)<=Date.now()) return {allowed:false,current:0,limit,plan,resource,resetAt:firstDayNextMonth()};
 
   // Ilimitado — passe direto
   if (limit === -1) {
@@ -78,8 +78,8 @@ export async function checkAndIncrement(
 
   if (error) {
     console.error('[RateLimit] Erro ao verificar quota:', error.message);
-    // Em caso de erro no banco, permite a ação (fail-open) para não quebrar o fluxo
-    return { allowed: true, current: 0, limit, plan, resource, resetAt: firstDayNextMonth() };
+    // Falha fechada: indisponibilidade não autoriza consumo pago.
+    return { allowed: false, current: 0, limit, plan, resource, resetAt: firstDayNextMonth() };
   }
 
   const current: number = data ?? 0;
@@ -106,12 +106,13 @@ export async function getUsage(
 
   const { data: estab } = await supabase
     .from('estabelecimento')
-    .select('plano')
+    .select('plano,active,trial_ends_at,plano_expires_at')
     .eq('id', estabelecimentoId)
     .maybeSingle();
 
-  const plan: PlanTier = (estab?.plano as PlanTier) ?? 'starter';
+  const plan: PlanTier = (['starter','basico','completo','premium','pro','business'].includes(estab?.plano) ? estab.plano : 'starter') as PlanTier;
   const limit = PLAN_LIMITS[plan][resource];
+  if(!estab?.active||Math.max(Date.parse(estab.trial_ends_at||'')||0,Date.parse(estab.plano_expires_at||'')||0)<=Date.now()) return {current:0,limit:0,plan};
 
   const { data } = await supabase
     .from('usage_quotas')

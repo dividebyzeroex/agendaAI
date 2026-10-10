@@ -1,0 +1,176 @@
+.comanda-wrapper {
+  min-height: 100vh;
+  background: #f8fafc;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 40px 20px;
+  font-family: 'Inter', sans-serif;
+}
+
+.comanda-container {
+  width: 100%;
+  max-width: 480px;
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  position: relative;
+}
+
+.comanda-container::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 6px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+}
+
+.loading-state, .error-state {
+  padding: 60px 20px;
+  text-align: center;
+  color: #64748b;
+}
+
+.loading-state i {
+  font-size: 2.5rem;
+  color: #3b82f6;
+  margin-bottom: 16px;
+}
+
+.error-state i {
+  font-size: 2.5rem;
+  color: #ef4444;
+  margin-bottom: 16px;
+}
+
+.comanda-header {
+  padding: 40px 30px 20px;
+  text-align: center;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.brand {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #3b82f6;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  margin-bottom: 12px;
+}
+
+.comanda-header h1 {
+  margin: 0 0 8px 0;
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.date {
+  margin: 0 0 16px 0;
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  background: #fefce8;
+  color: #a16207;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+}
+.status-badge.pago {
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.comanda-body {
+  padding: 30px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
+  color: #334155;
+}
+.info-row strong {
+  color: #0f172a;
+}
+
+hr {
+  border: 0;
+  border-top: 1px dashed #e2e8f0;
+  margin: 24px 0;
+}
+
+h3 {
+  font-size: 1rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0 0 16px 0;
+}
+
+.item-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.95rem;
+  color: #1e293b;
+  font-weight: 500;
+}
+.item-price {
+  font-weight: 700;
+}
+
+.total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.2rem;
+  color: #0f172a;
+}
+.total-row strong {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #059669;
+}
+
+.pagamento-info {
+  margin-top: 20px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  color: #475569;
+}
+.pagamento-info p {
+  margin: 0 0 4px 0;
+}
+
+.comanda-footer {
+  text-align: center;
+  padding: 24px 30px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+.comanda-footer p {
+  margin: 0 0 8px 0;
+  color: #0f172a;
+  font-weight: 600;
+}
+.comanda-footer .small-text {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-weight: 400;
+}

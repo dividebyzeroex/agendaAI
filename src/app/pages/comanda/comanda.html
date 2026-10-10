@@ -1,0 +1,73 @@
+<div class="comanda-wrapper">
+  <div class="comanda-container">
+    <div *ngIf="loading" class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Carregando sua comanda...</p>
+    </div>
+
+    <div *ngIf="error && !loading" class="error-state">
+      <i class="pi pi-times-circle"></i>
+      <p>{{ error }}</p>
+    </div>
+
+    <div *ngIf="caixaItem && !loading" class="comanda-content">
+      <div class="comanda-header">
+        <div class="brand">{{ nomeEstabelecimento }}</div>
+        <h1>Sua Comanda Digital</h1>
+        <p class="date">Atendimento em: {{ caixaItem.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
+        <span class="status-badge" [class.pago]="caixaItem.status_caixa === 'pago'">
+          {{ caixaItem.status_caixa === 'pago' ? 'PAGO' : 'PENDENTE' }}
+        </span>
+      </div>
+
+      <div class="comanda-body">
+        <div class="info-row">
+          <span>Cliente:</span>
+          <strong>{{ caixaItem.cliente_nome }}</strong>
+        </div>
+        <div class="info-row" *ngIf="caixaItem.profissional">
+          <span>Profissional:</span>
+          <strong>{{ caixaItem.profissional }}</strong>
+        </div>
+
+        <hr>
+
+        <h3>Serviços</h3>
+        <div class="item-list">
+          <div class="item-row" *ngFor="let s of caixaItem.servicos">
+            <span class="item-name">{{ s.titulo }}</span>
+            <span class="item-price">R$ {{ s.preco | number:'1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="produtos.length > 0">
+          <hr>
+          <h3>Produtos</h3>
+          <div class="item-list">
+            <div class="item-row" *ngFor="let p of produtos">
+              <span class="item-name">{{ p.nome }} x{{ p.quantidade }}</span>
+              <span class="item-price">R$ {{ (p.preco_unitario * p.quantidade) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="total-row">
+          <span>Total:</span>
+          <strong>R$ {{ caixaItem.valor_total | number:'1.2-2' }}</strong>
+        </div>
+        
+        <div class="pagamento-info" *ngIf="caixaItem.status_caixa === 'pago'">
+          <p>Pago via: <strong>{{ caixaItem.forma_pagamento }}</strong></p>
+          <p>Data do pagamento: {{ caixaItem.pago_em | date:'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+      </div>
+      
+      <div class="comanda-footer">
+        <p>Obrigado pela preferência!</p>
+        <p class="small-text">Esta é uma via digital gerada pelo {{ nomeEstabelecimento }}.</p>
+      </div>
+    </div>
+  </div>
+</div>

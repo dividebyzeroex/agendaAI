@@ -21,7 +21,7 @@ export class AdminConfiguracoes implements OnInit {
   servicos: Servico[] = [];
   horarios: Horario[] = [];
 
-  activeTab: 'negocio' | 'servicos' | 'horarios' = 'negocio';
+  activeTab: 'negocio' | 'servicos' | 'horarios' | 'fidelidade' = 'negocio';
   isSaving = false;
   savedMsg = '';
 
@@ -31,7 +31,12 @@ export class AdminConfiguracoes implements OnInit {
 
   ngOnInit() {
     this.estabelecimentoService.estabelecimento$.subscribe(e => { 
-      if (e) this.estabelecimento = { ...e }; 
+      if (e) {
+        this.estabelecimento = { ...e };
+        if (!this.estabelecimento.config_fidelidade) {
+          this.estabelecimento.config_fidelidade = { ativo: false, visitas_meta: 10, desconto_percentual: 15 };
+        }
+      }
       this.novoServico.emoji = this.segmentoConfig.current.emojiPadrao;
     });
     this.estabelecimentoService.servicos$.subscribe(s => (this.servicos = [...s]));

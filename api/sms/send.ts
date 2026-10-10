@@ -2,10 +2,11 @@
  * api/sms/send.ts — Vercel Serverless
  * v2: + Unicode Sanitization + Rate Limiting
  */
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../../server/http.js';
 import twilio from 'twilio';
-import { sanitizeText, sanitizePhone } from '../utils/sanitize.js';
-import { checkAndIncrement } from '../utils/rateLimit.js';
+import { authorizeTenant, handleError, HttpError } from '../../server/security.js';
+import { sanitizeText, sanitizePhone } from '../../server/sanitize.js';
+import { checkAndIncrement } from '../../server/rateLimit.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -14,7 +15,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
-  const raw = req.body as { to?: string; message?: string; tipo?: string; estabelecimento_id?: string };
+  try {
+  const raw = (req.body || {}) as { to?: string; message?: string; tipo?: string; estabelecimento_id?: string };
 
   // ✅ 1. Sanitização Unicode — remover caracteres invisíveis maliciosos
   const to      = raw.to      ? sanitizePhone(raw.to) : null;
@@ -25,6 +27,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!to || !message) {
     return res.status(400).json({ error: 'Campos obrigatórios: to, message' });
   }
+
+  const db = await authorizeTenant(req, estabelecimentoId);
+  const { data: customers, error: customerError } = await db.from('clientes').select('telefone').eq('estabelecimento_id', estabelecimentoId);
+  if (customerError || !customers?.some(c => sanitizePhone(c.telefone || '') === to)) throw new HttpError(403, 'Destinatário não cadastrado neste estabelecimento.');
+  const sid = process.env['TWILIO_ACCOUNT_SID'];
+  const token = process.env['TWILIO_AUTH_TOKEN'];
+  const from = process.env['TWILIO_PHONE_FROM'];
+  if (!sid || !token || !from) throw new HttpError(503, 'Envio de SMS não configurado.');
 
   // ✅ 2. Rate Limiting — verificar quota de SMS do plano
   if (estabelecimentoId) {
@@ -40,25 +50,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
-  const sid   = process.env['TWILIO_ACCOUNT_SID'];
-  const token = process.env['TWILIO_AUTH_TOKEN'];
-  const from  = process.env['TWILIO_PHONE_FROM'];
-
-  if (!sid || !token || !from) {
-    console.warn('[SMS] Vars Twilio ausentes — modo simulado');
-    return res.status(200).json({
-      success: true,
-      simulated: true,
-      to,
-      message: 'Configure TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN e TWILIO_PHONE_FROM no Vercel.',
-    });
-  }
-
   try {
     const client = twilio(sid, token);
     const result = await client.messages.create({ body: message, from, to });
 
-    console.log(`[SMS] Enviado para ${to} | SID: ${result.sid} | tipo: ${tipo}`);
+
 
     return res.status(200).json({
       success: true,
@@ -68,6 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (err: any) {
     console.error('[SMS] Erro Twilio:', err.message);
-    return res.status(500).json({ error: err.message, code: err.code });
+    return res.status(502).json({ error: 'O provedor não aceitou o envio.' });
   }
+  } catch (error) { return handleError(res, error); }
 }

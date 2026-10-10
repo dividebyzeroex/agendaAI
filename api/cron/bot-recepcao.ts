@@ -4,22 +4,19 @@
  * Busca agendamentos do dia no Supabase e dispara SMS de lembrete
  * via Twilio para cada cliente com telefone cadastrado.
  */
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../../server/http.js';
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
+import { checkAndIncrement } from '../../server/rateLimit.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Segurança: só aceita do cron da Vercel em produção
-  const authHeader = req.headers.authorization;
-  if (authHeader !== `Bearer ${process.env['CRON_SECRET']}`) {
-    if (process.env['NODE_ENV'] === 'production') {
-      return res.status(401).json({ error: 'Unauthorized CRON.' });
-    }
-  }
+  if (req.method !== 'GET') return res.status(405).json({ error: 'GET only' });
+  const secret = process.env['CRON_SECRET'];
+  if (!secret || req.headers.authorization !== `Bearer ${secret}`) return res.status(401).json({ error: 'Unauthorized CRON.' });
 
   // --- Supabase ---
   const supabaseUrl = process.env['NEXT_PUBLIC_SUPABASE_URL'] || process.env['SUPABASE_URL'];
-  const supabaseKey = process.env['SUPABASE_SERVICE_ROLE_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY'] || process.env['SUPABASE_ANON_KEY'];
+  const supabaseKey = process.env['SUPABASE_SERVICE_ROLE_KEY'];
   if (!supabaseUrl || !supabaseKey) {
     return res.status(500).json({ error: 'Supabase vars ausentes.' });
   }
@@ -31,11 +28,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const twilioFrom  = process.env['TWILIO_PHONE_FROM'];
   const twilioClient = (twilioSid && twilioToken) ? twilio(twilioSid, twilioToken) : null;
 
+  if (!twilioClient || !twilioFrom) return res.status(503).json({ error: 'SMS não configurado.', sent: 0 });
+
   // Agendamentos de amanhã (lembrete com 1 dia de antecedência)
-  const tomorrow = new Date();
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  const tomorrowStart = new Date(tomorrow); tomorrowStart.setHours(0, 0, 0, 0);
-  const tomorrowEnd   = new Date(tomorrow); tomorrowEnd.setHours(23, 59, 59, 999);
+  const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(Date.now() + 86400000));
+  const tomorrowStart = new Date(`${localDate}T00:00:00-03:00`);
+  const tomorrowEnd = new Date(tomorrowStart.getTime() + 86400000 - 1);
 
   const { data: events, error } = await supabase
     .from('agenda_events')
@@ -54,10 +52,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const cliente = (event as any).clientes;
     const telefone = cliente?.telefone;
 
-    if (!telefone) { skipped++; continue; }
+    if (!telefone || !event.estabelecimento_id) { skipped++; continue; }
+    const quota = await checkAndIncrement(event.estabelecimento_id, 'sms');
+    if (!quota.allowed) { skipped++; continue; }
 
-    const horario = new Date(event.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    const msg = `Olá, ${cliente.nome || 'cliente'}! 👋 Lembrete: você tem *${event.title}* amanhã às ${horario}. Responda com CONFIRMAR para garantir ou CANCELAR se não puder. — AgendaAi`;
+    const horario = new Date(event.start).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' });
+    const msg = `Olá, ${cliente.nome || 'cliente'}! 👋 Lembrete: você tem *${event.title}* amanhã às ${horario}. Entre em contato com o estabelecimento para alterações. — AgendaAi`;
 
     if (twilioClient && twilioFrom) {
       try {
@@ -68,11 +68,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } catch (e: any) {
         results.push({ to: telefone, error: e.message });
       }
-    } else {
-      // Modo simulado (sem credenciais Twilio)
-      console.log(`[SIMULADO] SMS para ${telefone}: ${msg}`);
-      results.push({ to: telefone, simulated: true });
-      sent++;
     }
   }
 

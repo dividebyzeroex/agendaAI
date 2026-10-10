@@ -2,6 +2,7 @@ import { Component, Output, EventEmitter, inject, Input, OnInit } from '@angular
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-novo-cliente-modal',
@@ -78,6 +79,48 @@ import { ClienteService, Cliente } from '../../services/cliente.service';
             placeholder="Ex: Alérgico a produtos X, prefere atendimento em local silencioso..."
             class="field-area" rows="4"></textarea>
         </div>
+
+        <ng-container *ngIf="isSaude()">
+          <div class="nc-separator"></div>
+          <div class="nc-section-title">Prontuário Médico (Anamnese)</div>
+          <div class="fields-grid">
+            <div class="field-group full">
+              <label>Condições Pré-existentes / Alergias</label>
+              <div class="input-wrap">
+                <i class="pi pi-heart-fill"></i>
+                <input type="text" [(ngModel)]="form.metadata.alergias" placeholder="Ex: Hipertensão, Alergia a Dipirona" class="field-input"/>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Tipo Sanguíneo</label>
+              <div class="input-wrap">
+                <i class="pi pi-info-circle"></i>
+                <input type="text" [(ngModel)]="form.metadata.tipoSanguineo" placeholder="Ex: O+" class="field-input"/>
+              </div>
+            </div>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="isPetshop()">
+          <div class="nc-separator"></div>
+          <div class="nc-section-title">Perfil do Pet</div>
+          <div class="fields-grid">
+            <div class="field-group">
+              <label>Nome do Pet</label>
+              <div class="input-wrap">
+                <i class="pi pi-prime"></i>
+                <input type="text" [(ngModel)]="form.metadata.petNome" placeholder="Ex: Rex" class="field-input"/>
+              </div>
+            </div>
+            <div class="field-group">
+              <label>Raça / Espécie</label>
+              <div class="input-wrap">
+                <i class="pi pi-tag"></i>
+                <input type="text" [(ngModel)]="form.metadata.petRaca" placeholder="Ex: Poodle, Gato Persa" class="field-input"/>
+              </div>
+            </div>
+          </div>
+        </ng-container>
  
         <!-- Info box -->
         <div class="info-box-premium" *ngIf="!isEdit">
@@ -190,11 +233,21 @@ export class NovoClienteModalComponent implements OnInit {
   @Output() cancelado = new EventEmitter<void>();
 
   private clienteService = inject(ClienteService);
+  segmentoConfig = inject(SegmentoConfigService);
 
-  form = { nome: '', telefone: '', email: '', nascimento: '', observacoes: '' };
+  form = { nome: '', telefone: '', email: '', nascimento: '', observacoes: '', metadata: {} as any };
   saving = false;
   erro   = '';
   isEdit = false;
+
+  isSaude(): boolean {
+    const s = this.segmentoConfig.current.id;
+    return s === 'clinica_medica' || s === 'clinica_odonto' || s === 'estetica';
+  }
+
+  isPetshop(): boolean {
+    return this.segmentoConfig.current.id === 'petshop';
+  }
 
   ngOnInit() {
     if (this.cliente) {
@@ -204,7 +257,8 @@ export class NovoClienteModalComponent implements OnInit {
         telefone:   this.cliente.telefone || '',
         email:      this.cliente.email || '',
         nascimento: (this.cliente as any).nascimento || '',
-        observacoes: (this.cliente as any).observacoes || ''
+        observacoes: (this.cliente as any).observacoes || '',
+        metadata:   this.cliente.metadata || {}
       };
     }
   }
@@ -225,7 +279,8 @@ export class NovoClienteModalComponent implements OnInit {
           telefone:   this.form.telefone.trim() || undefined,
           email:      this.form.email.trim()    || undefined,
           nascimento: nascimentoValue as any,
-          observacoes: this.form.observacoes.trim() || undefined
+          observacoes: this.form.observacoes.trim() || undefined,
+          metadata:   this.form.metadata
         } as any);
         this.salvo.emit(atualizado);
       } else {
@@ -237,6 +292,7 @@ export class NovoClienteModalComponent implements OnInit {
           nascimento: nascimentoValue as any,
           observacoes: this.form.observacoes.trim() || undefined,
           ultima_visita: new Date().toISOString().split('T')[0],
+          metadata:   this.form.metadata
         });
         this.salvo.emit(novo);
       }

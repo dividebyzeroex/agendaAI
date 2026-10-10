@@ -1,0 +1,55 @@
+<div class="social-container">
+  <div class="header">
+    <h2>Gerenciamento de Mídias (Zernio)</h2>
+    <p>Visão global da fila de postagens de Inteligência Artificial de todos os tenants.</p>
+  </div>
+
+  <div class="integration-status" [class.connected]="isZernioConnected">
+    <div class="status-indicator"></div>
+    <span>Zernio MCP Integration: <strong>{{ isZernioConnected ? 'ONLINE & SYNCED' : 'OFFLINE' }}</strong></span>
+  </div>
+
+  <div class="stats-cards">
+    <div class="card">
+      <span class="label">Agendados (Próx 7 dias)</span>
+      <span class="value">{{ stats.scheduled }}</span>
+    </div>
+    <div class="card">
+      <span class="label">Publicados Hoje</span>
+      <span class="value success">{{ stats.publishedToday }}</span>
+    </div>
+    <div class="card">
+      <span class="label">Falhas na Fila</span>
+      <span class="value error">{{ stats.failed }}</span>
+    </div>
+  </div>
+
+  <div class="queue-section">
+    <h3>Fila Global de Postagens</h3>
+    
+    <div class="queue-list">
+      <div class="queue-item" *ngFor="let post of queue">
+        <div class="platform-icon" [ngClass]="post.platform">
+          <i class="pi" [ngClass]="{
+            'pi-instagram': post.platform === 'instagram',
+            'pi-facebook': post.platform === 'facebook',
+            'pi-video': post.platform === 'tiktok'
+          }"></i>
+        </div>
+        
+        <div class="item-content">
+          <h4>{{ post.tenant }}</h4>
+          <p>{{ post.content }}</p>
+          <span class="time"><i class="pi pi-calendar"></i> {{ post.scheduledFor | date:'dd/MM/yyyy HH:mm' }}</span>
+        </div>
+        
+        <div class="item-actions">
+          <span class="badge" [ngClass]="post.status">{{ post.status | uppercase }}</span>
+          <button class="btn-retry" *ngIf="post.status === 'failed'" (click)="retryPost(post.id)">
+            <i class="pi pi-refresh"></i> Tentar Novamente
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,8 @@
-import { Component, inject, ChangeDetectorRef, OnInit } from '@angular/core';
+import { Component, inject, ChangeDetectorRef, OnInit, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { agendaDay, shiftAgendaDay } from '../../utils/agenda-day';
 import { FullCalendarModule } from '@fullcalendar/angular';
 import { CalendarOptions } from '@fullcalendar/core';
 import timeGridPlugin from '@fullcalendar/timegrid';
@@ -9,22 +12,56 @@ import ptBrLocale from '@fullcalendar/core/locales/pt-br';
 import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.service';
 import { AgendarModalComponent } from '../../components/agendar-modal/agendar-modal.component';
 import { EventoModalComponent } from '../../components/evento-modal/evento-modal.component';
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-admin-agenda',
   standalone: true,
-  imports: [CommonModule, FullCalendarModule, AgendarModalComponent, EventoModalComponent],
+  imports: [CommonModule, FormsModule, FullCalendarModule, AgendarModalComponent, EventoModalComponent],
   templateUrl: './admin-agenda.html',
   styleUrls: ['./admin-agenda.css'],
 })
 export class AdminAgenda implements OnInit {
   public agendaService = inject(AgendaEventService);
+  public segmentoConfig = inject(SegmentoConfigService);
   private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
 
   showAgendarModal = false;
   showEventoModal  = false;
   selectInfo: any  = null;
   eventoSelecionado: AgendaEvent | null = null;
+  viewMode: 'calendario' | 'fila' = 'calendario';
+
+  selectedDay = agendaDay(new Date());
+  selectedProfessional = '';
+  get dailyEvents(): AgendaEvent[] {
+    return this.agendaService.currentEvents.filter(e => agendaDay(e.start) === this.selectedDay && (!this.selectedProfessional || e.profissional_id === this.selectedProfessional)).sort((a,b) => new Date(a.start).getTime()-new Date(b.start).getTime());
+  }
+  get dailyProfessionals() {
+    const professionals = new Map<string,string>();
+    for (const e of this.agendaService.currentEvents) if(e.profissional_id) professionals.set(e.profissional_id, e.profissional_nome || 'Profissional');
+    return Array.from(professionals, ([id,nome]) => ({id,nome}));
+  }
+  moveDay(amount: number) { this.selectedDay = shiftAgendaDay(this.selectedDay, amount); }
+  today() { this.selectedDay = agendaDay(new Date()); }
+  openAppointment(event: AgendaEvent) { this.eventoSelecionado = event; this.showEventoModal = true; }
+  newAppointment() {
+    const start = `${this.selectedDay || agendaDay(new Date())}T09:00:00-03:00`;
+    this.selectInfo = {startStr:start, endStr:new Date(new Date(start).getTime()+60*60*1000).toISOString(), allDay:false};
+    this.showAgendarModal = true;
+  }
+  statusLabel(status?: string) {
+    return ({confirmado:'Confirmado',pendente:'Pendente',em_atendimento:'Em atendimento',concluido:'Concluído',cancelado:'Cancelado',noshow:'Não compareceu',pago:'Pago'} as Record<string,string>)[status || ''] || 'Agendado';
+  }
+
+  get filaEspera(): AgendaEvent[] {
+    const hoje = agendaDay(new Date());
+    const eventos = this.agendaService.currentEvents;
+    return eventos
+      .filter(e => agendaDay(e.start) === hoje && (e.status === 'pendente' || e.status === 'confirmado'))
+      .sort((a, b) => new Date(a.start).getTime() - new Date(b.start).getTime());
+  }
 
   calendarOptions: CalendarOptions = {
     plugins: [timeGridPlugin, interactionPlugin, dayGridPlugin],
@@ -96,6 +133,9 @@ export class AdminAgenda implements OnInit {
         observacoes: info.event.extendedProps?.['observacoes'],
         cliente_id: info.event.extendedProps?.['cliente_id'],
         servico_id: info.event.extendedProps?.['servico_id'],
+        profissional_id: info.event.extendedProps?.['profissional_id'],
+        profissional_nome: info.event.extendedProps?.['profissional_nome'],
+        metadata: info.event.extendedProps?.['metadata'],
       };
       this.showEventoModal = true;
     },
@@ -115,7 +155,7 @@ export class AdminAgenda implements OnInit {
 
   ngOnInit() {
     // Sincroniza a fonte de eventos do calendário com o stream do serviço
-    this.agendaService.events$.subscribe(events => {
+    this.agendaService.events$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(events => {
       this.calendarOptions = {
         ...this.calendarOptions,
         events: events

@@ -9,12 +9,14 @@ import { ClienteService } from '../../services/cliente.service';
 import { NotificationService } from '../../services/notification.service';
 import { MultiAgentService } from '../../services/multi-agent.service';
 import { AuthService } from '../../services/auth.service';
-import { map, Subscription, interval, Observable } from 'rxjs';
+import { ParticleCanvasComponent } from '../../components/particle-canvas/particle-canvas.component';
+import { PortalProfissionalComponent } from '../../components/portal-profissional/portal-profissional';
+import { BehaviorSubject, map, Subscription, interval, Observable } from 'rxjs';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule],
+  imports: [CommonModule, ButtonModule, CardModule, TableModule, PortalProfissionalComponent],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
@@ -22,7 +24,7 @@ export class Admin implements OnInit, OnDestroy {
   private agendaService = inject(AgendaEventService);
   private clienteService = inject(ClienteService);
   private notifService = inject(NotificationService);
-  private agentService = inject(MultiAgentService);
+
   private authService = inject(AuthService);
   private router = inject(Router);
 
@@ -30,18 +32,19 @@ export class Admin implements OnInit, OnDestroy {
 
   todayAppointments: AgendaEvent[] = [];
   noShowEvents: AgendaEvent[] = [];
-  
-  agentActivity$ = this.agentService.topActivity$;
-  
+
+  agentActivity$ = new BehaviorSubject<any[]>([]);
+
   totalToday = 0;
   totalClientes = 0;
   revenue = 0;
   concurrentCount = 0;
-  waitlistCount = 2; // AI Waitlist Mock
+  waitlistCount = 0;
   isLoading = true;
   aiSuggestions: any[] = [];
   saudacao = '';
-  
+  aniversariantes: any[] = [];
+
   private sub = new Subscription();
 
   ngOnInit() {
@@ -64,7 +67,7 @@ export class Admin implements OnInit, OnDestroy {
     this.sub.add(
       this.clienteService.clientes$.subscribe(clientes => {
         const uniquePhones = new Set(clientes.filter(c => c.telefone).map(c => c.telefone));
-        this.totalClientes = uniquePhones.size;
+        this.totalClientes = clientes.length;
       })
     );
 
@@ -81,7 +84,15 @@ export class Admin implements OnInit, OnDestroy {
         }));
       })
     );
+
+    // 5. Busca aniversariantes do mês
+    this.carregarAniversariantes();
   }
+
+  async carregarAniversariantes() {
+    this.aniversariantes = await this.clienteService.getAniversariantesDoMes();
+  }
+
 
   get isAdminOrFin(): Observable<boolean> {
     return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
@@ -115,7 +126,7 @@ export class Admin implements OnInit, OnDestroy {
 
   private processAppointments(events: AgendaEvent[]) {
     const agora = new Date();
-    
+
     // 🔗 Filtro de Autoridade: Apenas agendamentos do dia local (Soberania de Fuso)
     this.todayAppointments = events.filter(e => {
         const start = new Date(e.start);
@@ -123,7 +134,7 @@ export class Admin implements OnInit, OnDestroy {
                start.getMonth() === agora.getMonth() &&
                start.getDate() === agora.getDate();
     }).sort((a,b) => a.start.localeCompare(b.start));
-    
+
     // Identificar No-Shows: Começaram há mais de 10 minutos (atraso) e ainda estão apenas 'confirmado'
     this.noShowEvents = this.todayAppointments.filter(e => {
         const startTime = new Date(e.start);
@@ -132,16 +143,16 @@ export class Admin implements OnInit, OnDestroy {
     });
 
     this.totalToday = this.todayAppointments.length;
-    
+
     // Faturamento: Soma de todos os agendamentos que não foram cancelados
     this.revenue = events.filter(e => {
         // Faturamento do mês corrente
         const start = new Date(e.start);
-        return start.getMonth() === agora.getMonth() && 
-               start.getFullYear() === agora.getFullYear() && 
+        return start.getMonth() === agora.getMonth() &&
+               start.getFullYear() === agora.getFullYear() &&
                e.status !== 'cancelado';
     }).reduce((acc, curr) => acc + (curr.valor_total || 0), 0);
-    
+
     // Atendimentos simultâneos (acontecendo agora)
     this.concurrentCount = this.todayAppointments.filter(e => {
         const start = new Date(e.start);
@@ -149,16 +160,19 @@ export class Admin implements OnInit, OnDestroy {
         return agora >= start && agora <= end && e.status !== 'cancelado';
     }).length;
 
+    // Fila de Espera (Walk-in ou Pendentes de Hoje)
+    this.waitlistCount = this.todayAppointments.filter(e => e.status === 'pendente' || e.status === 'confirmado').length;
+
     this.isLoading = false;
   }
 
   async marcarFalta(event: AgendaEvent) {
     if (!event.id) return;
-    
+
     try {
         // 1. Atualiza status para 'noshow'
         await this.agendaService.updateStatus(event.id, 'noshow');
-        
+
         // 2. Registra falta no perfil do cliente se houver cliente_id
         if (event.cliente_id) {
           const cliente = this.clienteService.getClientes().find(c => c.id === event.cliente_id);
