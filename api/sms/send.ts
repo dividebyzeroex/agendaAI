@@ -2,7 +2,7 @@
  * api/sms/send.ts — Vercel Serverless
  * v2: + Unicode Sanitization + Rate Limiting
  */
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../../server/http.js';
 import twilio from 'twilio';
 import { authorizeTenant, handleError, HttpError } from '../../server/security.js';
 import { sanitizeText, sanitizePhone } from '../../server/sanitize.js';

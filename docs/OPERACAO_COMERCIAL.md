@@ -8,6 +8,9 @@ Foram retirados os painéis sociais e de observabilidade simulados, a inicializa
 
 ## Validação concluída
 
+Angular atualizado para 21.2.25 e build/CLI para 21.2.26. Dependências transitivas atualizadas e esbuild fixado em 0.28.1. A auditoria npm completa em 10/10/2026 retornou zero vulnerabilidades. Mercado Pago, Stripe.js, tema PrimeNG legado e SDK de desenvolvimento Vercel foram removidos por não serem necessários; os endpoints mantêm tipos HTTP locais sem dependência de um builder.
+
+
 - Compilação Angular de produção, verificação TypeScript do backend e inicialização real do Router Angular em teste de regressão.
 - 27 testes de preço, reconciliação, segurança, datas de São Paulo, intervalos ocupados e configuração de cobrança.
 - Seis migrações executadas em banco local; testes de isolamento, proteção de cobrança, limite de equipe, sobreposição, janela gratuita, limitação de tentativas e autorização do proprietário somente após confirmação do e-mail.

@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { adminClient, isUuid } from '../server/security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

@@ -4,7 +4,7 @@
  * Busca agendamentos do dia no Supabase e dispara SMS de lembrete
  * via Twilio para cada cliente com telefone cadastrado.
  */
-import { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../../server/http.js';
 import { createClient } from '@supabase/supabase-js';
 import twilio from 'twilio';
 import { checkAndIncrement } from '../../server/rateLimit.js';

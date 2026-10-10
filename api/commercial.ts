@@ -1,5 +1,5 @@
 import { createHmac } from 'node:crypto';
-import type { VercelRequest,VercelResponse } from '@vercel/node';
+import type { VercelRequest,VercelResponse } from '../server/http.js';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { discoverBusinesses } from '../server/discovery.js';
 import { Resend } from 'resend';

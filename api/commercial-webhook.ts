@@ -1,4 +1,4 @@
-import type {VercelRequest,VercelResponse} from '@vercel/node';
+import type {VercelRequest,VercelResponse} from '../server/http.js';
 import {Resend} from 'resend';
 import {adminClient} from '../server/security.js';
 export const config={api:{bodyParser:false}};

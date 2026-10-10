@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../server/http.js';
 import twilio from 'twilio';
 import { Resend } from 'resend';
 import { authorizeTenant, escapeHtml, handleError, HttpError, projectOrigin } from '../server/security.js';

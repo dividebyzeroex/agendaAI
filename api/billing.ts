@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { authenticate, billingReadiness, operationalBillingReadiness, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

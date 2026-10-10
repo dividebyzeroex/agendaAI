@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { VercelRequest } from '@vercel/node';
+import type { VercelRequest } from './http.js';
 export class HttpError extends Error { constructor(public status: number, message: string) { super(message); } }
 export function adminClient() {
   const url = process.env['NEXT_PUBLIC_SUPABASE_URL'] || process.env['SUPABASE_URL'];

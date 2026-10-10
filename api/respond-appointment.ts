@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { randomUUID } from 'node:crypto';
 import { adminClient, escapeHtml, handleError, HttpError, isUuid } from '../server/security.js';
 
