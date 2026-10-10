@@ -68,6 +68,12 @@ await db.query(`insert into auth.users(id,email) values($1,'joao.almeida.msbrasi
 assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[pendingOwner])).rows[0].n,0);
 await db.query(`update auth.users set email_confirmed_at=now() where id=$1`,[pendingOwner]);
 assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[pendingOwner])).rows[0].n,1);
+const paiolOwner='10000000-0000-4000-8000-000000000004';
+await db.query(`insert into auth.users(id,email) values($1,'paiol4@gmail.com')`,[paiolOwner]);
+assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[paiolOwner])).rows[0].n,0);
+await db.query(`update auth.users set email_confirmed_at=now() where id=$1`,[paiolOwner]);
+assert.equal((await asRole('authenticated',paiolOwner,`select is_platform_owner() as allowed`)).rows[0].allowed,true);
+assert.equal((await asRole('authenticated',paiolOwner,`select get_platform_metrics() as data`)).rows[0].data.prospects,0);
 await db.query(`update estabelecimento set trial_ends_at=now()-interval '1 day' where id=$1`,[tenant]);
 assert.equal((await asRole('authenticated',owner,`select * from get_meus_estabelecimentos()`)).rows.length,0);
 assert.equal((await asRole('authenticated',owner,`select id from estabelecimento where id=$1`,[tenant])).rows.length,1);
