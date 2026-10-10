@@ -14,7 +14,7 @@ export function quote(planId: unknown, months: unknown) {
 }
 export function billingReadiness(env: Record<string,string|undefined> = process.env) {
   const key = env['STRIPE_SECRET_KEY'] || '';
-  const mode = /^sk_live_/.test(key) ? 'live' : /^sk_test_/.test(key) ? 'test' : 'unconfigured';
+  const mode = /^(sk|rk)_live_/.test(key) ? 'live' : /^(sk|rk)_test_/.test(key) ? 'test' : 'unconfigured';
   const ready = mode !== 'unconfigured' && !!env['STRIPE_WEBHOOK_SECRET']
     && env['CONTRACT_READY'] === 'true'
     && ['BUSINESS_LEGAL_NAME','BUSINESS_TAX_ID','BUSINESS_CONTACT_EMAIL','BUSINESS_ADDRESS'].every(k => !!env[k]);
