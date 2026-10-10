@@ -1,9 +1,19 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
+
+interface ProviderDetails { name: string; taxId: string; address: string; contact: string; }
 
 @Component({
   selector: 'app-terms', standalone: true, imports: [RouterLink],
   template: `<main class="terms"><a routerLink="/">← AgendaAi</a><p class="eyebrow">TRANSPARÊNCIA DESDE O PRIMEIRO DIA</p><h1>Condições do teste e da assinatura</h1><p class="intro">Versão de avaliação — 4 de outubro de 2026. Leia estas condições antes de cadastrar os dados da sua empresa.</p><aside>O teste é gratuito por 30 dias, sem cartão de crédito e sem conversão automática em assinatura. A contratação paga exige uma confirmação separada.</aside>
+  <section aria-label="Identificação do fornecedor">
+  <h2>Responsável pelo serviço</h2>
+  @if (provider(); as business) {
+    <p><strong>{{ business.name }}</strong><br>CPF/CNPJ: {{ business.taxId }}<br>{{ business.address }}<br>Atendimento, contratos e privacidade: {{ business.contact }}</p>
+  } @else {
+    <p>{{ providerError() ? 'Identificação temporariamente indisponível. A contratação permanece sujeita à validação dos dados do fornecedor.' : 'Carregando identificação do fornecedor…' }}</p>
+  }
+  </section>
   <h2>1. A proposta</h2><p>O AgendaAi oferece ferramentas de agenda, cadastro de clientes, gestão de equipe e integrações de atendimento. A disponibilidade de cada recurso depende do plano, da configuração e dos provedores conectados. As demonstrações públicas usam dados fictícios; não são resultados de clientes nem garantias de faturamento, redução de faltas ou tempo de resposta.</p>
   <h2>2. Seu período de avaliação</h2><p>O período começa na criação da conta da empresa. Use os 30 dias para configurar serviços, horários e profissionais e validar o funcionamento. Encerrado o prazo, a continuidade dos recursos de assinatura depende da contratação de um plano. Você não autoriza débitos ao iniciar o teste.</p>
   <h2>3. Preço, contratação e cancelamento</h2><p>Os planos mensais anunciados são Starter (R$ 97), Profissional (R$ 197) e Premium (R$ 349). A modalidade anual, quando disponível, corresponde a R$ 931,20, R$ 1.891,20 e R$ 3.350,40 por ano. O checkout deve informar valor total, periodicidade, recursos e condições antes da confirmação. O teste não cria obrigação de compra. Custos de WhatsApp, telefonia ou outros provedores externos devem ser informados e contratados separadamente quando aplicáveis.</p><p>Uma solicitação de cancelamento deve interromper futuras renovações conforme as condições apresentadas na contratação, preservados os direitos legais aplicáveis. A política de reembolso, o canal de atendimento e a identificação jurídica do fornecedor precisam ser definidos antes da abertura de vendas; esta versão não substitui um contrato comercial final.</p>
@@ -13,4 +23,23 @@ import { RouterLink } from '@angular/router';
   <h2>7. Limites e publicação definitiva</h2><p>Integrações podem sofrer interrupções e respostas de IA podem conter erros. Não prometemos disponibilidade ininterrupta ou resultados comerciais específicos. Estas condições não afastam direitos previstos na legislação. A versão contratual definitiva depende da identificação do fornecedor, dos canais de suporte e privacidade e da validação do processo de cobrança.</p><a class="back" routerLink="/login" [queryParams]="{trial:30}">Voltar ao cadastro →</a></main>`,
   styles: [`.terms{max-width:820px;margin:auto;padding:48px 24px 90px;color:#263442;font:16px/1.8 system-ui}.terms a{color:#146650}.eyebrow{font-size:11px;letter-spacing:2px;margin-top:56px;color:#547463}h1{font-size:clamp(32px,5vw,48px);line-height:1.15;letter-spacing:-1.5px}h2{font-size:22px;margin-top:40px}.intro{color:#65717d}aside{border-left:3px solid #18705c;background:#edf6f1;padding:22px;margin:32px 0}.back{display:inline-block;margin-top:32px}`]
 })
-export class Terms {}
+export class Terms implements OnInit {
+  readonly provider = signal<ProviderDetails | null>(null);
+  readonly providerError = signal(false);
+
+  async ngOnInit() {
+    try {
+      const response = await fetch('/api/commercial?action=terms', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Provider unavailable');
+      const business: unknown = await response.json();
+      if (!business || typeof business !== 'object' ||
+          !['name', 'taxId', 'address', 'contact'].every(key => {
+            const value = (business as Record<string, unknown>)[key];
+            return typeof value === 'string' && value.trim().length > 0;
+          })) throw new Error('Provider incomplete');
+      this.provider.set(business as ProviderDetails);
+    } catch {
+      this.providerError.set(true);
+    }
+  }
+}
