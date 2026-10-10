@@ -2,19 +2,19 @@
   <aside class="sidebar">
     <div class="brand">
       <i class="pi pi-bolt"></i>
-      <span>AgendaAI Owner</span>
+      <span>AgendaAI <small>Owner</small></span>
     </div>
 
     <nav class="nav-menu">
-      <a routerLink="/platform-admin/growth" routerLinkActive="active" class="nav-item"><i class="pi pi-users"></i> Comercial e agentes</a>
       <a routerLink="/platform-admin/dashboard" routerLinkActive="active" class="nav-item">
-        <i class="pi pi-chart-pie"></i> Visão Global
+        <i class="pi pi-chart-pie"></i> Visão geral
       </a>
+      <a routerLink="/platform-admin/growth" routerLinkActive="active" class="nav-item"><i class="pi pi-users"></i> Oportunidades</a>
       <a routerLink="/platform-admin/tenants" routerLinkActive="active" class="nav-item">
         <i class="pi pi-building"></i> Estabelecimentos
       </a>
       <a routerLink="/platform-admin/billing" routerLinkActive="active" class="nav-item">
-        <i class="pi pi-credit-card"></i> Faturamento (Stripe)
+        <i class="pi pi-credit-card"></i> Financeiro
       </a>
       <a routerLink="/platform-admin/settings" routerLinkActive="active" class="nav-item">
         <i class="pi pi-cog"></i> Configurações
@@ -26,7 +26,7 @@
         <div class="avatar">{{ user.nome ? user.nome.charAt(0).toUpperCase() : 'S' }}</div>
         <div class="details">
           <strong>{{ user.nome }}</strong>
-          <span>Super Admin</span>
+          <span>Proprietário</span>
         </div>
       </div>
       <button class="btn-logout" (click)="logout()">
@@ -37,8 +37,9 @@
 
   <main class="content">
     <header class="topbar">
-      <h2>SaaS Command Center</h2>
+      <h2>Seu negócio / Administração</h2>
       <div class="topbar-actions">
+        <a href="/" target="_blank" rel="noopener">Abrir site <i class="pi pi-arrow-up-right"></i></a>
         <span class="status-badge"><i class="pi pi-circle-fill"></i> Painel do proprietário</span>
       </div>
     </header>

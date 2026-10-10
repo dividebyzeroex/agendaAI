@@ -312,7 +312,7 @@
 
           <div class="field">
             <label for="custPhone">WhatsApp / Telefone</label>
-            <input id="custPhone" type="tel" [ngModel]="custPhone"
+            <input id="custPhone" type="tel" inputmode="tel" [ngModel]="custPhone"
                    (input)="formatPhone($event)"
                    placeholder="(00) 00000-0000"
                    autocomplete="tel" maxlength="16" />

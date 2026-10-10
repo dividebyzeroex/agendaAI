@@ -408,3 +408,21 @@
     height: 400px;
   }
 }
+
+
+@media(max-width:768px) {
+ .header-actions {display:grid; grid-template-columns:1fr 1fr; gap:8px; width:100%;}
+ .header-actions .status-pill {grid-column:1/-1; width:fit-content;}
+ .header-actions button {min-height:48px; padding:10px; font-size:13px;}
+ .caixa-container {grid-template-columns:minmax(0,1fr); gap:12px;}
+ .caixa-container:not(.checkout-open) .caixa-right {display:none;}
+ .caixa-container.checkout-open .caixa-left {display:none;}
+ .caixa-left,.caixa-right {min-width:0; max-height:none; overflow:visible;}
+ .caixa-fechado-screen {padding:24px 16px; min-height:300px;}
+ .tab-item {min-height:48px; padding:12px 8px; font-size:13px;}
+ .mov-item {flex-wrap:wrap; gap:8px;}
+ .mov-info {min-width:0; overflow-wrap:anywhere;}
+ .mov-valor {margin-left:auto;}
+ .chk-header {flex-wrap:wrap;}
+ .chk-section {padding:12px;}
+}

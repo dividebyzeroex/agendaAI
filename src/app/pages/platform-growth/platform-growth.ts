@@ -13,14 +13,15 @@ export class PlatformGrowth implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   prospects: Prospect[] = [];
   status: AgentStatus | null = null;
-  loading = true; saving = false; running = false; error = ''; notice = ''; filter = '';
+  loading = true; saving = false; running = false; error = ''; notice = ''; filter = ''; search = '';
+  agents:Array<{title:string;enabled:boolean;cadence?:string}>=[];
   form = { business_name: '', email: '', segment: '', source_url: '', consent: false };
   labels: Record<string, string> = {new:'Novo',qualified:'Qualificado',contacted:'Contatado',replied:'Respondeu',trial:'Em teste',won:'Cliente',lost:'Encerrado',unsubscribed:'Descadastrado'};
-  get visibleProspects() { return this.prospects.filter(p => !this.filter || p.status === this.filter); }
+  get visibleProspects() { return this.prospects.filter(p => (!this.filter || p.status === this.filter) && (!this.search || `${p.business_name} ${p.email||''} ${p.segment||''}`.toLocaleLowerCase().includes(this.search.toLocaleLowerCase()))); }
   get researchProspects(): ResearchProspect[] {
     const found = new Map<string, ResearchProspect>();
     for (const run of this.status?.lastRuns || []) {
-      if (run.agent !== 'research' || !run.summary || typeof run.summary !== 'object') continue;
+      if (!run.summary || typeof run.summary !== 'object') continue;
       const entries = (run.summary as Record<string, unknown>)['prospects'];
       if (!Array.isArray(entries)) continue;
       for (const item of entries) {
@@ -45,11 +46,14 @@ export class PlatformGrowth implements OnInit {
   async load() {
     this.loading = true; this.error = '';
     try {
-      const [prospects, status] = await Promise.all([
+      const [prospects, status, configuration] = await Promise.all([
         this.supabase.client.from('commercial_prospects').select('id,business_name,email,segment,source_url,status,consent_at,unsubscribed_at,created_at,last_contact_at').order('created_at', {ascending:false}).limit(100),
-        this.api('GET','status')
+        this.api('GET','status'),
+        this.supabase.client.from('commercial_agent_runs').select('summary').eq('agent','agent_configuration').order('created_at',{ascending:false}).limit(1)
       ]);
       if (prospects.error) throw prospects.error;
+      if (configuration.error) throw configuration.error;
+      this.agents = Array.isArray(configuration.data?.[0]?.summary?.agents) ? configuration.data![0].summary.agents : [];
       this.prospects = prospects.data || []; this.status = status;
     } catch (e) { this.error = e instanceof Error ? e.message : 'Não foi possível carregar o painel comercial.'; }
     finally { this.loading = false; this.cdr.markForCheck(); }
@@ -84,6 +88,16 @@ export class PlatformGrowth implements OnInit {
       const summary = value as Record<string, unknown>;
       return `${(summary['prospects'] as unknown[]).length} empresas pesquisadas. Contatadas: ${summary['contacted'] ?? 0}. Consulte as abordagens abaixo.`;
     }
-    return typeof value === 'string' ? value : JSON.stringify(value ?? {});
+    if(value && typeof value==='object'){
+      const v=value as Record<string,any>;
+      if(typeof v['sent']==='number')return `${v['sent']} e-mail(s) enviados. Envios e conversas registrados no CRM.`;
+      if(v['billing_status'])return v['billing_status'].ready?'Stripe verificado e pronto para cobranças.':'Verificação do Stripe requer atenção.';
+      if(v['agents'])return `${v['agents'].length} rotinas configuradas para acompanhar o negócio.`;
+      if(v['email'])return 'Configuração de acesso administrativo registrada.';
+      if(v['metrics'])return 'Cadastros, clientes e recebimentos conferidos.';
+    }
+    return 'Execução registrada no histórico do negócio.';
   }
+  agentLabel(value:string){return ({research:'Pesquisa comercial',gmail_outreach:'Prospecção por Gmail',commercial_followup:'Relacionamento',finance_monitor:'Clientes e financeiro',agent_configuration:'Configuração dos agentes',billing_verification:'Verificação financeira',webhook_verification:'Webhook Stripe',owner_access:'Acesso administrativo'} as Record<string,string>)[value]||'Revisão da operação';}
+  runStatus(value:string){return ({completed:'Concluído',blocked:'Requer atenção',partial:'Parcial',pending_email_confirmation:'Aguardando confirmação'} as Record<string,string>)[value]||value;}
 }

@@ -32,7 +32,7 @@
     </div>
 
     <!-- TELA CAIXA ABERTO -->
-    <div class="caixa-container" *ngIf="sessaoAtual">
+    <div class="caixa-container" [class.checkout-open]="eventoSelecionado || showVendaAvulsaModal" *ngIf="sessaoAtual">
       
       <!-- LADO ESQUERDO: FILA & MOVS -->
       <div class="caixa-left bento-card custom-scroll">

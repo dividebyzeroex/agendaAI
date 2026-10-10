@@ -233,3 +233,15 @@
   box-shadow: 0 15px 40px rgba(var(--primary-rgb), 0.4);
   filter: brightness(1.1);
 }
+
+
+@media(max-width:768px) {
+ .header-actions-right {display:flex; flex-direction:column; width:100%; gap:12px;}
+ .header-actions-right .search-box,.btn-novo-cliente {width:100%; min-height:48px;}
+ .search-box input {width:100%; min-width:0; font-size:16px;}
+ .elite-row {padding:16px; gap:14px; border:1px solid var(--glass-border); border-radius:16px; margin-bottom:12px; grid-template-columns:minmax(0,1fr);}
+ .contact-col {overflow-wrap:anywhere;}
+ .actions-col {justify-content:flex-start;}
+ .btn-circle-elite {width:48px; height:48px;}
+ .u-info {min-width:0; overflow-wrap:anywhere;}
+}

@@ -1212,3 +1212,18 @@
   font-weight: 700;
   color: var(--primary);
 }
+
+
+@media(max-width:600px) {
+ .ag-root {min-height:100dvh; padding-bottom:env(safe-area-inset-bottom);}
+ .ag-app,.ag-main,.step-panel {min-width:0;}
+ .mp-grid {grid-template-columns:minmax(0,1fr);}
+ .time-slot,.btn-back,.cat-tab,.error-dismiss {min-height:44px;}
+ .btn-primary,.btn-secondary,.btn-agendar-cta {min-height:50px;}
+ input,select,textarea {font-size:16px; min-height:48px;}
+ .service-row {gap:10px; padding:16px 12px; min-height:72px;}
+ .svc-price {font-size:14px; flex-shrink:0;}
+ .summary-row strong {max-width:65%; overflow-wrap:anywhere; text-align:right;}
+ .day-picker {scroll-snap-type:x proximity;}
+ .day-card {scroll-snap-align:start;}
+}

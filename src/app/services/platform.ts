@@ -47,6 +47,19 @@ export class PlatformService {
     }
   }
 
+  async getOwnerOverview() {
+    const [metrics, tenants, prospects, messages, runs, payments, configuration] = await Promise.all([
+      this.getGlobalMetrics(), this.getTenants(),
+      this.supabase.from('commercial_prospects').select('id,business_name,email,status,segment,created_at,last_contact_at').order('created_at',{ascending:false}).limit(1000),
+      this.supabase.from('commercial_messages').select('id,prospect_id,subject,status,sent_at,created_at,provider_id').order('created_at',{ascending:false}).limit(100),
+      this.supabase.from('commercial_agent_runs').select('id,agent,status,summary,created_at').order('created_at',{ascending:false}).limit(12),
+      this.supabase.from('commercial_payments').select('id,estabelecimento_id,amount_cents,currency,status,paid_at,created_at').eq('livemode',true).order('created_at',{ascending:false}).limit(1000),
+      this.supabase.from('commercial_agent_runs').select('summary,created_at').eq('agent','agent_configuration').order('created_at',{ascending:false}).limit(1)
+    ]);
+    for(const result of [prospects,messages,runs,payments,configuration]) if(result.error) throw result.error;
+    return {metrics,tenants,prospects:prospects.data ?? [],messages:messages.data ?? [],runs:runs.data ?? [],payments:(payments.data ?? []) as PlatformPayment[],configuration:configuration.data?.[0]?.summary ?? null};
+  }
+
   async getTenants(): Promise<PlatformTenant[]> {
     try {
       const { data, error } = await this.supabase.rpc('get_platform_tenants');
