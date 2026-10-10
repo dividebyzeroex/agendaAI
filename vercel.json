@@ -25,10 +25,6 @@
   ],
   "crons": [
     {
-      "path": "/api/cron/bot-recepcao",
-      "schedule": "0 8 * * *"
-    },
-    {
       "path": "/api/commercial?action=run",
       "schedule": "0 12 * * *"
     }

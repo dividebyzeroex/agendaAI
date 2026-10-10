@@ -267,7 +267,7 @@ export class Agendar implements OnInit {
 
   buildCalendarDays() {
     this.calendarDays = [];
-    const today = new Date();
+    const today = new Date(bookingDate() + 'T12:00:00-03:00');
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
     const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -275,7 +275,9 @@ export class Agendar implements OnInit {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       const dateStr = bookingDate(d);
-      const dow = d.getDay();
+      const parts = dateStr.split('-').map(Number);
+      const day = new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+      const dow = day.getUTCDay();
 
       // Check if this day is a working day
       const dayConfig = this.schedule.find(h => h.dia_semana === dow);
@@ -284,8 +286,8 @@ export class Agendar implements OnInit {
       this.calendarDays.push({
         date: dateStr,
         dayName: dayNames[dow],
-        dayNum: d.getDate(),
-        monthShort: monthNames[d.getMonth()],
+        dayNum: day.getUTCDate(),
+        monthShort: monthNames[day.getUTCMonth()],
         isToday: i === 0,
         isSelected: dateStr === this.selectedDate,
         isClosed,
@@ -310,7 +312,7 @@ export class Agendar implements OnInit {
 
     if (!dayConfig) return;
     const professionalDay = this.selectedPro?.disponibilidades?.find(d => d.dia_semana === dow);
-    if (professionalDay && !professionalDay.ativo) return;
+    if (this.selectedPro && (!professionalDay?.ativo || !professionalDay.hora_inicio || !professionalDay.hora_fim)) return;
     const abre = dayConfig.abre;
     const fecha = dayConfig.fecha;
     if (!abre || !fecha) return;

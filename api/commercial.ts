@@ -114,9 +114,9 @@ async function run(sb:SupabaseClient){
   for(const p of prospects||[]){
    let trialEnd:string|null=null;
    if(p.estabelecimento_id){
-    const {data:e}=await checked(sb.from('estabelecimento').select('trial_ends_at,plano_expires_at,active').eq('id',p.estabelecimento_id).single());
+    const {data:e}=await checked(sb.from('estabelecimento').select('trial_ends_at,plano_expires_at,active,stripe_livemode,stripe_subscription_status').eq('id',p.estabelecimento_id).single());
     if(!e.active){skipped++;continue;}
-    if(e.plano_expires_at&&Date.parse(e.plano_expires_at)>Date.now()){await checked(sb.from('commercial_prospects').update({status:'won'}).eq('id',p.id));p.status='won';}
+    if(e.stripe_livemode&&['active','canceled_at_period_end'].includes(e.stripe_subscription_status)&&e.plano_expires_at&&Date.parse(e.plano_expires_at)>Date.now()){await checked(sb.from('commercial_prospects').update({status:'won'}).eq('id',p.id));p.status='won';}
     trialEnd=p.status==='won'?null:e.trial_ends_at;
    }
    const stage=nextStage(p,trialEnd);if(!stage||!eligible(p)){skipped++;continue;}

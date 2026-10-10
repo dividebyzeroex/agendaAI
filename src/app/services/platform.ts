@@ -62,7 +62,7 @@ export class PlatformService {
   async getBillingData(): Promise<{ metrics: PlatformMetrics; payments: PlatformPayment[]; tenants: PlatformTenant[] }> {
     const [metrics, tenants, result] = await Promise.all([
       this.getGlobalMetrics(), this.getTenants(),
-      this.supabase.from('commercial_payments').select('id,estabelecimento_id,amount_cents,currency,status,paid_at,created_at').order('created_at', { ascending: false }).limit(100)
+      this.supabase.from('commercial_payments').select('id,estabelecimento_id,amount_cents,currency,status,paid_at,created_at').eq('livemode',true).order('created_at', { ascending: false }).limit(100)
     ]);
     if (result.error) throw result.error;
     return { metrics, tenants, payments: (result.data ?? []) as PlatformPayment[] };

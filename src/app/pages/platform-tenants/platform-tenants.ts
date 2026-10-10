@@ -27,7 +27,7 @@ export class PlatformTenants implements OnInit {
     const query = this.query.trim().toLocaleLowerCase('pt-BR');
     return this.tenants.filter(t => (!this.status || t.status === this.status) && (!query || `${t.nome} ${t.slug} ${t.id}`.toLocaleLowerCase('pt-BR').includes(query)));
   }
-  statusLabel(status: string) { return ({ paid: 'Pagante', trial: 'Em teste', expired: 'Teste vencido', blocked: 'Bloqueado' } as Record<string, string>)[status] ?? status; }
+  statusLabel(status: string) { return ({ paid: 'Pagante', test_payment: 'Pagamento de teste', trial: 'Em teste', expired: 'Teste vencido', blocked: 'Bloqueado' } as Record<string, string>)[status] ?? status; }
   async toggleTenant(tenant: PlatformTenant) {
     const active = tenant.status === 'blocked';
     if (!active && !window.confirm(`Bloquear o acesso de ${tenant.nome}? A assinatura e a cobrança não serão canceladas por esta ação.`)) return;

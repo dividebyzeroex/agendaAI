@@ -69,9 +69,7 @@ export const routes: Routes = [
       },
       {
         path: 'chatbots',
-        redirectTo: 'configuracoes', pathMatch: 'full',
-        canActivate: [roleGuard],
-        data: { roles: ['dono'] }
+        redirectTo: 'configuracoes', pathMatch: 'full'
       }
     ]
   },

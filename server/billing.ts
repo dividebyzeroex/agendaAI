@@ -21,6 +21,21 @@ export function billingReadiness(env: Record<string,string|undefined> = process.
   return { ready, mode };
 }
 
+export async function operationalBillingReadiness() {
+  const configuration = billingReadiness();
+  if (!configuration.ready) return { ...configuration, reason: 'configuration' };
+  try {
+    const { stripe } = billingClients();
+    const [account, endpoints] = await Promise.all([stripe.accounts.retrieve(null), stripe.webhookEndpoints.list({limit:100})]);
+    const origin = new URL(process.env['PROJECT_URL'] || '').origin;
+    const endpoint = endpoints.data.find(e => e.url === `${origin}/api/webhook` && e.status === 'enabled' && e.livemode === (configuration.mode === 'live'));
+    const events = ['checkout.session.completed','customer.subscription.created','customer.subscription.updated','customer.subscription.deleted','invoice.paid','invoice.payment_failed'];
+    const webhookReady = !!endpoint && (endpoint.enabled_events.includes('*') || events.every(e => endpoint.enabled_events.includes(e as any)));
+    const ready = webhookReady && (configuration.mode !== 'live' || account.charges_enabled === true);
+    return { ...configuration, ready, reason: ready ? null : webhookReady ? 'stripe_account' : 'webhook_endpoint' };
+  } catch { return { ...configuration, ready:false, reason:'stripe_connection' }; }
+}
+
 export function billingClients() {
   const url = process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'];
   const key = process.env['SUPABASE_SERVICE_ROLE_KEY'];
