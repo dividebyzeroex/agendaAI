@@ -1,5 +1,5 @@
 import { SupportWidget } from '../../components/support-widget/support-widget';
-import { Component, ElementRef, HostListener, ViewChild, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, ElementRef, HostListener, ViewChild, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -8,9 +8,12 @@ import { AuthService } from '../../services/auth.service';
 export class PlatformLayout {
  private authService=inject(AuthService);
  private router=inject(Router);
+ private cdr=inject(ChangeDetectorRef);
  @ViewChild('ownerMenu') menu?:ElementRef<HTMLElement>;
  private opener:HTMLElement|null=null;
  user$=this.authService.profile$;
+ navigationError='';
+ failedPath='';
  isSidebarOpen=false;
  isMobile=typeof window!=='undefined'&&window.innerWidth<=900;
  readonly navigation=[
@@ -24,6 +27,16 @@ export class PlatformLayout {
  readonly mobileNavigation=this.navigation.filter(item=>['/platform-admin/dashboard','/platform-admin/tenants','/platform-admin/growth','/platform-admin/billing'].includes(item.path));
  get pageTitle(){return this.navigation.find(item=>this.isActive(item.path))?.label||'Owner';}
  isActive(path:string){return this.router.url.split(/[?#]/)[0].replace(/\/$/,'')===path;}
+ async navigate(event:MouseEvent,path:string){
+  if(event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  event.preventDefault();
+  this.closeSidebar();
+  this.navigationError='';this.failedPath='';
+  try{
+   const changed=await this.router.navigateByUrl(path);
+   if(!changed&&!this.isActive(path)){this.failedPath=path;this.navigationError='A navegação não foi concluída. Tente abrir a página novamente.';}
+  }catch{this.failedPath=path;this.navigationError='Não foi possível carregar esta página. Abra novamente para atualizar a aplicação.';}finally{this.cdr.markForCheck();}
+ }
  toggleSidebar(event?:Event){
   if(this.isSidebarOpen){this.closeSidebar();return;}
   this.opener=event?.currentTarget instanceof HTMLElement?event.currentTarget:null;
