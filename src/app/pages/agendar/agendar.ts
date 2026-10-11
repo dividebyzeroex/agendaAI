@@ -119,7 +119,290 @@ export class Agendar implements OnInit {
     // Subscribe to realtime changes
     this.pubService.data$.subscribe(data => {
       if (data && data.estabelecimento) {
-        this.estab  …2495 tokens truncated…/ Call the public API — NO AUTH REQUIRED
+        this.estab    = data.estabelecimento;
+        this.services = data.servicos || [];
+        this.schedule = data.horarios || [];
+        this.pros     = data.profissionais || [];
+        this.isLoading = false;
+        this.notFound  = false;
+        
+        // Se estava no marketplace por algum erro prévio, e agora carregou dados via socket:
+        if (this.step === 'marketplace') {
+          this.step = isDirect ? 'step1' : 'step0';
+        }
+
+        // Build categories from services
+        const cats = new Set<string>();
+        this.services.forEach(s => {
+          if ((s as any).categoria) cats.add((s as any).categoria);
+        });
+        this.categorias = cats.size > 0 ? ['Todos', ...Array.from(cats)] : [];
+
+        if (this.step === 'step2') this.refreshSlots();
+        this.cdr.detectChanges();
+      }
+    });
+
+    // Timeout safety net
+    const timeout = setTimeout(() => {
+      if (this.isLoading) {
+        this.isLoading = false;
+        this.errorMsg = 'O servidor está demorando para responder. Tente recarregar a página.';
+        this.cdr.detectChanges();
+      }
+    }, 12000);
+
+    try {
+      const data = await this.pubService.getBySlug(slug);
+      clearTimeout(timeout);
+      this.isLoading = false;
+      if (!data || !data.estabelecimento) {
+        this.notFound = true;
+        this.step = 'marketplace';
+        // Mostra um toast informando que não encontrou
+        try {
+          const notifService = (this as any)['notifService'] || inject(NotificationService);
+          notifService.showToast({
+            title: 'Não Encontrado',
+            message: 'O link acessado é inválido. Busque o estabelecimento abaixo.',
+            type: 'WARNING',
+            icon: 'pi pi-exclamation-triangle'
+          });
+        } catch (e) { console.error('Sem NotifService:', e); }
+        
+        this.performSearch(); // Busca inicial
+      }
+      // Se encontrou, step já foi configurado no início do ngOnInit
+      this.cdr.detectChanges();
+    } catch (e: any) {
+      this.errorMsg = 'Falha ao conectar com o servidor.';
+      this.isLoading = false;
+    }
+  }
+
+  // --- Marketplace Methods ---
+  onSearchInput() {
+    this.isSearching = true;
+    if (this.searchTimeout) clearTimeout(this.searchTimeout);
+    this.searchTimeout = setTimeout(() => {
+      this.performSearch();
+    }, 500);
+  }
+
+  async performSearch() {
+    this.isSearching = true;
+    this.cdr.detectChanges();
+    this.searchResults = await this.pubService.searchEstabelecimentos(this.searchQuery);
+    this.isSearching = false;
+    this.cdr.detectChanges();
+  }
+
+  goToEstabelecimento(slug?: string) {
+    if (!slug) return;
+    // Just navigate by updating window location to force reload state correctly, 
+    // or use router.navigate. Since we don't have Router injected, we can use location.href
+    window.location.href = `/agendar/${slug}`;
+  }
+
+  // === STEP NAVIGATION ===
+
+  async goToStep(next: BookingStep, msg: string) {
+    this.transitionMsg = msg;
+    this.isTransitioning = true;
+    this.cdr.detectChanges();
+    await new Promise(r => setTimeout(r, 500));
+    this.step = next;
+    this.isTransitioning = false;
+    this.cdr.detectChanges();
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  goBack() {
+    this.errorMsg = '';
+    if (this.step === 'step2') this.step = 'step1';
+    else if (this.step === 'step3') this.step = 'step2';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // === STEP 1: Service + Professional ===
+
+  selecionarCategoria(cat: string) {
+    this.categoriaAtiva = cat;
+    this.selectedService = null;
+    this.selectedPro = null;
+  }
+
+  toggleService(s: Servico) {
+    if (this.selectedService?.id === s.id) {
+      this.selectedService = null;
+      this.selectedPro = null;
+    } else {
+      this.selectedService = s;
+      this.selectedPro = null;
+    }
+  }
+  
+  goStepPro() {
+    if (this.selectedService) {
+      if (!this.pros.length) { this.goStep2(); return; }
+      this.step = 'step_pro';
+    }
+  }
+
+  pickPro(p: ProfissionalPublico | null) {
+    this.selectedPro = p;
+  }
+
+  goStep2() {
+    if (this.selectedService) {
+      if (!this.selectedDate) this.selectedDate = bookingDate();
+      this.step = 'step2';
+      this.buildCalendarDays();
+      this.refreshSlots();
+    }
+  }
+
+  // === STEP 2: Date + Time ===
+
+  buildCalendarDays() {
+    this.calendarDays = [];
+    const today = new Date(bookingDate() + 'T12:00:00-03:00');
+    const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(today);
+      d.setDate(d.getDate() + i);
+      const dateStr = bookingDate(d);
+      const parts = dateStr.split('-').map(Number);
+      const day = new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+      const dow = day.getUTCDay();
+
+      // Check if this day is a working day
+      const dayConfig = this.schedule.find(h => h.dia_semana === dow);
+      const isClosed = !dayConfig || !dayConfig.ativo;
+
+      this.calendarDays.push({
+        date: dateStr,
+        dayName: dayNames[dow],
+        dayNum: day.getUTCDate(),
+        monthShort: monthNames[day.getUTCMonth()],
+        isToday: i === 0,
+        isSelected: dateStr === this.selectedDate,
+        isClosed,
+      });
+    }
+  }
+
+  selectDate(day: any) {
+    if (day.isClosed) return;
+    this.selectedDate = day.date;
+    this.calendarDays.forEach(d => d.isSelected = d.date === day.date);
+    this.refreshSlots();
+  }
+
+  async refreshSlots() {
+    if (!this.selectedDate) return;
+    this.selectedTime = '';
+    this.slots = [];
+
+    const dow = new Date(this.selectedDate + 'T12:00:00').getDay();
+    const dayConfig = this.schedule.find(h => h.dia_semana === dow && h.ativo);
+
+    if (!dayConfig) return;
+    const professionalDay = this.selectedPro?.disponibilidades?.find(d => d.dia_semana === dow);
+    if (this.selectedPro && (!professionalDay?.ativo || !professionalDay.hora_inicio || !professionalDay.hora_fim)) return;
+    const abre = dayConfig.abre;
+    const fecha = dayConfig.fecha;
+    if (!abre || !fecha) return;
+
+    let busy: BusyInterval[] = [];
+    try {
+      busy = await this.pubService.getBusyIntervals(this.estab!.id!, this.selectedDate);
+    } catch { this.errorMsg = "Não foi possível consultar os horários. Tente novamente."; this.cdr.detectChanges(); return; }
+
+    const [hA, mA] = abre.split(':').map(Number);
+    const [hF, mF] = fecha.split(':').map(Number);
+    let current = hA * 60 + mA;
+    const end = hF * 60 + mF;
+    const duration = this.selectedService?.duracao_min || 30;
+
+    // Filter past slots if today
+    const now = new Date();
+    const isToday = this.selectedDate === bookingDate(now);
+    const currentMinutes = bookingMinutes(now);
+
+    while (current + duration <= end) {
+      const time = `${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
+      const isPast = isToday && current <= currentMinutes;
+      const toMinutes = (value: string) => Number(value.slice(0,2))*60 + Number(value.slice(3,5));
+      const outsideProfessional = professionalDay && ((professionalDay.hora_inicio && current < toMinutes(professionalDay.hora_inicio)) || (professionalDay.hora_fim && current + duration > toMinutes(professionalDay.hora_fim)) || (professionalDay.intervalo_inicio && professionalDay.intervalo_fim && current < toMinutes(professionalDay.intervalo_fim) && current + duration > toMinutes(professionalDay.intervalo_inicio)));
+      this.slots.push({ time, available: !outsideProfessional && !slotOverlaps(this.selectedDate, time, duration, busy, this.selectedPro?.id) && !isPast });
+      current += 30;
+    }
+    this.cdr.detectChanges();
+  }
+
+  selectTime(slot: any) {
+    if (!slot.available) return;
+    this.selectedTime = slot.time;
+  }
+
+  confirmarStep2() {
+    if (this.selectedDate && this.selectedTime) {
+      this.goToStep('step3', 'Preparando resumo...');
+    }
+  }
+
+  // === STEP 3: Confirm & Book (NO LOGIN!) ===
+
+  formatPhone(event: Event) {
+    const input = event.target as HTMLInputElement;
+    let value = input.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.substring(0, 11);
+
+    if (value.length >= 7) {
+      value = `(${value.substring(0,2)}) ${value.substring(2,7)}-${value.substring(7)}`;
+    } else if (value.length >= 3) {
+      value = `(${value.substring(0,2)}) ${value.substring(2)}`;
+    }
+    this.custPhone = value;
+  }
+
+  async finalize() {
+    const nameClean = this.custName.trim();
+    const phoneClean = this.custPhone.replace(/\D/g, '');
+
+    if (!nameClean) {
+      this.errorMsg = 'Por favor, informe seu nome.';
+      return;
+    }
+    if (phoneClean.length < 10) {
+      this.errorMsg = 'Informe um telefone válido com DDD.';
+      return;
+    }
+
+    this.isSaving = true;
+    this.errorMsg = '';
+
+    try {
+      let eventMeta: any = null;
+      if (this.config.id === 'assistencia') {
+        if (!this.aparelho || !this.defeito) {
+          this.errorMsg = 'Por favor, informe o Aparelho e o Defeito.';
+          this.isSaving = false;
+          return;
+        }
+        eventMeta = { aparelho: this.aparelho, defeito: this.defeito };
+      }
+      const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00-03:00`);
+      const duration = this.selectedService?.duracao_min || 30;
+      const endDt = new Date(startDt.getTime() + duration * 60000);
+
+      const eventTitle = `${this.selectedService?.emoji || this.config.emojiPadrao} ${nameClean} | ${this.selectedService?.titulo}`;
+
+      // Call the public API — NO AUTH REQUIRED
       const response = await fetch('/api/public-booking', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
