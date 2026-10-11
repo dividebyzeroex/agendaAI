@@ -17,6 +17,10 @@ export class PlatformLayout {
 
   user$ = this.authService.profile$;
 
+  isActive(path: string): boolean {
+    return this.router.url.split(/[?#]/)[0].replace(/\/$/, '') === path;
+  }
+
   async logout() {
     await this.authService.logout();
   }

@@ -5,19 +5,19 @@
       <span>AgendaAI <small>Owner</small></span>
     </div>
 
-    <nav class="nav-menu">
-      <a routerLink="/platform-admin/dashboard" routerLinkActive="active" class="nav-item">
+    <nav class="nav-menu" aria-label="Navegação principal do Owner">
+      <a href="/platform-admin/dashboard" [class.active]="isActive('/platform-admin/dashboard')" [attr.aria-current]="isActive('/platform-admin/dashboard') ? 'page' : null" class="nav-item">
         <i class="pi pi-chart-pie"></i> Visão geral
       </a>
-      <a routerLink="/platform-admin/control" routerLinkActive="active" class="nav-item"><i class="pi pi-compass"></i> Gestão e ativação</a>
-      <a routerLink="/platform-admin/growth" routerLinkActive="active" class="nav-item"><i class="pi pi-users"></i> Oportunidades</a>
-      <a routerLink="/platform-admin/tenants" routerLinkActive="active" class="nav-item">
+      <a href="/platform-admin/control" [class.active]="isActive('/platform-admin/control')" [attr.aria-current]="isActive('/platform-admin/control') ? 'page' : null" class="nav-item"><i class="pi pi-compass"></i> Gestão e ativação</a>
+      <a href="/platform-admin/growth" [class.active]="isActive('/platform-admin/growth')" [attr.aria-current]="isActive('/platform-admin/growth') ? 'page' : null" class="nav-item"><i class="pi pi-users"></i> Oportunidades</a>
+      <a href="/platform-admin/tenants" [class.active]="isActive('/platform-admin/tenants')" [attr.aria-current]="isActive('/platform-admin/tenants') ? 'page' : null" class="nav-item">
         <i class="pi pi-building"></i> Estabelecimentos
       </a>
-      <a routerLink="/platform-admin/billing" routerLinkActive="active" class="nav-item">
+      <a href="/platform-admin/billing" [class.active]="isActive('/platform-admin/billing')" [attr.aria-current]="isActive('/platform-admin/billing') ? 'page' : null" class="nav-item">
         <i class="pi pi-credit-card"></i> Financeiro
       </a>
-      <a routerLink="/platform-admin/settings" routerLinkActive="active" class="nav-item">
+      <a href="/platform-admin/settings" [class.active]="isActive('/platform-admin/settings')" [attr.aria-current]="isActive('/platform-admin/settings') ? 'page' : null" class="nav-item">
         <i class="pi pi-cog"></i> Configurações
       </a>
     </nav>
