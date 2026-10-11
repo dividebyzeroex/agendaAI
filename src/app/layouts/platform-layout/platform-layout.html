@@ -1,53 +1,21 @@
-<div class="platform-layout">
-  <aside class="sidebar">
-    <div class="brand">
-      <i class="pi pi-bolt"></i>
-      <span>AgendaAI <small>Owner</small></span>
-    </div>
-
-    <nav class="nav-menu" aria-label="Navegação principal do Owner">
-      <a href="/platform-admin/dashboard" [class.active]="isActive('/platform-admin/dashboard')" [attr.aria-current]="isActive('/platform-admin/dashboard') ? 'page' : null" class="nav-item">
-        <i class="pi pi-chart-pie"></i> Visão geral
-      </a>
-      <a href="/platform-admin/control" [class.active]="isActive('/platform-admin/control')" [attr.aria-current]="isActive('/platform-admin/control') ? 'page' : null" class="nav-item"><i class="pi pi-compass"></i> Gestão e ativação</a>
-      <a href="/platform-admin/growth" [class.active]="isActive('/platform-admin/growth')" [attr.aria-current]="isActive('/platform-admin/growth') ? 'page' : null" class="nav-item"><i class="pi pi-users"></i> Oportunidades</a>
-      <a href="/platform-admin/tenants" [class.active]="isActive('/platform-admin/tenants')" [attr.aria-current]="isActive('/platform-admin/tenants') ? 'page' : null" class="nav-item">
-        <i class="pi pi-building"></i> Estabelecimentos
-      </a>
-      <a href="/platform-admin/billing" [class.active]="isActive('/platform-admin/billing')" [attr.aria-current]="isActive('/platform-admin/billing') ? 'page' : null" class="nav-item">
-        <i class="pi pi-credit-card"></i> Financeiro
-      </a>
-      <a href="/platform-admin/settings" [class.active]="isActive('/platform-admin/settings')" [attr.aria-current]="isActive('/platform-admin/settings') ? 'page' : null" class="nav-item">
-        <i class="pi pi-cog"></i> Configurações
-      </a>
-    </nav>
-
-    <div class="sidebar-footer">
-      <div class="user-info" *ngIf="user$ | async as user">
-        <div class="avatar">{{ user.nome ? user.nome.charAt(0).toUpperCase() : 'S' }}</div>
-        <div class="details">
-          <strong>{{ user.nome }}</strong>
-          <span>Proprietário</span>
-        </div>
-      </div>
-      <button class="btn-logout" (click)="logout()">
-        <i class="pi pi-sign-out"></i> Sair
-      </button>
-    </div>
-  </aside>
-
-  <main class="content">
-    <header class="topbar">
-      <h2>Seu negócio / Administração</h2>
-      <div class="topbar-actions">
-        <a href="/" target="_blank" rel="noopener">Abrir site <i class="pi pi-arrow-up-right"></i></a>
-        <span class="status-badge"><i class="pi pi-circle-fill"></i> Painel do proprietário</span>
-      </div>
-    </header>
-    <div class="page-content">
-      <router-outlet></router-outlet>
-    </div>
-  </main>
+<a class="skip-link" href="#owner-content">Pular para o conteúdo</a>
+<div class="platform-layout" [class.menu-open]="isSidebarOpen">
+ <button type="button" *ngIf="isMobile && isSidebarOpen" class="menu-backdrop" (click)="closeSidebar()" aria-label="Fechar menu do Owner" tabindex="-1"></button>
+ <aside #ownerMenu id="owner-menu" class="sidebar" [class.open]="isSidebarOpen" [attr.inert]="isMobile && !isSidebarOpen ? '' : null" [attr.aria-hidden]="isMobile && !isSidebarOpen ? 'true' : null" (keydown)="trapMenu($event)">
+  <div class="brand"><div class="logo-mark"><i class="pi pi-sparkles" aria-hidden="true"></i></div><div><strong>AgendaAI</strong><span>Owner <span class="owner-label">Gestão da plataforma</span></span></div><button type="button" class="menu-close icon-button" (click)="closeSidebar()" aria-label="Fechar navegação"><i class="pi pi-times" aria-hidden="true"></i></button></div>
+  <nav class="nav-menu" aria-label="Navegação principal do Owner">
+   <ng-container *ngFor="let item of navigation; let i=index">
+    <p class="nav-section" *ngIf="i===0 || navigation[i-1].section!==item.section">{{item.section}}</p>
+    <a [href]="item.path" [class.active]="isActive(item.path)" [attr.aria-current]="isActive(item.path) ? 'page' : null" class="nav-item"><i class="pi" [ngClass]="item.icon" aria-hidden="true"></i><span>{{item.label}}</span></a>
+   </ng-container>
+  </nav>
+  <div class="sidebar-note"><i class="pi pi-shield" aria-hidden="true"></i><span>Acesso exclusivo do proprietário</span></div>
+  <div class="sidebar-footer"><div class="user-info" *ngIf="user$ | async as user"><div class="avatar">{{user.nome ? user.nome.charAt(0).toUpperCase() : 'O'}}</div><div class="details"><strong>{{user.nome || 'Proprietário'}}</strong><span>Administrador da plataforma</span></div></div><button type="button" class="btn-logout" (click)="logout()"><i class="pi pi-sign-out" aria-hidden="true"></i><span>Sair da conta</span></button></div>
+ </aside>
+ <main class="content" [attr.inert]="isMobile && isSidebarOpen ? '' : null">
+  <header class="topbar"><div class="topbar-title"><button type="button" class="mobile-hamburger icon-button" (click)="toggleSidebar($event)" aria-label="Abrir menu do Owner" aria-controls="owner-menu" [attr.aria-expanded]="isSidebarOpen"><i class="pi pi-bars" aria-hidden="true"></i></button><div><p class="breadcrumb">AgendaAI <span>/</span> Owner</p><h2>{{pageTitle}}</h2></div></div><div class="topbar-actions"><a class="site-link" href="/" target="_blank" rel="noopener"><i class="pi pi-external-link" aria-hidden="true"></i><span>Abrir site</span></a><span class="access-badge"><i class="pi pi-shield" aria-hidden="true"></i> Owner</span></div></header>
+  <div id="owner-content" class="page-content" tabindex="-1"><router-outlet></router-outlet></div>
+ </main>
+ <nav class="mobile-bottom-nav" aria-label="Atalhos do Owner" [attr.inert]="isSidebarOpen ? '' : null"><a *ngFor="let item of mobileNavigation" [href]="item.path" [class.active]="isActive(item.path)" [attr.aria-current]="isActive(item.path) ? 'page' : null"><i class="pi" [ngClass]="item.icon" aria-hidden="true"></i><span>{{item.label==='Visão geral'?'Início':item.label==='Estabelecimentos'?'Clientes':item.label}}</span></a><button type="button" (click)="toggleSidebar($event)" aria-controls="owner-menu" [attr.aria-expanded]="isSidebarOpen"><i class="pi pi-bars" aria-hidden="true"></i><span>Mais</span></button></nav>
 </div>
-
-<app-support-widget [owner]="true"></app-support-widget>
+<app-support-widget [owner]="true" [attr.inert]="isSidebarOpen ? '' : null" [style.visibility]="isSidebarOpen ? 'hidden' : null"></app-support-widget>

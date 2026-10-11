@@ -1,6 +1,5 @@
 <div class="billing-container">
-  <app-owner-payment-test></app-owner-payment-test>
-  <div class="header"><div><h2>Visão financeira</h2><p>Receita recorrente e pagamentos confirmados do seu negócio.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
+  <div class="header"><div><h1>Financeiro</h1><p>Receita recorrente e pagamentos confirmados do seu negócio.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
   <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar os dados financeiros. Tente novamente.</p>
   <p role="status" *ngIf="isLoading && !metrics">Carregando dados financeiros…</p>
   <ng-container *ngIf="metrics as m"><p class="updated">Atualizado em {{ updatedAt | date:'dd/MM/yyyy HH:mm' }} <span *ngIf="hasError">· Dados anteriores à falha</span></p>
@@ -16,3 +15,5 @@
     </section>
   </ng-container>
 </div>
+
+<app-owner-payment-test></app-owner-payment-test>

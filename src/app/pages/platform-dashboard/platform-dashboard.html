@@ -1,5 +1,5 @@
 <div class="dashboard-container">
- <header class="header"><div><p class="eyebrow">VISÃO EXECUTIVA</p><h1>O pulso do seu negócio.</h1><p>Do primeiro contato à receita recorrente. Tudo em uma visão.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading"><i class="pi pi-refresh" aria-hidden="true"></i> {{isLoading?'Atualizando…':'Atualizar'}}</button></header>
+ <header class="header"><div><p class="eyebrow">VISÃO EXECUTIVA</p><h1>Visão geral</h1><p>Acompanhe clientes, uso da plataforma e resultados em um só lugar.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading"><i class="pi pi-refresh" aria-hidden="true"></i> {{isLoading?'Atualizando…':'Atualizar'}}</button></header>
  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar. Os dados anteriores, quando disponíveis, foram preservados.</p>
  <div class="loading-state" role="status" *ngIf="isLoading&&!metrics">Carregando seu negócio…</div>
  <ng-container *ngIf="metrics as m">

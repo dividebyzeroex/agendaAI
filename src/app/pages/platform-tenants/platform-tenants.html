@@ -1,5 +1,5 @@
 <div class="tenants-container">
-  <div class="header"><div><h1>Clientes</h1><p>Acompanhe cada estabelecimento, seu plano e o período de teste.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
+  <div class="header"><div><h1>Estabelecimentos</h1><p>Acompanhe cada estabelecimento, seu plano e o período de teste.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
   <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar a lista de clientes. Tente novamente.</p>
   <p class="error-state" role="alert" *ngIf="actionError">{{ actionError }}</p><p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
   <div class="filters"><label>Buscar cliente<input [(ngModel)]="query" placeholder="Nome, endereço ou ID"></label><label>Situação<select [(ngModel)]="status"><option value="">Todos</option><option value="trial">Em teste</option><option value="paid">Pagantes</option><option value="expired">Teste vencido</option><option value="blocked">Bloqueados</option></select></label><span>{{ filteredTenants.length }} de {{ tenants.length }} clientes</span></div>
