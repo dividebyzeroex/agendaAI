@@ -81,7 +81,7 @@
               <span class="p-amount">{{ plan.basePrice * (1 - (plan.discount || 0)/100) | number:'1.2-2' }}</span>
               <span class="p-cycle">/mês*</span>
             </div>
-            <p class="p-cycle-total" *ngIf="plan.months > 1">Pagamento trienal/anual de R$ {{ plan.price | number:'1.2-2' }}</p>
+            <p class="p-cycle-total" *ngIf="plan.months > 1">Cobrança a cada {{plan.months}} meses: R$ {{ plan.price | number:'1.2-2' }}</p>
           </div>
 
           <div class="p-pro-features">
@@ -190,6 +190,7 @@
         </div>
       </div>
 
+      <p role="alert" *ngIf="successMsg">{{successMsg}}</p>
       <div class="c-footer">
         <button class="btn-secondary" (click)="closeConfirmModal()">Cancelar</button>
         <button class="btn-primary-pro" (click)="processStripeCheckout()" [disabled]="isProcessing || !checkoutAvailable || !subscriptionTermsAccepted">

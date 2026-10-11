@@ -106,7 +106,7 @@ export class BillingService {
    */
   async processStripeCheckout(planId: string, months: number, termsAccepted: boolean): Promise<string | undefined> {
     const current = this.estabService.estabelecimento$.value;
-    if (!current?.id) return undefined;
+    if (!current?.id) throw new Error('Estabelecimento ainda não carregado. Atualize a página e tente novamente.');
 
     let plan = this.plans.find(p => p.id === planId);
     if (!plan) return undefined;
@@ -119,7 +119,7 @@ export class BillingService {
       const { data: { session } } = await this.supabase.auth.getSession();
       const token = session?.access_token;
 
-      if (!token) return undefined;
+      if (!token) throw new Error('Sua sessão expirou. Entre novamente.');
 
       const response = await fetch('/api/billing?action=checkout', {
         method: 'POST',
@@ -137,10 +137,12 @@ export class BillingService {
       });
 
       const data = await response.json();
-      return data.init_point; // Stripe Checkout URL
+      if (!response.ok) throw new Error(data.error || 'Não foi possível iniciar o pagamento.');
+      if (typeof data.init_point !== 'string' || !data.init_point.startsWith('https://checkout.stripe.com/')) throw new Error('O checkout não retornou um endereço válido. Tente novamente.');
+      return data.init_point;
     } catch (err) {
       console.error('[Stripe Billing] Error creating checkout:', err);
-      return undefined;
+      throw err;
     }
   }
 
@@ -227,7 +229,6 @@ export class BillingService {
 
 
           if (now <= expires) return 'ACTIVE';
-          return 'EXPIRED';
         }
 
         // 2. Trial Logic
@@ -307,7 +308,7 @@ export class BillingService {
 
   isTrialActive(): Observable<boolean> {
     return this.estabService.estabelecimento$.pipe(
-      map((e: Estabelecimento | null) => !!e?.trial_ends_at && !e.plano_expires_at && new Date(e.trial_ends_at) > new Date())
+      map((e: Estabelecimento | null) => !!e?.trial_ends_at && !(e.plano_expires_at && new Date(e.plano_expires_at) > new Date()) && new Date(e.trial_ends_at) > new Date())
     );
   }
 

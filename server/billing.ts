@@ -108,6 +108,7 @@ export async function syncSubscription(stripe: Stripe, db: SupabaseClient, subsc
   const { data, error } = await query.select('id');
   if (error) throw new BillingError(503, 'Não foi possível atualizar a assinatura.');
   if (establishmentId && !data?.length) throw new BillingError(409, 'Assinatura vinculada a outro contrato.');
+  if (data?.length && invoice?.status === 'paid') await recordPaidInvoice(db, invoice, sub.id);
   return patch;
 }
 

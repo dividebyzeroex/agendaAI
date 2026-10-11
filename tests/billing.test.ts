@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import type Stripe from 'stripe';
-import { authenticate, ownedEstablishment, quote, subscriptionPatch, subscriptionPeriodEnd } from '../server/billing.js';
+import { authenticate, ownedEstablishment, quote, subscriptionPatch, subscriptionPeriodEnd, syncSubscription } from '../server/billing.js';
 
 function subscription(overrides: Record<string, unknown> = {}) {
   return { id: 'sub_1', customer: 'cus_1', status: 'active', cancel_at_period_end: false, metadata: { planId: 'completo' }, latest_invoice: 'in_1', items: { data: [{ current_period_end: 1800000000, quantity: 1, price: { currency: 'brl', unit_amount: 56145, recurring: { interval: 'month', interval_count: 3 } } }] }, ...overrides } as unknown as Stripe.Subscription;
@@ -52,4 +52,18 @@ describe('Stripe reconciliation', () => {
     expect(subscriptionPeriodEnd(subscription())).toBe(new Date(1800000000 * 1000).toISOString());
     expect(() => subscriptionPeriodEnd(subscription({ items: { data: [] } }))).toThrow();
   });
+});
+
+describe('payment ledger recovery',()=>{
+ it('records the Stripe-confirmed paid invoice during subscription verification',async()=>{
+  const invoice={...paidInvoice,amount_paid:9700,currency:'brl',livemode:true,status_transitions:{paid_at:1800000000},created:1800000000};
+  const sub=subscription({latest_invoice:invoice});
+  const stripe={subscriptions:{retrieve:vi.fn().mockResolvedValue(sub)}} as any;
+  const update:any={eq:vi.fn().mockReturnThis(),or:vi.fn().mockReturnThis(),select:vi.fn().mockResolvedValue({data:[{id:'tenant-a'}],error:null})};
+  const read:any={eq:vi.fn().mockReturnThis(),maybeSingle:vi.fn().mockResolvedValue({data:{id:'tenant-a'},error:null})};
+  const upsert=vi.fn().mockResolvedValue({error:null});
+  const db={from:(name:string)=>name==='commercial_payments'?{upsert}:{update:()=>update,select:()=>read}} as any;
+  await syncSubscription(stripe,db,'sub_1','tenant-a');
+  expect(upsert).toHaveBeenCalledWith(expect.objectContaining({id:'in_1',estabelecimento_id:'tenant-a',status:'paid',livemode:true,amount_cents:9700}),{onConflict:'id'});
+ });
 });

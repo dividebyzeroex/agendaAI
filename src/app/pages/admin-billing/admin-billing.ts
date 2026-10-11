@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,7 @@ declare var confetti: any;
   styleUrl: './admin-billing.css'
 })
 export class AdminBilling implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
   private billing = inject(BillingService);
   private tracker = inject(CostTrackerService);
   public  estabService = inject(EstabelecimentoService);
@@ -66,7 +67,8 @@ export class AdminBilling implements OnInit {
       const status = await response.json();
       this.checkoutAvailable = status.ready === true && status.mode === 'live';
       this.billingStatusMessage = this.checkoutAvailable ? '' : 'Seu teste é gratuito. A contratação paga ainda está em validação; nenhum débito será feito.';
-    } catch { this.billingStatusMessage = 'Contratação temporariamente indisponível. Seu teste não gera cobrança automática.'; }
+    } catch { this.checkoutAvailable=false; this.billingStatusMessage = 'Contratação temporariamente indisponível. Seu teste não gera cobrança automática.'; }
+    finally { this.cdr.markForCheck(); }
   }
 
   get orderSummary() {
@@ -125,7 +127,7 @@ export class AdminBilling implements OnInit {
           const result = await this.billing.verifySession(sessionId);
           if (result.status === 'success') {
             setTimeout(() => this.celebrate(), 500);
-            this.successMsg = `Plano ${result.planId.toUpperCase()} ativado com sucesso! Sua infraestrutura agora é Premium.`;
+            this.successMsg = 'Pagamento confirmado. Sua assinatura está ativa.';
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => this.successMsg = '', 15000);
           } else {
@@ -141,6 +143,7 @@ export class AdminBilling implements OnInit {
           }
         } finally {
           this.isVerifying = false;
+          this.cdr.markForCheck();
         }
       };
 
@@ -179,9 +182,8 @@ export class AdminBilling implements OnInit {
       }
     } catch (e: any) {
        this.successMsg = 'Erro ao iniciar pagamento: ' + e.message;
-       setTimeout(() => this.successMsg = '', 4000);
        this.isProcessing = false;
-       this.showConfirmModal = false;
+       this.cdr.markForCheck();
     }
   }
 
@@ -203,6 +205,7 @@ export class AdminBilling implements OnInit {
       setTimeout(() => this.successMsg = '', 4000);
     } finally {
       this.isProcessing = false;
+      this.cdr.markForCheck();
     }
   }
 

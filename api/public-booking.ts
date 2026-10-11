@@ -64,7 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (profissional_id) {
       const { data: availability, error: availabilityError } = await supabase.from('profissional_disponibilidades').select('ativo,hora_inicio,hora_fim,intervalo_inicio,intervalo_fim').eq('profissional_id', profissional_id).eq('estabelecimento_id', estabelecimento_id).eq('dia_semana', weekday).maybeSingle();
       if (availabilityError) return res.status(503).json({ error: 'Não foi possível verificar o expediente.' });
-      if (!availability?.ativo || startMinutes < minutes(availability.hora_inicio) || startMinutes + service.duracao_min > minutes(availability.hora_fim)
+      if (!availability?.ativo || !availability.hora_inicio || !availability.hora_fim || startMinutes < minutes(availability.hora_inicio) || startMinutes + service.duracao_min > minutes(availability.hora_fim)
         || (availability.intervalo_inicio && availability.intervalo_fim && startMinutes < minutes(availability.intervalo_fim) && startMinutes + service.duracao_min > minutes(availability.intervalo_inicio)))
         return res.status(400).json({ error: 'Profissional indisponível nesse horário.' });
     }
@@ -93,7 +93,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           estabelecimento_id,
           nome: cliente_nome,
           telefone: cliente_telefone,
-          metadata: {}
+          metadata: {origin: 'public_booking'}
         })
         .select('id')
         .single();
@@ -114,7 +114,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cliente_id: clienteId,
       servico_id,
       status: 'confirmado',
-      metadata: {}
+      metadata: {origin: 'public_booking'}
     };
 
     if (profissional_id) {

@@ -35,15 +35,18 @@ export class OnboardingService {
     if (!user) return;
 
     // Conclui via RPC (POST) para evitar user_id na URL
-    const { data: estab } = await this.supabase
+    const { data: estab, error } = await this.supabase
       .rpc('check_onboarding_status', { p_user_id: user.id })
       .maybeSingle<{ id: string }>();
 
+    if(error)throw error;
+    if(!estab?.id)throw new Error('Estabelecimento não encontrado.');
     if (estab?.id) {
-      await this.supabase.rpc('update_estabelecimento_safe', {
+      const {error:saveError}=await this.supabase.rpc('update_estabelecimento_safe', {
         p_id: estab.id,
         p_changes: { onboarding_completo: true }
       });
+      if(saveError)throw saveError;
     }
 
     this.showOnboarding$.next(false);

@@ -83,7 +83,11 @@ export class EstabelecimentoService {
   );
 
   constructor() {
-    this.init();
+    void this.init().catch(()=>this.isLoadingSubject.next(false));
+    this.supabase.auth.onAuthStateChange((event)=>{
+      if(event==='SIGNED_OUT'){this.resetContext();return;}
+      if(event==='SIGNED_IN')setTimeout(()=>{void this.refreshCurrent().catch(()=>this.isLoadingSubject.next(false));},0);
+    });
   }
 
   private async init() {
@@ -108,26 +112,37 @@ export class EstabelecimentoService {
     
     if (error) {
       console.warn('[EstabelecimentoService] Erro ao buscar empresa via POST:', error);
-      return null;
+      throw new Error('Não foi possível carregar o estabelecimento. Tente novamente.');
     }
-    return data as Estabelecimento | null;
+    if(data)return data;
+    const {data:ids,error:membershipError}=await this.supabase.rpc('get_meus_estabelecimentos');
+    if(membershipError)throw membershipError;
+    if(!ids?.length)return null;
+    const {data:member,error:memberError}=await this.supabase.from('estabelecimento').select('id,nome,slug,segmento,telefone,cidade,logo_url,cor_primaria,onboarding_completo,trial_ends_at,plano,plano_expires_at').eq('id',ids[0]).maybeSingle();
+    if(memberError)throw memberError;
+    return member;
   }
 
   async fetchEstabelecimento() {
     const { data: { user } } = await this.supabase.auth.getUser();
     if (!user) {
-      this.activeIdSubject.next(null);
+      this.resetContext();
       return;
     }
     const data = await this._estabelecimentoCache.get(user.id);
+    const {data:{session}}=await this.supabase.auth.getSession();
+    if(session?.user.id!==user.id)return;
     if (data) {
       this.ngZone.run(() => {
         this.estabelecimento$.next(data);
         this.activeIdSubject.next(data.id || null);
         console.log('[Tenancy Context] ID Ativo:', data.id);
       });
-    }
+    }else this.resetContext();
   }
+
+  private resetContext(){this._estabelecimentoCache.clear();this._servicosCache.clear();this.estabelecimento$.next(null);this.activeIdSubject.next(null);this.servicos$.next([]);this.horarios$.next([]);}
+  async refreshCurrent(){this._estabelecimentoCache.clear();this._servicosCache.clear();await this.fetchEstabelecimento();await Promise.all([this.fetchServicos(),this.fetchHorarios()]);}
 
   async updateEstabelecimento(changes: Partial<Estabelecimento>) {
     const current = this.estabelecimento$.value;
@@ -229,11 +244,11 @@ export class EstabelecimentoService {
       .rpc('get_horarios_by_estab', { p_estab_id: estId });
     
     if (!error) {
-      const days = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado', 'Domingo'];
+      const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
       if (!data || data.length < 7) {
         // Seed only the missing ones
         const existingDays = data ? data.map((d: any) => d.dia_semana) : [];
-        const missingDays = days.map((d, i) => ({ dia_semana: i + 1, dia_nome: d })).filter(d => !existingDays.includes(d.dia_semana));
+        const missingDays = days.map((d, i) => ({ dia_semana: i, dia_nome: d })).filter(d => !existingDays.includes(d.dia_semana));
 
         const seedPromises = missingDays.map(m => 
           this.supabase.from('horarios_funcionamento').insert({

@@ -2,7 +2,6 @@ import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
-import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
@@ -48,8 +47,8 @@ export class AdminConfiguracoes implements OnInit {
   /** URL pública do portal de agendamento deste estabelecimento */
   get publicLink(): string {
     if (!this.estabelecimento?.nome) return '';
-    const slug = EstabelecimentoPublicoService.slugify(this.estabelecimento.nome);
-    return `${window.location.origin}/agendar/${slug}`;
+    const slug = this.estabelecimento.slug;
+    return slug ? `${window.location.origin}/agendar/${encodeURIComponent(slug)}` : '';
   }
 
   linkCopiado = false;
@@ -63,8 +62,7 @@ export class AdminConfiguracoes implements OnInit {
   /** URL do portal do profissional (para compartilhar com a equipe) */
   get proLink(): string {
     if (!this.estabelecimento?.nome) return '';
-    const slug = EstabelecimentoPublicoService.slugify(this.estabelecimento.nome);
-    return `${window.location.origin}/pro/${slug}`;
+    return `${window.location.origin}/login`;
   }
 
   proLinkCopiado = false;

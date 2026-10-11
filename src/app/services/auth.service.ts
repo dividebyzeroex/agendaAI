@@ -222,7 +222,7 @@ export class AuthService {
 
   async redirectAfterLogin() {
     // 🔗 Inteligência de Redirecionamento de Identidade
-    if (this.currentUserSubject.value) await this.loadUserProfile(this.currentUserSubject.value.id);
+    await this.checkSession();
     const profile = this.userProfileSubject.value;
     if (!profile) {
       this.ngZone.run(() => this.router.navigate(['/login']));

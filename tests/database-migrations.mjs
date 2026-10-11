@@ -74,6 +74,17 @@ assert.equal((await db.query(`select count(*)::int n from private.platform_owner
 await db.query(`update auth.users set email_confirmed_at=now() where id=$1`,[paiolOwner]);
 assert.equal((await asRole('authenticated',paiolOwner,`select is_platform_owner() as allowed`)).rows[0].allowed,true);
 assert.equal((await asRole('authenticated',paiolOwner,`select get_platform_metrics() as data`)).rows[0].data.prospects,0);
+const hours=Array.from({length:7},(_,day)=>({dia_semana:day,dia_nome:'Dia '+day,abre:'09:00',fecha:'18:00',ativo:day>0}));
+const setup=[tenant,JSON.stringify({nome:'Test Business',cidade:'São Paulo'}),JSON.stringify([{titulo:'Corte',preco:50,duracao_min:30,emoji:'✂️'}]),JSON.stringify(hours)];
+await assert.rejects(()=>asRole('authenticated',other,`select configure_client_setup($1,$2,$3,$4)`,setup));
+await asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,setup);
+await asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,setup);
+assert.equal((await db.query(`select count(*)::int n from servicos where estabelecimento_id=$1 and titulo='Corte'`,[tenant])).rows[0].n,1);
+assert.equal((await db.query(`select count(*)::int n from horarios_funcionamento where estabelecimento_id=$1`,[tenant])).rows[0].n,7);
+const invalid=hours.map(h=>({...h}));invalid[2].fecha='08:00';
+await assert.rejects(()=>asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,[tenant,JSON.stringify({nome:'Must Roll Back'}),setup[2],JSON.stringify(invalid)]));
+assert.equal((await db.query(`select nome from estabelecimento where id=$1`,[tenant])).rows[0].nome,'Test Business');
+assert.equal((await db.query(`select count(*)::int n from horarios_funcionamento where estabelecimento_id=$1`,[tenant])).rows[0].n,7);
 await db.query(`update estabelecimento set trial_ends_at=now()-interval '1 day' where id=$1`,[tenant]);
 assert.equal((await asRole('authenticated',owner,`select * from get_meus_estabelecimentos()`)).rows.length,0);
 assert.equal((await asRole('authenticated',owner,`select id from estabelecimento where id=$1`,[tenant])).rows.length,1);
