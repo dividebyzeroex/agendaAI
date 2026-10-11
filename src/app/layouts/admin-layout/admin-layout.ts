@@ -1,3 +1,4 @@
+import { SupportWidget } from '../../components/support-widget/support-widget';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
@@ -28,7 +29,7 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [
+  imports: [SupportWidget,
     CommonModule,
     RouterModule,
     ButtonModule,

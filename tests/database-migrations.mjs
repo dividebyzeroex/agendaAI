@@ -77,5 +77,17 @@ assert.equal((await asRole('authenticated',paiolOwner,`select get_platform_metri
 await db.query(`update estabelecimento set trial_ends_at=now()-interval '1 day' where id=$1`,[tenant]);
 assert.equal((await asRole('authenticated',owner,`select * from get_meus_estabelecimentos()`)).rows.length,0);
 assert.equal((await asRole('authenticated',owner,`select id from estabelecimento where id=$1`,[tenant])).rows.length,1);
+const ticket = await asRole('authenticated',other,`insert into support_messages(category,body,page_path) values('falha','Não consegui salvar meu serviço','/admin/configuracoes') returning id`);
+const ticketId=ticket.rows[0].id;
+assert.equal((await asRole('authenticated',other,`select * from support_messages where id=$1`,[ticketId])).rows.length,1);
+assert.equal((await asRole('authenticated',pendingOwner,`select * from support_messages where id=$1`,[ticketId])).rows.length,1);
+await assert.rejects(()=>asRole('anon','',`select * from support_messages`));
+await assert.rejects(()=>asRole('authenticated',other,`insert into support_messages(category,body,user_id) values('duvida','Mensagem com autor forjado',$1)`,[owner]));
+assert.equal((await asRole('authenticated',other,`update support_messages set owner_reply='Resposta forjada' where id=$1 returning id`,[ticketId])).rows.length,0);
+await asRole('authenticated',paiolOwner,`update support_messages set owner_reply='Vamos investigar',status='respondido',replied_at=now() where id=$1`,[ticketId]);
+assert.equal((await asRole('authenticated',other,`select owner_reply from support_messages where id=$1`,[ticketId])).rows[0].owner_reply,'Vamos investigar');
+const isolated='10000000-0000-4000-8000-000000000005';
+await db.query(`insert into auth.users(id,email) values($1,'isolated@example.com')`,[isolated]);
+assert.equal((await asRole('authenticated',isolated,`select * from support_messages`)).rows.length,0);
 console.log('PASS: local migration compatibility, 30-day trial, owner authorization, private fields, anonymous denial, billing tamper prevention, CRM isolation, worker lock.');
 await db.close();

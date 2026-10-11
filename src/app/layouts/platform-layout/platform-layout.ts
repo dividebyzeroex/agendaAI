@@ -1,3 +1,4 @@
+import { SupportWidget } from '../../components/support-widget/support-widget';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule, Router } from '@angular/router';
@@ -6,7 +7,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-platform-layout',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [SupportWidget,CommonModule, RouterModule],
   templateUrl: './platform-layout.html',
   styleUrls: ['./platform-layout.css']
 })
