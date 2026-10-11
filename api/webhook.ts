@@ -1,3 +1,4 @@
+import { recordOwnerTest } from '../server/owner-payment-test.js';
 import type Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { billingClients, objectId, recordPaidInvoice, syncSubscription } from '../server/billing.js';
@@ -26,6 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object as Stripe.Checkout.Session;
+      if(session.metadata?.['purpose']==='owner_live_test') await recordOwnerTest(db,session,event.id);
       const id = session.metadata?.['estabelecimentoId'];
       const subId = objectId(session.subscription);
       if (session.mode === 'subscription' && session.payment_status === 'paid' && id && id === session.client_reference_id && subId) {

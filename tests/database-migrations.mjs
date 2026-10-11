@@ -107,5 +107,10 @@ await assert.rejects(()=>asRole('anon','',`insert into app_error_events(page_pat
 await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code,user_id) values('/admin','runtime_error',$1)`,[owner]));
 await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code) values('/admin?token=secret','runtime_error')`));
 await assert.rejects(()=>asRole('authenticated',other,`select owner_control_snapshot()`));
+await db.query(`insert into owner_payment_tests(id,user_id) values('cs_live_owner_fixture',$1)`,[paiolOwner]);
+assert.equal((await asRole('authenticated',paiolOwner,`select id from owner_payment_tests`)).rows.length,1);
+assert.equal((await asRole('authenticated',other,`select id from owner_payment_tests`)).rows.length,0);
+await assert.rejects(()=>asRole('authenticated',paiolOwner,`update owner_payment_tests set status='paid'`));
+await assert.rejects(()=>asRole('anon','',`select id from owner_payment_tests`));
 console.log('PASS: local migration compatibility, 30-day trial, owner authorization, private fields, anonymous denial, billing tamper prevention, CRM isolation, worker lock.');
 await db.close();

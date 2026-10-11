@@ -1,8 +1,9 @@
+import { OwnerPaymentTest } from '../../components/owner-payment-test/owner-payment-test';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PlatformService, PlatformMetrics, PlatformPayment, PlatformTenant } from '../../services/platform';
 
-@Component({ selector: 'app-platform-billing', standalone: true, imports: [CommonModule], templateUrl: './platform-billing.html', styleUrls: ['./platform-billing.css'] })
+@Component({ selector: 'app-platform-billing', standalone: true, imports: [CommonModule, OwnerPaymentTest], templateUrl: './platform-billing.html', styleUrls: ['./platform-billing.css'] })
 export class PlatformBilling implements OnInit {
   metrics: PlatformMetrics | null = null;
   transactions: PlatformPayment[] = [];

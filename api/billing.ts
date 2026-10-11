@@ -1,3 +1,4 @@
+import { ownerPaymentTest } from '../server/owner-payment-test.js';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { authenticate, billingReadiness, operationalBillingReadiness, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
 
@@ -6,11 +7,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const action = req.query['action'];
     if (action === 'status' && req.method === 'GET') return res.status(200).json(await operationalBillingReadiness());
-    const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET' };
+    const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET', 'owner-test-checkout':'POST', 'owner-test-status':'GET' };
     if (typeof action !== 'string' || !methods[action]) throw new BillingError(400, 'Ação inválida.');
     if (req.method !== methods[action]) { res.setHeader('Allow', methods[action]); throw new BillingError(405, 'Método não permitido.'); }
     const { db, stripe } = billingClients();
     const user = await authenticate(db, req.headers.authorization);
+
+    if (action.startsWith('owner-test-')) return await ownerPaymentTest(req,res,db,stripe,user);
 
     if (action === 'verify') {
       const sessionId = req.query['session_id'];
