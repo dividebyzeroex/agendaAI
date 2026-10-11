@@ -1,6 +1,7 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
 
@@ -12,6 +13,7 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
   styleUrls: ['./admin-configuracoes.css']
 })
 export class AdminConfiguracoes implements OnInit {
+  private route = inject(ActivatedRoute);
   public isLoadingService = inject(EstabelecimentoService);
   private estabelecimentoService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);
@@ -29,6 +31,8 @@ export class AdminConfiguracoes implements OnInit {
   showNovoServico = false;
 
   ngOnInit() {
+    const tab = this.route.snapshot.queryParamMap.get('tab');
+    if (tab === 'servicos' || tab === 'horarios' || tab === 'negocio' || tab === 'fidelidade') this.activeTab = tab;
     this.estabelecimentoService.estabelecimento$.subscribe(e => { 
       if (e) {
         this.estabelecimento = { ...e };

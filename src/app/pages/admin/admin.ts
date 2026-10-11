@@ -1,5 +1,6 @@
 import { Component, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivationSummaryComponent } from '../../components/activation-summary/activation-summary';
 import { Router } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
@@ -16,7 +17,7 @@ import { BehaviorSubject, map, Subscription, interval, Observable } from 'rxjs';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule, PortalProfissionalComponent],
+  imports: [CommonModule, ButtonModule, CardModule, TableModule, PortalProfissionalComponent, ActivationSummaryComponent],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
