@@ -43,50 +43,9 @@
 }
 
 /* ===== SISTEMA 3D PARA FUSÃO UI ===== */
-.on-scene {
-  width: 100%;
-  perspective: 2000px;
-  position: relative;
-}
-
-.on-card-3d {
-  width: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.on-face {
-  width: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.on-front {
-  position: relative;
-}
-
-.on-back {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.on-back {
-  transform: rotateY(180deg);
-}
-
-/* When flipped to back face, swap which face is relative */
-.on-card-3d.flipped .on-front {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.on-card-3d.flipped .on-back {
-  position: relative;
-}
-
+/* Only the current step is rendered in normal flow, including on Safari. */
+.on-scene, .on-card-3d, .on-face { width: 100%; position: relative; }
+.on-face { box-sizing: border-box; }
 /* Timeline Interna ao Card */
 .on-timeline {
   display: flex;
@@ -702,3 +661,7 @@
   color: white;
   border-color: var(--primary-color);
 }
+
+.slug-wrap-login, .slug-wrap { flex-wrap: wrap; }
+.slug-wrap-login input, .slug-wrap input { min-width: 0; max-width: 100%; }
+.email-badge { max-width: 100%; overflow-wrap: anywhere; }

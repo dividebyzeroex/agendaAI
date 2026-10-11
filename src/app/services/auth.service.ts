@@ -150,7 +150,7 @@ export class AuthService {
 
   async signInWithOtp(email: string) {
     if (!this.supabase) {
-      return { data: null, error: new Error('Supabase not initialized') };
+      throw new Error('Não foi possível iniciar a autenticação. Atualize a página.');
     }
     const { data, error } = await this.supabase.auth.signInWithOtp({
       email,
@@ -221,30 +221,15 @@ export class AuthService {
   }
 
   async redirectAfterLogin() {
-    // 🔗 Inteligência de Redirecionamento de Identidade
     await this.checkSession();
     const profile = this.userProfileSubject.value;
-    if (!profile) {
-      this.ngZone.run(() => this.router.navigate(['/login']));
-      return;
-    }
-
-    this.ngZone.run(() => {
-      if (profile.role === 'superadmin') {
-        this.router.navigate(['/platform-admin/dashboard']);
-      } else if (profile.role === 'new') {
-        this.router.navigate(['/onboarding']);
-      } else if (profile.role === 'dono') {
-        this.router.navigate(['/admin/dashboard']);
-      } else if (profile.role === 'secretaria') {
-        this.router.navigate(['/admin/agenda']);
-      } else if (profile.role === 'operacional') {
-        this.router.navigate(['/admin/agenda']);
-      } else {
-        // Fallback genérico para roles antigas
-        this.router.navigate(['/admin/agenda']);
-      }
-    });
+    const destination = !profile ? '/login'
+      : profile.role === 'superadmin' ? '/platform-admin/dashboard'
+      : profile.role === 'new' ? '/onboarding'
+      : profile.role === 'dono' ? '/admin/dashboard'
+      : '/admin/agenda';
+    const navigated = await this.ngZone.run(() => this.router.navigate([destination]));
+    if (!navigated) throw new Error('Não foi possível abrir o painel. Tente entrar novamente.');
   }
 
   async logout() {

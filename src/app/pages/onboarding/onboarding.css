@@ -46,42 +46,9 @@
 .t-line.active { background: #6366f1; }
 
 /* 3D Scene Control */
-.on-scene {
-  width: 100%;
-  position: relative;
-  min-height: 520px;
-}
-
-.on-card-3d {
-  width: 100%;
-  height: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.on-face {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  padding: 3rem;
-  background: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-radius: 32px;
-  border: 1px solid rgba(255,255,255,0.7);
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
-  backface-visibility: hidden;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.on-back {
-  transform: rotateY(180deg);
-}
-
-/* Typography & Hero */
+/* Only the current step is rendered in normal flow, including on Safari. */
+.on-scene, .on-card-3d, .on-face { width: 100%; position: relative; }
+.on-face { box-sizing: border-box; padding: 3rem; background: rgba(255,255,255,.8); border-radius: 32px; border: 1px solid rgba(255,255,255,.7); box-shadow: 0 25px 50px -12px rgba(0,0,0,.08); }
 .on-hero { text-align: center; margin-bottom: 1.5rem; }
 .on-hero .emoji { font-size: 3.5rem; margin-bottom: 0.5rem; display: block; }
 .on-hero h1 { font-size: 2rem; font-weight: 900; letter-spacing: -1px; margin: 0 0 8px 0; color: var(--text-main); }
@@ -248,3 +215,7 @@
   .chip-grid { grid-template-columns: 1fr; }
   .on-hero h1 { font-size: 1.6rem; }
 }
+
+.slug-wrap-login, .slug-wrap { flex-wrap: wrap; }
+.slug-wrap-login input, .slug-wrap input { min-width: 0; max-width: 100%; }
+.email-badge { max-width: 100%; overflow-wrap: anywhere; }

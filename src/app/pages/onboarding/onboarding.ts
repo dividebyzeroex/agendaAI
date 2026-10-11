@@ -62,7 +62,7 @@ export class Onboarding implements OnInit {
   async ngOnInit() {
     const {data:{user}} = await this.supabase.auth.getUser();
     if (user?.email) this.form.email=user.email;
-    try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); this.form={...this.form,...draft,email:user?.email||''}; } catch {}
+    try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); if (draft.email === user?.email) this.form={...this.form,...draft,email:user?.email||''}; } catch {}
     // Recupera o email vindo da tela de cadastro de login
     const savedEmail = '';
     if (savedEmail) {
@@ -112,6 +112,7 @@ export class Onboarding implements OnInit {
 
   async finalizar() {
     if (!this.termsAccepted) { this.errorMessage='Aceite as condições para iniciar o teste.'; return; }
+    if (this.isSaving) return;
     this.isSaving=true; this.errorMessage='';
     try {
       const {data:{session}}=await this.supabase.auth.getSession();

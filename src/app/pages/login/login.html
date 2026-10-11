@@ -6,12 +6,14 @@
     </div>
 
     <div class="on-scene">
-      <div class="on-card-3d" [class.flipped]="flipAngle !== 0" [style.transform]="'rotateY(' + flipAngle + 'deg)'">
+      <div class="on-card-3d">
 
         <!-- FRENTE: Login, Signup, Step 1, Step 3 -->
-        <div class="on-face on-front">
+        <div class="on-face on-front" *ngIf="!isDoingOnboarding || onStep === 'overview'">
 
           <p-card styleClass="login-card">
+            <p role="status" *ngIf="isLoading">{{ isDoingOnboarding ? 'Preparando seu cadastro…' : 'Verificando acesso…' }}</p>
+            <div class="error-box" role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
 
             <!-- Timeline (Apenas no Onboarding) -->
 
@@ -24,9 +26,7 @@
               </div>
 
               <div class="login-form" *ngIf="!isLoading">
-                <div class="error-box" *ngIf="errorMessage">
-                  <i class="pi pi-exclamation-triangle"></i> {{ errorMessage }}
-                </div>
+
 
                 <!-- PASSO 1: E-MAIL -->
                 <div class="field" *ngIf="step === 'email' && !isOtpSent">
@@ -126,7 +126,7 @@
               <div class="field mt-4">
                 <label>Seu link exclusivo</label>
                 <div class="slug-wrap-login mt-2">
-                   <span>agendaai.app/</span>
+                   <span>/agendar/</span>
                    <input pInputText [(ngModel)]="form.slug" placeholder="seu-nome" />
                 </div>
               </div>
@@ -140,20 +140,21 @@
         </div>
 
         <!-- TRÁS: Step 2, Step 4, Conclusão -->
-        <div class="on-face on-back">
+        <div class="on-face on-back" *ngIf="isDoingOnboarding && onStep === 'conclusao'">
           <p-card styleClass="login-card">
 
 
 
             <!-- CONCLUSÃO -->
             <ng-container *ngIf="onStep === 'conclusao'">
-              <div class="final-message-login">
+              <p role="status" *ngIf="isLoading">Preparando seu cadastro…</p>
+              <div class="final-message-login" *ngIf="!isLoading" role="status">
                 <div class="success-icon-wrap"><i class="pi pi-envelope"></i></div>
                 <h3 class="glow-text">Quase lá!</h3>
-                <p>Para sua segurança, enviamos um link de confirmação para:</p>
+                <p>Confira a caixa de entrada e o spam do e-mail:</p>
                 <div class="email-badge">{{form.email}}</div>
-                <p class="hint">Clique no link do e-mail para ativar sua empresa e acessar o painel.</p>
-                <p-button label="Voltar ao Início" styleClass="p-button-text w-full mt-4" (onClick)="isDoingOnboarding = false; flipAngle = 0;"></p-button>
+                <p class="hint">{{ successMessage }}</p>
+                <p-button label="Voltar ao Início" styleClass="p-button-text w-full mt-4" (onClick)="returnToLogin()"></p-button>
               </div>
             </ng-container>
 

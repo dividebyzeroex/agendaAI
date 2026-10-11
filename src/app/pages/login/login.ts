@@ -7,8 +7,6 @@ import { Card } from 'primeng/card';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
-import { ProfissionaisService } from '../../services/profissionais.service';
-import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 
 type OnboardingStep = 'overview' | 'conclusao';
 
@@ -33,7 +31,6 @@ export class Login implements OnInit {
 
   private router = inject(Router);
   private authService = inject(AuthService);
-  private profService = inject(ProfissionaisService);
   private cdr = inject(ChangeDetectorRef);
 
   // Estados Camaleão
@@ -44,7 +41,6 @@ export class Login implements OnInit {
   // Estados Onboarding Integrado (Elite Gatekeeper)
   isDoingOnboarding = false;
   onStep: OnboardingStep = 'overview';
-  flipAngle = 0;
   isSaving = false;
 
   form: any = {
@@ -70,11 +66,13 @@ export class Login implements OnInit {
   }
 
   async submitEmail() {
+    if (this.isLoading) return;
     this.errorMessage = '';
     this.successMessage = '';
     this.isLoading = true;
 
     this.email = this.email.trim().toLowerCase();
+    this.validateEmail();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
       this.errorMessage = 'Informe um e-mail válido.';
       this.isLoading = false;
@@ -158,10 +156,18 @@ export class Login implements OnInit {
 
   backStep() {
     this.isDoingOnboarding = false;
-    this.isSignupMode = false;
+    this.errorMessage = '';
   }
 
   async finalizarOnboarding() {
+    if (this.isLoading) return;
+    this.form.nome = this.form.nome.trim();
+    this.form.slug = EstabelecimentoPublicoService.slugify(this.form.slug);
+    if (!this.form.nome || !this.form.slug) {
+      this.errorMessage = 'Informe o nome e o link do estabelecimento.';
+      return;
+    }
+    this.errorMessage = '';
     this.isLoading = true;
     this.onStep = 'conclusao';
     this.cdr.detectChanges();
@@ -175,12 +181,12 @@ export class Login implements OnInit {
       if (this.authType === 'password') {
         const signup = await this.authService.signUpWithPassword(this.form.email, this.password);
         if (signup.session) await this.authService.redirectAfterLogin();
-        else this.successMessage = 'Confirme seu e-mail para ativar o teste gratuito.';
+        else this.successMessage = 'Abra o link de confirmação para continuar. Se já possui cadastro, volte ao início e entre com sua senha.';
       } else {
         await this.authService.signInWithOtp(this.form.email);
+        this.successMessage = 'Abra o link de acesso para continuar o cadastro e ativar seu teste.';
       }
 
-      await new Promise(r => setTimeout(r, 1500));
       this.isLoading = false;
       this.cdr.detectChanges();
     } catch (err: any) {
@@ -202,8 +208,22 @@ export class Login implements OnInit {
     }
   }
 
+  returnToLogin() {
+    this.isDoingOnboarding = false;
+    this.isSignupMode = false;
+    this.isOtpSent = false;
+    this.step = 'email';
+    this.onStep = 'overview';
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
   toggleMode() {
     this.isSignupMode = !this.isSignupMode;
+    this.step = 'email';
+    this.isOtpSent = false;
+    this.authType = 'password';
+    this.successMessage = '';
     this.errorMessage = '';
     this.cdr.detectChanges();
   }
