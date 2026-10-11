@@ -219,3 +219,26 @@
 .slug-wrap-login, .slug-wrap { flex-wrap: wrap; }
 .slug-wrap-login input, .slug-wrap input { min-width: 0; max-width: 100%; }
 .email-badge { max-width: 100%; overflow-wrap: anywhere; }
+
+/* Terms have their own rows; action buttons never compete with their text. */
+:host { display: block; }
+.onboarding-root { box-sizing: border-box; min-height: 100dvh; padding-bottom: max(2rem, env(safe-area-inset-bottom)); }
+.onboarding-container, .on-face, .field { min-width: 0; }
+.super-input { box-sizing: border-box; }
+.trial-consents { display: grid; gap: 1rem; margin-top: 1.5rem; }
+.trial-consents label { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: .65rem; align-items: start; line-height: 1.5; }
+.trial-consents input { width: 20px; height: 20px; margin: 3px 0 0; accent-color: #6366f1; }
+.trial-actions { align-items: stretch; }
+.trial-actions .btn-back { flex: 0 0 48px; width: 48px; height: auto; min-height: 52px; }
+.trial-actions .btn-next { flex: 1; min-width: 0; padding: 14px 12px; font-size: 1rem; line-height: 1.4; }
+.slug-wrap { display: grid; gap: 0; padding: 12px 16px; }
+.slug-wrap span { font-size: .8rem; overflow-wrap: anywhere; }
+.slug-wrap input { width: 100%; box-sizing: border-box; }
+.onboarding-error { padding: 1rem; border: 1px solid #fecaca; border-radius: 12px; background: #fff1f2; color: #9f1239; line-height: 1.5; }
+@media (max-width: 640px) {
+ .onboarding-root { padding: 20px 16px max(32px, env(safe-area-inset-bottom)); align-items: flex-start; }
+ .onboarding-container { padding: 0; gap: 1.5rem; }
+ .on-face { padding: 24px 20px; border-radius: 24px; }
+ .on-hero .emoji { font-size: 2.5rem; }
+ .on-hero p { font-size: 1rem; }
+}

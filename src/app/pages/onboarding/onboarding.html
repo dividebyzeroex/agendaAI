@@ -1,6 +1,6 @@
 <div class="onboarding-root">
   <div class="onboarding-container">
-    <p role="alert" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="onboarding-error" role="alert" *ngIf="errorMessage">{{ errorMessage }}</p>
 
     <!-- Timeline 4 Etapas (Invisível pro cliente, mas perceptível pelo preenchimento) -->
     <div class="on-timeline" *ngIf="step !== 'conclusao'">
@@ -115,7 +115,7 @@
           <ng-container *ngIf="step === 'link'">
             <div class="on-hero">
               <span class="emoji">🔗</span>
-              <h1>Seu Link Mágico</h1>
+              <h1>Seu link de reservas</h1>
               <p>Este é o link que os clientes acessarão para agendar 24/7.</p>
             </div>
             <div class="field magic-link-field">
@@ -128,8 +128,11 @@
             <div class="btn-group">
               <button class="btn-back" (click)="back()"><i class="pi pi-arrow-left"></i></button>
 
-              <label><input type="checkbox" [(ngModel)]="termsAccepted" /> Li e aceito as <a href="/termos" target="_blank" rel="noopener">condições do teste de 30 dias</a>.</label>
-              <label style="display:block;margin:12px 0"><input type="checkbox" [(ngModel)]="marketingConsent" /> Quero receber dicas e ofertas (opcional).</label>
+              <label><input type="checkbox" [(ngModel)]="termsAccepted" /><span>Li e aceito as <a href="/termos" target="_blank" rel="noopener">condições do teste de 30 dias</a>.</span></label>
+              <label style="display:block;margin:12px 0"><input type="checkbox" [(ngModel)]="marketingConsent" /><span>Quero receber dicas e ofertas (opcional).</span></label>
+            </div>
+            <div class="btn-group trial-actions">
+              <button class="btn-back" [disabled]="isSaving" aria-label="Voltar" (click)="back()"><i class="pi pi-arrow-left"></i></button>
               <button class="btn-next final" [disabled]="!form.slug || !termsAccepted || isSaving" (click)="finalizar()">
                 <i class="pi pi-bolt"></i> {{ isSaving ? 'Preparando sua agenda…' : 'Iniciar teste de 30 dias' }}
               </button>

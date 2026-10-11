@@ -72,9 +72,9 @@ export class AuthService {
     return !!this.currentUserSubject.value;
   }
 
-  async checkSession(): Promise<boolean> {
+  async checkSession(forceRefresh = false): Promise<boolean> {
     // Resolve the current authenticated profile.
-    if (this.isAuthed_Sync && this.userProfileValue) return true;
+    if (!forceRefresh && this.isAuthed_Sync && this.userProfileValue) return true;
 
     if (!this.supabase) {
       return false;
@@ -221,7 +221,8 @@ export class AuthService {
   }
 
   async redirectAfterLogin() {
-    await this.checkSession();
+    // Tenant creation changes the role from new to owner without changing the auth session.
+    await this.checkSession(true);
     const profile = this.userProfileSubject.value;
     const destination = !profile ? '/login'
       : profile.role === 'superadmin' ? '/platform-admin/dashboard'
