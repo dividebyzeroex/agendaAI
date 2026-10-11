@@ -23,13 +23,23 @@ export class PlatformTenants implements OnInit {
   ngOnInit() { void this.refresh(); }
   async refresh() {
     this.isLoading = true; this.hasError = false;
-    try { const [tenants, usage] = await Promise.all([this.platformService.getTenants(), this.db.rpc('owner_tenant_usage')]); if(usage.error) throw usage.error; this.tenants = tenants; this.usage = usage.data || []; if(this.selected) this.selected = this.usage.find(t=>t.id===this.selected.id); }
+    try {
+      const [tenants, usage, contacts] = await Promise.all([this.platformService.getTenants(), this.db.rpc('owner_tenant_usage'), this.db.rpc('owner_tenant_contacts')]);
+      if (usage.error) throw usage.error;
+      if (contacts.error) throw contacts.error;
+      this.tenants = tenants;
+      this.usage = (usage.data || []).map((tenant: any) => ({ ...tenant, ...(contacts.data || []).find((contact: any) => contact.id === tenant.id) }));
+      if (this.selected) this.selected = this.usage.find(t => t.id === this.selected.id);
+    }
     catch { this.hasError = true; }
     finally { this.isLoading = false; this.cdr.markForCheck(); }
   }
   get filteredTenants() {
     const query = this.query.trim().toLocaleLowerCase('pt-BR');
-    return this.tenants.filter(t => (!this.status || t.status === this.status) && (!query || `${t.nome} ${t.slug} ${t.id}`.toLocaleLowerCase('pt-BR').includes(query)));
+    return this.tenants.filter(t => {
+      const contact = this.usageFor(t.id);
+      return (!this.status || t.status === this.status) && (!query || `${t.nome} ${t.slug} ${t.id} ${contact?.email || ''} ${contact?.telefone || ''} ${contact?.endereco || ''} ${contact?.cidade || ''}`.toLocaleLowerCase('pt-BR').includes(query));
+    });
   }
   usageFor(id:string) { return this.usage.find(t=>t.id===id); }
   activeCount(items:any[]) { return (items||[]).filter(t=>t.ativo).length; }
