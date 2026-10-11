@@ -89,5 +89,12 @@ assert.equal((await asRole('authenticated',other,`select owner_reply from suppor
 const isolated='10000000-0000-4000-8000-000000000005';
 await db.query(`insert into auth.users(id,email) values($1,'isolated@example.com')`,[isolated]);
 assert.equal((await asRole('authenticated',isolated,`select * from support_messages`)).rows.length,0);
+await asRole('authenticated',other,`insert into app_error_events(page_path,error_code) values('/admin/agenda','runtime_error')`);
+assert.equal((await asRole('authenticated',other,`select * from app_error_events`)).rows.length,0);
+assert.equal((await asRole('authenticated',paiolOwner,`select * from app_error_events`)).rows.length,1);
+await assert.rejects(()=>asRole('anon','',`insert into app_error_events(page_path,error_code) values('/login','runtime_error')`));
+await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code,user_id) values('/admin','runtime_error',$1)`,[owner]));
+await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code) values('/admin?token=secret','runtime_error')`));
+await assert.rejects(()=>asRole('authenticated',other,`select owner_control_snapshot()`));
 console.log('PASS: local migration compatibility, 30-day trial, owner authorization, private fields, anonymous denial, billing tamper prevention, CRM isolation, worker lock.');
 await db.close();
