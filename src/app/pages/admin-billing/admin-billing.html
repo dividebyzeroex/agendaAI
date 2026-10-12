@@ -35,7 +35,7 @@
     <!-- CONFETTI OVERLAY -->
     <div class="confetti-overlay" *ngIf="showConfetti"></div>
 
-    <div class="bento-header">
+    <div class="page-header">
       <div>
         <h2>Gestão de <span class="gradient-text">Assinatura</span></h2>
         <p>30 dias de teste sem cartão. A assinatura paga exige sua confirmação.</p>
@@ -78,10 +78,10 @@
             <h3>{{ plan.name }}</h3>
             <div class="p-pro-price">
               <span class="p-currency">R$</span>
-              <span class="p-amount">{{ plan.basePrice * (1 - (plan.discount || 0)/100) | number:'1.2-2' }}</span>
+              <span class="p-amount">{{ formatAmount(plan.basePrice * (1 - (plan.discount || 0)/100)) }}</span>
               <span class="p-cycle">/mês*</span>
             </div>
-            <p class="p-cycle-total" *ngIf="plan.months > 1">Cobrança a cada {{plan.months}} meses: R$ {{ plan.price | number:'1.2-2' }}</p>
+            <p class="p-cycle-total" *ngIf="plan.months > 1">Cobrança a cada {{ plan.months }} meses: R$ {{ formatAmount(plan.price) }}</p>
           </div>
 
           <div class="p-pro-features">
@@ -128,7 +128,7 @@
               <tr *ngFor="let inv of invoices$ | async">
                 <td>{{ inv.date | date:'dd/MM/yyyy' }}</td>
                 <td class="id-cell">{{ inv.id }}</td>
-                <td class="val-cell">R$ {{ inv.amount | number:'1.2-2' }}</td>
+                <td class="val-cell">R$ {{ formatAmount(inv.amount) }}</td>
                 <td><span class="st-pill" [attr.data-status]="inv.status">{{ inv.status }}</span></td>
                 <td class="action-cell">
                   <button class="btn-table-icon" *ngIf="inv.pdfUrl" (click)="downloadInvoice(inv.pdfUrl)">
@@ -162,10 +162,10 @@
 
   <!-- CONFIRMATION MODAL -->
   <div class="modal-backdrop" *ngIf="showConfirmModal" (click)="closeConfirmModal()">
-    <div class="confirm-card" (click)="$event.stopPropagation()">
+    <div class="confirm-card" role="dialog" aria-modal="true" aria-labelledby="billing-confirm-title" (keydown.escape)="closeConfirmModal()" (click)="$event.stopPropagation()">
       <div class="c-head">
-        <h4>Confirmar Assinatura</h4>
-        <button class="btn-close" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
+        <h4 id="billing-confirm-title">Confirmar assinatura</h4>
+        <button class="btn-close" aria-label="Fechar confirmação" (click)="closeConfirmModal()"><i class="pi pi-times"></i></button>
       </div>
 
       <div class="c-body" *ngIf="orderSummary as summary">
@@ -175,15 +175,15 @@
             <strong>{{ summary.planName }}</strong>
             <p>Ciclo de {{ summary.months }} Mês(es)</p>
           </div>
-          <div class="p-val">R$ {{ summary.total | number:'1.2-2' }}</div>
+          <div class="p-val">R$ {{ formatAmount(summary.total) }}</div>
         </div>
 
         <div class="savings-alert" *ngIf="summary.savings > 0">
           <i class="pi pi-gift"></i>
-          <span>Você está economizando <b>R$ {{ summary.savings | number:'1.2-2' }}</b> neste ciclo!</span>
+          <span>Você está economizando <b>R$ {{ formatAmount(summary.savings) }}</b> neste ciclo!</span>
         </div>
 
-        <label><input type="checkbox" [(ngModel)]="subscriptionTermsAccepted" /> Li e aceito os <a href="/termos" target="_blank" rel="noopener">termos da assinatura</a>, o valor e a renovação a cada {{ selectedCycle }} mês(es).</label>
+        <label class="subscription-consent"><input type="checkbox" [(ngModel)]="subscriptionTermsAccepted" /><span>Li e aceito os <a href="/termos" target="_blank" rel="noopener">termos da assinatura</a>, o valor e a renovação a cada {{ selectedCycle }} mês(es).</span></label>
         <div class="security-note">
           <i class="pi pi-shield"></i>
           <span>Checkout processado via <b>Stripe Secure Payments</b>.</span>

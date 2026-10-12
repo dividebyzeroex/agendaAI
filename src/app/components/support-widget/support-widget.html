@@ -1,4 +1,4 @@
-<button class="support-launcher" [class.owner-support]="owner" (click)="show()" aria-haspopup="dialog" [attr.aria-expanded]="open"><i class="pi pi-comment" aria-hidden="true"></i> {{owner?'Atendimentos':'Ajuda e sugestões'}}</button>
+<button class="support-launcher" [class.owner-support]="owner" (click)="show()" [attr.aria-label]="owner ? 'Atendimentos' : 'Ajuda e sugestões'" aria-haspopup="dialog" [attr.aria-expanded]="open"><i class="pi pi-comment" aria-hidden="true"></i> <span>{{owner?'Atendimentos':'Ajuda e sugestões'}}</span></button>
 <section *ngIf="open" class="support-panel" [class.owner-support]="owner" role="dialog" aria-label="Ajuda e sugestões" (keydown.escape)="open=false">
 <header><div><strong>{{owner?'Central de atendimento':'Como podemos ajudar?'}}</strong><p>{{owner?'Mensagens recebidas dos usuários':'Dúvidas, sugestões ou algo que não funcionou'}}</p></div><button (click)="open=false" aria-label="Fechar ajuda">×</button></header>
 <div class="support-scroll">

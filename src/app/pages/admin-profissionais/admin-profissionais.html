@@ -12,7 +12,7 @@
       </div>
       <div class="search-box">
         <i class="pi pi-search"></i>
-        <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." />
+        <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." aria-label="Buscar profissional" />
       </div>
       <!-- Botão Novo Profissional -->
       <button class="btn-novo-prof-header" (click)="abrirNovo()">
@@ -23,16 +23,9 @@
   </div>
 
   <!-- ── Banner: Migração SQL pendente ──────── -->
-  <div class="migration-banner" *ngIf="tabelasAusentes">
-    <div class="mig-icon">⚠️</div>
-    <div class="mig-text">
-      <strong>Migração necessária</strong>
-      <span>Execute <code>supabase-profissionais.sql</code> no SQL Editor para ativar este módulo.</span>
-    </div>
-    <a href="https://supabase.com/dashboard/project/vvanjarfwdxtzklogysy/sql/new"
-      target="_blank" class="mig-btn">
-      <i class="pi pi-external-link"></i> Abrir SQL Editor
-    </a>
+  <div class="migration-banner" *ngIf="tabelasAusentes" role="alert">
+    <div class="mig-text"><strong>Não foi possível carregar a equipe</strong>
+    <span>Tente recarregar a página. Se o problema continuar, fale conosco pelo botão de ajuda.</span></div>
   </div>
 
   <!-- ── Conteúdo principal ─────────────────── -->
@@ -51,13 +44,13 @@
       <!-- Refined Empty State -->
       <div class="empty-state-elite" *ngIf="!isLoading && profFiltrados.length === 0">
         <div class="empty-visual">
-          <div class="pulse-ring"></div>
+          
           <i class="pi pi-users"></i>
         </div>
-        <h3>Gestão de Talentos</h3>
-        <p>Sua equipe é o coração do negócio. Cadastre profissionais para delegar agendas, automatizar comissões e centralizar a performance.</p>
-        <button class="btn-primary-glow" (click)="abrirNovo()">
-          <i class="pi pi-user-plus"></i> Novo Colaborador
+        <h3>{{ filtro ? 'Nenhum profissional encontrado' : 'Cadastre sua equipe' }}</h3>
+        <p>{{ filtro ? 'Tente outro nome para encontrar o profissional.' : 'Adicione os profissionais e organize os serviços e horários de cada um.' }}</p>
+        <button *ngIf="!filtro" class="btn-primary-glow" (click)="abrirNovo()">
+          <i class="pi pi-user-plus"></i> Novo profissional
         </button>
       </div>
 

@@ -17,6 +17,11 @@ declare var confetti: any;
   styleUrl: './admin-billing.css'
 })
 export class AdminBilling implements OnInit {
+  formatAmount(value: number | undefined): string {
+    if (value == null) return '—';
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
   private cdr = inject(ChangeDetectorRef);
   private billing = inject(BillingService);
   private tracker = inject(CostTrackerService);

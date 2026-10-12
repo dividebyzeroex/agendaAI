@@ -239,39 +239,25 @@ export class EstabelecimentoService {
   async fetchHorarios() {
     const estId = this.activeIdSubject.value;
     if (!estId) return;
-
-    const { data, error } = await this.supabase
-      .rpc('get_horarios_by_estab', { p_estab_id: estId });
-    
-    if (!error) {
-      const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-      if (!data || data.length < 7) {
-        // Seed only the missing ones
-        const existingDays = data ? data.map((d: any) => d.dia_semana) : [];
-        const missingDays = days.map((d, i) => ({ dia_semana: i, dia_nome: d })).filter(d => !existingDays.includes(d.dia_semana));
-
-        const seedPromises = missingDays.map(m => 
-          this.supabase.from('horarios_funcionamento').insert({
-            estabelecimento_id: estId,
-            dia_semana: m.dia_semana,
-            dia_nome: m.dia_nome,
-            abre: '09:00',
-            fecha: '18:00',
-            ativo: false // missing days (like sunday) start closed
-          }).select().single()
-        );
-        const results = await Promise.all(seedPromises);
-        const seeded = results.map(r => r.data).filter(Boolean);
-        
-        const allHorarios = [...(data || []), ...seeded].sort((a, b) => a.dia_semana - b.dia_semana);
-        this.ngZone.run(() => {
-          this.horarios$.next(allHorarios as Horario[]);
-        });
-      } else {
-        this.ngZone.run(() => {
-          this.horarios$.next(data);
-        });
-      }
+    const { data, error } = await this.supabase.rpc('get_horarios_by_estab', { p_estab_id: estId });
+    if (error) throw error;
+    const days = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+    const existing = new Set((data ?? []).map((day: Horario) => day.dia_semana));
+    const missing = days.flatMap((dia_nome, dia_semana) => existing.has(dia_semana) ? [] : [{
+      estabelecimento_id: estId, dia_semana, dia_nome, abre: '09:00', fecha: '18:00', ativo: false
+    }]);
+    let rows = data ?? [];
+    if (missing.length) {
+      // The database unique key makes concurrent first loads idempotent.
+      const { error: seedError } = await this.supabase.from('horarios_funcionamento')
+        .upsert(missing, { onConflict: 'estabelecimento_id,dia_semana', ignoreDuplicates: true });
+      if (seedError) throw seedError;
+      const result = await this.supabase.rpc('get_horarios_by_estab', { p_estab_id: estId });
+      if (result.error) throw result.error;
+      rows = result.data ?? [];
+    }
+    if (this.activeIdSubject.value === estId) {
+      this.ngZone.run(() => this.horarios$.next([...rows].sort((a, b) => a.dia_semana - b.dia_semana)));
     }
   }
 

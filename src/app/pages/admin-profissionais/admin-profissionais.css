@@ -31,16 +31,16 @@
 .btn-primary-glow:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(var(--primary-rgb), 0.3); filter: brightness(1.1); }
 
 /* ── EMPTY STATE GLASS ───────────────────────── */
-.empty-state-glass {
+.empty-state-elite {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
-  text-align: center; padding: 100px 20px; background: var(--glass-bg); border-radius: var(--radius-xl);
+  text-align: center; padding: 40px 24px; background: var(--glass-bg); border-radius: var(--radius-xl);
   border: 1px dashed var(--glass-border); margin-top: 20px;
 }
 .empty-visual {
-  position: relative; width: 120px; height: 120px;
-  display: flex; align-items: center; justify-content: center; margin-bottom: 30px;
+  position: relative; width: 64px; height: 64px;
+  display: flex; align-items: center; justify-content: center; margin-bottom: 20px;
 }
-.empty-visual i { font-size: 3rem; color: var(--primary-color); z-index: 2; }
+.empty-visual i { font-size: 1.75rem; color: var(--primary-color); z-index: 2; }
 .pulse-ring {
   position: absolute; width: 100%; height: 100%; border-radius: 50%;
   border: 2px solid var(--primary-color); animation: pulse 2s infinite; opacity: 0;
@@ -49,7 +49,7 @@
   0% { transform: scale(0.6); opacity: 0.8; }
   100% { transform: scale(1.4); opacity: 0; }
 }
-.empty-state-elite h3 { font-size: var(--font-2xl); font-weight: var(--weight-black); color: var(--text-main); margin-bottom: var(--space-md); }
+.empty-state-elite h3 { font-size: var(--font-lg); font-weight: var(--weight-bold); color: var(--text-main); margin-bottom: var(--space-md); }
 .empty-state-elite p { max-width: 500px; color: var(--text-muted); font-size: var(--font-md); line-height: 1.6; margin-bottom: var(--space-2xl); }
 
 /* ── GRID DE PROFISSIONAIS ─────────────────────── */
@@ -181,7 +181,7 @@
 .opacity-inativo { opacity: 0.6; filter: grayscale(0.8); }
 
 /* ── PAINEL GLASS ───────────────────── */
-.main-layout { display: flex; transition: all var(--transition-smooth); min-height: 80vh; }
+.main-layout { display: flex; transition: all var(--transition-smooth); min-height: 0; }
 .prof-list-area { flex: 1; min-width: 0; }
 
 .edit-panel-glass {
@@ -418,4 +418,14 @@ textarea {
  .color-picker-grid {grid-template-columns:repeat(4,minmax(0,1fr));}
  .color-picker-grid button {min-height:44px;}
  .card-actions-ent {flex-wrap:wrap; gap:12px;}
+}
+
+.empty-visual{background:var(--active-bg);border-radius:16px;}
+.prof-card-ent:hover{transform:none;}
+@media(max-width:768px){
+ .header-actions,.header-actions .search-box{width:100%;}
+ .btn-novo-prof-header{width:100%;justify-content:center;min-height:48px;}
+ .prof-grid-elite{grid-template-columns:minmax(0,1fr);}
+ .empty-state-elite{padding:32px 20px;margin-top:0;}
+ .empty-state-elite p{font-size:14px;margin-bottom:20px;}
 }

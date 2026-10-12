@@ -427,3 +427,38 @@
  .plans-grid {grid-template-columns:minmax(0,1fr);}
  .billing-wrapper,.plan-card {min-width:0;}
 }
+
+/* Billing uses a self-contained dialog, above navigation and contextual help. */
+.billing-body,.cycle-tabs-container,.cycle-tabs,.plan-card-pro{min-width:0;max-width:100%;}
+.cycle-tabs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;max-width:680px;}
+.cycle-tab{padding:12px 8px;min-height:56px;white-space:normal;}
+.plans-grid-modern{grid-template-columns:minmax(0,1fr);max-width:720px;margin-inline:auto;}
+.plan-card-pro:hover{transform:none;}
+.modal-backdrop{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;padding:24px;background:rgba(15,23,42,.55);backdrop-filter:blur(4px);}
+.confirm-card{box-sizing:border-box;width:100%;max-width:560px;max-height:calc(100dvh - 48px);overflow-y:auto;background:var(--bg-color,#fff);color:var(--text-main);border:1px solid var(--glass-border);border-radius:20px;box-shadow:0 24px 80px #0f172a40;}
+.c-head{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px;border-bottom:1px solid var(--glass-border);}
+.c-head h4{margin:0;font-size:1.125rem;}
+.btn-close{width:44px;height:44px;flex-shrink:0;border:0;border-radius:12px;background:var(--active-bg);color:var(--text-main);cursor:pointer;}
+.c-body{padding:20px;}
+.plan-preview{gap:16px;flex-wrap:wrap;padding:16px;}
+.p-val{font-size:1.75rem;white-space:nowrap;}
+.subscription-consent{display:flex;align-items:flex-start;gap:12px;font-size:.9rem;line-height:1.6;}
+.subscription-consent input{flex:0 0 20px;width:20px;height:20px;margin-top:3px;}
+.security-note{margin:20px 0 0;line-height:1.5;}
+.c-footer{display:flex;gap:12px;padding:16px 20px calc(20px + env(safe-area-inset-bottom));border-top:1px solid var(--glass-border);}
+.c-footer button{flex:1;min-height:48px;padding:12px;border-radius:12px;font:inherit;cursor:pointer;border:1px solid var(--glass-border);}
+.btn-primary-pro{background:var(--primary-color);color:white;}
+.c-footer button:disabled{opacity:.5;cursor:not-allowed;}
+@media(max-width:768px){
+ .cycle-tabs{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .cycle-tabs-container{margin-bottom:24px;}
+ .plan-card-pro,.simple-section{padding:20px;border-radius:16px;}
+ .simple-section{margin-top:24px;}
+ .plan-badge-active{position:static;align-self:flex-start;margin-bottom:12px;}
+ .p-pro-price{flex-wrap:wrap;}
+ .f-pro-item{align-items:flex-start;line-height:1.5;}
+ .grace-period-banner,.success-banner-modern{padding:20px;flex-wrap:wrap;gap:12px;}
+ .confirm-card{max-height:calc(100dvh - 16px);border-radius:20px 20px 0 0;}
+ .c-head,.c-body{padding:16px;}
+ .c-footer{padding-inline:16px;flex-wrap:wrap;}
+}

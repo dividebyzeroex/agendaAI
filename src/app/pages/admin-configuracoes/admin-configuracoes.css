@@ -170,3 +170,27 @@
  .link-actions {flex-wrap:wrap;}
  .tab-btn {flex-shrink:0; min-height:44px; padding:10px 14px;}
 }
+
+/* Consistent, compact settings surfaces. */
+.link-card::before,.plan-card::before{display:none;}
+.link-card:hover,.plan-card:hover{transform:none;box-shadow:var(--elite-shadow);}
+.link-icon{font-size:22px;color:var(--primary-color);filter:none;line-height:1.5;}
+.bento-grid{gap:16px;grid-template-columns:repeat(3,minmax(0,1fr));}
+.bento-card,.link-card-header>div{min-width:0;}
+.link-box{flex-wrap:wrap;}
+.link-url{min-width:0;overflow-wrap:anywhere;white-space:normal;}
+.btn-copy,.btn-preview,.btn-save{min-height:44px;justify-content:center;}
+.pro-link-card .link-url{color:var(--primary-color);}
+.btn-copy.pro{background:var(--primary-color);}
+.horario-row.fechado{opacity:1;background:var(--glass-bg);}
+.icon-btn{min-width:44px;min-height:44px;}
+@media(max-width:900px){.bento-grid{grid-template-columns:minmax(0,1fr);}.bento-grid .bento-wide{grid-column:1;}}
+@media(max-width:768px){
+ .tabs-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:100%;overflow:visible;}
+ .tab-btn{min-width:0;justify-content:center;padding:10px 6px;font-size:13px;}
+ .horario-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px 12px;align-items:center;}
+ .horario-fields{grid-column:1/-1;}
+ .dia-toggle{min-height:40px;}
+ .card-header-row{align-items:flex-start;}
+ .card-header-row button{width:100%;min-height:44px;}
+}
