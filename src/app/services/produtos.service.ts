@@ -23,6 +23,8 @@ export class ProdutosService {
   private estService = inject(EstabelecimentoService);
   private ngZone = inject(NgZone);
 
+  public error$ = new BehaviorSubject<string>('');
+  private loadVersion = 0;
   public produtos$ = new BehaviorSubject<Produto[]>([]);
   public isLoading$ = new BehaviorSubject<boolean>(false);
 
@@ -31,12 +33,17 @@ export class ProdutosService {
       if (id) {
         this.fetchProdutos(id);
       } else {
+        this.loadVersion++;
         this.produtos$.next([]);
+        this.isLoading$.next(false);
+        this.error$.next('');
       }
     });
   }
 
   async fetchProdutos(estId: string) {
+    const version = ++this.loadVersion;
+    this.error$.next('');
     this.ngZone.run(() => this.isLoading$.next(true));
     try {
       const { data, error } = await this.supabase
@@ -47,12 +54,17 @@ export class ProdutosService {
       
       if (error) throw new Error(parseSupabaseError(error));
       
-      this.ngZone.run(() => this.produtos$.next(data as Produto[]));
+      if (version === this.loadVersion) this.ngZone.run(() => this.produtos$.next(data ?? []));
     } catch (e: any) {
-      console.error('Erro ao buscar produtos:', e.message);
+      if (version === this.loadVersion) this.error$.next('Não foi possível carregar os produtos. Tente novamente.');
     } finally {
-      this.ngZone.run(() => this.isLoading$.next(false));
+      if (version === this.loadVersion) this.ngZone.run(() => this.isLoading$.next(false));
     }
+  }
+
+  async retryLoad() {
+    const id = this.estService.estabelecimento$.value?.id;
+    if (id) await this.fetchProdutos(id);
   }
 
   async saveProduto(p: Produto): Promise<Produto> {

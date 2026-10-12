@@ -1,3 +1,4 @@
+<div *ngIf="clienteService.error$ | async as loadError" role="alert">{{loadError}} <button (click)="clienteService.fetchClientes()" [disabled]="isLoading">Tentar novamente</button></div>
 <div class="ag-page">
   <div class="page-header">
     <div>

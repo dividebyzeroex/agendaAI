@@ -1,4 +1,5 @@
-import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
@@ -13,10 +14,11 @@ import { NovoClienteModalComponent } from '../../components/novo-cliente-modal/n
   styleUrls: ['./admin-clientes.css']
 })
 export class AdminClientes implements OnInit {
-  private clienteService = inject(ClienteService);
+  public clienteService = inject(ClienteService);
   private smsService     = inject(SmsService);
   private cdr            = inject(ChangeDetectorRef);
 
+  private destroyRef = inject(DestroyRef);
   clientes: Cliente[] = [];
   filteredClientes: Cliente[] = [];
   searchQuery = '';
@@ -30,10 +32,11 @@ export class AdminClientes implements OnInit {
   };
 
   ngOnInit() {
-    this.clienteService.clientes$.subscribe(data => {
+    this.clienteService.loading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => { this.isLoading = v; this.cdr.markForCheck(); });
+    this.clienteService.clientes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
       this.clientes = data;
       this.applyFilter();
-      this.isLoading = false;
+
       this.cdr.detectChanges();
     });
   }

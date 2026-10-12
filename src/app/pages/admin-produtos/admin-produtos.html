@@ -1,3 +1,4 @@
+<div *ngIf="svc.error$ | async as loadError" role="alert">{{loadError}} <button (click)="svc.retryLoad()" [disabled]="isLoading">Tentar novamente</button></div>
 <div class="ag-page">
   <!-- Header -->
   <header class="page-header">

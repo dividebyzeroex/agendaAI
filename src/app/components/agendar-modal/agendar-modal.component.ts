@@ -1,4 +1,5 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
@@ -40,6 +41,9 @@ export interface AgendamentoForm {
  
       <!-- Body Scrollable com Blur -->
       <div class="modal-body custom-scroll">
+        <div *ngIf="catalogError" role="alert">{{ catalogError }} <button (click)="loadCatalog()" [disabled]="loadingCatalog">Tentar novamente</button></div>
+        <p *ngIf="!loadingCatalog && !catalogError && !servicos.length">Nenhum serviço cadastrado. Adicione um serviço em Configurações antes de agendar.</p>
+        <p *ngIf="!loadingCatalog && !catalogError && !profissionais.length">Nenhum profissional disponível. Cadastre sua equipe antes de agendar.</p>
  
         <!-- Seção: Cliente Inteligente -->
         <div class="elite-section">
@@ -127,7 +131,7 @@ export interface AgendamentoForm {
               </div>
             </div>
             
-            <div class="empty-state-mini" *ngIf="servicos.length === 0">
+            <div class="empty-state-mini" *ngIf="loadingCatalog">
               <i class="pi pi-spin pi-spinner"></i> Sincronizando catálogo...
             </div>
           </div>
@@ -436,26 +440,39 @@ export class AgendarModalComponent implements OnInit {
     return d.toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
   }
 
-  async ngOnInit() {
-    // Forçar atualização do catálogo de serviços
-    await this.estabelecimento.fetchServicos();
-    this.estabelecimento.servicos$.subscribe(s => {
+  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+  loadingCatalog = false;
+  catalogError = '';
+
+  ngOnInit() {
+    this.estabelecimento.servicos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
       this.servicos = s;
-      console.log('[AgendarModal] Servicos sincronizados:', s.length);
+      this.cdr.markForCheck();
     });
-
-    const estId = this.estabelecimento.estabelecimento$.value?.id;
-    const rawPros = await this.proService.fetchProfissionais(estId || undefined);
-    
-    // Filtro de Unicidade (Distinct por ID) para erradicar duplicatas
-    const uniquePros = Array.from(new Map(rawPros.map(p => [p.id, p])).values());
-    
-    this.profissionais = await Promise.all(uniquePros.map(async p => ({
-      ...p,
-      nome: await this.security.decryptData(p.nome) || p.nome
-    })));
-
     document.addEventListener('click', this._closeDropdown);
+    void this.loadCatalog();
+  }
+
+  async loadCatalog() {
+    if (this.loadingCatalog) return;
+    this.loadingCatalog = true;
+    this.catalogError = '';
+    this.cdr.markForCheck();
+    try {
+      const estId = this.estabelecimento.estabelecimento$.value?.id;
+      if (!estId) throw new Error('Não foi possível identificar o estabelecimento. Reabra a agenda.');
+      const [, rawPros] = await Promise.all([
+        this.estabelecimento.fetchServicos(), this.proService.fetchProfissionais(estId)
+      ]);
+      const unique = Array.from(new Map(rawPros.map(p => [p.id, p])).values());
+      this.profissionais = await Promise.all(unique.map(async p => ({ ...p, nome: await this.security.decryptData(p.nome) || p.nome })));
+    } catch {
+      this.catalogError = 'Não foi possível carregar serviços e profissionais. Verifique sua conexão e tente novamente.';
+    } finally {
+      this.loadingCatalog = false;
+      if (!this.destroyRef.destroyed) this.cdr.markForCheck();
+    }
   }
 
   ngOnDestroy() {
@@ -505,7 +522,7 @@ export class AgendarModalComponent implements OnInit {
   }
 
   async confirmar() {
-    if (!this.isFormValido()) return;
+    if (this.saving || this.loadingCatalog || this.catalogError || !this.isFormValido()) return;
     this.saving = true;
     this.erro   = '';
 
@@ -545,6 +562,7 @@ export class AgendarModalComponent implements OnInit {
       this.erro = e.message || 'Erro ao salvar agendamento.';
     } finally {
       this.saving = false;
+      if (!this.destroyRef.destroyed) this.cdr.markForCheck();
     }
   }
 

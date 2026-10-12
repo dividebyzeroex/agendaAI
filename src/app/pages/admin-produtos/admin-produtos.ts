@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProdutosService, Produto } from '../../services/produtos.service';
@@ -11,6 +12,8 @@ import { ProdutosService, Produto } from '../../services/produtos.service';
   styleUrls: ['./admin-produtos.css']
 })
 export class AdminProdutos implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
   public svc = inject(ProdutosService);
   
   produtos: Produto[] = [];
@@ -24,8 +27,8 @@ export class AdminProdutos implements OnInit {
   prodAtual: Partial<Produto> = {};
 
   ngOnInit() {
-    this.svc.produtos$.subscribe(p => this.produtos = p);
-    this.svc.isLoading$.subscribe(l => this.isLoading = l);
+    this.svc.produtos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(p => { this.produtos = p; this.cdr.markForCheck(); });
+    this.svc.isLoading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(l => { this.isLoading = l; this.cdr.markForCheck(); });
   }
 
   abrirNovo() {
@@ -65,6 +68,7 @@ export class AdminProdutos implements OnInit {
       this.erro = e.message;
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 

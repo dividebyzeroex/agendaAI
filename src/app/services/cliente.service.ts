@@ -25,11 +25,15 @@ export class ClienteService {
   private estService = inject(EstabelecimentoService);
   private security = inject(SecurityService);
 
+  loading$ = new BehaviorSubject(false);
+  error$ = new BehaviorSubject('');
+  private loadVersion = 0;
   clientes$ = new BehaviorSubject<Cliente[]>([]);
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
-      if (id) this.fetchClientes();
+      if (id) void this.fetchClientes();
+      else { this.loadVersion++; this.clientes$.next([]); this.loading$.next(false); this.error$.next(''); }
     });
     this.subscribeRealtime();
   }
@@ -45,19 +49,20 @@ export class ClienteService {
   }
 
   async fetchClientes() {
-    const currentId = (this.estService as any)['activeIdSubject'].value; 
-    
+    const currentId = (this.estService as any)['activeIdSubject'].value;
     if (!currentId) return;
-
-    const { data, error } = await this.supabase
-      .rpc('get_clientes_by_estab', { p_estab_id: currentId });
-    
-    if (!error) {
-      const decrypted = await Promise.all((data as Cliente[] || []).map((c: Cliente) => 
-        this.security.decryptObject(c, ['nome', 'telefone', 'email', 'observacoes'])
-      ));
-
-      this.ngZone.run(() => this.clientes$.next(decrypted || []));
+    const version = ++this.loadVersion;
+    this.loading$.next(true);
+    this.error$.next('');
+    try {
+      const {data,error} = await this.supabase.rpc('get_clientes_by_estab', {p_estab_id:currentId});
+      if (error) throw error;
+      const decrypted = await Promise.all((data as Cliente[] || []).map(c => this.security.decryptObject(c, ['nome','telefone','email','observacoes'])));
+      if (version === this.loadVersion) this.ngZone.run(() => this.clientes$.next(decrypted));
+    } catch {
+      if (version === this.loadVersion) this.error$.next('Não foi possível carregar os clientes. Verifique sua conexão e tente novamente.');
+    } finally {
+      if (version === this.loadVersion) this.loading$.next(false);
     }
   }
 

@@ -1,4 +1,5 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -13,6 +14,8 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
   styleUrls: ['./admin-configuracoes.css']
 })
 export class AdminConfiguracoes implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
   private route = inject(ActivatedRoute);
   public isLoadingService = inject(EstabelecimentoService);
   private estabelecimentoService = inject(EstabelecimentoService);
@@ -33,7 +36,7 @@ export class AdminConfiguracoes implements OnInit {
   ngOnInit() {
     const tab = this.route.snapshot.queryParamMap.get('tab');
     if (tab === 'servicos' || tab === 'horarios' || tab === 'negocio' || tab === 'fidelidade') this.activeTab = tab;
-    this.estabelecimentoService.estabelecimento$.subscribe(e => { 
+    this.estabelecimentoService.estabelecimento$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => { 
       if (e) {
         this.estabelecimento = { ...e };
         if (!this.estabelecimento.config_fidelidade) {
@@ -41,9 +44,10 @@ export class AdminConfiguracoes implements OnInit {
         }
       }
       this.novoServico.emoji = this.segmentoConfig.current.emojiPadrao;
+      this.cdr.markForCheck();
     });
-    this.estabelecimentoService.servicos$.subscribe(s => (this.servicos = [...s]));
-    this.estabelecimentoService.horarios$.subscribe(h => (this.horarios = [...h]));
+    this.estabelecimentoService.servicos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => { this.servicos = [...s]; this.cdr.markForCheck(); });
+    this.estabelecimentoService.horarios$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(h => { this.horarios = [...h]; this.cdr.markForCheck(); });
   }
 
   setTab(t: typeof this.activeTab) { this.activeTab = t; }
@@ -86,6 +90,7 @@ export class AdminConfiguracoes implements OnInit {
       this.showSuccessMsg('Erro ao salvar: ' + e.message);
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 
