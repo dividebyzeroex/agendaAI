@@ -23,19 +23,19 @@ export interface AgendamentoForm {
   imports: [CommonModule, FormsModule],
   template: `
   <div class="modal-backdrop" (click)="cancelar()">
-    <div class="modal-box glass-animate" (click)="$event.stopPropagation()">
+    <div class="modal-box glass-animate" role="dialog" aria-modal="true" aria-label="Novo agendamento" (keydown.escape)="cancelar()" (click)="$event.stopPropagation()">
  
       <!-- Header Superior de Luxo -->
       <div class="modal-header">
         <div class="modal-header-info">
           <div class="glass-icon-circle"><i class="pi pi-calendar-plus"></i></div>
           <div class="header-texts">
-            <span class="header-subtitle">AgendaAi Management</span>
+            
             <h2 class="header-title">Novo Agendamento</h2>
             <span class="modal-date-tag"><i class="pi pi-clock"></i> {{ startLabel }}</span>
           </div>
         </div>
-        <button class="close-luxury" (click)="cancelar()"><i class="pi pi-times"></i></button>
+        <button class="close-luxury" aria-label="Fechar agendamento" (click)="cancelar()"><i class="pi pi-times"></i></button>
       </div>
  
       <!-- Body Scrollable com Blur -->
@@ -43,7 +43,7 @@ export interface AgendamentoForm {
  
         <!-- Seção: Cliente Inteligente -->
         <div class="elite-section">
-          <label><i class="pi pi-user"></i> Identificação do Cliente</label>
+          <label><i class="pi pi-user"></i> Cliente</label>
           
           <div class="search-container" *ngIf="!form.clienteNome">
             <div class="premium-search-box">
@@ -137,7 +137,7 @@ export interface AgendamentoForm {
  
         <!-- Seção: Profissional -->
         <div class="elite-section">
-          <label><i class="pi pi-id-card"></i> Colaborador Designado</label>
+          <label><i class="pi pi-id-card"></i> Profissional</label>
           <div class="professional-grid custom-scroll-h">
             <div
                 *ngFor="let p of profissionais"
@@ -162,7 +162,7 @@ export interface AgendamentoForm {
         <!-- Seção: Status e Notas -->
         <div class="dual-section">
           <div class="section-part">
-            <label>Prioridade/Status</label>
+            <label>Status</label>
             <div class="status-toggle">
               <button class="t-btn conf" [class.active]="form.status === 'confirmado'" (click)="form.status = 'confirmado'">
                 <i class="pi pi-check"></i>
@@ -186,9 +186,9 @@ export interface AgendamentoForm {
  
       <!-- Footer de Ações -->
       <div class="modal-footer-glass">
-        <button class="glass-btn-secondary" (click)="cancelar()">Cancelar Operação</button>
+        <button class="glass-btn-secondary" (click)="cancelar()">Cancelar</button>
         <button class="glass-btn-primary" [disabled]="saving || !isFormValido()" (click)="confirmar()">
-          <span *ngIf="!saving">Confirmar Agendamento</span>
+          <span *ngIf="!saving">Agendar</span>
           <span *ngIf="saving"><i class="pi pi-spin pi-spinner"></i> Processando...</span>
         </button>
       </div>
@@ -368,6 +368,32 @@ export interface AgendamentoForm {
     }
     .glass-btn-primary:not(:disabled):hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
     .glass-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .modal-box{background:var(--surface-color,#fff);box-shadow:0 20px 60px #09090b26;border-radius:20px;}
+    .modal-body{gap:20px;min-height:0;}
+    .modal-header,.modal-footer-glass{background:var(--surface-color,#fff);flex-shrink:0;}
+    .modal-header-info,.header-texts{min-width:0;}
+    .glass-icon-circle{flex-shrink:0;box-shadow:none;}
+    .elite-section{gap:10px;}
+    label{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:var(--text-main);}
+    .glass-dropdown{background:var(--surface-color,#fff);border-color:var(--glass-border);box-shadow:0 8px 24px #09090b1a;}
+    .c-name{color:var(--text-main);}.c-sub{color:var(--text-muted);}
+    .client-row:hover{background:var(--active-bg);}
+    .premium-search-box,textarea{border-width:1px;background:var(--bg-color);}
+    .service-card,.prof-card-glass{background:var(--surface-color,#fff);border-radius:12px;}
+    .service-card:hover{transform:none;border-color:var(--primary-color);}
+    .prof-card-glass.active{background:var(--active-bg);border-color:var(--primary-color);}
+    .modal-footer-glass button{min-height:48px;font:inherit;font-size:14px;font-weight:600;}
+    @media(max-width:768px){
+      .modal-header-info{gap:12px;}.glass-icon-circle{width:40px;height:40px;border-radius:12px;font-size:20px;}
+      .header-title{font-size:18px;line-height:1.35;}.modal-date-tag{font-size:13px;line-height:1.5;}
+      .modal-body{gap:20px;flex:1;}.modal-footer-glass{padding:12px 16px calc(12px + env(safe-area-inset-bottom));gap:10px;}
+      .modal-footer-glass button{flex:1;padding:12px 8px;}
+      .service-horizontal,.professional-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:10px;padding:4px 0;}
+      .service-card,.prof-card-glass{min-width:0;padding:12px;}.s-details,.p-name{min-width:0;overflow-wrap:anywhere;}
+      .service-card{flex-direction:column;align-items:flex-start;}.s-meta{flex-wrap:wrap;}
+      .t-btn{min-width:44px;min-height:44px;}.elite-search-input{min-width:0;font-size:16px;}
+    }
   `]
 })
 export class AgendarModalComponent implements OnInit {

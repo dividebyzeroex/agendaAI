@@ -64,8 +64,9 @@
   --text-muted: #64748b;
 
   /* Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-bg: #ffffff;
+  --surface-color: #ffffff;
+  --glass-border: #e4e4e7;
   --glass-edge: rgba(255, 255, 255, 0.6);
   --glass-blur: 24px;
 
@@ -867,3 +868,18 @@ button,a,input,select,textarea {touch-action:manipulation;}
  .ag-admin-shell .page-header p,.ag-admin-shell .bento-header p{font-size:14px;}
 }
 body:has(.modal-backdrop) .support-launcher,body:has(.modal-backdrop) .mobile-bottom-nav{visibility:hidden;}
+
+/* Opaque workspace surfaces share the landing page's editorial hierarchy. */
+body.theme-claro{--surface-color:#fff;--glass-bg:#fff;--glass-border:#e4e4e7;--bg-color:#fafafa;--text-main:#09090b;--text-muted:#52525b;--glass-blur:0px;--elite-shadow:0 2px 12px #09090b06;--radius-lg:14px;--radius-xl:20px;}
+body.theme-escuro,body.theme-translucido{--surface-color:#18181b;--glass-bg:#18181b;--glass-border:#3f3f46;--bg-color:#09090b;--text-main:#fafafa;--text-muted:#a1a1aa;--glass-blur:0px;--bg-image:none;}
+body.theme-translucido::before{display:none;}
+:is(.modal-box,.modal-panel,.evento-modal-box,.sms-modal,.ob-modal,.confirm-card,.edit-panel-glass,.glass-dropdown,.p-dialog,.p-select-overlay,.p-datepicker-panel){background:var(--surface-color,#fff)!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;color:var(--text-main);}
+:is(.ag-sidebar,.ag-topbar,.mobile-bottom-nav,.config-card,.bento-card,.glass-panel,.tabs-bar){backdrop-filter:none!important;-webkit-backdrop-filter:none!important;}
+:is(.ag-admin-shell,.owner-shell) .gradient-text{background:none;color:var(--primary-color);-webkit-text-fill-color:currentColor;}
+:is(.modal-header,.modal-footer,.modal-footer-glass,.evento-header,.c-head,.c-footer){flex-shrink:0;}
+:is(.modal-body,.evento-body,.checkout-body,.c-body){min-width:0;min-height:0;overscroll-behavior:contain;}
+@media(max-width:768px){
+ :is(.modal-box,.modal-panel,.evento-modal-box,.sms-modal,.ob-modal,.confirm-card){max-height:calc(100dvh - 12px)!important;}
+ :is(.modal-box,.modal-panel,.evento-modal-box) input::placeholder{color:var(--text-muted);opacity:1;}
+ :is(.modal-box,.modal-panel,.evento-modal-box) label{line-height:1.5;}
+}
