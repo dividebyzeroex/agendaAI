@@ -1,94 +1,71 @@
-<div class="dashboard-container" *ngIf="!isLoading && metrics; else loading">
+<div class="dashboard-container">
   <div class="header">
-    <h1>Visão Global da Plataforma</h1>
-    <p>Acompanhe o crescimento e saúde da AgendaAI em tempo real.</p>
+    <div>
+      <h1>Central de comando</h1>
+      <p>Indicadores reais do AgendaAI, consolidados para decisões de negócio.</p>
+      <p *ngIf="lastUpdated" class="metric-trend">Atualizado em {{ lastUpdated | date:'dd/MM/yyyy HH:mm' }}</p>
+    </div>
+    <button type="button" class="refresh-button" (click)="refresh()" [disabled]="isLoading">↻ Atualizar</button>
   </div>
 
-  <div class="metrics-grid">
-    <div class="metric-card">
-      <div class="metric-icon blue"><i class="pi pi-building"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Total de Clientes (Tenants)</span>
-        <span class="metric-value">{{ metrics.totalTenants }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +12% este mês</span>
+  <ng-container *ngIf="!isLoading && metrics as m">
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="metric-icon blue"><i class="pi pi-building"></i></div>
+        <div class="metric-content"><span class="metric-label">Estabelecimentos cadastrados</span><span class="metric-value">{{ m.totalTenants | number }}</span><span class="metric-trend">Total acumulado</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon green"><i class="pi pi-check-circle"></i></div>
+        <div class="metric-content"><span class="metric-label">Estabelecimentos ativos</span><span class="metric-value">{{ m.activeTenants | number }}</span><span class="metric-trend">{{ activationRate | number:'1.1-1' }}% da base</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon purple"><i class="pi pi-wallet"></i></div>
+        <div class="metric-content"><span class="metric-label">MRR estimado</span><span class="metric-value">{{ m.totalMrr | currency:'BRL' }}</span><span class="metric-trend">Estimativa, não receita conciliada</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon orange"><i class="pi pi-chart-line"></i></div>
+        <div class="metric-content"><span class="metric-label">MRR médio por ativo</span><span class="metric-value">{{ averageMrr | currency:'BRL' }}</span><span class="metric-trend">MRR estimado ÷ estabelecimentos ativos</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon blue"><i class="pi pi-calendar"></i></div>
+        <div class="metric-content"><span class="metric-label">Agendamentos</span><span class="metric-value">{{ m.totalAppointments | number }}</span><span class="metric-trend">Total histórico</span></div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-icon purple"><i class="pi pi-comments"></i></div>
+        <div class="metric-content"><span class="metric-label">Mensagens de IA</span><span class="metric-value">{{ m.aiMessagesSent | number }}</span><span class="metric-trend">Volume histórico, não tokens</span></div>
       </div>
     </div>
 
-    <div class="metric-card">
-      <div class="metric-icon green"><i class="pi pi-dollar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">MRR Estimado</span>
-        <span class="metric-value">R$ {{ metrics.totalMrr | number:'1.2-2' }}</span>
-        <span class="metric-trend positive"><i class="pi pi-arrow-up"></i> +8.5% este mês</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon purple"><i class="pi pi-calendar"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Agendamentos Transacionados</span>
-        <span class="metric-value">{{ metrics.totalAppointments | number }}</span>
-        <span class="metric-trend">Total Histórico</span>
-      </div>
-    </div>
-
-    <div class="metric-card">
-      <div class="metric-icon orange"><i class="pi pi-sparkles"></i></div>
-      <div class="metric-content">
-        <span class="metric-label">Mensagens de IA (ZAP)</span>
-        <span class="metric-value">{{ metrics.aiMessagesSent | number }}</span>
-        <span class="metric-trend">Tokens consumidos</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="charts-section">
-    <div class="chart-box">
-      <h3>Crescimento de Assinaturas</h3>
-      <div class="mock-chart">
-        <!-- Mock de gráfico de barras -->
-        <div class="bar" style="height: 30%"></div>
-        <div class="bar" style="height: 50%"></div>
-        <div class="bar" style="height: 40%"></div>
-        <div class="bar" style="height: 70%"></div>
-        <div class="bar" style="height: 90%"></div>
-        <div class="bar" style="height: 85%"></div>
-        <div class="bar" style="height: 100%"></div>
-      </div>
-    </div>
-    <div class="chart-box">
-      <h3>Uso de IA por Estabelecimento</h3>
-      <div class="mock-list">
-        <div class="mock-list-item">
-          <span>Barbearia do João</span>
-          <strong>12.4k msgs</strong>
+    <div class="charts-section">
+      <div class="chart-box">
+        <h3>Composição da base</h3>
+        <p class="metric-trend">Ativos e demais estabelecimentos cadastrados</p>
+        <div class="composition-bar" role="img" [attr.aria-label]="'Ativos: ' + m.activeTenants + ', demais: ' + inactiveTenants">
+          <div class="composition-active" [style.width.%]="activationRate"></div>
         </div>
-        <div class="mock-list-item">
-          <span>Spa Zen</span>
-          <strong>8.2k msgs</strong>
-        </div>
-        <div class="mock-list-item">
-          <span>Tattoo Studio</span>
-          <strong>5.1k msgs</strong>
+        <div class="mock-list">
+          <div class="mock-list-item"><span>Ativos</span><strong>{{ m.activeTenants | number }}</strong></div>
+          <div class="mock-list-item"><span>Demais status</span><strong>{{ inactiveTenants | number }}</strong></div>
+          <div class="mock-list-item"><span>Taxa de ativação</span><strong>{{ activationRate | number:'1.1-1' }}%</strong></div>
         </div>
       </div>
+      <div class="chart-box">
+        <h3>Ações do Owner</h3>
+        <p class="metric-trend">Acesso rápido às áreas de gestão disponíveis.</p>
+        <div class="owner-actions">
+          <a routerLink="/platform-admin/tenants">Ver estabelecimentos <i class="pi pi-arrow-right"></i></a>
+          <a routerLink="/platform-admin/tenants">Investigar contas inativas <i class="pi pi-arrow-right"></i></a>
+        </div>
+        <p class="metric-trend">Indicadores de churn, inadimplência e conversão exigem fontes financeiras e eventos históricos reconciliados.</p>
+      </div>
     </div>
+  </ng-container>
+
+  <div class="loading-state" *ngIf="isLoading"><i class="pi pi-spin pi-spinner"></i><span>Carregando indicadores...</span></div>
+  <div class="error-state" *ngIf="!isLoading && hasError">
+    <i class="pi pi-exclamation-triangle"></i>
+    <h2>Não foi possível carregar os indicadores</h2>
+    <p>Verifique a conexão e as permissões da função de métricas. Nenhum valor fictício será exibido.</p>
+    <button type="button" class="refresh-button" (click)="refresh()">Tentar novamente</button>
   </div>
 </div>
-
-<ng-template #loading>
-  <div class="loading-state" *ngIf="!hasError">
-    <i class="pi pi-spin pi-spinner"></i>
-    <span>Carregando métricas da plataforma...</span>
-  </div>
-  
-  <div class="error-state" *ngIf="hasError">
-    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
-    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
-    <p>Para garantir o funcionamento geral com dados reais (sem mocks), execute o script SQL abaixo no seu painel Supabase (SQL Editor).</p>
-    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
-      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
-      -- Execute-o para criar as funções (RPCs) necessárias.
-    </code>
-  </div>
-</ng-template>
