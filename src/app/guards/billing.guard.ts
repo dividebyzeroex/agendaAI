@@ -12,5 +12,20 @@ export const billingGuard: CanActivateFn = async (_route, state) => {
   if(lookupError||!e)return router.parseUrl('/login');
   if(state.url.includes('/admin/billing'))return true;
   const until=Math.max(Date.parse(e.trial_ends_at||'')||0,Date.parse(e.plano_expires_at||'')||0);
-  return e.active&&until>Date.now() ? true : router.parseUrl('/admin/billing');
+  if(e.active && until>Date.now()) return true;
+  // A purchase may have arrived after signup or after an existing trial expired.
+  // The server matches the verified account email and owns the tenant; never trust client-submitted IDs.
+  try {
+    const {data:{session}}=await client.auth.getSession();
+    if(session?.access_token) {
+      const response=await fetch('/api/hotmart-activate',{
+        method:'POST',headers:{Authorization:`Bearer ${session.access_token}`}
+      });
+      if(response.ok) {
+        const license=await response.json();
+        if(license.status==='active' && Date.parse(license.expiresAt)>Date.now()) return true;
+      }
+    }
+  } catch { /* Keep existing billing fallback. */ }
+  return router.parseUrl('/admin/billing');
 };
