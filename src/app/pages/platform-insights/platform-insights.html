@@ -1,0 +1,177 @@
+<div class="insights">
+  <header class="insights-header">
+    <div>
+      <p class="eyebrow">AGENDAAI / OWNER / INTELIGÊNCIA</p>
+      <h1>Inteligência do negócio</h1>
+      <p class="subtitle">Receita, aquisição e riscos operacionais reunidos para priorizar as próximas decisões.</p>
+      <p class="timestamp" *ngIf="updatedAt">Última atualização: {{updatedAt | date:'dd/MM/yyyy HH:mm':'-0300'}}</p>
+    </div>
+    <button class="refresh" type="button" (click)="refresh()" [disabled]="loading"><i class="pi pi-refresh" aria-hidden="true"></i> {{loading?'Atualizando…':'Atualizar dados'}}</button>
+  </header>
+
+  <div class="insights-toolbar">
+    <div class="tabs" role="tablist" aria-label="Áreas de inteligência">
+      <button type="button" role="tab" id="insights-tab-commercial" [attr.aria-selected]="tab==='commercial'" [class.current]="tab==='commercial'" (click)="chooseTab('commercial')"><i class="pi pi-chart-line" aria-hidden="true"></i> Comercial</button>
+      <button type="button" role="tab" id="insights-tab-finance" [attr.aria-selected]="tab==='finance'" [class.current]="tab==='finance'" (click)="chooseTab('finance')"><i class="pi pi-wallet" aria-hidden="true"></i> Financeiro</button>
+      <button type="button" role="tab" id="insights-tab-operations" [attr.aria-selected]="tab==='operations'" [class.current]="tab==='operations'" (click)="chooseTab('operations')"><i class="pi pi-shield" aria-hidden="true"></i> Operação</button>
+    </div>
+    <div class="period" role="group" aria-label="Período da análise">
+      <span>Período</span>
+      <button type="button" [class.selected]="range===30" [attr.aria-pressed]="range===30" (click)="setRange(30)">30d</button>
+      <button type="button" [class.selected]="range===90" [attr.aria-pressed]="range===90" (click)="setRange(90)">90d</button>
+      <button type="button" [class.selected]="range===365" [attr.aria-pressed]="range===365" (click)="setRange(365)">1 ano</button>
+    </div>
+  </div>
+
+  <div *ngIf="loading && !updatedAt" class="loading-state" role="status"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Carregando indicadores do seu negócio…</div>
+  <p class="error-state" role="alert" *ngIf="error">{{error}}</p>
+  <p class="data-note" *ngIf="partial"><i class="pi pi-info-circle" aria-hidden="true"></i> Algumas fontes ultrapassaram o limite de leitura de 1.000 registros (200 execuções). Os valores afetados são parciais, não totais históricos.</p>
+
+  <ng-container *ngIf="updatedAt && metrics as m">
+    <div class="summary-grid" aria-label="Indicadores executivos">
+      <article class="summary-card feature">
+        <span>Receita recorrente estimada</span>
+        <strong>{{m.totalMrr | currency:'BRL'}}</strong>
+        <small>MRR contratual · não é caixa recebido</small>
+      </article>
+      <article class="summary-card">
+        <span>Recebido no período</span>
+        <strong>{{revenue | currency:'BRL'}}</strong>
+        <small>Pagamentos reais · moeda BRL</small>
+      </article>
+      <article class="summary-card">
+        <span>Contas pagantes</span>
+        <strong>{{m.payingTenants | number}}</strong>
+        <small>{{m.activeTenants | number}} estabelecimentos ativos</small>
+      </article>
+      <article class="summary-card">
+        <span>Pontos de atenção</span>
+        <strong>{{actions.length | number}}</strong>
+        <small>Categorias com pendências identificadas</small>
+      </article>
+    </div>
+
+    <section class="attention" aria-label="Prioridades de gestão">
+      <div class="section-heading">
+        <div><p class="eyebrow">PRÓXIMAS AÇÕES</p><h2>O que merece sua atenção</h2></div>
+        <span class="hint">Ordenado por quantidade de ocorrências</span>
+      </div>
+      <div class="attention-grid" *ngIf="actions.length; else healthy">
+        <a *ngFor="let action of actions | slice:0:6" [routerLink]="action.link" class="attention-item">
+          <span class="action-icon"><i class="pi" [ngClass]="action.icon" aria-hidden="true"></i></span>
+          <span class="action-copy"><strong>{{action.title}}</strong><small>{{action.detail}}</small></span>
+          <b>{{action.count}}</b><i class="pi pi-arrow-up-right" aria-hidden="true"></i>
+        </a>
+      </div>
+      <ng-template #healthy><div class="empty-state"><i class="pi pi-check-circle"></i><strong>Sem pendências nas fontes consultadas</strong><p>Continue acompanhando as novas ocorrências.</p></div></ng-template>
+    </section>
+
+    <div [ngSwitch]="tab" class="insights-panels">
+      <div *ngSwitchCase="'commercial'" role="tabpanel" aria-labelledby="insights-tab-commercial">
+        <div class="section-heading"><div><p class="eyebrow">AQUISIÇÃO</p><h2>Da pesquisa à conversão</h2></div><a routerLink="/platform-admin/growth" class="inline-action">Abrir CRM <i class="pi pi-arrow-up-right"></i></a></div>
+        <div class="stats-row">
+          <article><span>Prospects registrados</span><strong>{{prospects.length | number}}</strong><small>Base atual, não limitada ao filtro de período</small></article>
+          <article><span>Novos sem e-mail</span><strong>{{missingEmail.length | number}}</strong><small>Precisam de enriquecimento</small></article>
+          <article><span>Abordagens enviadas</span><strong>{{sentMessages.length | number}}</strong><small>Registros do sistema no período</small></article>
+          <article><span>Taxa de resposta do funil</span><strong>{{replyRate | number:'1.1-1'}}%</strong><small>Contas respondidas ÷ contatadas</small></article>
+        </div>
+        <div class="two-panels">
+          <section class="panel">
+            <div class="section-heading compact"><h3>Funil de oportunidades</h3><span class="hint">Etapa atual no CRM</span></div>
+            <div class="funnel-line"><span>Pesquisados</span><b>{{prospects.length}}</b><div class="meter"><span [style.width.%]="100"></span></div></div>
+            <div class="funnel-line"><span>Contatados ou avançados</span><b>{{contactedLeads}}</b><div class="meter"><span [style.width.%]="prospects.length ? contactedLeads/prospects.length*100 : 0"></span></div></div>
+            <div class="funnel-line"><span>Responderam ou avançaram</span><b>{{repliedLeads}}</b><div class="meter"><span [style.width.%]="prospects.length ? repliedLeads/prospects.length*100 : 0"></span></div></div>
+            <div class="funnel-line"><span>Em teste</span><b>{{trialLeads}}</b><div class="meter"><span [style.width.%]="prospects.length ? trialLeads/prospects.length*100 : 0"></span></div></div>
+            <div class="funnel-line"><span>Convertidos</span><b>{{wonLeads}}</b><div class="meter"><span [style.width.%]="prospects.length ? wonLeads/prospects.length*100 : 0"></span></div></div>
+            <p class="footnote">O funil mostra o estado atual das oportunidades; não representa conversões ocorridas exclusivamente no período selecionado.</p>
+          </section>
+          <section class="panel">
+            <div class="section-heading compact"><h3>Composição da prospecção</h3><span class="hint">Por segmento</span></div>
+            <div class="segment" *ngFor="let group of segmentRows">
+              <div class="segment-head"><span>{{group.name}}</span><b>{{group.count}}</b></div>
+              <div class="meter"><span [style.width.%]="group.share"></span></div>
+            </div>
+            <div class="empty-state" *ngIf="!segmentRows.length">Nenhuma oportunidade registrada.</div>
+            <p class="footnote">E-mails sem autorização registrada não são classificados como elegíveis para disparos automatizados.</p>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="section-heading compact"><div><h3>Qualidade da base comercial</h3><p class="hint">Diferencie contatos prontos de contatos que exigem revisão</p></div><button type="button" class="export" (click)="exportProspects()" [disabled]="!prospects.length"><i class="pi pi-download" aria-hidden="true"></i> Exportar CSV</button></div>
+          <div class="quality-grid">
+            <div><span>Novos aguardando contato</span><strong>{{newLeads.length}}</strong></div>
+            <div><span>Elegíveis com autorização</span><strong>{{addressableLeads.length}}</strong></div>
+            <div><span>Mensagens com falha no período</span><strong>{{failedMessages.length}}</strong></div>
+            <div><span>Mensagens na fila</span><strong>{{queuedMessages.length}}</strong></div>
+          </div>
+          <p class="footnote">Exportação de registros carregados (até 1.000). Exige sessão Owner e deve ser armazenada com cuidado por conter dados comerciais.</p>
+        </section>
+      </div>
+
+      <div *ngSwitchCase="'finance'" role="tabpanel" aria-labelledby="insights-tab-finance">
+        <div class="section-heading"><div><p class="eyebrow">MONETIZAÇÃO</p><h2>Receita contratada versus recebida</h2></div><a routerLink="/platform-admin/billing" class="inline-action">Financeiro completo <i class="pi pi-arrow-up-right"></i></a></div>
+        <div class="stats-row">
+          <article><span>MRR estimado</span><strong>{{m.totalMrr | currency:'BRL'}}</strong><small>Assinaturas ativas mensalizadas</small></article>
+          <article><span>Receita recebida</span><strong>{{revenue | currency:'BRL'}}</strong><small>Pagamentos pagos no período</small></article>
+          <article><span>Valor médio por pagamento</span><strong>{{averagePayment | currency:'BRL'}}</strong><small>{{paidPayments.length}} pagamentos concluídos</small></article>
+          <article><span>Falhas de pagamento</span><strong>{{failedPayments.length}}</strong><small>Transações de produção no período</small></article>
+        </div>
+        <div class="two-panels">
+          <section class="panel">
+            <div class="section-heading compact"><h3>Recebimentos mês a mês</h3><span class="hint">Seis meses corridos</span></div>
+            <div class="revenue-chart" aria-label="Recebimentos mensais em reais">
+              <div *ngFor="let month of revenueMonths" class="chart-column">
+                <strong>{{month.total | currency:'BRL':'symbol':'1.0-0'}}</strong>
+                <div class="bar-track"><span [style.height.%]="month.percent" [class.zero]="!month.total"></span></div>
+                <small>{{month.label}}</small>
+              </div>
+            </div>
+            <p class="footnote">Somente pagamentos de produção identificados como pagos em reais. Valores brutos, antes de taxas e tributos; a série abrange os últimos seis meses independentemente do filtro.</p>
+          </section>
+          <section class="panel">
+            <div class="section-heading compact"><h3>Saúde dos recebimentos</h3><span class="hint">Período selecionado</span></div>
+            <div class="financial-row"><span>Pagamentos confirmados</span><strong>{{paidPayments.length}}</strong></div>
+            <div class="financial-row"><span>Pagamentos pendentes</span><strong>{{pendingPayments.length}}</strong></div>
+            <div class="financial-row"><span>Pagamentos com falha</span><strong>{{failedPayments.length}}</strong></div>
+            <div class="financial-row"><span>Contas pagantes / ativas</span><strong>{{payingShare | number:'1.1-1'}}%</strong></div>
+            <div class="financial-row"><span>Testes encerrando em 7 dias</span><strong>{{expiringTrials.length}}</strong></div>
+            <p class="footnote">Pagamento pendente não significa inadimplência. Não confundir faturamento contratado (MRR) com caixa realizado.</p>
+          </section>
+        </div>
+        <section class="panel">
+          <div class="section-heading compact"><div><h3>Contas em teste com prazo próximo</h3><p class="hint">Oportunidade de conversão em até sete dias</p></div><a routerLink="/platform-admin/tenants" class="inline-action">Gerenciar clientes <i class="pi pi-arrow-up-right"></i></a></div>
+          <div class="table-wrap" *ngIf="expiringTrials.length; else noExpiry">
+            <table><thead><tr><th>Estabelecimento</th><th>Plano</th><th>Término do teste</th></tr></thead><tbody>
+              <tr *ngFor="let tenant of expiringTrials"><td><strong>{{tenant.nome}}</strong></td><td>{{tenant.plano || 'Não informado'}}</td><td>{{tenant.trial_ends_at | date:'dd/MM/yyyy':'-0300'}}</td></tr>
+            </tbody></table>
+          </div>
+          <ng-template #noExpiry><div class="empty-state"><strong>Nenhum teste termina nos próximos sete dias.</strong></div></ng-template>
+        </section>
+      </div>
+
+      <div *ngSwitchCase="'operations'" role="tabpanel" aria-labelledby="insights-tab-operations">
+        <div class="section-heading"><div><p class="eyebrow">OBSERVABILIDADE</p><h2>Funcionamento e atendimento</h2></div><a routerLink="/platform-admin/control" class="inline-action">Central de ativação e suporte <i class="pi pi-arrow-up-right"></i></a></div>
+        <div class="stats-row">
+          <article><span>Solicitações abertas</span><strong>{{openTickets.length}}</strong><small>Em aberto ou análise, acumuladas</small></article>
+          <article><span>Erros registrados</span><strong>{{recentErrors.length}}</strong><small>Eventos no período selecionado</small></article>
+          <article><span>Execuções incompletas</span><strong>{{failedRuns.length}}</strong><small>Agentes bloqueados, parciais ou com falha</small></article>
+          <article><span>Testes com prazo vencido</span><strong>{{expiredTrials.length}}</strong><small>Contas ainda marcadas como teste</small></article>
+        </div>
+        <div class="two-panels">
+          <section class="panel">
+            <div class="section-heading compact"><h3>Erros mais frequentes</h3><span class="hint">Página e código</span></div>
+            <div class="issue-row" *ngFor="let issue of errorGroups"><div><strong>{{issue.page}}</strong><small>{{issue.code}}</small></div><b>{{issue.count}}</b></div>
+            <div class="empty-state" *ngIf="!errorGroups.length"><i class="pi pi-check-circle"></i><strong>Sem eventos de erro no período.</strong></div>
+            <p class="footnote">Ocorrências registradas não equivalem necessariamente a usuários afetados ou indisponibilidade.</p>
+          </section>
+          <section class="panel">
+            <div class="section-heading compact"><h3>Últimas execuções automáticas</h3><span class="hint">Até dez registros</span></div>
+            <div class="issue-row" *ngFor="let run of lastRuns"><div><strong>{{runName(run.agent)}}</strong><small>{{run.created_at | date:'dd/MM HH:mm':'-0300'}}</small></div><span class="status-chip" [class.good]="run.status==='completed'">{{statusLabel(run.status)}}</span></div>
+            <div class="empty-state" *ngIf="!lastRuns.length"><strong>Nenhuma execução registrada no período.</strong></div>
+            <a routerLink="/platform-admin/settings" class="inline-action">Configurações de integração <i class="pi pi-arrow-up-right"></i></a>
+          </section>
+        </div>
+      </div>
+    </div>
+    <p class="sources-note"><i class="pi pi-database" aria-hidden="true"></i> Fontes: métricas Owner, CRM, pagamentos de produção, suporte, eventos de erro e histórico dos agentes no Supabase. Dados atualizados sob demanda; não há valores de demonstração.</p>
+  </ng-container>
+</div>
