@@ -1,8 +1,9 @@
 name: Temporary Owner Build Validation
 on:
+  pull_request:
+    branches: [develop]
   push:
-    branches:
-      - feat/owner-intelligence-develop
+    branches: [feat/owner-intelligence-develop]
 permissions:
   contents: read
 jobs:
