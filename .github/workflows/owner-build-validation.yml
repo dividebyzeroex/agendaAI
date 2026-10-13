@@ -1,0 +1,21 @@
+name: Temporary Owner Build Validation
+on:
+  push:
+    branches:
+      - feat/owner-intelligence-develop
+permissions:
+  contents: read
+jobs:
+  angular-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '24'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build
