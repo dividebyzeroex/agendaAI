@@ -36,7 +36,7 @@ begin
     raise exception 'Licença vinculada a outro estabelecimento';
   end if;
   if v_license.activated_at is null then
-    v_expires := now() + interval '12 months';
+    v_expires := v_license.purchase_at + interval '12 months';
     update public.hotmart_licenses set estabelecimento_id=p_estabelecimento, activated_at=now(), expires_at=v_expires,updated_at=now()
       where id=v_license.id;
   else
