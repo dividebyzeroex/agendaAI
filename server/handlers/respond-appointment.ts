@@ -1,6 +1,6 @@
-import type { VercelRequest, VercelResponse } from '../server/http.js';
+import type { VercelRequest, VercelResponse } from '../http.js';
 import { randomUUID } from 'node:crypto';
-import { adminClient, escapeHtml, handleError, HttpError, isUuid } from '../server/security.js';
+import { adminClient, escapeHtml, handleError, HttpError, isUuid } from '../security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');

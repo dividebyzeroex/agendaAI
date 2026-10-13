@@ -2,11 +2,11 @@
  * api/sms/send.ts — Vercel Serverless
  * v2: + Unicode Sanitization + Rate Limiting
  */
-import type { VercelRequest, VercelResponse } from '../../server/http.js';
+import type { VercelRequest, VercelResponse } from '../../http.js';
 import twilio from 'twilio';
-import { authorizeTenant, handleError, HttpError } from '../../server/security.js';
-import { sanitizeText, sanitizePhone } from '../../server/sanitize.js';
-import { checkAndIncrement } from '../../server/rateLimit.js';
+import { authorizeTenant, handleError, HttpError } from '../../security.js';
+import { sanitizeText, sanitizePhone } from '../../sanitize.js';
+import { checkAndIncrement } from '../../rateLimit.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Origin', '*');

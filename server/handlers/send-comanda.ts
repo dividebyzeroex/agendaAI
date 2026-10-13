@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { authorizeTenant, escapeHtml, handleError, HttpError, projectOrigin } from '../server/security.js';
+import { authorizeTenant, escapeHtml, handleError, HttpError, projectOrigin } from '../security.js';
 
 // Vercel Serverless Function
 export default async function handler(req: any, res: any) {

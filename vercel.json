@@ -3,6 +3,38 @@
   "version": 2,
   "rewrites": [
     {
+      "source": "/api/ping",
+      "destination": "/api/bridge?__handler=ping"
+    },
+    {
+      "source": "/api/hotmart-activate",
+      "destination": "/api/bridge?__handler=hotmart-activate"
+    },
+    {
+      "source": "/api/public-booking",
+      "destination": "/api/bridge?__handler=public-booking"
+    },
+    {
+      "source": "/api/respond-appointment",
+      "destination": "/api/bridge?__handler=respond-appointment"
+    },
+    {
+      "source": "/api/send-comanda",
+      "destination": "/api/bridge?__handler=send-comanda"
+    },
+    {
+      "source": "/api/trigger-workflow",
+      "destination": "/api/bridge?__handler=trigger-workflow"
+    },
+    {
+      "source": "/api/sms/send",
+      "destination": "/api/bridge?__handler=sms-send"
+    },
+    {
+      "source": "/api/cron/bot-recepcao",
+      "destination": "/api/bridge?__handler=bot-recepcao"
+    },
+    {
       "source": "/api/checkout",
       "destination": "/api/billing?action=checkout"
     },
@@ -31,6 +63,9 @@
   ],
   "functions": {
     "api/commercial.ts": {
+      "maxDuration": 60
+    },
+    "api/bridge.ts": {
       "maxDuration": 60
     }
   }

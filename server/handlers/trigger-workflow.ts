@@ -1,9 +1,9 @@
-import type { VercelRequest, VercelResponse } from '../server/http.js';
+import type { VercelRequest, VercelResponse } from '../http.js';
 import twilio from 'twilio';
 import { Resend } from 'resend';
-import { authorizeTenant, escapeHtml, handleError, HttpError, projectOrigin } from '../server/security.js';
-import { sanitizePhone } from '../server/sanitize.js';
-import { checkAndIncrement } from '../server/rateLimit.js';
+import { authorizeTenant, escapeHtml, handleError, HttpError, projectOrigin } from '../security.js';
+import { sanitizePhone } from '../sanitize.js';
+import { checkAndIncrement } from '../rateLimit.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });

@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '../server/http.js';
+import type { VercelRequest, VercelResponse } from '../http.js';
 
 export default function handler(req: VercelRequest, res: VercelResponse) {
   return res.status(200).json({

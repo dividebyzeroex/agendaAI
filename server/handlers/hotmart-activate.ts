@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import type { VercelRequest, VercelResponse } from '../server/http.js';
+import type { VercelRequest, VercelResponse } from '../http.js';
 
 export default async function handler(req: VercelRequest,res: VercelResponse) {
  res.setHeader('Cache-Control','no-store');
