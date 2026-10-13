@@ -3,6 +3,7 @@
  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar. Os dados anteriores, quando disponíveis, foram preservados.</p>
  <div class="loading-state" role="status" *ngIf="isLoading&&!metrics">Carregando seu negócio…</div>
  <ng-container *ngIf="metrics as m">
+ <a routerLink="/platform-admin/insights" class="insights-shortcut"><i class="pi pi-chart-bar" aria-hidden="true"></i><span>Inteligência do negócio</span><i class="pi pi-arrow-up-right" aria-hidden="true"></i></a>
  <div class="overview-strip"><span><span class="status-dot" [class.online]="billing?.ready"></span>{{billing?.ready&&billing?.mode==='live'?'Stripe pronto para cobranças':'Stripe: verificar configuração'}}</span><span>{{enabledAgents}} rotina(s) habilitada(s)</span><span class="updated">Atualizado {{updatedAt|date:'dd/MM HH:mm':'-0300'}}</span></div>
  <div class="metrics-grid">
   <article class="metric-card accent"><div class="metric-top"><span>Receita recorrente mensal</span><i class="pi pi-wallet"></i></div><strong class="metric-value">{{m.totalMrr|currency:'BRL'}}</strong><small>Valor mensalizado de contratos ativos</small><a routerLink="/platform-admin/billing">Ver financeiro <i class="pi pi-arrow-up-right"></i></a></article>
