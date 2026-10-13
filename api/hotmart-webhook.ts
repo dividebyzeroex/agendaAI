@@ -10,7 +10,7 @@ const eq = (a: string, b: string) => {
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control','no-store');
   if(req.method !== 'POST') return respond(res,405,{error:'Método não permitido'});
-  const url=process.env['SUPABASE_URL'] || process.env['VITE_SUPABASE_URL'];
+  const url=process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'];
   const key=process.env['SUPABASE_SERVICE_ROLE_KEY'];
   const hottok=process.env['HOTMART_HOTTOK'];
   const product=process.env['HOTMART_PRODUCT_ID'];
