@@ -126,6 +126,10 @@ export class Onboarding implements OnInit {
       // Connect the newly created tenant to its explicitly consented commercial journey.
       const enrolled=await fetch('/api/commercial?action=enroll',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})});
       if(!enrolled.ok)throw new Error('Empresa criada; não foi possível concluir o cadastro comercial. Tente novamente.');
+      // Compradores Hotmart recebem automaticamente a licença após criar a barbearia.
+      // A inexistência de compra não impede o onboarding convencional.
+      const activation=await fetch('/api/hotmart-activate',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`}});
+      if(!activation.ok && activation.status!==503) console.warn('Ativação Hotmart pendente; cliente pode tentar novamente no próximo acesso.');
       localStorage.removeItem('ag_temp_onboarding_data');
       this.completed=true;
       await this.authService.redirectAfterLogin();
