@@ -318,6 +318,13 @@
                    autocomplete="tel" maxlength="16" />
           </div>
 
+          <ng-container *ngIf="config.id === 'petshop'">
+            <div class="summary-divider"></div><div class="form-header">Sobre o pet</div>
+            <div class="field"><label for="petName">Nome do pet</label><input id="petName" [(ngModel)]="petNome" maxlength="80" placeholder="Ex: Thor" required></div>
+            <div class="field"><label for="petBreed">Raça ou espécie</label><input id="petBreed" [(ngModel)]="petRaca" maxlength="80" placeholder="Ex: Golden Retriever"></div>
+            <div class="field"><label for="petSize">Porte</label><select id="petSize" [(ngModel)]="petPorte"><option value="">Selecione</option><option>Pequeno</option><option>Médio</option><option>Grande</option></select></div>
+            <div class="field"><label for="petCare">Cuidados para este atendimento</label><input id="petCare" [(ngModel)]="petCuidados" maxlength="500" placeholder="Ex: cuidado com orelhas, sensibilidade a produtos"></div>
+          </ng-container>
           <!-- Módulo: Ordem de Serviço (Assistência Técnica) -->
           <ng-container *ngIf="config.id === 'assistencia'">
             <div class="summary-divider"></div>
@@ -349,7 +356,7 @@
         </button>
 
         <p class="disclaimer">
-          Ao confirmar, você receberá uma notificação via SMS/WhatsApp com os detalhes da reserva.
+          A confirmação aparece nesta tela. Salve os detalhes da reserva; mensagens adicionais dependem dos canais configurados pelo estabelecimento.
         </p>
       </div>
 

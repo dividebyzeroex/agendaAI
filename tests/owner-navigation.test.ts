@@ -21,14 +21,14 @@ beforeEach(async()=>{
  await ɵresolveComponentResources(url=>Promise.resolve(readFileSync(globSync('src/app/**/'+url.replace(/^\.\//,''))[0],'utf8')));
  Object.defineProperty(window,'innerWidth',{value:1200,writable:true,configurable:true});
  TestBed.resetTestingModule();
- TestBed.configureTestingModule({imports:[PlatformLayout,RootHarness],providers:[provideRouter([{path:'platform-admin',component:PlatformLayout,children:[{path:'dashboard',component:RoutePage,data:{label:'Visão geral'}},{path:'control',component:RoutePage,data:{label:'Gestão e ativação'}},{path:'tenants',component:RoutePage,data:{label:'Estabelecimentos'}},{path:'growth',component:RoutePage,data:{label:'Oportunidades'}},{path:'billing',component:RoutePage,data:{label:'Financeiro'}},{path:'settings',component:RoutePage,data:{label:'Configurações'}}]}]),{provide:AuthService,useValue:{profile$:of(null)}}]});
+ TestBed.configureTestingModule({imports:[PlatformLayout,RootHarness],providers:[provideRouter([{path:'platform-admin',component:PlatformLayout,children:[{path:'dashboard',component:RoutePage,data:{label:'Central de negócio'}},{path:'control',component:RoutePage,data:{label:'Gestão e ativação'}},{path:'tenants',component:RoutePage,data:{label:'Estabelecimentos'}},{path:'growth',component:RoutePage,data:{label:'Oportunidades'}},{path:'billing',component:RoutePage,data:{label:'Financeiro'}},{path:'observability',component:RoutePage,data:{label:'Saúde do sistema'}},{path:'settings',component:RoutePage,data:{label:'Configurações'}}]}]),{provide:AuthService,useValue:{profile$:of(null)}}]});
  TestBed.overrideComponent(PlatformLayout,{set:{template:readFileSync('src/app/layouts/platform-layout/platform-layout.html','utf8').replace('[owner]="true"',''),styles:[],styleUrls:[],imports:[CommonModule,RouterModule,SupportStub]}});
 });
 describe('Owner primary menu',()=>{
- it('renders six links to existing protected destinations',()=>{
+ it('renders seven links to existing protected destinations',()=>{
   const fixture=TestBed.createComponent(PlatformLayout);fixture.detectChanges();
   const links=[...fixture.nativeElement.querySelectorAll('.nav-menu a')] as HTMLAnchorElement[];
-  expect(links).toHaveLength(6);
+  expect(links).toHaveLength(7);
   const owner=routes.find(r=>r.path==='platform-admin')!;expect(owner.canActivate?.length).toBeGreaterThan(0);
   for(const link of links){
    const path=link.getAttribute('href')!;expect(path).toMatch(/^\/platform-admin\//);expect(owner.children!.some(r=>r.path===path.split('/').pop()&&r.loadComponent)).toBe(true);
@@ -57,7 +57,7 @@ describe('Owner primary menu',()=>{
   expect(shortcuts.map(a=>a.getAttribute('href'))).toEqual(['/platform-admin/dashboard','/platform-admin/tenants','/platform-admin/growth','/platform-admin/billing']);expect(fixture.nativeElement.querySelector('.mobile-bottom-nav button').getAttribute('aria-controls')).toBe('owner-menu');fixture.destroy();
  });
 
- it('changes the routed page for all six menu clicks and closes the mobile drawer',async()=>{
+ it('changes the routed page for all seven menu clicks and closes the mobile drawer',async()=>{
   window.innerWidth=375;
   const fixture=TestBed.createComponent(RootHarness);document.body.append(fixture.nativeElement);fixture.detectChanges();
   const router=TestBed.inject(Router);await router.navigateByUrl('/platform-admin/control');await fixture.whenStable();fixture.detectChanges();

@@ -1,3 +1,4 @@
+import { growthProposal } from '../server/growth-proposal.js';
 import { createHmac } from 'node:crypto';
 import type { VercelRequest,VercelResponse } from '../server/http.js';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
@@ -29,6 +30,7 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
  res.setHeader('Cache-Control','no-store');
  try {
   const action=String(req.query['action']||'status');
+  if(action==='ping'&&req.method==='GET')return res.status(200).json({status:'ok',message:'AgendaAi Serverless Runtime is active',timestamp:new Date().toISOString(),node_version:process.version});
   if(action==='terms'&&req.method==='GET') return res.status(200).json({name:env('BUSINESS_LEGAL_NAME'),taxId:env('BUSINESS_TAX_ID'),contact:env('BUSINESS_CONTACT_EMAIL'),address:env('BUSINESS_ADDRESS'),ready:env('CONTRACT_READY')==='true'});
   const sb=db();
   if(action==='interest' && req.method==='POST') {
@@ -84,11 +86,35 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
    if(error) return res.status(error.code==='23505'?409:500).json({error:error.code==='23505'?'Este contato já está cadastrado.':'Não foi possível salvar.'});
    return res.status(201).json({ok:true});
   }
+  if(action==='prospect-diagnosis'&&req.method==='POST'){
+   const b=req.body||{};const allowed=['unknown','migration','time','price','features','no_need','other'];
+   if(typeof b.id!=='string'||!/^[-0-9a-f]{36}$/i.test(b.id)||!allowed.includes(b.objection)||typeof b.note!=='string'||b.note.length>1000)return res.status(400).json({error:'Diagnóstico inválido.'});
+   await checked(sb.from('commercial_prospects').update({objection:b.objection,qualification_note:b.note.trim()}).eq('id',b.id));
+   await checked(sb.from('commercial_agent_runs').insert({agent:'owner',status:'completed',summary:{action:'prospect_diagnosis',prospect_id:b.id,objection:b.objection,actor:user?.id}}));
+   return res.status(200).json({ok:true});
+  }
+  if(action==='proposal-preview'&&req.method==='POST'){
+   const {data:p}=await checked(sb.from('commercial_prospects').select('business_name,segment,source_url,status,unsubscribed_at').eq('id',req.body?.id).single());
+   if(p.unsubscribed_at||['lost','unsubscribed'].includes(p.status))return res.status(409).json({error:'Contato encerrado.'});
+   const signal=String(req.body?.signal||'').trim();
+   if(signal.length<10||signal.length>500)return res.status(400).json({error:'Registre um detalhe real confirmado na fonte do negócio.'});
+   return res.status(200).json(growthProposal(p.business_name,p.segment,signal,env('PROJECT_URL')));
+  }
   if(action==='stage'&&req.method==='POST'){
    const allowed=['replied','lost'];
    if(!allowed.includes(req.body?.status))return res.status(400).json({error:'Etapa inválida.'});
    await checked(sb.from('commercial_prospects').update({status:req.body.status}).eq('id',req.body.id).is('unsubscribed_at',null));
    await checked(sb.from('commercial_messages').update({status:'suppressed'}).eq('prospect_id',req.body.id).eq('status','queued'));
+   return res.status(200).json({ok:true});
+  }
+  if(action==='user-access'&&req.method==='POST'){
+   const b=req.body||{};
+   if(typeof b.id!=='string'||!/^[-0-9a-f]{36}$/i.test(b.id)||typeof b.blocked!=='boolean')return res.status(400).json({error:'Usuário inválido.'});
+   const {data:protectedUser}=await checked(sb.rpc('platform_is_protected_user',{p_id:b.id}));
+   if(protectedUser||b.id===user?.id)return res.status(409).json({error:'Contas de proprietário são protegidas.'});
+   const {error}=await sb.auth.admin.updateUserById(b.id,{ban_duration:b.blocked?'876000h':'none'});
+   if(error)throw error;
+   await checked(sb.from('commercial_agent_runs').insert({agent:'owner',status:'completed',summary:{action:'user_access',user_id:b.id,blocked:b.blocked,actor:user?.id}}));
    return res.status(200).json({ok:true});
   }
   if(action==='tenant'&&req.method==='POST'){
@@ -128,7 +154,7 @@ async function run(sb:SupabaseClient){
   const {count}=await checked(sb.from('commercial_messages').select('id',{count:'exact',head:true}).gte('locked_at',since).in('status',['sent','sending','failed']));
   const remaining=Math.max(0,c.dailyLimit-(count||0));
   if(remaining){
-   const {data:messages}=await checked(sb.from('commercial_messages').select('*').eq('status','queued').lte('due_at',new Date().toISOString()).order('created_at').limit(remaining));
+   const {data:messages}=await checked(sb.from('commercial_messages').select('*').eq('channel','resend').eq('status','queued').lte('due_at',new Date().toISOString()).order('created_at').limit(remaining));
    const resend=new Resend(env('RESEND_API_KEY'));
    for(const m of messages||[]){
     const {data:p}=await checked(sb.from('commercial_prospects').select('*').eq('id',m.prospect_id).single());

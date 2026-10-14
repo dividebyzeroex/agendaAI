@@ -1,0 +1,4 @@
+import {expect,it} from 'vitest';
+import {growthProposal} from '../server/growth-proposal';
+it('uses a segment-specific demonstration and free attachment without an invented discount',()=>{const p=growthProposal('Pet & Cia','petshop','Vi que oferecem banho e tosa.','https://example.test');expect(p.demo).toContain('segmento=petshop');expect(p.attachment.url).toBe('https://example.test/guias/petshop.pdf');expect(p.text).toContain('R$ 97/mês');expect(p.text).toContain('sem cobrança automática');expect(p.text).toContain('Se não fizer sentido');expect(p.text).not.toContain('20%');});
+it('escapes business names and source details inside HTML',()=>{const p=growthProposal('<img src=x>','barbearia','Detalhe <script>alert(1)</script>.','https://example.test');expect(p.html).not.toContain('<script>');expect(p.html).not.toContain('<img src=x>');expect(p.html).toContain('&lt;script&gt;');});

@@ -3,13 +3,14 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ClienteService, Cliente } from '../../services/cliente.service';
+import { ClientImport } from '../../components/client-import/client-import';
 import { SmsService } from '../../services/sms.service';
 import { NovoClienteModalComponent } from '../../components/novo-cliente-modal/novo-cliente-modal.component';
 
 @Component({
   selector: 'app-admin-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, NovoClienteModalComponent],
+  imports: [CommonModule, FormsModule, NovoClienteModalComponent,ClientImport],
   templateUrl: './admin-clientes.html',
   styleUrls: ['./admin-clientes.css']
 })

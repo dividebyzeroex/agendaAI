@@ -11,7 +11,7 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "test:api": "vitest run tests/*.test.ts",
+    "test:api": "vitest run tests/*.test.ts --maxWorkers=2 --testTimeout=15000",
     "test:db": "node tests/database-migrations.mjs",
     "typecheck:api": "tsc --noEmit --target es2022 --module nodenext --moduleResolution nodenext --esModuleInterop --skipLibCheck api/*.ts server/*.ts api/cron/*.ts api/sms/*.ts"
   },

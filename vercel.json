@@ -2,6 +2,7 @@
   "name": "agenda-ai",
   "version": 2,
   "rewrites": [
+    {"source":"/api/ping","destination":"/api/commercial?action=ping"},
     {
       "source": "/api/checkout",
       "destination": "/api/billing?action=checkout"

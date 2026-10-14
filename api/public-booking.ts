@@ -26,6 +26,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cliente_metadata
     } = req.body || {};
 
+    const bookingMetadata:Record<string,string>={};
+    if(event_metadata && typeof event_metadata==='object' && !Array.isArray(event_metadata)){
+      for(const key of ['pet_nome','pet_raca','pet_porte','pet_cuidados','aparelho','defeito']){
+        if(typeof event_metadata[key]==='string')bookingMetadata[key]=event_metadata[key].trim().slice(0,key==='pet_cuidados'||key==='defeito'?500:120);
+      }
+    }
     // Validation
     if (!estabelecimento_id || !servico_id || !start || !end || !cliente_nome || !cliente_telefone) {
       return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
@@ -93,7 +99,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           estabelecimento_id,
           nome: cliente_nome,
           telefone: cliente_telefone,
-          metadata: {origin: 'public_booking'}
+          metadata: {origin: 'public_booking',...bookingMetadata}
         })
         .select('id')
         .single();
@@ -108,13 +114,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // 2. Create the agenda event
     const eventPayload: any = {
       estabelecimento_id,
-      title: `${cliente_nome.trim()} — ${service.titulo}`,
+      title: `${cliente_nome.trim()} — ${service.titulo}${bookingMetadata['pet_nome']?' · '+bookingMetadata['pet_nome']:''}`,
       start,
       end,
       cliente_id: clienteId,
       servico_id,
       status: 'confirmado',
-      metadata: {origin: 'public_booking'}
+      metadata: {origin: 'public_booking',...bookingMetadata},
+      ...(bookingMetadata['pet_nome']?{observacoes:`Pet: ${bookingMetadata['pet_nome']}. Raça/espécie: ${bookingMetadata['pet_raca']||'Não informada'}. Porte: ${bookingMetadata['pet_porte']||'Não informado'}. Cuidados: ${bookingMetadata['pet_cuidados']||'Nenhum informado'}`}:{})
     };
 
     if (profissional_id) {

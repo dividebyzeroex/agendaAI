@@ -58,6 +58,7 @@ export class Agendar implements OnInit {
   custPhone: string = '';
 
   // --- Extra Metadata (Nicho) ---
+  petNome='';petRaca='';petPorte='';petCuidados='';
   aparelho: string = '';
   defeito: string = '';
 
@@ -396,6 +397,7 @@ export class Agendar implements OnInit {
         }
         eventMeta = { aparelho: this.aparelho, defeito: this.defeito };
       }
+      if(this.config.id==='petshop'){if(!this.petNome.trim()){this.errorMsg='Informe o nome do pet.';this.isSaving=false;return;}eventMeta={pet_nome:this.petNome.trim(),pet_raca:this.petRaca.trim(),pet_porte:this.petPorte,pet_cuidados:this.petCuidados.trim()};}
       const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00-03:00`);
       const duration = this.selectedService?.duracao_min || 30;
       const endDt = new Date(startDt.getTime() + duration * 60000);

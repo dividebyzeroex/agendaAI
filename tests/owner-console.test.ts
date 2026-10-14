@@ -1,0 +1,18 @@
+// @vitest-environment jsdom
+import '@angular/compiler';
+import {readFileSync,globSync} from 'node:fs';
+import {TestBed} from '@angular/core/testing';
+import {ɵresolveComponentResources} from '@angular/core';
+import {BrowserTestingModule,platformBrowserTesting} from '@angular/platform-browser/testing';
+import {provideRouter} from '@angular/router';
+import {afterAll,beforeEach,expect,it,vi} from 'vitest';
+import {OwnerConsole} from '../src/app/pages/owner-console/owner-console';
+import {OwnerIntelligenceService} from '../src/app/services/owner-intelligence.service';
+TestBed.initTestEnvironment(BrowserTestingModule,platformBrowserTesting());
+afterAll(()=>TestBed.resetTestEnvironment());
+const sample={checked_at:'2026-10-14T20:00:00Z',period_days:30,period_start:'2026-09-14',totals:{customers:2,trials:2,subscribers:0,licensed:0,activated:0,ready:0,mrr_cents:0,received_cents:0,internal:0,unowned:1,workspaces:3},acquisition:{prospects:70,contacted:45,sent:45,failed:3,queued:5,replied:1,linked:2,status_without_evidence:7,period_sent:45},health:{errors_period:2,support_open:0,last_automation_at:null,oldest_queue_at:null,recent_errors:[],telemetry_since:null},users:[],tenants:[],segments:[],revenue:[],payments:[],messages:[],audit:[]};
+let snapshot:ReturnType<typeof vi.fn>,action:ReturnType<typeof vi.fn>;
+beforeEach(async()=>{await ɵresolveComponentResources(url=>Promise.resolve(readFileSync(globSync('src/app/**/'+url.replace(/^\.\//,''))[0],'utf8')));TestBed.resetTestingModule();snapshot=vi.fn().mockResolvedValue(sample);action=vi.fn();vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({ready:true,mode:'live'})}));TestBed.configureTestingModule({imports:[OwnerConsole],providers:[provideRouter([]),{provide:OwnerIntelligenceService,useValue:{snapshot,action}}]});});
+it('shows evidence-based totals and exposes all six management views',async()=>{const f=TestBed.createComponent(OwnerConsole);f.detectChanges();await f.componentInstance.refresh();f.detectChanges();expect(f.nativeElement.querySelectorAll('.tabs button')).toHaveLength(6);expect(f.nativeElement.querySelector('.kpis').textContent).toContain('2');expect(f.nativeElement.textContent).toContain('7 status de CRM sem mensagem');f.componentInstance.chooseTab('finance');f.detectChanges();expect(f.nativeElement.textContent).toContain('Nenhum pagamento de produção');f.componentInstance.chooseTab('health');f.detectChanges();expect(f.nativeElement.textContent).toContain('2');expect(f.nativeElement.textContent).toContain('Não é uma medição de latência global');f.destroy();});
+it('does not replace unavailable measurements with zero or a green health claim',async()=>{snapshot.mockRejectedValue(new Error('connection'));const f=TestBed.createComponent(OwnerConsole);f.detectChanges();await f.componentInstance.refresh();f.detectChanges();expect(f.nativeElement.querySelector('[role=alert]')).not.toBeNull();expect(f.nativeElement.querySelector('.kpis')).toBeNull();f.destroy();});
+it('retains prior data on refresh failure and never executes a declined access change',async()=>{const f=TestBed.createComponent(OwnerConsole);f.detectChanges();await f.componentInstance.refresh();snapshot.mockRejectedValue(new Error('timeout'));await f.componentInstance.refresh();expect(f.componentInstance.data?.totals.customers).toBe(2);vi.spyOn(window,'confirm').mockReturnValue(false);await f.componentInstance.userAccess({id:'user',email:'person@example.test',is_owner:false,banned_until:null} as any);expect(action).not.toHaveBeenCalled();expect(f.componentInstance.plainBody('<style>bad</style><p>Offer</p><script>alert(1)</script>')).toBe('Offer');f.destroy();});

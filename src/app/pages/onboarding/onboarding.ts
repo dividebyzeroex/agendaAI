@@ -62,6 +62,8 @@ export class Onboarding implements OnInit {
   async ngOnInit() {
     const {data:{user}} = await this.supabase.auth.getUser();
     if (user?.email) this.form.email=user.email;
+    const chosenSegment=localStorage.getItem('ag_signup_segment');
+    if(chosenSegment&&this.segmentOptions.some(s=>s.value===chosenSegment))this.form.segmento=chosenSegment;
     try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); if (draft.email === user?.email) this.form={...this.form,...draft,email:user?.email||''}; } catch {}
     // Recupera o email vindo da tela de cadastro de login
     const savedEmail = '';

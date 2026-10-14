@@ -7,11 +7,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const action = req.query['action'];
     if (action === 'status' && req.method === 'GET') return res.status(200).json(await operationalBillingReadiness());
-    const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET', 'owner-test-checkout':'POST', 'owner-test-status':'GET' };
+    const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET', 'owner-test-checkout':'POST', 'owner-test-status':'GET', 'owner-offer':'POST' };
     if (typeof action !== 'string' || !methods[action]) throw new BillingError(400, 'Ação inválida.');
     if (req.method !== methods[action]) { res.setHeader('Allow', methods[action]); throw new BillingError(405, 'Método não permitido.'); }
     const { db, stripe } = billingClients();
     const user = await authenticate(db, req.headers.authorization);
+
+    if(action==='owner-offer'){
+      const anon=process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY']||process.env['SUPABASE_ANON_KEY'];
+      const url=process.env['SUPABASE_URL']||process.env['NEXT_PUBLIC_SUPABASE_URL'];
+      if(!anon||!url)throw new BillingError(503,'Autorização indisponível.');
+      const {createClient}=await import('@supabase/supabase-js');
+      const scoped=createClient(url,anon,{global:{headers:{Authorization:String(req.headers.authorization)}},auth:{persistSession:false}});
+      const {data:isOwner,error:ownerError}=await scoped.rpc('is_platform_owner');
+      if(ownerError||isOwner!==true)throw new BillingError(403,'Acesso exclusivo ao proprietário.');
+      const percent=Number(req.body?.percent);const code=String(req.body?.code||'').trim().toUpperCase();
+      if(!Number.isInteger(percent)||percent<5||percent>30||!/^AG[A-Z0-9-]{5,25}$/.test(code))throw new BillingError(400,'Use código iniciado em AG e desconto entre 5% e 30%.');
+      if(!(await operationalBillingReadiness()).ready)throw new BillingError(503,'Faturamento indisponível.');
+      const expires=Math.floor(Date.now()/1000)+14*86400;
+      const coupon=await stripe.coupons.create({duration:'once',percent_off:percent,name:`AgendaAI ${code}`,metadata:{actor:user.id,reason:'activation_incentive'}},{idempotencyKey:'owner-offer-coupon:'+code});
+      const promotion=await stripe.promotionCodes.create({promotion:{type:'coupon',coupon:coupon.id},code,max_redemptions:10,expires_at:expires,restrictions:{first_time_transaction:true}},{idempotencyKey:'owner-offer-code:'+code});
+      const {error}=await db.from('commercial_agent_runs').insert({agent:'owner',status:'completed',summary:{action:'discount_created',code:promotion.code,percent,expires_at:new Date(expires*1000).toISOString(),duration:'first_invoice',max_redemptions:10,actor:user.id}});
+      if(error)throw new BillingError(503,'Cupom criado no Stripe, mas a auditoria falhou. Confira antes de divulgar.');
+      return res.status(201).json({code:promotion.code,percent,expires_at:new Date(expires*1000).toISOString(),conditions:'Desconto na primeira fatura, para primeira contratação, até 10 resgates. Válido por 14 dias.'});
+    }
 
     if (action.startsWith('owner-test-')) return await ownerPaymentTest(req,res,db,stripe,user);
 
@@ -48,7 +67,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { error: acceptanceError } = await db.from('commercial_terms_acceptances').upsert({ user_id:user.id, version:'2026-10-10', marketing_consent:false }, { onConflict:'user_id,version', ignoreDuplicates:true });
       if (acceptanceError) throw new BillingError(503, 'Não foi possível registrar as condições da assinatura.');
       const session = await stripe.checkout.sessions.create({
-        mode: 'subscription', payment_method_types: ['card'],
+        mode: 'subscription', payment_method_types: ['card'], allow_promotion_codes:true,
         ...(estab.stripe_customer_id ? { customer: estab.stripe_customer_id } : { customer_email: user.email }),
         line_items: [{ quantity: 1, price_data: { currency: 'brl', unit_amount: amount, recurring: { interval: 'month', interval_count: months }, product_data: { name: `Agenda AI — ${planId}`, description: `Assinatura recorrente de ${months} mês(es).` } } }],
         success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`, cancel_url: baseUrl,

@@ -9,6 +9,7 @@ import { platformOwnerGuard } from './guards/platform-owner.guard';
 
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
+  { path: 'demonstracao', loadComponent: () => import('./pages/product-demo/product-demo').then(m => m.ProductDemo) },
   { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.Login) },
   { path: 'termos', loadComponent: () => import('./pages/terms/terms').then(m => m.Terms) },
   { path: 'primeiro-acesso', loadComponent: () => import('./pages/primeiro-acesso/primeiro-acesso').then(m => m.PrimeiroAcesso) },
@@ -79,11 +80,11 @@ export const routes: Routes = [
     canActivate: [platformOwnerGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./pages/platform-dashboard/platform-dashboard').then(m => m.PlatformDashboard) },
+      { path: 'dashboard', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole) },
       { path: 'control', loadComponent: () => import('./components/owner-control/owner-control').then(m => m.OwnerControl) },
       { path: 'growth', loadComponent: () => import('./pages/platform-growth/platform-growth').then(m => m.PlatformGrowth) },
       { path: 'tenants', loadComponent: () => import('./pages/platform-tenants/platform-tenants').then(m => m.PlatformTenants) },
-      { path: 'observability', redirectTo: 'growth', pathMatch: 'full' },
+      { path: 'observability', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole), data: {view:'health'} },
       { path: 'social', redirectTo: 'growth', pathMatch: 'full' },
       { path: 'billing', loadComponent: () => import('./pages/platform-billing/platform-billing').then(m => m.PlatformBilling) },
       { path: 'settings', loadComponent: () => import('./pages/platform-settings/platform-settings').then(m => m.PlatformSettings) }

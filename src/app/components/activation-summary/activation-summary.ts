@@ -2,6 +2,7 @@ import { ChangeDetectorRef, Component, HostListener, inject, OnDestroy, OnInit }
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
+import { QuickStart } from '../quick-start/quick-start';
 import { Estabelecimento, EstabelecimentoService } from '../../services/estabelecimento.service';
 import { SupabaseService } from '../../services/supabase.service';
 export interface ActivationSummary {
@@ -9,7 +10,7 @@ export interface ActivationSummary {
   services_ready: boolean; staff_ready: boolean; schedule_ready: boolean; first_booking: boolean;
   appointments: number; completed: number; public_bookings: number; clients: number; cash_records: number;
 }
-@Component({selector:'app-activation-summary',standalone:true,imports:[CommonModule,RouterLink],templateUrl:'./activation-summary.html',styleUrls:['./activation-summary.css']})
+@Component({selector:'app-activation-summary',standalone:true,imports:[CommonModule,RouterLink,QuickStart],templateUrl:'./activation-summary.html',styleUrls:['./activation-summary.css']})
 export class ActivationSummaryComponent implements OnInit, OnDestroy {
   private est = inject(EstabelecimentoService);
   private db = inject(SupabaseService).client;
@@ -21,6 +22,8 @@ export class ActivationSummaryComponent implements OnInit, OnDestroy {
   summary: ActivationSummary | null = null;
   loading = false;
   error = '';
+  copied = false;
+  async shareLink(){if(!this.publicPath)return;try{await navigator.clipboard.writeText(window.location.origin+this.publicPath);this.copied=true;}catch{this.error='Não foi possível copiar. Abra o link de reservas para compartilhá-lo.';}this.cdr.markForCheck();}
   get steps() {
     const s = this.summary;
     return [

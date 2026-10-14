@@ -17,11 +17,12 @@ export class PlatformLayout {
  isSidebarOpen=false;
  isMobile=typeof window!=='undefined'&&window.innerWidth<=900;
  readonly navigation=[
-  {path:'/platform-admin/dashboard',label:'Visão geral',icon:'pi-home',section:'Operação'},
+  {path:'/platform-admin/dashboard',label:'Central de negócio',icon:'pi-home',section:'Operação'},
   {path:'/platform-admin/control',label:'Gestão e ativação',icon:'pi-compass',section:'Operação'},
   {path:'/platform-admin/tenants',label:'Estabelecimentos',icon:'pi-building',section:'Operação'},
   {path:'/platform-admin/growth',label:'Oportunidades',icon:'pi-users',section:'Crescimento'},
   {path:'/platform-admin/billing',label:'Financeiro',icon:'pi-wallet',section:'Administração'},
+  {path:'/platform-admin/observability',label:'Saúde do sistema',icon:'pi-heart',section:'Administração'},
   {path:'/platform-admin/settings',label:'Configurações',icon:'pi-cog',section:'Administração'}
  ];
  readonly mobileNavigation=this.navigation.filter(item=>['/platform-admin/dashboard','/platform-admin/tenants','/platform-admin/growth','/platform-admin/billing'].includes(item.path));

@@ -43,6 +43,7 @@ export class Landing implements OnInit {
     } catch (error) { this.pilotMessage = error instanceof Error ? error.message : 'Tente novamente.'; }
     finally { this.pilotSending = false; this.cdr.detectChanges(); }
   }
+  goToDemo(){this.router.navigate(['/demonstracao'],{queryParams:{segmento:this.activeSegmentId==='pet'?'petshop':this.activeSegmentId==='estetica'?'estetica':'barbearia'}});}
   isScrolled = false;
   isMobileMenuOpen = false;
   isAnnualBilling = false;

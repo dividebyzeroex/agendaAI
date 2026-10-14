@@ -1,3 +1,4 @@
+import { AppActivityService } from '../../services/app-activity.service';
 import { SupportWidget } from '../../components/support-widget/support-widget';
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -46,6 +47,7 @@ import { SegmentoConfigService } from '../../services/segmento-config.service';
   styleUrls: ['./admin-layout.css']
 })
 export class AdminLayout implements OnInit {
+  private activity = inject(AppActivityService);
   costTracker = inject(CostTrackerService);
   keybindings = inject(KeybindingService);
   onboarding = inject(OnboardingService);

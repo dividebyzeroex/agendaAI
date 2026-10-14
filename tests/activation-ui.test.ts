@@ -15,7 +15,7 @@ afterAll(()=>TestBed.resetTestEnvironment());
 let tenant:BehaviorSubject<any>,rpc:ReturnType<typeof vi.fn>;
 const summary={period_start:'2026-10-01',period_end:'2026-10-11',during_trial:true,services_ready:false,staff_ready:false,schedule_ready:false,first_booking:false,appointments:0,completed:0,public_bookings:0,clients:0,cash_records:0};
 beforeEach(async()=>{
- await ɵresolveComponentResources(url=>Promise.resolve(readFileSync("src/app/components/activation-summary/"+url.replace(/^\.\//,""),"utf8")));
+ await ɵresolveComponentResources(url=>Promise.resolve(readFileSync((url.includes("quick-start")?"src/app/components/quick-start/":"src/app/components/activation-summary/")+url.replace(/^\.\//,""),"utf8")));
  TestBed.resetTestingModule();tenant=new BehaviorSubject<any>({id:'a',nome:'Studio de teste',slug:'studio-teste'});rpc=vi.fn().mockResolvedValue({data:summary,error:null});
  TestBed.configureTestingModule({imports:[ActivationSummaryComponent],providers:[provideRouter([]),{provide:EstabelecimentoService,useValue:{estabelecimento$:tenant}},{provide:SupabaseService,useValue:{client:{rpc}}}]});
  TestBed.overrideComponent(ActivationSummaryComponent,{set:{template:readFileSync('src/app/components/activation-summary/activation-summary.html','utf8'),styles:[],styleUrls:[]}});
