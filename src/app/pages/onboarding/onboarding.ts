@@ -8,7 +8,6 @@ import { EstabelecimentoPublicoService } from '../../services/estabelecimento-pu
 import { SupabaseService } from '../../services/supabase.service';
 import { AuthService } from '../../services/auth.service';
 
-type Step = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
 
 @Component({
   selector: 'app-onboarding',
@@ -31,9 +30,8 @@ export class Onboarding implements OnInit {
   completed = false;
 
   // Estado do wizard
-  step: Step = 'overview';
+  slugEdited=false;
   isSaving = false;
-  flipAngle = 0; // Efeito 3D acumulativo
 
   // O registro invisível de dados (UX Seamless)
   form: any = {
@@ -65,6 +63,7 @@ export class Onboarding implements OnInit {
     const chosenSegment=localStorage.getItem('ag_signup_segment');
     if(chosenSegment&&this.segmentOptions.some(s=>s.value===chosenSegment))this.form.segmento=chosenSegment;
     try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); if (draft.email === user?.email) this.form={...this.form,...draft,email:user?.email||''}; } catch {}
+    this.cdr.markForCheck();
     // Recupera o email vindo da tela de cadastro de login
     const savedEmail = '';
     if (savedEmail) {
@@ -77,42 +76,13 @@ export class Onboarding implements OnInit {
   }
 
   onNameChange() {
-    if (this.form.nome) {
+    if (this.form.nome&&!this.slugEdited) {
       this.form.slug = EstabelecimentoPublicoService.slugify(this.form.nome);
     }
   }
 
-  getStepIndex(): number {
-    const steps: Step[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
-    return steps.indexOf(this.step);
-  }
-
-  // Máquina de Estado da Rotação
-  next() {
-    const steps: Step[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
-    const idx = this.getStepIndex();
-
-    if (idx < steps.length - 1) {
-      if (this.step === 'link') {
-        this.finalizar();
-      } else {
-        this.step = steps[idx + 1];
-        this.flipAngle -= 180; // Gira o cartão fisicamente (X graus negativos ou positivos)
-      }
-    }
-  }
-
-  back() {
-    const steps: Step[] = ['overview', 'operacao', 'identidade', 'link'];
-    const idx = this.getStepIndex();
-
-    if (idx > 0) {
-      this.step = steps[idx - 1];
-      this.flipAngle += 180;
-    }
-  }
-
   async finalizar() {
+    if(!this.form.nome.trim()||!this.form.segmento||!this.form.telefone.trim()||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(this.form.slug)){this.errorMessage='Confira nome, tipo de negócio, telefone e link de reservas.';return;}
     if (!this.termsAccepted) { this.errorMessage='Aceite as condições para iniciar o teste.'; return; }
     if (this.isSaving) return;
     this.isSaving=true; this.errorMessage='';

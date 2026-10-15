@@ -2,14 +2,14 @@ import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute,RouterLink } from '@angular/router';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-admin-configuracoes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './admin-configuracoes.html',
   styleUrls: ['./admin-configuracoes.css']
 })
@@ -34,9 +34,8 @@ export class AdminConfiguracoes implements OnInit {
   showNovoServico = false;
 
   ngOnInit() {
-    const tab = this.route.snapshot.queryParamMap.get('tab');
-    if (tab === 'servicos' || tab === 'horarios' || tab === 'negocio' || tab === 'fidelidade') this.activeTab = tab;
-    this.estabelecimentoService.estabelecimento$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => { 
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params=>{const tab=params.get('tab');if(tab==='servicos'||tab==='horarios'||tab==='negocio'||tab==='fidelidade')this.activeTab=tab;this.cdr.markForCheck();});
+    this.estabelecimentoService.estabelecimento$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => {
       if (e) {
         this.estabelecimento = { ...e };
         if (!this.estabelecimento.config_fidelidade) {

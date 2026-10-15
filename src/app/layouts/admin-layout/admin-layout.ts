@@ -1,142 +1,99 @@
-import { AppActivityService } from '../../services/app-activity.service';
-import { SupportWidget } from '../../components/support-widget/support-widget';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, ChangeDetectorRef, DestroyRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { ButtonModule } from 'primeng/button';
-import { CommandPaletteComponent } from '../command-palette/command-palette.component';
-import { MenuModule } from 'primeng/menu';
-import { AvatarModule } from 'primeng/avatar';
-import { MenuItem } from 'primeng/api';
-import { CostTrackerService } from '../../services/cost-tracker.service';
-import { KeybindingService } from '../../services/keybinding.service';
-import { OnboardingService } from '../../services/onboarding.service';
-import { OnboardingModalComponent } from '../../components/onboarding-modal/onboarding-modal';
-import { UpdateNotifierComponent } from '../../components/update-notifier/update-notifier.component';
+import { NavigationEnd, Router, RouterModule } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+import { EstabelecimentoService } from '../../services/estabelecimento.service';
+import { AppActivityService } from '../../services/app-activity.service';
 import { NotificationService } from '../../services/notification.service';
 import { NotificationCenterComponent } from '../../components/notification-center/notification-center';
-import { BillingService } from '../../services/billing.service';
 import { ToastContainerComponent } from '../../components/toast-container/toast-container.component';
-import { ThemeService, AppTheme } from '../../services/theme.service';
-import { TooltipModule } from 'primeng/tooltip';
-import { EstabelecimentoService } from '../../services/estabelecimento.service';
-import { ProfissionaisService } from '../../services/profissionais.service';
-import { AuthService } from '../../services/auth.service';
-import { map, Observable } from 'rxjs';
-import { PresenceService, OnlineUser } from '../../services/presence.service';
-import { SegmentoConfigService } from '../../services/segmento-config.service';
-
-
+import { SupportWidget } from '../../components/support-widget/support-widget';
+import { CommandPaletteComponent } from '../command-palette/command-palette.component';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [SupportWidget,
+  imports: [
     CommonModule,
     RouterModule,
-    ButtonModule,
-    CommandPaletteComponent,
-    OnboardingModalComponent,
-    UpdateNotifierComponent,
     NotificationCenterComponent,
     ToastContainerComponent,
-    MenuModule,
-    AvatarModule,
-    TooltipModule
+    SupportWidget,
+    CommandPaletteComponent,
   ],
   templateUrl: './admin-layout.html',
-  styleUrls: ['./admin-layout.css']
+  styleUrls: ['./admin-layout.css'],
 })
-export class AdminLayout implements OnInit {
+export class AdminLayout {
+  private cdr = inject(ChangeDetectorRef);
   private activity = inject(AppActivityService);
-  costTracker = inject(CostTrackerService);
-  keybindings = inject(KeybindingService);
-  onboarding = inject(OnboardingService);
-  notifService = inject(NotificationService);
-  billing = inject(BillingService);
-  estabService = inject(EstabelecimentoService);
-  segmentoConfig = inject(SegmentoConfigService);
-  authService  = inject(AuthService);
-  profService  = inject(ProfissionaisService);
-  presence     = inject(PresenceService); // Monitor de Vida em Tempo Real
-
-  showOnboarding = false;
-  isNotifOpen = false;
+  private destroy = inject(DestroyRef);
+  private router = inject(Router);
+  auth = inject(AuthService);
+  est = inject(EstabelecimentoService);
+  notifications = inject(NotificationService);
+  profile$ = this.auth.profile$;
+  tenant$ = this.est.estabelecimento$;
   isSidebarOpen = false;
-
-  userProfile$ = this.authService.profile$ as Observable<{nome: string, role: string} | null>;
-  onlineUsers$ = this.presence.onlineUsers$;
-  userMenuItems: MenuItem[] | undefined;
-
-  async ngOnInit() {
-    // Busca a config do estabelecimento para pegar o slug real
-    let urlPublica = '/agendar';
-    const configData = this.estabService.estabelecimento$.getValue();
-    if (configData && configData.slug) {
-      urlPublica = `/agendar/${configData.slug}`;
-    }
-
-    this.userMenuItems = [
-      {
-        label: 'Minha Conta',
-        icon: 'pi pi-user',
-        routerLink: ['/admin/configuracoes']
-      },
-      {
-        label: 'Configurações',
-        icon: 'pi pi-cog',
-        routerLink: ['/admin/configuracoes']
-      },
-      {
-        label: 'Ver Página Pública',
-        icon: 'pi pi-external-link',
-        url: urlPublica,
-        target: '_blank'
-      },
-      { separator: true },
-      {
-        label: 'Sair da Plataforma',
-        icon: 'pi pi-sign-out',
-        command: () => this.logout()
-      }
-    ];
-
-    await this.onboarding.checkOnboarding();
-    this.onboarding.showOnboarding$.subscribe(show => (this.showOnboarding = show));
-
-
+  isNotifOpen = false;
+  isMobile = window.innerWidth <= 900;
+  copied = false;
+  copyError = '';
+  readonly isDono = this.profile$.pipe(map((p) => p?.role === 'dono'));
+  readonly canClients = this.profile$.pipe(
+    map((p) => ['dono', 'secretaria', 'recepcionista'].includes(p?.role || '')),
+  );
+  readonly canCash = this.profile$.pipe(
+    map((p) => ['dono', 'financeiro', 'recepcionista'].includes(p?.role || '')),
+  );
+  readonly isFinance = this.profile$.pipe(
+    map((p) => ['dono', 'financeiro'].includes(p?.role || '')),
+  );
+  readonly isOperational = this.profile$.pipe(map((p) => p?.role === 'operacional'));
+  constructor() {
+    this.router.events
+      .pipe(
+        filter((e) => e instanceof NavigationEnd),
+        takeUntilDestroyed(this.destroy),
+      )
+      .subscribe(() => this.closeSidebar());
   }
-
-  get isDono(): Observable<boolean> {
-    return this.userProfile$.pipe(map(p => p?.role === 'dono'));
+  get managementActive() {
+    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|primeiros-passos|portal)/.test(
+      this.router.url,
+    );
   }
-
-  get isAdminOrFin(): Observable<boolean> {
-    return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
+  get publicPath() {
+    const slug = this.est.estabelecimento$.value?.slug;
+    return slug ? '/agendar/' + encodeURIComponent(slug) : '';
   }
-
-  get isOperacional(): Observable<boolean> {
-    return this.userProfile$.pipe(map(p => p?.role === 'operacional'));
-  }
-
-  get isSecretaria(): Observable<boolean> {
-    return this.userProfile$.pipe(map(p => p?.role === 'secretaria'));
-  }
-
-
-
-  logout() {
-    this.authService.logout();
-  }
-
-
-
   toggleSidebar() {
     this.isSidebarOpen = !this.isSidebarOpen;
   }
-
   closeSidebar() {
-    if (window.innerWidth <= 768) {
-      this.isSidebarOpen = false;
+    this.isSidebarOpen = false;
+  }
+  @HostListener('window:resize') resize() {
+    this.isMobile = window.innerWidth <= 900;
+    if (!this.isMobile) this.closeSidebar();
+  }
+  @HostListener('window:keydown.escape') escape() {
+    this.closeSidebar();
+    this.isNotifOpen = false;
+  }
+  async copyLink() {
+    if (!this.publicPath) return;
+    try {
+      await navigator.clipboard.writeText(window.location.origin + this.publicPath);
+      this.copied = true;
+      this.copyError = '';
+    } catch {
+      this.copyError = 'Abra seu link nas configurações para compartilhar.';
     }
+    this.cdr.markForCheck();
+  }
+  logout() {
+    void this.auth.logout();
   }
 }

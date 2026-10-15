@@ -1,0 +1,29 @@
+:host {
+  display: block;
+}
+.page-heading h1 {
+  margin-top: 12px;
+  max-width: 760px;
+  overflow-wrap: anywhere;
+}
+.main-actions {
+  margin: 28px 0;
+}
+.detail-notes,
+.receipt {
+  padding: 24px 0;
+  border-top: 1px solid var(--glass-border);
+}
+.detail-notes p {
+  white-space: pre-line;
+  max-width: 760px;
+}
+.receipt .field {
+  max-width: 460px;
+}
+.danger {
+  color: #b13d35 !important;
+}
+.disclosure .form-layout {
+  max-width: 540px;
+}

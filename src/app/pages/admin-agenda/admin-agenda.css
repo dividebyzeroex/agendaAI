@@ -495,3 +495,6 @@
   .appointment-info>span:not(.status-pill) {font-size:13px; color:var(--text-muted);}
   .day-empty {padding:24px 12px; color:var(--text-muted); line-height:1.5;}
 }
+
+/* Quiet calendar workspace */
+.agenda-wrapper{padding:0}.calendar-card-premium{border:1px solid var(--glass-border);border-radius:12px;box-shadow:none;background:var(--surface-color,#fff);padding:20px}.view-toggles{margin-bottom:20px}.stat-chip-premium{display:none}:host ::ng-deep .fc .fc-button{border-radius:7px!important;box-shadow:none!important;font-size:13px!important;padding:8px 12px!important}:host ::ng-deep .fc .fc-toolbar-title{font-size:18px;font-weight:600}:host ::ng-deep .simple-calendar-event{display:flex;flex-direction:column;gap:3px;padding:4px 6px;overflow:hidden;font-size:12px}:host ::ng-deep .simple-calendar-event strong{font-weight:550;overflow:hidden;text-overflow:ellipsis}.day-appointment{box-shadow:none;border-radius:0;border:0;border-bottom:1px solid var(--glass-border);background:none}.day-new{display:none}@media(max-width:768px){.calendar-card-premium{padding:14px}.customer-page .page-heading .action{width:100%}}

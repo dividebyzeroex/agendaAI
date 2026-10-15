@@ -1,0 +1,88 @@
+<div class="customer-page">
+  <a class="back-link" routerLink="/admin/clientes"
+    ><i class="pi pi-arrow-left" aria-hidden="true"></i>Voltar aos clientes</a
+  >
+  <header class="page-heading">
+    <div>
+      <h1>{{ isEdit ? 'Editar cliente' : 'Novo cliente' }}</h1>
+      <p>Comece com o nome. Complete os outros dados quando precisar.</p>
+    </div>
+  </header>
+  <p *ngIf="clients.error$|async as loadError" class="feedback error" role="alert">{{loadError}} <button type="button" class="text-action" (click)="clients.fetchClientes()">Tentar novamente</button></p>
+  <p *ngIf="loading" role="status">Carregando cliente…</p>
+  <p *ngIf="isEdit && !loading && !cliente && !(clients.error$|async)" role="alert">
+    Cliente não encontrado. Volte à lista e tente novamente.
+  </p>
+  <form *ngIf="!loading && (!isEdit || cliente)" class="form-layout" (ngSubmit)="confirmar()">
+    <section class="form-section">
+      <label class="field"
+        >Nome<input
+          name="name"
+          [(ngModel)]="form.nome"
+          required
+          maxlength="150"
+          autocomplete="name"
+          placeholder="Nome do cliente" /></label
+      ><label class="field"
+        >Telefone <span class="helper">Opcional</span
+        ><input
+          type="tel"
+          name="phone"
+          [(ngModel)]="form.telefone"
+          autocomplete="tel"
+          placeholder="(11) 99999-9999"
+      /></label>
+    </section>
+    <details class="disclosure">
+      <summary>E-mail, aniversário e observações</summary>
+      <div class="field-row">
+        <label class="field"
+          >E-mail<input
+            type="email"
+            name="email"
+            [(ngModel)]="form.email"
+            autocomplete="email" /></label
+        ><label class="field"
+          >Nascimento<input
+            type="date"
+            name="birth"
+            [(ngModel)]="form.nascimento"
+            autocomplete="bday"
+        /></label>
+      </div>
+      <label class="field"
+        >Observações<textarea
+          name="notes"
+          [(ngModel)]="form.observacoes"
+          rows="3"
+          placeholder="Preferências para o atendimento"
+        ></textarea>
+      </label>
+    </details>
+    <details class="disclosure" *ngIf="isPetshop">
+      <summary>Informações do pet</summary>
+      <label class="field"
+        >Nome do pet<input name="petName" [(ngModel)]="form.metadata['petNome']" /></label
+      ><label class="field"
+        >Raça ou espécie<input name="petBreed" [(ngModel)]="form.metadata['petRaca']"
+      /></label>
+    </details>
+    <details class="disclosure" *ngIf="isSaude">
+      <summary>Informações para o atendimento</summary>
+      <label class="field"
+        >Condições e alergias<input
+          name="allergies"
+          [(ngModel)]="form.metadata['alergias']" /></label
+      ><label class="field"
+        >Tipo sanguíneo<input name="blood" [(ngModel)]="form.metadata['tipoSanguineo']"
+      /></label>
+    </details>
+    <p class="feedback error" *ngIf="erro" role="alert">{{ erro }}</p>
+    <div class="form-footer">
+      <a class="text-action" routerLink="/admin/clientes">Cancelar</a
+      ><button class="action" type="submit" [disabled]="saving || saved">
+        {{ saving ? 'Salvando…' : 'Salvar cliente' }}
+      </button>
+    </div>
+  </form>
+</div>

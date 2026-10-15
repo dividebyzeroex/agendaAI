@@ -6,7 +6,7 @@
       <h2>Encontre o seu lugar</h2>
       <p>Busque por nome ou especialidade para agendar seu horário.</p>
     </div>
-    
+
     <div class="mp-search">
       <div class="search-box">
         <i class="pi pi-search"></i>
@@ -18,7 +18,7 @@
       <div class="mp-loader" *ngIf="isSearching">
         <i class="pi pi-spin pi-spinner"></i> Buscando...
       </div>
-      
+
       <div class="mp-grid" *ngIf="!isSearching">
         <div class="mp-card" *ngFor="let result of searchResults" (click)="goToEstabelecimento(result.slug)">
           <div class="mp-card-cover" [style.background]="result.cor_primaria || 'linear-gradient(135deg, #4f46e5, #9333ea)'">
@@ -31,7 +31,7 @@
           </div>
         </div>
       </div>
-      
+
       <div class="mp-empty" *ngIf="!isSearching && searchResults.length === 0">
         Nenhum estabelecimento encontrado para sua busca.
       </div>
@@ -94,7 +94,7 @@
         <div class="profile-info">
           <h1>{{ estab?.nome }}</h1>
           <p class="p-cidade" *ngIf="estab?.cidade"><i class="pi pi-map-marker"></i> {{ estab?.cidade }} <span *ngIf="estab?.estado">- {{ estab?.estado }}</span></p>
-          
+
           <div class="p-desc" *ngIf="estab?.descricao">
             <p>{{ estab?.descricao }}</p>
           </div>
@@ -122,7 +122,7 @@
 
         <div class="step-title">
           <h2>O que você <span class="accent">precisa?</span></h2>
-          <p>Selecione o serviço desejado e escolha um profissional.</p>
+          <p>Escolha o serviço para ver os horários disponíveis.</p>
         </div>
 
         <!-- Category Tabs -->
@@ -140,7 +140,7 @@
           <div class="service-card" *ngFor="let s of filteredServices"
                [class.selected]="selectedService?.id === s.id">
 
-            <button class="service-row" (click)="toggleService(s); goStepPro()">
+            <button class="service-row" (click)="toggleService(s)">
               <div class="svc-emoji">{{ s.emoji || config.emojiPadrao }}</div>
               <div class="svc-info">
                 <strong>{{ s.titulo }}</strong>
@@ -157,50 +157,16 @@
             <p>Nenhum serviço disponível nesta categoria.</p>
           </div>
         </div>
-      </div>
-
-      <!-- ============================================ -->
-      <!-- STEP PRO: PROFESSIONAL SELECTION             -->
-      <!-- ============================================ -->
-      <div class="step-panel" *ngIf="step === 'step_pro' && !isLoading && !isTransitioning">
-        <button class="btn-back" (click)="step = 'step1'">
-          <i class="pi pi-arrow-left"></i> Voltar
-        </button>
-
-        <div class="step-title">
-          <h2>Com <span class="accent">quem?</span></h2>
-          <p>Prefere alguém específico para o serviço de <strong>{{ selectedService?.titulo }}</strong>?</p>
-        </div>
-
-        <div class="pro-grid" *ngIf="prosForSelectedService.length > 0">
-          <button class="pro-card" *ngFor="let p of prosForSelectedService"
-                  [class.active]="selectedPro?.id === p.id"
-                  (click)="pickPro(p); goStep2()">
-            <div class="pro-avatar" [style.background]="p.cor_agenda || '#4f46e5'">
-              <img *ngIf="p.foto_url" [src]="p.foto_url" />
-              <span *ngIf="!p.foto_url">{{ p.nome[0] }}</span>
-            </div>
-            <div class="pro-info">
-              <strong>{{ p.nome }}</strong>
-            </div>
-            <div class="pro-check" *ngIf="selectedPro?.id === p.id">
-              <i class="pi pi-check"></i>
-            </div>
-          </button>
-        </div>
-        
-        <div class="empty-state" *ngIf="prosForSelectedService.length === 0">
-          <i class="pi pi-user-minus"></i>
-          <p>Nenhum profissional disponível para este serviço no momento.</p>
-          <button class="btn-secondary" (click)="step = 'step1'">Escolher outro serviço</button>
-        </div>
+        <details class="professional-preference" *ngIf="selectedService&&prosForSelectedService.length>1"><summary>Prefere um profissional específico? <span>{{selectedPro?.nome||'Qualquer disponível'}}</span></summary><button type="button" class="preference-option" [class.chosen]="!selectedPro" (click)="pickPro(null)">Qualquer profissional disponível</button><button type="button" class="preference-option" *ngFor="let p of prosForSelectedService" [class.chosen]="selectedPro?.id===p.id" (click)="pickPro(p)">{{p.nome}}</button></details>
+        <button class="btn-primary" [disabled]="!selectedService" (click)="goStepPro()">Ver horários <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+        <details class="business-details" *ngIf="estab?.descricao"><summary>Sobre {{estab?.nome}}</summary><p>{{estab?.descricao}}</p></details>
       </div>
 
       <!-- ============================================ -->
       <!-- STEP 2: DATE + TIME                          -->
       <!-- ============================================ -->
       <div class="step-panel" *ngIf="step === 'step2' && !isLoading && !isTransitioning">
-        <button class="btn-back" (click)="step = 'step_pro'">
+        <button class="btn-back" (click)="step = 'step1'">
           <i class="pi pi-arrow-left"></i> Voltar
         </button>
 
@@ -229,9 +195,10 @@
           📅 {{ formatDate(selectedDate) }}
         </div>
 
+        <p role="status" *ngIf="slotsLoading">Buscando horários disponíveis…</p>
         <!-- Time Grid -->
-        <div class="time-grid" *ngIf="slots.length > 0">
-          <button class="time-slot" *ngFor="let s of slots"
+        <div class="time-grid" *ngIf="availableSlots.length > 0">
+          <button class="time-slot" *ngFor="let s of availableSlots"
                   [class.active]="selectedTime === s.time"
                   [class.unavailable]="!s.available"
                   [disabled]="!s.available"
@@ -240,11 +207,12 @@
           </button>
         </div>
 
-        <div class="empty-slots" *ngIf="slots.length === 0 && selectedDate">
+        <div class="empty-slots" *ngIf="slots.length === 0 && selectedDate && !slotsLoading && !errorMsg">
           <i class="pi pi-calendar-times"></i>
-          <p>Nenhum horário disponível para este dia.</p>
+          <p>Nenhum horário disponível neste dia. Tente outra data.</p>
         </div>
 
+        <p class="empty-slots" *ngIf="slots.length && !slotsLoading && !hasAvailableSlots">Nenhum horário livre neste dia. Tente outra data ou profissional.</p>
         <!-- CTA -->
         <button class="btn-primary" [disabled]="!selectedTime" (click)="confirmarStep2()">
           Continuar
@@ -266,7 +234,7 @@
         </div>
 
         <!-- Booking Summary -->
-        <div class="summary-card">
+        <details class="summary-card" open><summary>Revisar agendamento</summary>
           <div class="summary-header">Resumo do agendamento</div>
           <div class="summary-row">
             <span>{{ config.labelServico }}</span>
@@ -274,7 +242,7 @@
           </div>
           <div class="summary-row">
             <span>Profissional</span>
-            <strong>{{ selectedPro ? selectedPro.nome : 'Primeiro disponível' }}</strong>
+            <strong>{{ bookingProfessional?.nome || 'Primeiro disponível' }}</strong>
           </div>
           <div class="summary-row">
             <span>Data</span>
@@ -293,15 +261,15 @@
             <span>Valor</span>
             <strong>R$ {{ formatPrice(selectedService?.preco || 0) }}</strong>
           </div>
-        </div>
+        </details>
 
-        <!-- Client Info (ZERO REGISTRATION!) -->
+        <!-- Client Info -->
         <div class="client-form">
           <div class="form-header">
             <i class="pi pi-user"></i>
             Seus dados para contato
           </div>
-          <p class="form-subtitle">Não é necessário criar conta. Precisamos apenas do seu nome e telefone para confirmar a reserva.</p>
+          <p class="form-subtitle">Sem cadastro de conta. Informe seu nome e telefone.</p>
 
           <div class="field">
             <label for="custName">Nome</label>
@@ -332,7 +300,7 @@
               <i class="pi pi-desktop"></i>
               Sobre o Aparelho
             </div>
-            
+
             <div class="field">
               <label for="aparelho">Modelo do Aparelho</label>
               <input id="aparelho" type="text" [(ngModel)]="aparelho"
@@ -356,7 +324,7 @@
         </button>
 
         <p class="disclaimer">
-          A confirmação aparece nesta tela. Salve os detalhes da reserva; mensagens adicionais dependem dos canais configurados pelo estabelecimento.
+          A confirmação aparece nesta tela. Salve os detalhes da reserva. Mensagens adicionais dependem dos canais configurados pelo estabelecimento.
         </p>
       </div>
 
@@ -372,7 +340,7 @@
         </div>
 
         <h2>Reserva <span class="accent">confirmada!</span></h2>
-        <p class="done-subtitle">Seu horário em <strong>{{ estab?.nome }}</strong> está garantido.</p>
+        <p class="done-subtitle">Seu agendamento em <strong>{{ estab?.nome }}</strong> foi registrado.</p>
 
         <div class="done-details">
           <div class="dd-row">

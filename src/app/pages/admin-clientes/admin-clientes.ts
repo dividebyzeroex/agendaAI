@@ -2,6 +2,7 @@ import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angul
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { ClienteService, Cliente } from '../../services/cliente.service';
 import { ClientImport } from '../../components/client-import/client-import';
 import { SmsService } from '../../services/sms.service';
@@ -10,7 +11,7 @@ import { NovoClienteModalComponent } from '../../components/novo-cliente-modal/n
 @Component({
   selector: 'app-admin-clientes',
   standalone: true,
-  imports: [CommonModule, FormsModule, NovoClienteModalComponent,ClientImport],
+  imports: [CommonModule, FormsModule, RouterLink, ClientImport],
   templateUrl: './admin-clientes.html',
   styleUrls: ['./admin-clientes.css']
 })
@@ -20,6 +21,7 @@ export class AdminClientes implements OnInit {
   private cdr            = inject(ChangeDetectorRef);
 
   private destroyRef = inject(DestroyRef);
+  importOpen=inject(ActivatedRoute).snapshot.queryParamMap.has('importar');
   clientes: Cliente[] = [];
   filteredClientes: Cliente[] = [];
   searchQuery = '';
@@ -44,23 +46,8 @@ export class AdminClientes implements OnInit {
 
   applyFilter() {
     const q = this.searchQuery.toLowerCase();
-    
-    // De-duplicação por telefone (Prioriza o primeiro encontrado)
-    const uniqueMap = new Map<string, Cliente>();
-    this.clientes.forEach(c => {
-      if (c.telefone && !uniqueMap.has(c.telefone)) {
-        uniqueMap.set(c.telefone, c);
-      } else if (!c.telefone) {
-        // Se sem telefone, permite como único temporário (ex: cadastro manual incompleto)
-        uniqueMap.set(`id-${c.id}`, c);
-      }
-    });
 
-    const deduped = Array.from(uniqueMap.values());
-
-    this.filteredClientes = q
-      ? deduped.filter(c => c.nome.toLowerCase().includes(q) || c.telefone?.includes(q))
-      : deduped;
+    this.filteredClientes=this.clientes.filter(c=>!q||`${c.nome} ${c.telefone||''} ${c.email||''}`.toLowerCase().includes(q));
   }
 
   // --- Novo Cliente Modal ---
@@ -95,24 +82,11 @@ export class AdminClientes implements OnInit {
   closeSmsModal() { this.smsModal.open = false; }
 
   async enviarSms() {
-    if (!this.smsModal.cliente?.telefone || !this.smsModal.mensagem.trim()) return;
+    if (this.smsModal.sending || !this.smsModal.cliente?.telefone || !this.smsModal.mensagem.trim()) return;
     this.smsModal.sending = true;
     this.smsModal.result  = '';
 
-    const result = await this.smsService.enviarManual(
-      this.smsModal.cliente.telefone,
-      this.smsModal.mensagem
-    );
-
-    this.smsModal.sending = false;
-    if (result.success) {
-      this.smsModal.result = result.simulated
-        ? '✅ SMS simulado (configure Twilio no Vercel para envio real)'
-        : `✅ Enviado! SID: ${result.sid}`;
-      setTimeout(() => this.closeSmsModal(), 3000);
-    } else {
-      this.smsModal.result = `❌ Erro: ${result.error}`;
-    }
+    try{const result=await this.smsService.enviarManual(this.smsModal.cliente.telefone,this.smsModal.mensagem);this.smsModal.result=result.success?(result.simulated?'Envio simulado. Nenhum SMS foi enviado.':'Mensagem enviada.'):`Não foi possível enviar: ${result.error||'tente novamente'}`;}catch{this.smsModal.result='Não foi possível enviar. Tente novamente.';}finally{this.smsModal.sending=false;this.cdr.markForCheck();}
   }
 
   async enviarLembreteCliente(cliente: Cliente) {

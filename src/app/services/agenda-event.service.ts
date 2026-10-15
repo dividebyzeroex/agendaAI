@@ -42,6 +42,9 @@ export class AgendaEventService {
   events$ = this.eventsSubject.asObservable();
   get currentEvents(): AgendaEvent[] { return this.eventsSubject.value; }
 
+  readonly error$ = new BehaviorSubject<string>('');
+  reload(){return this.fetchEvents();}
+
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();
 
@@ -57,10 +60,12 @@ export class AgendaEventService {
     if (!estId) return;
 
     this.isLoadingSubject.next(true);
+    this.error$.next('');
     try {
       const { data, error } = await this.supabase
         .rpc('get_agenda_events_by_estab', { p_estab_id: estId });
 
+      if(error)throw error;
       if (!error) {
         const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) =>
           this.security.decryptObject(e, ['title', 'observacoes', 'profissional_nome'])
@@ -70,6 +75,8 @@ export class AgendaEventService {
           this.eventsSubject.next(decrypted || []);
         });
       }
+    } catch {
+      this.ngZone.run(()=>this.error$.next('Não foi possível carregar os agendamentos. Tente novamente.'));
     } finally {
       this.ngZone.run(() => {
         this.isLoadingSubject.next(false);

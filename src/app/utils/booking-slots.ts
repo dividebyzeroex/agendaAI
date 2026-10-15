@@ -13,3 +13,15 @@ export function slotOverlaps(date: string, time: string, duration: number, busy:
   return busy.some(event => (!professionalId || !event.profissional_id || event.profissional_id === professionalId)
     && start < Date.parse(event.end) && end > Date.parse(event.start));
 }
+
+/** Starts the public calendar at a usable business day, without overriding a chosen date. */
+export function nextOpeningDate(hours:ReadonlyArray<{dia_semana:number;ativo:boolean;abre:string|null;fecha:string|null}>,duration:number,now=new Date()):string {
+ const today=bookingDate(now);const day=new Date(`${today}T12:00:00-03:00`);
+ const minutes=(value:string)=>Number(value.slice(0,2))*60+Number(value.slice(3,5));
+ for(let i=0;i<14;i++){
+  const h=hours.find(row=>row.dia_semana===day.getUTCDay()&&row.ativo);
+  if(h?.abre&&h.fecha){const opens=minutes(h.abre),closes=minutes(h.fecha);let start=opens;if(i===0&&bookingMinutes(now)>=opens)start=opens+(Math.floor((bookingMinutes(now)-opens)/30)+1)*30;if(start+duration<=closes)return bookingDate(day);}
+  day.setUTCDate(day.getUTCDate()+1);
+ }
+ return today;
+}

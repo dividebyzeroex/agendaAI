@@ -1,4 +1,4 @@
-import { ChangeDetectorRef, Component, HostListener, inject, OnDestroy, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, HostListener, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -12,6 +12,7 @@ export interface ActivationSummary {
 }
 @Component({selector:'app-activation-summary',standalone:true,imports:[CommonModule,RouterLink,QuickStart],templateUrl:'./activation-summary.html',styleUrls:['./activation-summary.css']})
 export class ActivationSummaryComponent implements OnInit, OnDestroy {
+  @Input() expanded = false;
   private est = inject(EstabelecimentoService);
   private db = inject(SupabaseService).client;
   private cdr = inject(ChangeDetectorRef);

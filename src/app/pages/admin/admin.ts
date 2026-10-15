@@ -1,7 +1,7 @@
-import { Component, inject, OnInit, OnDestroy } from '@angular/core';
+import { Component, ChangeDetectorRef, inject, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivationSummaryComponent } from '../../components/activation-summary/activation-summary';
-import { Router } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { TableModule } from 'primeng/table';
@@ -17,12 +17,13 @@ import { BehaviorSubject, map, Subscription, interval, Observable } from 'rxjs';
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule, ButtonModule, CardModule, TableModule, PortalProfissionalComponent, ActivationSummaryComponent],
+  imports: [CommonModule, RouterLink, PortalProfissionalComponent, ActivationSummaryComponent],
   templateUrl: './admin.html',
   styleUrls: ['./admin.css']
 })
 export class Admin implements OnInit, OnDestroy {
-  private agendaService = inject(AgendaEventService);
+  private cdr=inject(ChangeDetectorRef);
+  agendaService = inject(AgendaEventService);
   private clienteService = inject(ClienteService);
   private notifService = inject(NotificationService);
 
@@ -68,7 +69,7 @@ export class Admin implements OnInit, OnDestroy {
     this.sub.add(
       this.clienteService.clientes$.subscribe(clientes => {
         const uniquePhones = new Set(clientes.filter(c => c.telefone).map(c => c.telefone));
-        this.totalClientes = clientes.length;
+        this.totalClientes = clientes.length;this.cdr.markForCheck();
       })
     );
 
@@ -91,7 +92,7 @@ export class Admin implements OnInit, OnDestroy {
   }
 
   async carregarAniversariantes() {
-    this.aniversariantes = await this.clienteService.getAniversariantesDoMes();
+    try{this.aniversariantes=await this.clienteService.getAniversariantesDoMes();}catch{this.aniversariantes=[];}this.cdr.markForCheck();
   }
 
 
@@ -99,6 +100,12 @@ export class Admin implements OnInit, OnDestroy {
     return this.userProfile$.pipe(map(p => p?.role === 'dono' || p?.role === 'financeiro'));
   }
 
+  readonly isOwner = this.userProfile$.pipe(map(p => p?.role === 'dono'));
+  get activeToday(){return this.todayAppointments.filter(e=>e.status!=='cancelado');}
+  get inProgress(){return this.activeToday.filter(e=>e.status==='em_atendimento').length;}
+  get completedToday(){return this.activeToday.filter(e=>e.status==='concluido').length;}
+  isLate(e:AgendaEvent){return this.noShowEvents.some(item=>item.id===e.id);}
+  statusLabel(s?:string){return ({confirmado:'Agendado',pendente:'Pendente',em_atendimento:'Em atendimento',concluido:'Concluído',noshow:'Não compareceu',cancelado:'Cancelado'} as Record<string,string>)[s||'']||'Agendado';}
   get isStaff(): Observable<boolean> {
     return this.userProfile$.pipe(map(p => p?.role === 'esteticista' || p?.role === 'barbeiro'));
   }
@@ -164,7 +171,7 @@ export class Admin implements OnInit, OnDestroy {
     // Fila de Espera (Walk-in ou Pendentes de Hoje)
     this.waitlistCount = this.todayAppointments.filter(e => e.status === 'pendente' || e.status === 'confirmado').length;
 
-    this.isLoading = false;
+    this.isLoading = false;this.cdr.markForCheck();
   }
 
   async marcarFalta(event: AgendaEvent) {
@@ -208,4 +215,3 @@ export class Admin implements OnInit, OnDestroy {
     this.router.navigate(['/admin/agenda']);
   }
 }
-

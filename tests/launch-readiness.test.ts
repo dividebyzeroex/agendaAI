@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { billingReadiness } from '../server/billing.js';
-import { bookingDate, slotOverlaps } from '../src/app/utils/booking-slots';
+import { bookingDate, slotOverlaps, nextOpeningDate } from '../src/app/utils/booking-slots';
 describe('launch protections', () => {
+ it('opens public booking on the next working day after closing, keeping a future slot today when possible',()=>{
+ const hours=[{dia_semana:3,ativo:true,abre:'09:00',fecha:'18:00'},{dia_semana:4,ativo:true,abre:'09:00',fecha:'18:00'}];
+ expect(nextOpeningDate(hours,30,new Date('2026-10-14T22:00:00-03:00'))).toBe('2026-10-15');
+ expect(nextOpeningDate(hours,30,new Date('2026-10-14T16:15:00-03:00'))).toBe('2026-10-14');
+ expect(nextOpeningDate(hours,30,new Date('2026-10-14T17:31:00-03:00'))).toBe('2026-10-15');
+ });
  it('uses São Paulo date across UTC midnight', () => expect(bookingDate(new Date('2026-10-11T01:00:00Z'))).toBe('2026-10-10'));
  it('blocks partial overlaps, allows adjacent slots and filters professionals', () => {
   const busy=[{start:'2026-10-10T12:15:00Z',end:'2026-10-10T12:45:00Z',profissional_id:'a'}];

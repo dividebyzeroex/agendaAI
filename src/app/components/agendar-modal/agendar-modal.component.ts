@@ -1,570 +1,203 @@
-import { Component, Input, Output, EventEmitter, OnInit, inject, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClienteService, Cliente } from '../../services/cliente.service';
 import { EstabelecimentoService, Servico } from '../../services/estabelecimento.service';
 import { AgendaEventService } from '../../services/agenda-event.service';
 import { ProfissionalService } from '../../services/profissional.service';
 import { SecurityService } from '../../services/security.service';
-
-export interface AgendamentoForm {
-  clienteId: string | null;
-  clienteNome: string;
-  clienteTelefone: string;
-  servicoId: string;
-  profissionalId: string | null;
-  observacoes: string;
-  status: 'confirmado' | 'pendente';
-}
-
+import { agendaDay } from '../../utils/agenda-day';
+import { appointmentTime, appointmentWindow } from '../../utils/appointment-window';
 @Component({
   selector: 'app-agendar-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-  <div class="modal-backdrop" (click)="cancelar()">
-    <div class="modal-box glass-animate" role="dialog" aria-modal="true" aria-label="Novo agendamento" (keydown.escape)="cancelar()" (click)="$event.stopPropagation()">
- 
-      <!-- Header Superior de Luxo -->
-      <div class="modal-header">
-        <div class="modal-header-info">
-          <div class="glass-icon-circle"><i class="pi pi-calendar-plus"></i></div>
-          <div class="header-texts">
-            
-            <h2 class="header-title">Novo Agendamento</h2>
-            <span class="modal-date-tag"><i class="pi pi-clock"></i> {{ startLabel }}</span>
-          </div>
-        </div>
-        <button class="close-luxury" aria-label="Fechar agendamento" (click)="cancelar()"><i class="pi pi-times"></i></button>
-      </div>
- 
-      <!-- Body Scrollable com Blur -->
-      <div class="modal-body custom-scroll">
-        <div *ngIf="catalogError" role="alert">{{ catalogError }} <button (click)="loadCatalog()" [disabled]="loadingCatalog">Tentar novamente</button></div>
-        <p *ngIf="!loadingCatalog && !catalogError && !servicos.length">Nenhum serviço cadastrado. Adicione um serviço em Configurações antes de agendar.</p>
-        <p *ngIf="!loadingCatalog && !catalogError && !profissionais.length">Nenhum profissional disponível. Cadastre sua equipe antes de agendar.</p>
- 
-        <!-- Seção: Cliente Inteligente -->
-        <div class="elite-section">
-          <label><i class="pi pi-user"></i> Cliente</label>
-          
-          <div class="search-container" *ngIf="!form.clienteNome">
-            <div class="premium-search-box">
-              <i class="pi pi-search search-icon"></i>
-              <input
-                type="text"
-                [(ngModel)]="clienteQuery"
-                (ngModelChange)="filterClientes()"
-                (focus)="showDropdown = true"
-                placeholder="Nome ou Telefone do cliente..."
-                class="elite-search-input"
-                autocomplete="off" />
-              <button *ngIf="clienteQuery" class="clear-icon" (click)="clearCliente()">
-                <i class="pi pi-times"></i>
-              </button>
-            </div>
- 
-            <!-- Dropdown Reativo de Clientes -->
-            <div class="glass-dropdown" *ngIf="showDropdown && (clientesFiltrados.length > 0 || clienteQuery)">
-              <div class="dropdown-scroll custom-scroll">
-                <div class="client-row"
-                  *ngFor="let c of clientesFiltrados"
-                  (mousedown)="selectCliente(c)">
-                  <div class="mini-avatar">{{ c.nome.charAt(0) }}</div>
-                  <div class="c-info">
-                    <span class="c-name">{{ c.nome }}</span>
-                    <span class="c-sub">{{ c.telefone || 'Sem telefone' }}</span>
-                  </div>
-                </div>
-                
-                <div class="client-row create-row" *ngIf="clienteQuery.length > 1" (mousedown)="usarNovoCliente()">
-                  <div class="mini-avatar plus"><i class="pi pi-plus"></i></div>
-                  <div class="c-info">
-                    <span class="c-name">Criar novo: "{{ clienteQuery }}"</span>
-                    <span class="c-sub">O cadastro será feito ao confirmar</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
- 
-          <!-- Badge Cliente Selecionado -->
-          <div class="active-client-chip" *ngIf="form.clienteNome">
-            <i class="pi" [ngClass]="isNovoCliente ? 'pi-user-plus' : 'pi-verified'"></i>
-            <span>{{ isNovoCliente ? 'Novo: ' + form.clienteNome : form.clienteNome }}</span>
-            <button class="remove-chip" (click)="clearCliente()"><i class="pi pi-times"></i></button>
-          </div>
-
-          <!-- Campo Telefone Expansível Premium -->
-          <div class="expand-phone" *ngIf="isNovoCliente">
-            <div class="premium-search-box">
-              <i class="pi pi-phone search-icon"></i>
-              <input type="tel" [(ngModel)]="form.clienteTelefone"
-                placeholder="Digite o telefone para o novo cadastro..." class="elite-search-input" />
-            </div>
-          </div>
-        </div>
- 
-        <div class="h-divider"></div>
- 
-        <!-- Seção: Seleção de Serviço -->
-        <div class="elite-section">
-          <label><i class="pi pi-briefcase"></i> Escolha o Serviço</label>
-          <div class="service-horizontal custom-scroll-h">
-            <div
-              *ngFor="let s of servicos"
-              class="service-card"
-              [class.active]="form.servicoId === s.id"
-              (click)="form.servicoId = s.id!">
-              <div class="s-icon-bg">{{ s.emoji || '✂️' }}</div>
-              <div class="s-details">
-                <span class="s-name">{{ s.titulo }}</span>
-                <div class="s-meta">
-                  <span class="s-price">R$ {{ s.preco }}</span>
-                  <span class="s-dot">•</span>
-                  <span class="s-time">{{ s.duracao_min }}m</span>
-                </div>
-              </div>
-              <div class="check-mark" *ngIf="form.servicoId === s.id">
-                <i class="pi pi-check"></i>
-              </div>
-            </div>
-            
-            <div class="empty-state-mini" *ngIf="loadingCatalog">
-              <i class="pi pi-spin pi-spinner"></i> Sincronizando catálogo...
-            </div>
-          </div>
-        </div>
- 
-        <div class="h-divider"></div>
- 
-        <!-- Seção: Profissional -->
-        <div class="elite-section">
-          <label><i class="pi pi-id-card"></i> Profissional</label>
-          <div class="professional-grid custom-scroll-h">
-            <div
-                *ngFor="let p of profissionais"
-                class="prof-card-glass"
-                [class.active]="form.profissionalId === p.id"
-                (click)="form.profissionalId = p.id">
-              <div class="p-avatar-wrap">
-                <img *ngIf="p.foto_url" [src]="p.foto_url">
-                <div class="p-initials" *ngIf="!p.foto_url" [style.background]="p.cor_agenda || '#1a73e8'">
-                  {{ p.nome.charAt(0) }}
-                </div>
-                <div class="online-indicator" *ngIf="p.is_online"></div>
-              </div>
-              <span class="p-name">{{ p.nome }}</span>
-              <div class="p-active-border" *ngIf="form.profissionalId === p.id"></div>
-            </div>
-          </div>
-        </div>
- 
-        <div class="h-divider"></div>
- 
-        <!-- Seção: Status e Notas -->
-        <div class="dual-section">
-          <div class="section-part">
-            <label>Status</label>
-            <div class="status-toggle">
-              <button class="t-btn conf" [class.active]="form.status === 'confirmado'" (click)="form.status = 'confirmado'">
-                <i class="pi pi-check"></i>
-              </button>
-              <button class="t-btn pend" [class.active]="form.status === 'pendente'" (click)="form.status = 'pendente'">
-                <i class="pi pi-clock"></i>
-              </button>
-              <span class="status-label">{{ form.status === 'confirmado' ? 'Confirmado' : 'Pendente' }}</span>
-            </div>
-          </div>
-          <div class="section-part">
-            <label>Observações Privadas</label>
-            <textarea [(ngModel)]="form.observacoes" placeholder="Notas sobre o agendamento..."></textarea>
-          </div>
-        </div>
- 
-        <div class="error-toast" *ngIf="erro">
-          <i class="pi pi-exclamation-triangle"></i> {{ erro }}
-        </div>
-      </div>
- 
-      <!-- Footer de Ações -->
-      <div class="modal-footer-glass">
-        <button class="glass-btn-secondary" (click)="cancelar()">Cancelar</button>
-        <button class="glass-btn-primary" [disabled]="saving || !isFormValido()" (click)="confirmar()">
-          <span *ngIf="!saving">Agendar</span>
-          <span *ngIf="saving"><i class="pi pi-spin pi-spinner"></i> Processando...</span>
-        </button>
-      </div>
-    </div>
-  </div>
-  `,
-  styles: [`
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(10px); z-index: 3500;
-      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
-    }
- 
-    .modal-box {
-      background: var(--glass-bg, rgba(255,255,255,0.95)); 
-      backdrop-filter: blur(var(--glass-blur, 20px));
-      -webkit-backdrop-filter: blur(var(--glass-blur, 20px));
-      border-radius: 28px; width: 100%; max-width: 580px;
-      box-shadow: 0 30px 60px rgba(0,0,0,0.4), var(--elite-shadow);
-      display: flex; flex-direction: column; max-height: 92vh; overflow: hidden;
-      border: 1px solid var(--glass-border); position: relative;
-    }
- 
-    .glass-animate { animation: slideInUp .4s cubic-bezier(0.16, 1, 0.3, 1); }
-    @keyframes slideInUp { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
- 
-    /* Header Superior */
-    .modal-header {
-      padding: 1.75rem 2rem; border-bottom: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.02); display: flex; justify-content: space-between; align-items: flex-start;
-    }
-    .modal-header-info { display: flex; gap: 16px; }
-    .glass-icon-circle {
-      width: 50px; height: 50px; border-radius: 16px; background: var(--primary-color);
-      display: flex; align-items: center; justify-content: center; font-size: 1.4rem; color: white;
-      box-shadow: 0 8px 16px rgba(37,99,235,0.3);
-    }
-    .header-texts { display: flex; flex-direction: column; gap: 2px; }
-    .header-subtitle { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); font-weight: 700; }
-    .header-title { font-size: 1.25rem; font-weight: 800; color: var(--text-main); margin: 0; }
-    .modal-date-tag { font-size: 0.8rem; color: var(--primary-color); font-weight: 600; display: flex; align-items: center; gap: 6px; margin-top: 4px; }
-    
-    .close-luxury { background: var(--active-bg); border: 1px solid var(--glass-border); color: var(--text-muted); width: 34px; height: 34px; border-radius: 10px; cursor: pointer; transition: all .3s; }
-    .close-luxury:hover { background: rgba(255,100,100,0.1); color: #ff5555; border-color: rgba(255,100,100,0.2); }
- 
-    /* Body */
-    .modal-body { padding: 2rem; overflow-y: auto; display: flex; flex-direction: column; gap: 2rem; }
-    .custom-scroll::-webkit-scrollbar { width: 4px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
-    .custom-scroll-h::-webkit-scrollbar { height: 4px; }
-    .custom-scroll-h::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
- 
-    .elite-section { display: flex; flex-direction: column; gap: 12px; }
-    label { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
-    label i { font-size: 0.9rem; color: var(--primary-color); }
-    .h-divider { height: 1px; background: var(--glass-border); width: 100%; opacity: 0.5; }
- 
-    /* Busca de Clientes */
-    .search-container { position: relative; }
-    .premium-search-box {
-      background: var(--active-bg, rgba(255, 255, 255, 0.6)); border: 2px solid var(--glass-border, rgba(0, 0, 0, 0.15)); border-radius: 14px;
-      padding: 2px 6px; display: flex; align-items: center; gap: 10px; transition: all .3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .premium-search-box:focus-within { border-color: var(--primary-color); box-shadow: 0 0 0 4px rgba(37,99,235,0.1); background: var(--glass-bg); }
-    .search-icon { color: var(--text-muted); margin-left: 10px; }
-    .elite-search-input {
-      border: none; background: transparent; padding: 12px 2px; color: var(--text-main);
-      font-size: 0.95rem; font-weight: 500; width: 100%; outline: none;
-    }
-    .clear-icon { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 10px; font-size: 0.8rem; }
-    
-    .expand-phone { 
-      margin-top: 8px;
-      animation: slideDown 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes slideDown { 
-      from { opacity: 0; transform: translateY(-10px); } 
-      to { opacity: 1; transform: translateY(0); } 
-    }
- 
-    .glass-dropdown {
-      position: absolute; top: calc(100% + 12px); left: 0; right: 0; z-index: 1000;
-      background: rgba(17, 17, 17, 0.9); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.12);
-      border-radius: 18px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); overflow: hidden;
-    }
-    .dropdown-scroll { max-height: 250px; overflow-y: auto; padding: 8px; }
-    .active-client-chip {
-      display: inline-flex; align-items: center; gap: 10px;
-      background: rgba(37, 99, 235, 0.1); color: var(--primary-color);
-      border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 14px;
-      padding: 10px 16px; font-weight: 700; font-size: 0.95rem;
-      margin-top: 12px; backdrop-filter: blur(10px);
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
-      animation: fadeIn .3s ease;
-    }
-    @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
-    
-    .remove-chip {
-      background: rgba(255, 255, 255, 0.1); border: none; cursor: pointer;
-      color: var(--primary-color); width: 22px; height: 22px; border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      transition: all .2s; font-size: 0.7rem;
-    }
-    .remove-chip:hover { background: #ef4444; color: white; }
-    .client-row {
-      display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 12px; cursor: pointer;
-      transition: background .2s; margin-bottom: 4px;
-    }
-    .client-row:hover { background: rgba(255,255,255,0.05); }
-    .mini-avatar {
-      width: 38px; height: 38px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;
-    }
-    .mini-avatar.plus { background: rgba(37,99,235,0.1); color: var(--primary-color); border: 1px dashed var(--primary-color); }
-    .c-info { display: flex; flex-direction: column; }
-    .c-name { font-weight: 700; color: #ffffff; font-size: 0.92rem; }
-    .c-sub { font-size: 0.78rem; color: rgba(255,255,255,0.6); font-family: 'Space Mono', monospace; }
- 
-    /* Serviços e Profissionais */
-    .service-horizontal { display: flex; gap: 12px; padding-bottom: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
-    .service-card {
-      min-width: 170px; padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.02);
-      border: 1.5px solid var(--glass-border); cursor: pointer; position: relative;
-      transition: all .3s; display: flex; align-items: center; gap: 12px;
-      scroll-snap-align: start;
-    }
-    .service-card:hover { border-color: rgba(255,255,255,0.1); transform: translateY(-3px); }
-    .service-card.active { border-color: var(--primary-color); background: rgba(37,99,235,0.08); }
-    .s-icon-bg { font-size: 1.4rem; }
-    .s-details { display: flex; flex-direction: column; }
-    .s-name { font-weight: 700; font-size: 0.9rem; color: var(--text-main); }
-    .s-meta { font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px; font-weight: 600; }
-    .s-price { color: #34a853; }
-    .check-mark { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
- 
-    .professional-grid { display: flex; gap: 12px; padding-bottom: 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
-    .prof-card-glass {
-      min-width: 130px;
-      padding: 14px; border-radius: 18px; border: 1.5px solid var(--glass-border);
-      background: rgba(255,255,255,0.02); cursor: pointer; text-align: center;
-      transition: all .3s; position: relative; overflow: hidden;
-      scroll-snap-align: start;
-    }
-    .prof-card-glass.active { background: rgba(255,255,255,0.05); }
-    .p-avatar-wrap { width: 44px; height: 44px; margin: 0 auto 10px; border-radius: 12px; overflow: hidden; position: relative; }
-    .p-avatar-wrap img { width: 100%; height: 100%; object-fit: cover; }
-    .p-initials { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1rem; }
-    .p-name { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
-    .p-active-border { position: absolute; bottom: 0; left: 0; right: 0; height: 4px; background: var(--primary-color); box-shadow: 0 -4px 10px var(--primary-color); }
- 
-    /* Ações Finais */
-    .dual-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    textarea {
-      width: 100%; background: var(--active-bg); border: 2px solid var(--glass-border); border-radius: 14px;
-      padding: 12px; color: var(--text-main); outline: none; font-size: 0.9rem; transition: border .2s;
-      resize: none; min-height: 70px;
-    }
-    textarea:focus { border-color: var(--primary-color); background: var(--glass-bg); }
- 
-    .status-toggle {
-      display: flex; align-items: center; gap: 12px; background: var(--active-bg);
-      padding: 6px; border-radius: 14px; border: 1px solid var(--glass-border);
-    }
-    .t-btn { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; transition: all .2s; color: var(--text-muted); display: flex; align-items: center; justify-content: center; }
-    .t-btn.conf.active { background: #34a853; color: white; box-shadow: 0 4px 12px rgba(52, 168, 83, 0.3); }
-    .t-btn.pend.active { background: #f9ab00; color: white; box-shadow: 0 4px 12px rgba(249, 171, 0, 0.3); }
-    .status-label { font-size: 0.85rem; font-weight: 700; color: var(--text-main); }
- 
-    .modal-footer-glass {
-      padding: 1.5rem 2rem; border-top: 1px solid var(--glass-border);
-      background: rgba(255,255,255,0.01); display: flex; justify-content: flex-end; gap: 12px;
-    }
-    .glass-btn-secondary { background: none; border: 1px solid var(--glass-border); color: var(--text-muted); padding: 12px 20px; border-radius: 14px; cursor: pointer; font-weight: 600; }
-    .glass-btn-primary {
-      background: var(--primary-color); color: white; border: none; padding: 12px 28px;
-      border-radius: 14px; font-weight: 800; cursor: pointer; transition: all .3s;
-    }
-    .glass-btn-primary:not(:disabled):hover { transform: scale(1.02); box-shadow: 0 10px 20px rgba(37,99,235,0.3); }
-    .glass-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .modal-box{background:var(--surface-color,#fff);box-shadow:0 20px 60px #09090b26;border-radius:20px;}
-    .modal-body{gap:20px;min-height:0;}
-    .modal-header,.modal-footer-glass{background:var(--surface-color,#fff);flex-shrink:0;}
-    .modal-header-info,.header-texts{min-width:0;}
-    .glass-icon-circle{flex-shrink:0;box-shadow:none;}
-    .elite-section{gap:10px;}
-    label{text-transform:none;letter-spacing:0;font-size:14px;font-weight:600;color:var(--text-main);}
-    .glass-dropdown{background:var(--surface-color,#fff);border-color:var(--glass-border);box-shadow:0 8px 24px #09090b1a;}
-    .c-name{color:var(--text-main);}.c-sub{color:var(--text-muted);}
-    .client-row:hover{background:var(--active-bg);}
-    .premium-search-box,textarea{border-width:1px;background:var(--bg-color);}
-    .service-card,.prof-card-glass{background:var(--surface-color,#fff);border-radius:12px;}
-    .service-card:hover{transform:none;border-color:var(--primary-color);}
-    .prof-card-glass.active{background:var(--active-bg);border-color:var(--primary-color);}
-    .modal-footer-glass button{min-height:48px;font:inherit;font-size:14px;font-weight:600;}
-    @media(max-width:768px){
-      .modal-header-info{gap:12px;}.glass-icon-circle{width:40px;height:40px;border-radius:12px;font-size:20px;}
-      .header-title{font-size:18px;line-height:1.35;}.modal-date-tag{font-size:13px;line-height:1.5;}
-      .modal-body{gap:20px;flex:1;}.modal-footer-glass{padding:12px 16px calc(12px + env(safe-area-inset-bottom));gap:10px;}
-      .modal-footer-glass button{flex:1;padding:12px 8px;}
-      .service-horizontal,.professional-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));overflow:visible;gap:10px;padding:4px 0;}
-      .service-card,.prof-card-glass{min-width:0;padding:12px;}.s-details,.p-name{min-width:0;overflow-wrap:anywhere;}
-      .service-card{flex-direction:column;align-items:flex-start;}.s-meta{flex-wrap:wrap;}
-      .t-btn{min-width:44px;min-height:44px;}.elite-search-input{min-width:0;font-size:16px;}
-    }
-  `]
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './appointment-form.html',
+  styleUrls: ['./appointment-form.css'],
 })
 export class AgendarModalComponent implements OnInit {
-  @Input() startStr = '';
-  @Input() endStr = '';
-  @Input() allDay = false;
-  @Output() confirmado = new EventEmitter<void>();
-  @Output() cancelado  = new EventEmitter<void>();
-
-  private clienteService  = inject(ClienteService);
-  private estabelecimento = inject(EstabelecimentoService);
-  private agendaService   = inject(AgendaEventService);
-  private proService      = inject(ProfissionalService);
-  private security        = inject(SecurityService);
-
-  form: AgendamentoForm = {
-    clienteId: null,
+  private clients = inject(ClienteService);
+  private est = inject(EstabelecimentoService);
+  private agenda = inject(AgendaEventService);
+  private pros = inject(ProfissionalService);
+  private security = inject(SecurityService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+  private destroy = inject(DestroyRef);
+  form = {
+    clienteId: null as string | null,
     clienteNome: '',
     clienteTelefone: '',
     servicoId: '',
-    profissionalId: null,
+    profissionalId: '' as string,
     observacoes: '',
-    status: 'confirmado'
+    status: 'confirmado' as 'confirmado' | 'pendente',
   };
-
-  clienteQuery   = '';
-  clientesFiltrados: Cliente[] = [];
-  showDropdown   = false;
-  isNovoCliente  = false;
-  
+  day = agendaDay(new Date());
+  time = '09:00';
+  clienteQuery = '';
+  isNovoCliente = false;
+  showMatches = false;
   servicos: Servico[] = [];
-  profissionais: any[] = [];
-  
-  saving = false;
-  erro   = '';
-
-  get startLabel(): string {
-    if (!this.startStr) return '';
-    const d = new Date(this.startStr);
-    return d.toLocaleString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
-  }
-
-  private cdr = inject(ChangeDetectorRef);
-  private destroyRef = inject(DestroyRef);
+  profissionais: Array<{ id: string; nome: string; cor_agenda?: string }> = [];
   loadingCatalog = false;
   catalogError = '';
-
+  saving = false;
+  erro = '';
+  saved = false;
+  get service() {
+    return this.servicos.find((s) => s.id === this.form.servicoId);
+  }
+  get window() {
+    return appointmentWindow(this.day, this.time, Number(this.service?.duracao_min || 30));
+  }
+  get endTime() {
+    return this.window ? appointmentTime(this.window.end) : '';
+  }
+  get matches() {
+    const q = this.clienteQuery.trim().toLowerCase();
+    return this.clients
+      .getClientes()
+      .filter(
+        (c) =>
+          !q ||
+          c.nome.toLowerCase().includes(q) ||
+          c.telefone?.replace(/\D/g, '').includes(q.replace(/\D/g, '') || 'invalid'),
+      )
+      .slice(0, 6);
+  }
   ngOnInit() {
-    this.estabelecimento.servicos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => {
-      this.servicos = s;
+    const start = this.route.snapshot.queryParamMap.get('start');
+    if (start && !Number.isNaN(Date.parse(start))) {
+      this.day = agendaDay(start);
+      this.time = appointmentTime(start);
+    }
+    const clientId = this.route.snapshot.queryParamMap.get('cliente');
+    this.clients.clientes$.pipe(takeUntilDestroyed(this.destroy)).subscribe((list) => {
+      if (clientId && !this.form.clienteNome) {
+        const c = list.find((item) => item.id === clientId);
+        if (c) this.selectCliente(c);
+      }
       this.cdr.markForCheck();
     });
-    document.addEventListener('click', this._closeDropdown);
     void this.loadCatalog();
   }
-
   async loadCatalog() {
     if (this.loadingCatalog) return;
     this.loadingCatalog = true;
     this.catalogError = '';
-    this.cdr.markForCheck();
     try {
-      const estId = this.estabelecimento.estabelecimento$.value?.id;
-      if (!estId) throw new Error('Não foi possível identificar o estabelecimento. Reabra a agenda.');
-      const [, rawPros] = await Promise.all([
-        this.estabelecimento.fetchServicos(), this.proService.fetchProfissionais(estId)
+      const id = this.est.estabelecimento$.value?.id;
+      if (!id) throw new Error();
+      const [, pros] = await Promise.all([
+        this.est.fetchServicos(),
+        this.pros.fetchProfissionais(id),
       ]);
-      const unique = Array.from(new Map(rawPros.map(p => [p.id, p])).values());
-      this.profissionais = await Promise.all(unique.map(async p => ({ ...p, nome: await this.security.decryptData(p.nome) || p.nome })));
+      this.servicos = this.est.servicos$.value.filter((s) => s.ativo !== false);
+      const unique = Array.from(new Map(pros.map((p) => [p.id, p])).values());
+      this.profissionais = await Promise.all(
+        unique.map(async (p) => ({
+          ...p,
+          nome: (await this.security.decryptData(p.nome)) || p.nome,
+        })),
+      );
+      if (this.servicos.length === 1) this.form.servicoId = this.servicos[0].id!;
+      if (this.profissionais.length === 1) this.form.profissionalId = this.profissionais[0].id;
     } catch {
-      this.catalogError = 'Não foi possível carregar serviços e profissionais. Verifique sua conexão e tente novamente.';
+      this.catalogError = 'Não foi possível carregar serviços e equipe. Tente novamente.';
     } finally {
       this.loadingCatalog = false;
-      if (!this.destroyRef.destroyed) this.cdr.markForCheck();
+      if (!this.destroy.destroyed) this.cdr.markForCheck();
     }
   }
-
-  ngOnDestroy() {
-    document.removeEventListener('click', this._closeDropdown);
-  }
-
-  private _closeDropdown = () => this.showDropdown = false;
-
-  filterClientes() {
-    const q = this.clienteQuery.toLowerCase();
-    const todos = this.clienteService.getClientes();
-    this.clientesFiltrados = q.length > 0
-      ? todos.filter(c => c.nome.toLowerCase().includes(q) || c.telefone?.includes(q)).slice(0, 6)
-      : todos.slice(0, 6);
-    this.showDropdown = true;
-    this.isNovoCliente = false;
-    this.form.clienteId = null;
-  }
-
   selectCliente(c: Cliente) {
-    this.form.clienteId   = c.id!;
+    this.form.clienteId = c.id!;
     this.form.clienteNome = c.nome;
-    this.clienteQuery     = ''; // Limpa para evitar duplicação visual
-    this.showDropdown     = false;
-    this.isNovoCliente    = false;
+    this.form.clienteTelefone = c.telefone || '';
+    this.clienteQuery = '';
+    this.isNovoCliente = false;
+    this.showMatches = false;
   }
-
   usarNovoCliente() {
-    this.form.clienteId   = null;
-    this.form.clienteNome = this.clienteQuery;
-    this.clienteQuery     = ''; // Limpa mantendo o nome no chip/form
-    this.isNovoCliente    = true;
-    this.showDropdown     = false;
+    const name = this.clienteQuery.trim();
+    if (!name) return;
+    this.form.clienteId = null;
+    this.form.clienteNome = name;
+    this.form.clienteTelefone = '';
+    this.isNovoCliente = true;
+    this.showMatches = false;
   }
- 
   clearCliente() {
-    this.form.clienteId   = null;
+    this.form.clienteId = null;
     this.form.clienteNome = '';
-    this.clienteQuery     = '';
-    this.isNovoCliente    = false;
+    this.form.clienteTelefone = '';
+    this.clienteQuery = '';
+    this.isNovoCliente = false;
+    this.showMatches = true;
   }
-
-  isFormValido(): boolean {
-    return this.form.clienteNome.trim().length > 0 && 
-           this.form.servicoId.length > 0 && 
-           this.form.profissionalId !== null;
+  isFormValido() {
+    return !!(
+      this.form.clienteNome.trim() &&
+      this.service &&
+      this.profissionais.some((p) => p.id === this.form.profissionalId) &&
+      this.window
+    );
   }
-
   async confirmar() {
-    if (this.saving || this.loadingCatalog || this.catalogError || !this.isFormValido()) return;
+    if (this.saving || this.saved || this.loadingCatalog || this.catalogError) return;
+    if (!this.isFormValido()) {
+      this.erro = 'Escolha cliente, serviço, profissional e um horário válido.';
+      return;
+    }
     this.saving = true;
-    this.erro   = '';
-
+    this.erro = '';
     try {
-      let clienteId = this.form.clienteId;
-
-      if (!clienteId && this.form.clienteNome.trim()) {
-        const novoCliente = await this.clienteService.addCliente({
+      const window = this.window!;
+      const conflict = this.agenda.currentEvents.some(
+        (e) =>
+          e.profissional_id === this.form.profissionalId &&
+          !['cancelado', 'noshow'].includes(e.status || '') &&
+          Date.parse(e.start) < Date.parse(window.end) &&
+          Date.parse(e.end) > Date.parse(window.start),
+      );
+      if (conflict)
+        throw new Error(
+          'Este profissional já tem um atendimento nesse horário. Escolha outro horário.',
+        );
+      if (!this.form.clienteId) {
+        const c = await this.clients.addCliente({
           nome: this.form.clienteNome.trim(),
-          telefone: this.form.clienteTelefone || undefined,
-          ultima_visita: new Date().toISOString().split('T')[0],
+          telefone: this.form.clienteTelefone.trim() || undefined,
         });
-        clienteId = novoCliente.id!;
+        this.form.clienteId = c.id!;
+        this.isNovoCliente = false;
       }
-
-      const servico = this.servicos.find(s => s.id === this.form.servicoId);
-      const prof    = this.profissionais.find(p => p.id === this.form.profissionalId);
-      const title   = `${servico?.emoji || '✂️'} ${this.form.clienteNome} — ${servico?.titulo || ''}`;
-
-      await this.agendaService.addEvent({
-        title,
-        start: this.startStr,
-        end:   this.endStr,
-        allDay: this.allDay,
-        cliente_id: clienteId || undefined,
+      const pro = this.profissionais.find((p) => p.id === this.form.profissionalId);
+      await this.agenda.addEvent({
+        title: `${this.service?.emoji || '📅'} ${this.form.clienteNome.trim()} — ${this.service?.titulo}`,
+        start: window.start,
+        end: window.end,
+        allDay: false,
+        cliente_id: this.form.clienteId!,
         servico_id: this.form.servicoId,
-        profissional_id: this.form.profissionalId || undefined,
-        profissional_nome: prof?.nome,
-        status:     this.form.status,
+        profissional_id: this.form.profissionalId,
+        profissional_nome: pro?.nome,
+        status: this.form.status,
         status_confirmacao: 'pendente',
-        observacoes: this.form.observacoes || undefined,
-        backgroundColor: prof?.cor_agenda || '#1a73e8',
+        observacoes: this.form.observacoes.trim() || undefined,
+        backgroundColor: pro?.cor_agenda || '#5d6ed9',
       });
-
-      this.confirmado.emit();
-    } catch (e: any) {
-      this.erro = e.message || 'Erro ao salvar agendamento.';
+      this.saved = true;
+      await this.router.navigate(['/admin/agenda'], { queryParams: { dia: this.day } });
+    } catch (e) {
+      this.erro =
+        e instanceof Error ? e.message : 'Não foi possível agendar. Seus dados foram mantidos.';
     } finally {
       this.saving = false;
-      if (!this.destroyRef.destroyed) this.cdr.markForCheck();
+      if (!this.destroy.destroyed) this.cdr.markForCheck();
     }
   }
-
-  cancelar() { this.cancelado.emit(); }
 }

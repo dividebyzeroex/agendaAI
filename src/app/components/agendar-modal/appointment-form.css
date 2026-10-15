@@ -1,0 +1,63 @@
+:host {
+  display: block;
+}
+.client-search {
+  position: relative;
+}
+.client-matches {
+  margin-top: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: 8px;
+  max-height: 280px;
+  overflow: auto;
+  background: var(--surface-color, #fff);
+}
+.client-matches > button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  min-height: 46px;
+  border: 0;
+  border-bottom: 1px solid var(--glass-border);
+  padding: 12px;
+  background: none;
+  color: var(--text-main);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.client-matches button:hover {
+  background: var(--active-bg);
+}
+.client-matches strong {
+  font-size: 14px;
+  font-weight: 550;
+}
+.client-matches small {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.client-matches > p {
+  padding: 12px;
+}
+.client-matches .create-client {
+  color: var(--primary-color);
+  font-size: 14px;
+}
+.selected-client {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+}
+.selected-client span {
+  display: block;
+  margin-top: 4px;
+}
+.selected-client strong {
+  font-size: 15px;
+  font-weight: 550;
+}

@@ -1,4 +1,8 @@
 import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import {ActivatedRoute,RouterLink} from '@angular/router';
+import {DestroyRef} from '@angular/core';
+import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
+import {agendaDay} from '../../utils/agenda-day';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AgendaEventService, AgendaEvent } from '../../services/agenda-event.service';
@@ -11,7 +15,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-admin-caixa',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './admin-caixa.html',
   styleUrls: ['./admin-caixa.css']
 })
@@ -24,10 +28,19 @@ export class AdminCaixa implements OnInit {
   private authService = inject(AuthService);
   private cdr = inject(ChangeDetectorRef);
 
+  private route=inject(ActivatedRoute);private destroy=inject(DestroyRef);
+  private requestedId=this.route.snapshot.queryParamMap.get('atendimento');private requestedHandled=false;
+  message='';messageError=false;sessionError=false;sessionBusy=false;lastClosure:any=null;
+  get cashTaskActive(){return this.showFechamentoModal||this.showSangriaModal;}
+  get selectedClientName(){return this.clientesLista.find(c=>c.id===this.clienteSelecionadoId)?.nome||'';}
+  notify(message:string,error=false){this.message=message;this.messageError=error;this.cdr.markForCheck();}
+  openTask(type:'movement'|'close'){this.showSangriaModal=type==='movement';this.showFechamentoModal=false;this.message='';if(type==='close')this.prepararFechamento();}
+  closeTask(){this.showSangriaModal=false;this.showFechamentoModal=false;}
+  async openRequested(){if(!this.requestedId||this.requestedHandled||!this.sessaoAtual)return;const target=this.eventosPendentes.find(e=>e.id===this.requestedId)||this.agendaService.currentEvents.find(e=>e.id===this.requestedId);if(!target)return;this.requestedHandled=true;if(target.status!=='concluido'||target.cobranca_enviada){this.notify('Este atendimento já foi cobrado ou ainda precisa ser concluído.');return;}await this.selecionarEvento(target);}
   eventosPendentes: AgendaEvent[] = [];
   isLoading = true;
   isLoadingMovs = false;
-  
+
   // POS Session State
   sessaoAtual: any = null;
   movimentacoes: any[] = [];
@@ -45,7 +58,7 @@ export class AdminCaixa implements OnInit {
   // Fechamento
   saldoInformado: number | null = null;
   fechamentoRelatorio: any = null;
-  
+
   // Sangria / Suprimento
   tipoMovimento: 'sangria' | 'suprimento' = 'sangria';
   valorMovimento: number = 0;
@@ -58,16 +71,16 @@ export class AdminCaixa implements OnInit {
   produtosCatalogo: Produto[] = [];
   prodSelecionadoId = '';
   comandaProdutos: { produto: Produto, quantidade: number }[] = [];
-  comandaToken = '';
+  comandaToken = '';checkoutComplete=false;
   comandaFisica = '';
   emailCliente = '';
   formaPagamento: string = '';
   valorRecebido: number | null = null;
   clienteSelecionadoId: string = '';
   clientesLista: any[] = [];
-  
+
   visitasFidelidade = 0;
-  visitasMeta = 10;
+  visitasMeta = 0;
   descontoPercentual = 0;
   aplicarFidelidade = false;
   isAniversariante = false;
@@ -77,18 +90,14 @@ export class AdminCaixa implements OnInit {
   @ViewChild('printArea') printArea!: ElementRef;
 
   async ngOnInit() {
-    this.estService.activeId$.subscribe(id => {
-      if (id) {
-        this.checkSessaoAberta();
-        this.fetchPendentes();
-      }
-    });
+    this.estService.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe(id=>{this.sessaoAtual=null;this.eventosPendentes=[];this.requestedHandled=false;this.cancelarCheckout();if(id)void Promise.all([this.checkSessaoAberta(),this.fetchPendentes()]).then(()=>this.openRequested());});
+    this.agendaService.events$.pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>void this.openRequested());
 
-    this.prodService.produtos$.subscribe(p => {
+    this.prodService.produtos$.pipe(takeUntilDestroyed(this.destroy)).subscribe(p => {
       this.produtosCatalogo = p.filter(x => x.ativo && x.estoque > 0);
       this.cdr.detectChanges();
     });
-    this.clienteService.clientes$.subscribe(c => {
+    this.clienteService.clientes$.pipe(takeUntilDestroyed(this.destroy)).subscribe(c => {
       this.clientesLista = c || [];
       this.cdr.detectChanges();
     });
@@ -97,7 +106,7 @@ export class AdminCaixa implements OnInit {
   // --- SESSÃO DO CAIXA ---
 
   async checkSessaoAberta() {
-    this.isLoading = true;
+    this.isLoading = true;this.sessionError=false;
     try {
       const estabId = this.estService.estabelecimento$.value?.id;
       if (!estabId) return;
@@ -111,14 +120,15 @@ export class AdminCaixa implements OnInit {
         .limit(1)
         .maybeSingle();
 
+      if(error)throw error;
       if (data) {
         this.sessaoAtual = data;
         this.fetchMovimentacoes();
       } else {
         this.sessaoAtual = null;
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      this.sessionError=true;this.notify('Não foi possível verificar o caixa. Tente carregar novamente.',true);
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -126,6 +136,7 @@ export class AdminCaixa implements OnInit {
   }
 
   async abrirCaixa() {
+    if(this.sessionBusy||this.sessionError)return;if(!Number.isFinite(Number(this.trocoInicial))||Number(this.trocoInicial)<0){this.notify('Informe um saldo inicial válido.',true);return;}this.sessionBusy=true;
     try {
       const estabId = this.estService.estabelecimento$.value?.id;
       const profile = this.authService.userProfileValue;
@@ -144,7 +155,7 @@ export class AdminCaixa implements OnInit {
         .single();
 
       if (error) throw error;
-      
+
       // Lança suprimento do troco inicial
       if (this.trocoInicial > 0) {
         await this.profService['supabase']
@@ -161,16 +172,14 @@ export class AdminCaixa implements OnInit {
 
       this.sessaoAtual = data;
       this.showAberturaModal = false;
-      this.fetchMovimentacoes();
-    } catch (e: any) {
-      alert('Erro ao abrir caixa: ' + e.message);
-    }
+      void this.fetchMovimentacoes();await this.openRequested();this.notify('Caixa aberto.');
+    } catch (e:any){this.notify('Não foi possível abrir o caixa: '+e.message,true);}finally{this.sessionBusy=false;this.cdr.markForCheck();}
   }
 
   prepararFechamento() {
     let entradas = 0;
     let saidas = 0;
-    
+
     this.movimentacoes.forEach(m => {
       if (m.forma_pagamento === 'dinheiro') {
         if (m.tipo === 'venda' || m.tipo === 'suprimento') {
@@ -182,23 +191,25 @@ export class AdminCaixa implements OnInit {
     });
 
     const calculado = entradas - saidas;
-    
+
     this.fechamentoRelatorio = {
       saldoInicial: this.sessaoAtual.saldo_inicial,
       totalEntradasDinheiro: entradas,
       totalSaidasDinheiro: saidas,
       saldoCalculado: calculado
     };
-    
+
     this.showFechamentoModal = true;
   }
 
   async fecharCaixa() {
+    if(this.sessionBusy)return;
     if (this.saldoInformado === null) {
-      alert('Informe o valor contado na gaveta para prosseguir.');
+      this.notify('Informe o valor contado na gaveta para prosseguir.',true);
       return;
     }
 
+    this.sessionBusy=true;
     try {
       const { data, error } = await this.profService['supabase']
         .from('caixa_sessoes')
@@ -212,18 +223,18 @@ export class AdminCaixa implements OnInit {
         .eq('id', this.sessaoAtual.id)
         .select()
         .single();
-        
+
       if (error) throw error;
-      
-      alert('Caixa fechado com sucesso!');
-      this.imprimirFechamento(data, this.movimentacoes);
+
+      this.notify('Caixa fechado. O relatório está disponível para impressão.');
+      this.lastClosure={data,movimentacoes:[...this.movimentacoes]};
       this.sessaoAtual = null;
       this.showFechamentoModal = false;
       this.saldoInformado = null;
-      
+
     } catch (e: any) {
-      alert('Erro ao fechar caixa: ' + e.message);
-    }
+      this.notify('Não foi possível fechar o caixa: '+e.message,true);
+    }finally{this.sessionBusy=false;this.cdr.markForCheck();}
   }
 
   // --- MOVIMENTAÇÕES ---
@@ -250,14 +261,16 @@ export class AdminCaixa implements OnInit {
   }
 
   async registrarMovimentoManual() {
+    if(this.sessionBusy)return;
     if (!this.valorMovimento || this.valorMovimento <= 0) {
-      alert('Valor inválido.');
+      this.notify('Informe um valor maior que zero.',true);
       return;
     }
-    
+
+    this.sessionBusy=true;
     try {
       const profile = this.authService.userProfileValue;
-      await this.profService['supabase']
+      const {error}=await this.profService['supabase']
         .from('caixa_movimentacoes')
         .insert([{
           sessao_id: this.sessaoAtual.id,
@@ -267,20 +280,21 @@ export class AdminCaixa implements OnInit {
           descricao: this.motivoMovimento || (this.tipoMovimento === 'sangria' ? 'Retirada de caixa' : 'Entrada manual'),
           operador_nome: profile?.nome
         }]);
-        
-      alert(`${this.tipoMovimento} registrada com sucesso.`);
+
+      if(error)throw error;
+      this.notify('Movimentação registrada.');
       this.showSangriaModal = false;
       this.valorMovimento = 0;
       this.motivoMovimento = '';
       this.fetchMovimentacoes();
     } catch (e: any) {
-      alert('Erro: ' + e.message);
-    }
+      this.notify('Não foi possível registrar: '+e.message,true);
+    }finally{this.sessionBusy=false;this.cdr.markForCheck();}
   }
 
   async estornarMovimento(mov: any) {
     if (!confirm(`Deseja realmente estornar este lançamento de R$ ${mov.valor}?`)) return;
-    
+
     try {
       const profile = this.authService.userProfileValue;
       await this.profService['supabase']
@@ -293,7 +307,7 @@ export class AdminCaixa implements OnInit {
           descricao: `Estorno Ref: ${mov.id.substring(0,8)}`,
           operador_nome: profile?.nome
         }]);
-      
+
       // Se for venda, também cancela a comanda atrelada (se houver)
       if (mov.caixa_item_id) {
          await this.profService['supabase']
@@ -301,7 +315,7 @@ export class AdminCaixa implements OnInit {
            .update({ status_caixa: 'cancelado' })
            .eq('id', mov.caixa_item_id);
       }
-      
+
       alert('Lançamento estornado.');
       this.fetchMovimentacoes();
     } catch (e: any) {
@@ -310,17 +324,19 @@ export class AdminCaixa implements OnInit {
   }
 
   // --- CHECKOUT EXISTENTE ---
-  
+
   async fetchPendentes() {
+    const establishmentId=this.estService.estabelecimento$.value?.id;if(!establishmentId)return;
     try {
-      const hoje = new Date().toISOString().split('T')[0];
+      const hoje = agendaDay(new Date());
       const { data, error } = await this.profService['supabase']
         .from('agenda_events')
         .select('*, clientes(nome, telefone), servicos(titulo, preco, emoji, duracao_min)')
-        .gte('start', `${hoje}T00:00:00`)
-        .lte('start', `${hoje}T23:59:59`)
+        .eq('estabelecimento_id',establishmentId)
+        .gte('start', `${hoje}T00:00:00-03:00`)
+        .lte('start', `${hoje}T23:59:59.999-03:00`)
         .eq('status', 'concluido')
-        .is('cobranca_enviada', null) 
+        .is('cobranca_enviada', null)
         .order('start', { ascending: false });
 
       if (error) {
@@ -329,16 +345,17 @@ export class AdminCaixa implements OnInit {
         const { data: dataTrue } = await this.profService['supabase']
           .from('agenda_events')
           .select('*, clientes(nome, telefone), servicos(titulo, preco, emoji, duracao_min)')
-          .gte('start', `${hoje}T00:00:00`)
-          .lte('start', `${hoje}T23:59:59`)
+          .eq('estabelecimento_id',establishmentId)
+          .gte('start', `${hoje}T00:00:00-03:00`)
+          .lte('start', `${hoje}T23:59:59.999-03:00`)
           .eq('status', 'concluido')
-          .eq('cobranca_enviada', false) 
+          .eq('cobranca_enviada', false)
           .order('start', { ascending: false });
-        
+
         let arr1 = data || [];
         let arr2 = dataTrue || [];
         const combined = [...arr1, ...arr2];
-        
+
         this.eventosPendentes = await Promise.all(combined.map(async (e: any) => {
           const security = (this.profService as any).security;
           if (e.title) e.title = await security.decryptData(e.title);
@@ -364,13 +381,13 @@ export class AdminCaixa implements OnInit {
 
   async selecionarEvento(evento: AgendaEvent) {
     if (!this.sessaoAtual) {
-      alert('Abra o caixa primeiro antes de iniciar um pagamento.');
+      this.notify('Abra o caixa abaixo para receber este atendimento.');
       return;
     }
-    
+
     this.eventoSelecionado = evento;
     this.resetCheckoutState();
-    
+
     if (evento.servico_id) {
       const servicos = this.estService.servicos$.value;
       this.servicoPrincipal = servicos.find((s: any) => s.id === evento.servico_id);
@@ -378,7 +395,7 @@ export class AdminCaixa implements OnInit {
          this.servicoPrincipal = (evento as any).servicos;
       }
     }
-    
+
     if (evento.cliente_id) {
       this.clienteSelecionadoId = evento.cliente_id;
       const clientes = this.clienteService.getClientes();
@@ -411,7 +428,7 @@ export class AdminCaixa implements OnInit {
   resetCheckoutState() {
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
-    this.comandaToken = '';
+    this.comandaToken = '';this.checkoutComplete=false;
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
@@ -419,13 +436,13 @@ export class AdminCaixa implements OnInit {
     this.clienteSelecionadoId = '';
     this.aplicarFidelidade = false;
     this.isAniversariante = false;
-    this.visitasFidelidade = 0;
+    this.visitasFidelidade = 0;this.visitasMeta=0;this.descontoPercentual=0;
     this.servicoPrincipal = null;
   }
 
   iniciarVendaAvulsa() {
-    if (!this.sessaoAtual) { alert('Abra o caixa primeiro.'); return; }
-    this.resetCheckoutState();
+    if (!this.sessaoAtual) { this.notify('Abra o caixa abaixo para receber.'); return; }
+    this.eventoSelecionado=null;this.resetCheckoutState();
     this.showVendaAvulsaModal = true;
   }
 
@@ -452,7 +469,7 @@ export class AdminCaixa implements OnInit {
       this.descontoPercentual = config.desconto_percentual || 0;
       this.visitasFidelidade = await this.clienteService.getVisitasFidelidadePendentes(this.clienteSelecionadoId);
     }
-    
+
     this.cdr.detectChanges();
   }
 
@@ -496,15 +513,17 @@ export class AdminCaixa implements OnInit {
   }
 
   async finalizarEGerarComanda(isAvulso: boolean = false) {
-    if (!this.formaPagamento) { alert('Selecione uma forma de pagamento.'); return; }
-    
+    if(this.isFinalizing||this.checkoutComplete)return;
+    if(!this.sessaoAtual||!this.clientesLista.some(c=>c.id===this.clienteSelecionadoId)||!this.formaPagamento){this.notify('Confira cliente, caixa aberto e forma de pagamento.',true);return;}
+    if(this.getValorTotalCheckout()<=0||(this.formaPagamento==='dinheiro'&&Number(this.valorRecebido)<this.getValorTotalCheckout())){this.notify('Confira o total e o valor recebido.',true);return;}
+
     this.isFinalizing = true;
     try {
       let clienteNome = 'Venda Avulsa';
       let eventId = '';
       let profissionalNome = this.authService.userProfileValue?.nome || 'Balcão';
       let clienteId, profissionalId, servicoId;
-      
+
       if (!isAvulso && this.eventoSelecionado) {
         eventId = this.eventoSelecionado.id || '';
         profissionalNome = this.eventoSelecionado.profissional_nome || 'Profissional';
@@ -519,7 +538,7 @@ export class AdminCaixa implements OnInit {
       }
 
       const total = this.getValorTotalCheckout();
-      
+
       const caixaItem = await this.profService.finalizarEEnviarCaixa({
         eventId: eventId,
         clienteNome: clienteNome,
@@ -537,9 +556,10 @@ export class AdminCaixa implements OnInit {
         estabelecimentoId: this.estService.estabelecimento$.value?.id,
         sessaoId: this.sessaoAtual.id
       });
-      
+
+      this.checkoutComplete=true;this.comandaToken=caixaItem.token_publico||'';
       // Registrar Movimentação
-      await this.profService['supabase'].from('caixa_movimentacoes').insert([{
+      const {error:movementError}=await this.profService['supabase'].from('caixa_movimentacoes').insert([{
         sessao_id: this.sessaoAtual.id,
         caixa_item_id: caixaItem.id,
         tipo: 'venda',
@@ -548,21 +568,21 @@ export class AdminCaixa implements OnInit {
         descricao: `Venda #${caixaItem.comanda_fisica || caixaItem.id?.substring(0,6)}`,
         operador_nome: this.authService.userProfileValue?.nome
       }]);
-      
+
+      if(movementError)throw movementError;
       this.comandaToken = caixaItem.token_publico || '';
 
       if (!isAvulso && this.eventoSelecionado) {
         this.eventosPendentes = this.eventosPendentes.filter(e => e.id !== this.eventoSelecionado!.id);
       }
-      
+
       this.fetchMovimentacoes();
-      
-      // Imprimir Recibo Automaticamente
-      this.imprimirComprovante(caixaItem, total, isAvulso);
+
+      this.notify('Venda registrada. Você pode abrir ou imprimir a comanda.');
 
       this.cdr.detectChanges();
     } catch (e: any) {
-      alert('Erro: ' + e.message);
+      this.notify(this.checkoutComplete?'Venda registrada, mas não foi possível atualizar as movimentações. Não registre novamente; confira o caixa.':'Não foi possível concluir: '+e.message,true);
     } finally {
       this.isFinalizing = false;
       this.cdr.detectChanges();
@@ -583,7 +603,7 @@ export class AdminCaixa implements OnInit {
   imprimirComprovante(caixaItem: any, total: number, isAvulso: boolean) {
     const estNome = this.estService.estabelecimento$.value?.nome || 'Estabelecimento';
     const dataHora = new Date().toLocaleString('pt-BR');
-    
+
     let html = `
       <html>
       <head>
@@ -635,7 +655,7 @@ export class AdminCaixa implements OnInit {
   imprimirFechamento(sessao: any, movs: any[]) {
     const estNome = this.estService.estabelecimento$.value?.nome || 'Estabelecimento';
     const dataHora = new Date().toLocaleString('pt-BR');
-    
+
     let entradasDinheiro = 0, saidasDinheiro = 0;
     let totalPix = 0, totalCredito = 0, totalDebito = 0;
 
@@ -677,7 +697,7 @@ export class AdminCaixa implements OnInit {
         <div><strong>Abertura:</strong> ${new Date(sessao.data_abertura).toLocaleString('pt-BR')}</div>
         <div><strong>Fechamento:</strong> ${new Date(sessao.data_fechamento).toLocaleString('pt-BR')}</div>
         <div class="divider"></div>
-        
+
         <div class="flex-between"><span>Fundo de Caixa (Abertura)</span><span>R$ ${Number(sessao.saldo_inicial).toFixed(2)}</span></div>
         <div class="flex-between"><span>(+) Entradas em Dinheiro</span><span>R$ ${entradasDinheiro.toFixed(2)}</span></div>
         <div class="flex-between"><span>(-) Saídas em Dinheiro</span><span>R$ ${saidasDinheiro.toFixed(2)}</span></div>
@@ -685,13 +705,13 @@ export class AdminCaixa implements OnInit {
         <div class="flex-between"><span>Gaveta Contada (Informado)</span><span>R$ ${Number(sessao.saldo_final_informado).toFixed(2)}</span></div>
         <div class="divider"></div>
         <div class="flex-between bold"><span>QUEBRA DE CAIXA</span><span>R$ ${dif.toFixed(2)}</span></div>
-        
+
         <div class="divider"></div>
         <div class="center bold">RESUMO OUTRAS FORMAS</div>
         <div class="flex-between"><span>PIX</span><span>R$ ${totalPix.toFixed(2)}</span></div>
         <div class="flex-between"><span>Crédito</span><span>R$ ${totalCredito.toFixed(2)}</span></div>
         <div class="flex-between"><span>Débito</span><span>R$ ${totalDebito.toFixed(2)}</span></div>
-        
+
         <div class="divider"></div>
         <div class="center">AgendaAI - PDV</div>
       </body>

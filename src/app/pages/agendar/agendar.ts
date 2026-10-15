@@ -1,4 +1,4 @@
-import { bookingDate, bookingMinutes, slotOverlaps, BusyInterval } from '../../utils/booking-slots';
+import { bookingDate, bookingMinutes, slotOverlaps, nextOpeningDate } from '../../utils/booking-slots';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -64,12 +64,14 @@ export class Agendar implements OnInit {
 
   // --- Time Slots ---
   slots: { time: string; available: boolean }[] = [];
+  slotsLoading=false;private slotsRequest=0;assignedProfessionals:Partial<Record<string,ProfissionalPublico>>={};
+  get bookingProfessional(){return this.selectedPro||this.assignedProfessionals[this.selectedTime]||null;}
 
   // --- Calendar navigation ---
   calendarDays: { date: string; dayName: string; dayNum: number; monthShort: string; isToday: boolean; isSelected: boolean; isClosed: boolean }[] = [];
 
   get progressValue(): number {
-    const p: Record<BookingStep, number> = { marketplace: 0, step0: 10, step1: 25, step_pro: 50, step2: 75, step3: 90, done: 100 };
+    const p: Record<BookingStep, number> = { marketplace: 0, step0: 10, step1: 33, step_pro: 33, step2: 66, step3: 90, done: 100 };
     return p[this.step];
   }
 
@@ -77,10 +79,10 @@ export class Agendar implements OnInit {
     const labels: Record<BookingStep, string> = {
       marketplace: 'Explorar',
       step0: 'Perfil',
-      step1: `Passo 1 de 4 · Escolha o ${this.config.labelServico}`,
-      step_pro: `Passo 2 de 4 · Escolha o ${this.config.labelProfissional}`,
-      step2: 'Passo 3 de 4 · Selecione o horário',
-      step3: 'Passo 4 de 4 · Confirmação',
+      step1: `Passo 1 de 3 · Escolha o ${this.config.labelServico}`,
+      step_pro: `Passo 1 de 3 · Escolha o ${this.config.labelProfissional}`,
+      step2: 'Passo 2 de 3 · Selecione o horário',
+      step3: 'Passo 3 de 3 · Confirmação',
       done: 'Concluído'
     };
     return labels[this.step];
@@ -115,7 +117,7 @@ export class Agendar implements OnInit {
     }
 
     // Pré-configura o step correto para evitar flash de tela
-    this.step = isDirect ? 'step1' : 'step0';
+    this.step = 'step1';
 
     // Subscribe to realtime changes
     this.pubService.data$.subscribe(data => {
@@ -126,10 +128,10 @@ export class Agendar implements OnInit {
         this.pros     = data.profissionais || [];
         this.isLoading = false;
         this.notFound  = false;
-        
+
         // Se estava no marketplace por algum erro prévio, e agora carregou dados via socket:
         if (this.step === 'marketplace') {
-          this.step = isDirect ? 'step1' : 'step0';
+          this.step = 'step1';
         }
 
         // Build categories from services
@@ -170,7 +172,7 @@ export class Agendar implements OnInit {
             icon: 'pi pi-exclamation-triangle'
           });
         } catch (e) { console.error('Sem NotifService:', e); }
-        
+
         this.performSearch(); // Busca inicial
       }
       // Se encontrou, step já foi configurado no início do ngOnInit
@@ -200,24 +202,14 @@ export class Agendar implements OnInit {
 
   goToEstabelecimento(slug?: string) {
     if (!slug) return;
-    // Just navigate by updating window location to force reload state correctly, 
+    // Just navigate by updating window location to force reload state correctly,
     // or use router.navigate. Since we don't have Router injected, we can use location.href
     window.location.href = `/agendar/${slug}`;
   }
 
   // === STEP NAVIGATION ===
 
-  async goToStep(next: BookingStep, msg: string) {
-    this.transitionMsg = msg;
-    this.isTransitioning = true;
-    this.cdr.detectChanges();
-    await new Promise(r => setTimeout(r, 500));
-    this.step = next;
-    this.isTransitioning = false;
-    this.cdr.detectChanges();
-    // Scroll to top
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
+  async goToStep(next:BookingStep,_msg:string){this.step=next;this.isTransitioning=false;this.cdr.markForCheck();window.scrollTo({top:0,behavior:'auto'});}
 
   goBack() {
     this.errorMsg = '';
@@ -243,13 +235,8 @@ export class Agendar implements OnInit {
       this.selectedPro = null;
     }
   }
-  
-  goStepPro() {
-    if (this.selectedService) {
-      if (!this.pros.length) { this.goStep2(); return; }
-      this.step = 'step_pro';
-    }
-  }
+
+  goStepPro(){if(this.selectedService){if(this.prosForSelectedService.length===1)this.selectedPro=this.prosForSelectedService[0];this.goStep2();}}
 
   pickPro(p: ProfissionalPublico | null) {
     this.selectedPro = p;
@@ -257,7 +244,7 @@ export class Agendar implements OnInit {
 
   goStep2() {
     if (this.selectedService) {
-      if (!this.selectedDate) this.selectedDate = bookingDate();
+      if (!this.selectedDate) this.selectedDate = nextOpeningDate(this.schedule,this.selectedService.duracao_min||30);
       this.step = 'step2';
       this.buildCalendarDays();
       this.refreshSlots();
@@ -304,46 +291,33 @@ export class Agendar implements OnInit {
   }
 
   async refreshSlots() {
-    if (!this.selectedDate) return;
-    this.selectedTime = '';
-    this.slots = [];
-
-    const dow = new Date(this.selectedDate + 'T12:00:00').getDay();
-    const dayConfig = this.schedule.find(h => h.dia_semana === dow && h.ativo);
-
-    if (!dayConfig) return;
-    const professionalDay = this.selectedPro?.disponibilidades?.find(d => d.dia_semana === dow);
-    if (this.selectedPro && (!professionalDay?.ativo || !professionalDay.hora_inicio || !professionalDay.hora_fim)) return;
-    const abre = dayConfig.abre;
-    const fecha = dayConfig.fecha;
-    if (!abre || !fecha) return;
-
-    let busy: BusyInterval[] = [];
-    try {
-      busy = await this.pubService.getBusyIntervals(this.estab!.id!, this.selectedDate);
-    } catch { this.errorMsg = "Não foi possível consultar os horários. Tente novamente."; this.cdr.detectChanges(); return; }
-
-    const [hA, mA] = abre.split(':').map(Number);
-    const [hF, mF] = fecha.split(':').map(Number);
-    let current = hA * 60 + mA;
-    const end = hF * 60 + mF;
-    const duration = this.selectedService?.duracao_min || 30;
-
-    // Filter past slots if today
-    const now = new Date();
-    const isToday = this.selectedDate === bookingDate(now);
-    const currentMinutes = bookingMinutes(now);
-
-    while (current + duration <= end) {
-      const time = `${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
-      const isPast = isToday && current <= currentMinutes;
-      const toMinutes = (value: string) => Number(value.slice(0,2))*60 + Number(value.slice(3,5));
-      const outsideProfessional = professionalDay && ((professionalDay.hora_inicio && current < toMinutes(professionalDay.hora_inicio)) || (professionalDay.hora_fim && current + duration > toMinutes(professionalDay.hora_fim)) || (professionalDay.intervalo_inicio && professionalDay.intervalo_fim && current < toMinutes(professionalDay.intervalo_fim) && current + duration > toMinutes(professionalDay.intervalo_inicio)));
-      this.slots.push({ time, available: !outsideProfessional && !slotOverlaps(this.selectedDate, time, duration, busy, this.selectedPro?.id) && !isPast });
-      current += 30;
-    }
-    this.cdr.detectChanges();
+    const request=++this.slotsRequest;const date=this.selectedDate;
+    this.selectedTime='';this.slots=[];this.assignedProfessionals={};this.slotsLoading=false;
+    if(!date||!this.selectedService)return;
+    const dow=new Date(date+'T12:00:00-03:00').getUTCDay();
+    const hours=this.schedule.find(h=>h.dia_semana===dow&&h.ativo);
+    if(!hours?.abre||!hours.fecha)return;
+    this.slotsLoading=true;this.errorMsg='';this.cdr.markForCheck();
+    try{
+      const busy=await this.pubService.getBusyIntervals(this.estab!.id!,date);
+      if(request!==this.slotsRequest)return;
+      const duration=this.selectedService.duracao_min||30;
+      const minutes=(value:string)=>Number(value.slice(0,2))*60+Number(value.slice(3,5));
+      const today=date===bookingDate();const now=bookingMinutes(new Date());
+      const candidates=this.selectedPro?[this.selectedPro]:this.prosForSelectedService;
+      for(let current=minutes(hours.abre);current+duration<=minutes(hours.fecha);current+=30){
+        const time=`${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
+        const available=candidates.find(pro=>{const d=pro.disponibilidades?.find(item=>item.dia_semana===dow);return d?.ativo&&d.hora_inicio&&d.hora_fim&&current>=minutes(d.hora_inicio)&&current+duration<=minutes(d.hora_fim)&&!(d.intervalo_inicio&&d.intervalo_fim&&current<minutes(d.intervalo_fim)&&current+duration>minutes(d.intervalo_inicio))&&!slotOverlaps(date,time,duration,busy,pro.id);});
+        const free=this.pros.length?!!available:!slotOverlaps(date,time,duration,busy);
+        this.slots.push({time,available:free&&!(today&&current<=now)});
+        if(available)this.assignedProfessionals[time]=available;
+      }
+    }catch{if(request===this.slotsRequest)this.errorMsg='Não foi possível consultar os horários. Tente novamente.';}
+    finally{if(request===this.slotsRequest){this.slotsLoading=false;this.cdr.markForCheck();}}
   }
+
+  get availableSlots(){return this.slots.filter(slot=>slot.available);}
+  get hasAvailableSlots(){return this.availableSlots.length>0;}
 
   selectTime(slot: any) {
     if (!slot.available) return;
@@ -375,8 +349,8 @@ export class Agendar implements OnInit {
     const nameClean = this.custName.trim();
     const phoneClean = this.custPhone.replace(/\D/g, '');
 
-    if (!nameClean) {
-      this.errorMsg = 'Por favor, informe seu nome.';
+    if (nameClean.length<2) {
+      this.errorMsg = 'Informe seu nome com pelo menos duas letras.';
       return;
     }
     if (phoneClean.length < 10) {
@@ -384,6 +358,9 @@ export class Agendar implements OnInit {
       return;
     }
 
+    if(this.isSaving)return;
+    if(!this.selectedService||!this.selectedDate||!this.selectedTime){this.errorMsg='Escolha um serviço e horário antes de confirmar.';return;}
+    if(this.pros.length&&!this.bookingProfessional){this.errorMsg='O horário mudou. Escolha um horário disponível novamente.';return;}
     this.isSaving = true;
     this.errorMsg = '';
 
@@ -411,7 +388,7 @@ export class Agendar implements OnInit {
         body: JSON.stringify({
           estabelecimento_id: this.estab!.id,
           servico_id: this.selectedService?.id,
-          profissional_id: this.selectedPro?.id || null,
+          profissional_id: this.bookingProfessional?.id || null,
           start: this.toLocalISO(startDt),
           end: this.toLocalISO(endDt),
           cliente_nome: nameClean,
@@ -462,6 +439,7 @@ export class Agendar implements OnInit {
     this.selectedPro = null;
     this.selectedDate = '';
     this.selectedTime = '';
+    this.petNome='';this.petRaca='';this.petPorte='';this.petCuidados='';this.aparelho='';this.defeito='';
     this.custName = '';
     this.custPhone = '';
     this.errorMsg = '';

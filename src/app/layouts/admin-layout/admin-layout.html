@@ -1,130 +1,175 @@
+<a class="skip-link" href="#customer-content">Pular para o conteúdo</a>
 <div class="ag-admin-shell" [class.sidebar-open]="isSidebarOpen">
-  
-  <div class="sidebar-overlay" *ngIf="isSidebarOpen" (click)="closeSidebar()"></div>
-
-  <!-- Update Notifier Toast (background check) -->
-  <app-update-notifier></app-update-notifier>
-
-  <!-- Sidebar -->
-
-  <aside id="admin-menu" class="ag-sidebar" *ngIf="!(isOperacional | async)">
-    <div class="sidebar-logo">
-      <span class="logo-mark">▲</span>
-      <span class="logo-text">AgendaAi</span>
-    </div>
-
-    <nav class="sidebar-nav">
-      <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" (click)="closeSidebar()">
-        <i class="pi pi-home"></i><span>Meu Painel</span>
-      </a>
-      <a routerLink="/admin/portal" routerLinkActive="active" *ngIf="isAdminOrFin | async" (click)="closeSidebar()">
-        <i class="pi pi-desktop"></i><span>Visão Profissional</span>
-      </a>
-      <a routerLink="/admin/agenda" routerLinkActive="active" (click)="closeSidebar()">
-        <i class="pi pi-calendar-times"></i><span>Agenda</span>
-      </a>
-      <a routerLink="/admin/clientes" routerLinkActive="active" *ngIf="(isDono | async) || (isSecretaria | async)" (click)="closeSidebar()">
-        <i class="pi pi-users"></i><span>Clientes</span>
-      </a>
-      <a routerLink="/admin/produtos" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-box"></i><span>Produtos</span>
-      </a>
-      <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-id-card"></i><span>{{ (segmentoConfig.config$ | async)?.labelProfissionalPlural || 'Profissionais' }}</span>
-      </a>
-      <a routerLink="/admin/caixa" routerLinkActive="active" *ngIf="(isDono | async) || (isAdminOrFin | async)" (click)="closeSidebar()">
-        <i class="pi pi-receipt"></i><span>Caixa (PDV)</span>
-      </a>
-      <a routerLink="/admin/comissoes" routerLinkActive="active" *ngIf="(isDono | async) || (isAdminOrFin | async)" (click)="closeSidebar()">
-        <i class="pi pi-percentage"></i><span>Comissões</span>
-      </a>
-      <!-- HIDE AUTOMATIONS TEMPORARILY FOR TESTING
-      <a routerLink="/admin/chatbots" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-android"></i><span>Meus Robôs</span>
-      </a>
-      -->
-      <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isAdminOrFin | async" (click)="closeSidebar()">
-        <i class="pi pi-chart-bar"></i><span>Relatórios</span>
-      </a>
-      <a routerLink="/admin/configuracoes" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-cog"></i><span>Configurações</span>
-      </a>
-      <!-- Plans and trial expiry -->
-      <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async" (click)="closeSidebar()">
-        <i class="pi pi-credit-card"></i><span>Planos</span>
-        <span class="trial-badge" *ngIf="billing.isTrialActive() | async as active">
-           {{ billing.getTrialDaysRemaining() | async }}d restantes
-        </span>
-      </a>
+  <button
+    *ngIf="isMobile && isSidebarOpen"
+    class="sidebar-overlay"
+    (click)="closeSidebar()"
+    aria-label="Fechar menu"
+  ></button>
+  <aside
+    id="admin-menu"
+    class="ag-sidebar"
+    *ngIf="!(isOperational | async)"
+    [attr.inert]="isMobile && !isSidebarOpen ? '' : null"
+  >
+    <a class="sidebar-logo" routerLink="/admin/dashboard"
+      ><span class="logo-symbol">a</span><strong>agenda<span>AI</span></strong></a
+    >
+    <nav class="sidebar-nav" aria-label="Navegação principal">
+      <a routerLink="/admin/dashboard" routerLinkActive="active" ariaCurrentWhenActive="page"
+        ><i class="pi pi-home" aria-hidden="true"></i>Hoje</a
+      >
+      <a routerLink="/admin/agenda" routerLinkActive="active" ariaCurrentWhenActive="page"
+        ><i class="pi pi-calendar" aria-hidden="true"></i>Agenda</a
+      >
+      <a
+        routerLink="/admin/clientes"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        *ngIf="canClients | async"
+        ><i class="pi pi-users" aria-hidden="true"></i>Clientes</a
+      >
+      <a
+        routerLink="/admin/caixa"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        *ngIf="canCash | async"
+        ><i class="pi pi-wallet" aria-hidden="true"></i>Caixa</a
+      >
+      <details class="management-nav" [open]="managementActive">
+        <summary>Gerenciar <i class="pi pi-angle-down" aria-hidden="true"></i></summary>
+        <div>
+          <a routerLink="/admin/profissionais" routerLinkActive="active" *ngIf="isDono | async"
+            ><i class="pi pi-id-card" aria-hidden="true"></i>Equipe</a
+          >
+          <a
+            routerLink="/admin/configuracoes"
+            [queryParams]="{ tab: 'servicos' }"
+            *ngIf="isDono | async"
+            ><i class="pi pi-tag" aria-hidden="true"></i>Serviços e preços</a
+          >
+          <a routerLink="/admin/produtos" routerLinkActive="active" *ngIf="isDono | async"
+            ><i class="pi pi-box" aria-hidden="true"></i>Produtos</a
+          >
+          <a routerLink="/admin/analytics" routerLinkActive="active" *ngIf="isFinance | async"
+            ><i class="pi pi-chart-line" aria-hidden="true"></i>Relatórios</a
+          >
+          <a routerLink="/admin/comissoes" routerLinkActive="active" *ngIf="isFinance | async"
+            ><i class="pi pi-percentage" aria-hidden="true"></i>Comissões</a
+          >
+          <a routerLink="/admin/portal" routerLinkActive="active"
+            ><i class="pi pi-user" aria-hidden="true"></i>Minha agenda profissional</a
+          >
+          <a routerLink="/admin/configuracoes" routerLinkActive="active" *ngIf="isDono | async"
+            ><i class="pi pi-cog" aria-hidden="true"></i>Configurações</a
+          >
+          <a routerLink="/admin/billing" routerLinkActive="active" *ngIf="isDono | async"
+            ><i class="pi pi-credit-card" aria-hidden="true"></i>Plano e assinatura</a
+          >
+          <a routerLink="/admin/primeiros-passos" routerLinkActive="active" *ngIf="isDono | async"
+            ><i class="pi pi-check-circle" aria-hidden="true"></i>Preparar minha agenda</a
+          >
+        </div>
+      </details>
     </nav>
-
-
+    <div class="sidebar-account" *ngIf="profile$ | async as p">
+      <span>{{ p.nome }}</span
+      ><button type="button" (click)="logout()">
+        Sair <i class="pi pi-sign-out" aria-hidden="true"></i>
+      </button>
+    </div>
   </aside>
-
-  <!-- Main Area -->
-  <div class="ag-main" [style.margin-left]="(isOperacional | async) ? '0' : ''">
-    <!-- Topbar -->
+  <div class="ag-main" [class.operational]="isOperational | async">
     <header class="ag-topbar">
       <div class="topbar-left">
-        <button class="mobile-hamburger" aria-label="Abrir menu" [attr.aria-expanded]="isSidebarOpen" (click)="toggleSidebar()" *ngIf="!(isOperacional | async)">
-          <i class="pi pi-bars"></i>
-        </button>
-        <div class="topbar-search desktop-only">
-          <i class="pi pi-search"></i>
-          <span>Pressione <kbd>Ctrl+K</kbd> para buscar</span>
-        </div>
+        <button
+          type="button"
+          class="mobile-hamburger"
+          (click)="toggleSidebar()"
+          aria-label="Abrir menu"
+          aria-controls="admin-menu"
+          [attr.aria-expanded]="isSidebarOpen"
+          *ngIf="!(isOperational | async)"
+        >
+          <i class="pi pi-bars" aria-hidden="true"></i></button
+        ><span class="business-name">{{ (tenant$ | async)?.nome || 'Minha agenda' }}</span>
       </div>
       <div class="topbar-right">
-        <!-- LIVE CREW (Presence Synchrony) -->
-        <div class="presence-stack" *ngIf="onlineUsers$ | async as users">
-           <div class="presence-avatars" *ngIf="users.length > 0">
-              <div class="p-avatar-item" *ngFor="let u of users | slice:0:3" 
-                   [pTooltip]="u.nome + ' (' + u.role + ')'" tooltipPosition="bottom">
-                 <div class="p-status-glow"></div>
-                 <p-avatar [label]="(u.nome[0] | uppercase)" shape="circle"></p-avatar>
-              </div>
-              <div class="p-avatar-more" *ngIf="users.length > 3" [pTooltip]="users.length - 3 + ' mais online'" tooltipPosition="bottom">
-                +{{ users.length - 3 }}
-              </div>
-           </div>
-        </div>
-
-        <div class="notif-wrapper">
-          <p-button icon="pi pi-bell" [rounded]="true" [text]="true" severity="secondary" 
-            (click)="isNotifOpen = !isNotifOpen"></p-button>
-          <span class="notif-badge" *ngIf="notifService.unreadCount > 0">{{ notifService.unreadCount }}</span>
-        </div>
-        <div class="user-avatar-wrap" (click)="menu.toggle($event)" *ngIf="userProfile$ | async as profile">
-          <p-avatar [label]="(profile.nome[0] | uppercase)" shape="circle" styleClass="premium-avatar"></p-avatar>
-        </div>
-        <p-menu #menu [model]="userMenuItems" [popup]="true" styleClass="premium-menu"></p-menu>
+        <button
+          type="button"
+          class="share-link"
+          *ngIf="publicPath && (isDono | async)"
+          (click)="copyLink()"
+        >
+          <i class="pi pi-link" aria-hidden="true"></i
+          ><span>{{ copied ? 'Link copiado' : 'Compartilhar agenda' }}</span>
+        </button>
+        <button
+          type="button"
+          class="topbar-icon"
+          (click)="palette.toggle()"
+          aria-label="Buscar uma função"
+        >
+          <i class="pi pi-search" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="topbar-icon"
+          (click)="isNotifOpen = !isNotifOpen"
+          aria-label="Notificações"
+          [attr.aria-expanded]="isNotifOpen"
+        >
+          <i class="pi pi-bell" aria-hidden="true"></i
+          ><span class="notif-dot" *ngIf="notifications.unreadCount"></span>
+        </button>
+        <button
+          type="button"
+          class="topbar-icon"
+          *ngIf="isOperational | async"
+          (click)="logout()"
+          aria-label="Sair"
+        >
+          <i class="pi pi-sign-out" aria-hidden="true"></i>
+        </button>
       </div>
     </header>
-
-    <!-- Notification Center Overlay -->
-    <app-notification-center [isOpen]="isNotifOpen" (close)="isNotifOpen = false"></app-notification-center>
-
-    <!-- Child Page Content -->
-    <div class="ag-page-content">
+    <p class="copy-error" *ngIf="copyError" role="status">{{ copyError }}</p>
+    <app-notification-center
+      [isOpen]="isNotifOpen"
+      (close)="isNotifOpen = false"
+    ></app-notification-center>
+    <main
+      id="customer-content"
+      class="ag-page-content"
+      [attr.inert]="isMobile && isSidebarOpen ? '' : null"
+    >
       <router-outlet></router-outlet>
-    </div>
+    </main>
   </div>
-
-  <nav class="mobile-bottom-nav" aria-label="Navegação principal" *ngIf="!(isOperacional | async)">
-    <a routerLink="/admin/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact:true}" ariaCurrentWhenActive="page"><i class="pi pi-home" aria-hidden="true"></i><span>Início</span></a>
-    <a routerLink="/admin/agenda" routerLinkActive="active" ariaCurrentWhenActive="page"><i class="pi pi-calendar" aria-hidden="true"></i><span>Agenda</span></a>
-    <a routerLink="/admin/clientes" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="(isDono | async) || (isSecretaria | async)"><i class="pi pi-users" aria-hidden="true"></i><span>Clientes</span></a>
-    <a routerLink="/admin/caixa" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="(isDono | async) || (isAdminOrFin | async)"><i class="pi pi-wallet" aria-hidden="true"></i><span>Caixa</span></a>
-    <button type="button" (click)="toggleSidebar()" aria-controls="admin-menu" [attr.aria-expanded]="isSidebarOpen"><i class="pi pi-bars" aria-hidden="true"></i><span>Mais</span></button>
+  <nav
+    class="mobile-bottom-nav"
+    aria-label="Atalhos"
+    *ngIf="!(isOperational | async)"
+    [attr.inert]="isSidebarOpen ? '' : null"
+  >
+    <a routerLink="/admin/dashboard" routerLinkActive="active"
+      ><i class="pi pi-home" aria-hidden="true"></i><span>Hoje</span></a
+    ><a routerLink="/admin/agenda" routerLinkActive="active"
+      ><i class="pi pi-calendar" aria-hidden="true"></i><span>Agenda</span></a
+    ><a routerLink="/admin/clientes" routerLinkActive="active" *ngIf="canClients | async"
+      ><i class="pi pi-users" aria-hidden="true"></i><span>Clientes</span></a
+    ><a routerLink="/admin/caixa" routerLinkActive="active" *ngIf="canCash | async"
+      ><i class="pi pi-wallet" aria-hidden="true"></i><span>Caixa</span></a
+    ><button
+      type="button"
+      (click)="toggleSidebar()"
+      aria-label="Mais funções"
+      aria-controls="admin-menu"
+      [attr.aria-expanded]="isSidebarOpen"
+    >
+      <i class="pi pi-bars" aria-hidden="true"></i><span>Mais</span>
+    </button>
   </nav>
-  <app-command-palette></app-command-palette>
-
-  <!-- Onboarding Modal — shown only once per user -->
-  <app-onboarding-modal *ngIf="showOnboarding"></app-onboarding-modal>
-
-  <!-- Popup Toasts -->
-  <app-toast-container></app-toast-container>
-
+  <app-command-palette #palette></app-command-palette><app-toast-container></app-toast-container>
 </div>
-
 <app-support-widget></app-support-widget>

@@ -1,0 +1,139 @@
+<div class="customer-page">
+  <a class="back-link" routerLink="/admin/agenda" [queryParams]="{ dia: day }"
+    ><i class="pi pi-arrow-left" aria-hidden="true"></i>Voltar à agenda</a
+  >
+  <p *ngIf="loading && !event" role="status">Carregando atendimento…</p>
+  <div class="feedback error" *ngIf="agenda.error$ | async as loadError" role="alert">
+    {{ loadError }} <button class="text-action" (click)="agenda.reload()">Tentar novamente</button>
+  </div>
+  <ng-container *ngIf="event as e"
+    ><header class="page-heading">
+      <div>
+        <span class="status-tag" [ngClass]="e.status || 'confirmado'">{{ statusLabel }}</span>
+        <h1>{{ e.title }}</h1>
+        <p>
+          {{ e.start | date: 'EEEE, dd/MM · HH:mm' : '-0300' }}–{{ e.end | date: 'HH:mm' : '-0300'
+          }}<ng-container *ngIf="e.profissional_nome"> · {{ e.profissional_nome }}</ng-container>
+        </p>
+      </div>
+    </header>
+    <p class="feedback error" *ngIf="error" role="alert">{{ error }}</p>
+    <p class="feedback" *ngIf="notice" role="status">{{ notice }}</p>
+    <div class="workspace-actions main-actions">
+      <button
+        class="action"
+        type="button"
+        *ngIf="isActive && e.status !== 'em_atendimento'"
+        [disabled]="busy"
+        (click)="change('em_atendimento')"
+      >
+        Iniciar atendimento</button
+      ><button
+        class="action"
+        type="button"
+        *ngIf="e.status === 'em_atendimento'"
+        [disabled]="busy"
+        (click)="change('concluido')"
+      >
+        Concluir atendimento</button
+      ><a
+        class="action"
+        *ngIf="pendingPayment && canReceive"
+        routerLink="/admin/caixa"
+        [queryParams]="{ atendimento: e.id }"
+        >Receber pagamento <i class="pi pi-arrow-right" aria-hidden="true"></i></a
+      ><button
+        class="action secondary"
+        *ngIf="isFinished"
+        type="button"
+        (click)="loadReceipt()"
+        [disabled]="receiptLoading"
+      >
+        {{ receiptLoading ? 'Consultando…' : 'Ver comanda' }}
+      </button>
+    </div>
+    <div class="detail-notes" *ngIf="e.observacoes || e.metadata?.aparelho || e.metadata?.defeito">
+      <h2>Sobre o atendimento</h2>
+      <p *ngIf="e.observacoes">{{ e.observacoes }}</p>
+      <p *ngIf="e.metadata?.aparelho"><strong>Aparelho:</strong> {{ e.metadata.aparelho }}</p>
+      <p *ngIf="e.metadata?.defeito">{{ e.metadata.defeito }}</p>
+    </div>
+    <section class="receipt" *ngIf="receipt">
+      <h2>Comanda</h2>
+      <p>
+        {{ receipt.created_at | date: 'dd/MM/yyyy HH:mm' : '-0300' }} ·
+        {{ receipt.valor_total | currency: 'BRL' }}
+      </p>
+      <div class="workspace-actions">
+        <a class="text-action" [href]="publicReceipt" target="_blank" rel="noopener"
+          >Abrir comanda</a
+        ><button class="text-action" (click)="copyReceipt()">Copiar link</button>
+      </div>
+      <details class="disclosure">
+        <summary>Enviar por e-mail</summary>
+        <label class="field"
+          >E-mail do cliente<input type="email" [(ngModel)]="email" autocomplete="email" /></label
+        ><button class="action secondary" (click)="sendReceipt()" [disabled]="busy">
+          Enviar comanda
+        </button>
+      </details>
+    </section>
+    <details class="disclosure" *ngIf="isActive">
+      <summary>Remarcar horário</summary>
+      <form class="form-layout" (ngSubmit)="reschedule()">
+        <div class="field-row">
+          <label class="field">Dia<input type="date" name="day" [(ngModel)]="day" required /></label
+          ><label class="field"
+            >Horário<input type="time" name="time" [(ngModel)]="time" required
+          /></label>
+        </div>
+        <label class="field"
+          >Duração em minutos<input
+            type="number"
+            name="duration"
+            [(ngModel)]="duration"
+            min="1"
+            max="1440"
+            required /></label
+        ><button class="action secondary" [disabled]="busy">Salvar novo horário</button>
+      </form>
+    </details>
+    <details class="disclosure">
+      <summary>Outras ações</summary>
+      <div class="workspace-actions">
+        <button
+          class="action secondary"
+          type="button"
+          *ngIf="isActive"
+          [disabled]="busy"
+          (click)="change('noshow')"
+        >
+          Marcar que não compareceu</button
+        ><button
+          class="action secondary"
+          type="button"
+          *ngIf="isActive"
+          [disabled]="busy"
+          (click)="change('cancelado')"
+        >
+          Cancelar atendimento</button
+        ><button class="text-action danger" type="button" (click)="confirmDelete = true">
+          Excluir agendamento
+        </button>
+      </div>
+      <div class="feedback error" *ngIf="confirmDelete">
+        <p>Excluir este agendamento permanentemente?</p>
+        <div class="workspace-actions">
+          <button type="button" class="action secondary" (click)="confirmDelete = false">
+            Manter agendamento</button
+          ><button type="button" class="action" (click)="remove()" [disabled]="busy">
+            Sim, excluir
+          </button>
+        </div>
+      </div>
+    </details>
+  </ng-container>
+  <p *ngIf="!event && !loading && !(agenda.error$ | async)">
+    Atendimento não encontrado nesta agenda. <a routerLink="/admin/agenda">Voltar</a>
+  </p>
+</div>
