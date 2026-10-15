@@ -1,3 +1,4 @@
+import { acquisitionInFocus, PROSPECT_FOCUS } from '../server/prospect-focus.js';
 import { growthProposal } from '../server/growth-proposal.js';
 import { createHmac } from 'node:crypto';
 import type { VercelRequest,VercelResponse } from '../server/http.js';
@@ -76,7 +77,7 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
   if(!cron&&!await owner(sb,token)) return res.status(403).json({error:'Acesso exclusivo ao proprietário da plataforma.'});
   if(action==='status'&&req.method==='GET'){
    const [{data:lastRuns},{data:prospects}]=await Promise.all([checked(sb.from('commercial_agent_runs').select('*').order('created_at',{ascending:false}).limit(20)),checked(sb.from('commercial_prospects').select('status'))]);
-   return res.status(200).json({...config(),lastRuns,counts:{prospects:prospects?.length||0,contacted:prospects?.filter(p=>p.status==='contacted').length||0,trial:prospects?.filter(p=>p.status==='trial').length||0,won:prospects?.filter(p=>p.status==='won').length||0},discoveryReady:!!env('GOOGLE_PLACES_API_KEY')});
+   return res.status(200).json({...config(),lastRuns,counts:{prospects:prospects?.length||0,contacted:prospects?.filter(p=>p.status==='contacted').length||0,trial:prospects?.filter(p=>p.status==='trial').length||0,won:prospects?.filter(p=>p.status==='won').length||0},discoveryReady:!!env('GOOGLE_PLACES_API_KEY'),focus:PROSPECT_FOCUS.label});
   }
   if(action==='prospect'&&req.method==='POST'){
    const b=req.body||{};const email=String(b.email||'').trim().toLowerCase();const name=String(b.business_name||'').trim();
@@ -89,13 +90,16 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
   if(action==='prospect-diagnosis'&&req.method==='POST'){
    const b=req.body||{};const allowed=['unknown','migration','time','price','features','no_need','other'];
    if(typeof b.id!=='string'||!/^[-0-9a-f]{36}$/i.test(b.id)||!allowed.includes(b.objection)||typeof b.note!=='string'||b.note.length>1000)return res.status(400).json({error:'Diagnóstico inválido.'});
-   await checked(sb.from('commercial_prospects').update({objection:b.objection,qualification_note:b.note.trim()}).eq('id',b.id));
+   const {data:previous}=await checked(sb.from('commercial_prospects').select('qualification_note').eq('id',b.id).single());
+   const prefix=previous.qualification_note?.startsWith(PROSPECT_FOCUS.marker)?previous.qualification_note.split('\n')[0]+'\n':'';
+   await checked(sb.from('commercial_prospects').update({objection:b.objection,qualification_note:(prefix+b.note.trim()).slice(0,2000)}).eq('id',b.id));
    await checked(sb.from('commercial_agent_runs').insert({agent:'owner',status:'completed',summary:{action:'prospect_diagnosis',prospect_id:b.id,objection:b.objection,actor:user?.id}}));
    return res.status(200).json({ok:true});
   }
   if(action==='proposal-preview'&&req.method==='POST'){
-   const {data:p}=await checked(sb.from('commercial_prospects').select('business_name,segment,source_url,status,unsubscribed_at').eq('id',req.body?.id).single());
+   const {data:p}=await checked(sb.from('commercial_prospects').select('business_name,segment,source_url,status,unsubscribed_at,qualification_note').eq('id',req.body?.id).single());
    if(p.unsubscribed_at||['lost','unsubscribed'].includes(p.status))return res.status(409).json({error:'Contato encerrado.'});
+   if(!acquisitionInFocus(p))return res.status(409).json({error:'Foco atual: confirme barbearia independente, uma unidade e equipe de 1 a 5 profissionais na pesquisa antes de preparar proposta.'});
    const signal=String(req.body?.signal||'').trim();
    if(signal.length<10||signal.length>500)return res.status(400).json({error:'Registre um detalhe real confirmado na fonte do negócio.'});
    return res.status(200).json(growthProposal(p.business_name,p.segment,signal,env('PROJECT_URL')));
@@ -138,6 +142,7 @@ async function run(sb:SupabaseClient){
   // Reconcile CRM state before sending. Replies and opt-outs always stop nurture.
   const {data:prospects}=await checked(sb.from('commercial_prospects').select('*').is('unsubscribed_at',null).not('consent_at','is',null).in('status',['qualified','contacted','trial','won']).order('created_at').limit(100));
   for(const p of prospects||[]){
+   if(!acquisitionInFocus(p)){skipped++;continue;}
    let trialEnd:string|null=null;
    if(p.estabelecimento_id){
     const {data:e}=await checked(sb.from('estabelecimento').select('trial_ends_at,plano_expires_at,active,stripe_livemode,stripe_subscription_status').eq('id',p.estabelecimento_id).single());
@@ -158,6 +163,9 @@ async function run(sb:SupabaseClient){
    const resend=new Resend(env('RESEND_API_KEY'));
    for(const m of messages||[]){
     const {data:p}=await checked(sb.from('commercial_prospects').select('*').eq('id',m.prospect_id).single());
+    if(!acquisitionInFocus(p)){
+     await checked(sb.from('commercial_messages').update({status:'suppressed',error:'Foco temporário: barbearias pequenas; perfil fora do foco ou porte pendente.'}).eq('id',m.id).eq('status','queued'));skipped++;continue;
+    }
     if(!eligible(p)||p.last_contact_at&&Date.now()-Date.parse(p.last_contact_at)<3*86400000){skipped++;continue;}
     const {data:claimed}=await checked(sb.from('commercial_messages').update({status:'sending',locked_at:new Date().toISOString(),attempts:m.attempts+1}).eq('id',m.id).eq('status','queued').select('id'));
     if(!claimed?.length)continue;

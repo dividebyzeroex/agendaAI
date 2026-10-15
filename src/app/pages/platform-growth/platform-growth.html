@@ -1,5 +1,5 @@
 <main class="growth">
-  <header><div><p class="eyebrow">OPERAÇÃO COMERCIAL</p><h1>Oportunidades</h1><p class="muted">Acompanhe oportunidades, testes e a execução dos agentes em um só lugar.</p></div><button class="secondary" (click)="load()" [disabled]="loading">Atualizar</button></header>
+  <header><div><p class="eyebrow">OPERAÇÃO COMERCIAL</p><h1>Oportunidades</h1><p class="muted">Foco de prospecção: barbearias independentes, uma unidade e de 1 a 5 profissionais. O atendimento aos clientes existentes continua.</p></div><button class="secondary" (click)="load()" [disabled]="loading">Atualizar</button></header>
   <div class="alert error" role="alert" *ngIf="error">{{ error }} <button (click)="load()">Tentar novamente</button></div>
   <div class="alert success" role="status" *ngIf="notice">{{ notice }}</div>
   <p role="status" *ngIf="loading">Carregando dados comerciais…</p>
