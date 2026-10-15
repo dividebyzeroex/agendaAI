@@ -45,12 +45,14 @@ export class AgendaEventService {
   readonly error$ = new BehaviorSubject<string>('');
   reload(){return this.fetchEvents();}
 
+  private loadVersion=0;
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
-      if (id) this.fetchEvents();
+      ++this.loadVersion;this.eventsSubject.next([]);
+      if (id) this.fetchEvents();else this.isLoadingSubject.next(false);
     });
     this.subscribeRealtime();
   }
@@ -59,6 +61,7 @@ export class AgendaEventService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) return;
 
+    const version=++this.loadVersion;
     this.isLoadingSubject.next(true);
     this.error$.next('');
     try {
@@ -72,14 +75,14 @@ export class AgendaEventService {
         ));
 
         this.ngZone.run(() => {
-          this.eventsSubject.next(decrypted || []);
+          if(version===this.loadVersion)this.eventsSubject.next(decrypted || []);
         });
       }
     } catch {
-      this.ngZone.run(()=>this.error$.next('Não foi possível carregar os agendamentos. Tente novamente.'));
+      if(version===this.loadVersion)this.ngZone.run(()=>this.error$.next('Não foi possível carregar os agendamentos. Tente novamente.'));
     } finally {
       this.ngZone.run(() => {
-        this.isLoadingSubject.next(false);
+        if(version===this.loadVersion)this.isLoadingSubject.next(false);
       });
     }
   }
@@ -201,13 +204,25 @@ export class AgendaEventService {
     return decrypted;
   }
 
+  async addSeries(event:Omit<AgendaEvent,'id'>,count:number,days:number,key:string):Promise<AgendaEvent[]> {
+    const estId=this.estService.estabelecimento$.value?.id;
+    if(!estId)throw new Error('Estabelecimento não encontrado.');
+    const encrypted=await this.security.encryptObject(event,['title','observacoes','profissional_nome']);
+    const {data,error}=await this.supabase.rpc('create_agenda_series',{p_data:{...encrypted,estabelecimento_id:estId},p_count:count,p_days:days,p_key:key});
+    if(error)throw new Error(parseSupabaseError(error));
+    const rows=await Promise.all((data as AgendaEvent[]).map(e=>this.security.decryptObject(e,['title','observacoes','profissional_nome'])));
+    this.ngZone.run(()=>this.eventsSubject.next([...new Map([...this.currentEvents,...rows].map(e=>[e.id,e])).values()]));
+    return rows;
+  }
+
   async updateEvent(id: string, changes: Partial<AgendaEvent>): Promise<void> {
     const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
-    const { error } = await this.supabase
+    const { data:updated,error } = await this.supabase
       .rpc('update_event_safe', { p_id: id, p_changes: encrypted });
 
     if (error) throw new Error(parseSupabaseError(error));
+    if(!Array.isArray(updated)||!updated.length)throw new Error('O atendimento não foi atualizado. Atualize a agenda e tente novamente.');
 
     const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 

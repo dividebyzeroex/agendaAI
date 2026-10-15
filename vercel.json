@@ -2,7 +2,10 @@
   "name": "agenda-ai",
   "version": 2,
   "rewrites": [
-    {"source":"/api/ping","destination":"/api/commercial?action=ping"},
+    {
+      "source": "/api/ping",
+      "destination": "/api/commercial?action=ping"
+    },
     {
       "source": "/api/checkout",
       "destination": "/api/billing?action=checkout"
@@ -28,10 +31,17 @@
     {
       "path": "/api/commercial?action=run",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/bot-recepcao",
+      "schedule": "0 11 * * *"
     }
   ],
   "functions": {
     "api/commercial.ts": {
+      "maxDuration": 60
+    },
+    "api/cron/bot-recepcao.ts": {
       "maxDuration": 60
     }
   }

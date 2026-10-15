@@ -58,6 +58,7 @@
           placeholder="Preferências para o atendimento"
         ></textarea>
       </label>
+      <label><input type="checkbox" name="smsOptOut" [(ngModel)]="form.metadata['sms_opt_out']"> Não enviar notificações automáticas por SMS para este cliente</label>
     </details>
     <details class="disclosure" *ngIf="isPetshop">
       <summary>Informações do pet</summary>

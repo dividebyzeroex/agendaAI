@@ -1,3 +1,4 @@
+import {appointmentMessagingReady} from '../../server/appointment-messaging.js';
 /**
  * api/sms/send.ts — Vercel Serverless
  * v2: + Unicode Sanitization + Rate Limiting
@@ -13,6 +14,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if(req.method==='GET'){
+    try{const id=String(req.query['estabelecimento_id']||'');const db=await authorizeTenant(req,id);const [{data:settings,error},{data:messages,error:queueError}]=await Promise.all([db.from('appointment_messaging_settings').select('enabled').eq('estabelecimento_id',id).maybeSingle(),db.from('appointment_messages').select('id,kind,status,due_at,sent_at,error').eq('estabelecimento_id',id).order('created_at',{ascending:false}).limit(10)]);if(error||queueError)throw new Error('Fila indisponível');return res.status(200).json({ready:appointmentMessagingReady(),enabled:!!settings?.enabled,messages:messages||[],schedule:'Rotina diária às 08h de São Paulo; mensagens não são instantâneas.'});}catch(e){return handleError(res,e);}
+  }
+  if(req.method==='POST'&&req.query?.['action']==='settings'){
+    try{const id=req.body?.estabelecimento_id;const db=await authorizeTenant(req,id);if(typeof req.body?.enabled!=='boolean')throw new HttpError(400,'Configuração inválida');if(req.body.enabled&&!appointmentMessagingReady())throw new HttpError(409,'SMS ainda não configurado e homologado.');const {error}=await db.from('appointment_messaging_settings').upsert({estabelecimento_id:id,enabled:req.body.enabled});if(error)throw error;return res.status(200).json({ok:true});}catch(e){return handleError(res,e);}
+  }
   if (req.method !== 'POST') return res.status(405).json({ error: 'Método não permitido' });
 
   try {

@@ -8,6 +8,10 @@
     <div class="header-actions" *ngIf="sessaoAtual&&!cashTaskActive"><button type="button" class="action" (click)="iniciarVendaAvulsa()">Nova venda</button><details class="cash-menu"><summary>Gerenciar caixa <i class="pi pi-angle-down" aria-hidden="true"></i></summary><button type="button" (click)="openTask('movement')">Registrar entrada ou retirada</button><button type="button" (click)="openTask('close')">Fechar caixa</button></details></div>
   </div>
 
+  <section class="quiet-metrics" *ngIf="overview as o" aria-label="Resumo financeiro"><div><strong>{{o.received|currency:'BRL'}}</strong><span>Recebido hoje</span></div><div><strong>{{o.pending|currency:'BRL'}}</strong><span>Atendimentos a receber</span></div><div><strong>{{o.withdrawals|currency:'BRL'}}</strong><span>Retiradas hoje</span></div></section>
+  <p class="helper" *ngIf="overview">Recebimentos registrados no caixa; não representam conciliação bancária. <button class="text-action" (click)="loadOverview()">Atualizar</button></p>
+  <p class="feedback error" *ngIf="overviewError" role="alert">{{overviewError}} <button class="text-action" (click)="loadOverview()">Tentar novamente</button></p>
+  <details class="disclosure" *ngIf="overview?.commissions?.length"><summary>Comissões geradas hoje</summary><p *ngFor="let c of overview.commissions">{{c.nome}} · {{c.amount|currency:'BRL'}}</p><p class="helper">Comissão sobre o serviço após desconto de fidelidade, conforme regra do profissional. Retiradas incluem despesas e outras saídas; não são cálculo de lucro.</p></details>
   <p class="feedback" [class.error]="messageError" *ngIf="message" [attr.role]="messageError?'alert':'status'">{{message}}</p><button class="text-action" *ngIf="lastClosure&&!sessaoAtual" (click)="imprimirFechamento(lastClosure.data,lastClosure.movimentacoes)">Imprimir relatório do último fechamento</button>
   <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 400px;">
     <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
@@ -182,9 +186,9 @@
                 <div class="mov-valor" [class.positivo]="m.tipo==='venda' || m.tipo==='suprimento'" [class.negativo]="m.tipo==='sangria' || m.tipo==='estorno'">
                   {{ (m.tipo==='venda' || m.tipo==='suprimento' ? '+' : '-') }} R$ {{ m.valor | number:'1.2-2' }}
                 </div>
-                <!-- <button class="btn-icon danger-icon" *ngIf="m.tipo === 'venda'" (click)="estornarMovimento(m)" title="Estornar Lançamento">
+                <button class="btn-icon danger-icon" *ngIf="m.tipo === 'venda'" (click)="estornarMovimento(m)" [disabled]="sessionBusy" title="Registrar estorno da venda">
                   <i class="pi pi-undo"></i>
-                </button> -->
+                </button>
              </div>
            </div>
         </div>

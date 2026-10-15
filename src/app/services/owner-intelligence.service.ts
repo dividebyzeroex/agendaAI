@@ -3,6 +3,7 @@ import { SupabaseService } from './supabase.service';
 export interface OwnerTenant {
  id:string;nome:string;slug:string;segmento:string|null;user_id:string|null;active:boolean;internal:boolean;created_at:string;trial_ends_at:string|null;plano_expires_at:string|null;plano:string;
  email:string|null;email_confirmed_at:string|null;last_sign_in_at:string|null;last_seen_at:string|null;subscription_status:string|null;stripe_livemode:boolean;
+ completed_bookings?:number;received_bookings?:number;first_value_at?:string|null;
  services:number;professionals:number;clients:number;bookings:number;bookings_period:number;booking_ready:boolean;paid_evidence:boolean;received_cents:number;
 }
 export interface OwnerUser {id:string;email:string;is_owner:boolean;workspaces:number;email_confirmed_at:string|null;last_sign_in_at:string|null;last_seen_at:string|null;banned_until:string|null;created_at:string;}

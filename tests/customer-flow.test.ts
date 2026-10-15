@@ -72,7 +72,7 @@ beforeEach(async () => {
   agenda = {
     currentEvents: [],
     events$: new BehaviorSubject([]),
-    addEvent: vi.fn().mockResolvedValue({ id: 'event' }),
+    addSeries: vi.fn().mockResolvedValue({ id: 'event' }),
   };
   pro = {
     fetchProfissionais: vi.fn().mockResolvedValue([{ id: 'pro', nome: 'João' }]),
@@ -140,14 +140,14 @@ it('creates an appointment from one form, calculates the service duration, and p
   c.day = '2026-10-16';
   c.time = '14:30';
   await c.confirmar();
-  expect(agenda.addEvent).toHaveBeenCalledWith(
+  expect(agenda.addSeries).toHaveBeenCalledWith(
     expect.objectContaining({
       start: '2026-10-16T17:30:00.000Z',
       end: '2026-10-16T18:15:00.000Z',
       cliente_id: 'client',
       servico_id: 'service',
       profissional_id: 'pro',
-    }),
+    }),1,14,expect.any(String),
   );
   expect(clients.addCliente).not.toHaveBeenCalled();
   expect(navigate).toHaveBeenCalledWith(['/admin/agenda'], { queryParams: { dia: '2026-10-16' } });
@@ -160,13 +160,13 @@ it('preserves a newly created client when booking fails, so retry does not dupli
   const c = f.componentInstance;
   c.clienteQuery = 'Maria';
   c.usarNovoCliente();
-  agenda.addEvent.mockRejectedValueOnce(new Error('Conexão indisponível'));
+  agenda.addSeries.mockRejectedValueOnce(new Error('Conexão indisponível'));
   await c.confirmar();
   expect(c.erro).toBe('Conexão indisponível');
   expect(c.form.clienteId).toBe('new-client');
   await c.confirmar();
   expect(clients.addCliente).toHaveBeenCalledTimes(1);
-  expect(agenda.addEvent).toHaveBeenCalledTimes(2);
+  expect(agenda.addSeries).toHaveBeenCalledTimes(2);
   f.destroy();
 });
 it('blocks a conflicting appointment before saving and permits an adjacent slot', async () => {
@@ -186,10 +186,10 @@ it('blocks a conflicting appointment before saving and permits an adjacent slot'
   ];
   await c.confirmar();
   expect(c.erro).toContain('já tem');
-  expect(agenda.addEvent).not.toHaveBeenCalled();
+  expect(agenda.addSeries).not.toHaveBeenCalled();
   c.time = '10:00';
   await c.confirmar();
-  expect(agenda.addEvent).toHaveBeenCalledOnce();
+  expect(agenda.addSeries).toHaveBeenCalledOnce();
   f.destroy();
 });
 it('rejects invalid civil dates and uses São Paulo time at a date boundary', () => {

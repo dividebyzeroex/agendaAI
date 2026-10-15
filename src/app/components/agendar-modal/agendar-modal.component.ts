@@ -36,6 +36,7 @@ export class AgendarModalComponent implements OnInit {
     observacoes: '',
     status: 'confirmado' as 'confirmado' | 'pendente',
   };
+  repeatCount=1;repeatDays=14;private requestKey=crypto.randomUUID();private repeatApplied=false;
   day = agendaDay(new Date());
   time = '09:00';
   clienteQuery = '';
@@ -77,12 +78,14 @@ export class AgendarModalComponent implements OnInit {
     }
     const clientId = this.route.snapshot.queryParamMap.get('cliente');
     this.clients.clientes$.pipe(takeUntilDestroyed(this.destroy)).subscribe((list) => {
-      if (clientId && !this.form.clienteNome) {
-        const c = list.find((item) => item.id === clientId);
+      if ((clientId||this.form.clienteId) && !this.form.clienteNome) {
+        const c = list.find((item) => item.id === (clientId||this.form.clienteId));
         if (c) this.selectCliente(c);
       }
       this.cdr.markForCheck();
     });
+    const repeatId=this.route.snapshot.queryParamMap.get('repetir');
+    this.agenda.events$.pipe(takeUntilDestroyed(this.destroy)).subscribe(events=>{const e=events.find(e=>e.id===repeatId);if(e&&!this.repeatApplied){this.repeatApplied=true;this.form.clienteId=e.cliente_id||null;this.form.servicoId=e.servico_id||'';this.form.profissionalId=e.profissional_id||'';const c=this.clients.getClientes().find(c=>c.id===e.cliente_id);if(c)this.selectCliente(c);const proposed=this.route.snapshot.queryParamMap.get('start');if(!proposed){const d=new Date(e.start);d.setUTCDate(d.getUTCDate()+14);this.day=agendaDay(d);this.time=appointmentTime(e.start);}this.cdr.markForCheck();}});
     void this.loadCatalog();
   }
   async loadCatalog() {
@@ -139,7 +142,7 @@ export class AgendarModalComponent implements OnInit {
     this.showMatches = true;
   }
   isFormValido() {
-    return !!(
+    return Number.isInteger(Number(this.repeatCount)) && Number(this.repeatCount)>=1 && Number(this.repeatCount)<=12 && !!(
       this.form.clienteNome.trim() &&
       this.service &&
       this.profissionais.some((p) => p.id === this.form.profissionalId) &&
@@ -176,7 +179,7 @@ export class AgendarModalComponent implements OnInit {
         this.isNovoCliente = false;
       }
       const pro = this.profissionais.find((p) => p.id === this.form.profissionalId);
-      await this.agenda.addEvent({
+      await this.agenda.addSeries({
         title: `${this.service?.emoji || '📅'} ${this.form.clienteNome.trim()} — ${this.service?.titulo}`,
         start: window.start,
         end: window.end,
@@ -189,7 +192,7 @@ export class AgendarModalComponent implements OnInit {
         status_confirmacao: 'pendente',
         observacoes: this.form.observacoes.trim() || undefined,
         backgroundColor: pro?.cor_agenda || '#5d6ed9',
-      });
+      },Number(this.repeatCount),Number(this.repeatDays),this.requestKey);
       this.saved = true;
       await this.router.navigate(['/admin/agenda'], { queryParams: { dia: this.day } });
     } catch (e) {

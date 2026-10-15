@@ -38,6 +38,7 @@ export class AppointmentDetails implements OnInit {
   time = '';
   duration = 30;
   readonly id = this.route.snapshot.paramMap.get('id') || '';
+  get nextVisitStart(){if(!this.event)return '';const d=new Date(this.event.start);do{d.setUTCDate(d.getUTCDate()+14);}while(d.getTime()<=Date.now());return d.toISOString();}
   get canReceive() {
     return ['dono', 'financeiro', 'recepcionista'].includes(this.auth.userProfileValue?.role || '');
   }

@@ -8,6 +8,8 @@ export function parseSupabaseError(error: any): string {
   switch (code) {
     case '42501': // insufficient_privilege (RLS)
       return 'Permissão negada: você não tem privilégio para realizar esta operação.';
+    case '23P01':
+      return 'Este horário acabou de ser ocupado. Escolha outro horário; nenhuma reserva desta tentativa foi criada.';
     case '23505': // unique_violation
       return 'Este registro já existe e não pode ser duplicado (conflito de dados).';
     case '23503': // foreign_key_violation

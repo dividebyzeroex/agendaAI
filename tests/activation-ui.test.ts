@@ -39,7 +39,7 @@ beforeEach(async () => {
     providers: [
       provideRouter([]),
       { provide: EstabelecimentoService, useValue: { estabelecimento$: tenant } },
-      { provide: SupabaseService, useValue: { client: { rpc } } },
+      { provide: SupabaseService, useValue: { client: { rpc,auth:{getSession:async()=>({data:{session:null}})} } } },
     ],
   });
 });
@@ -59,7 +59,7 @@ it('shows just the next step on the dashboard and removes the prompt once setup 
       services_ready: true,
       staff_ready: true,
       schedule_ready: true,
-      first_booking: true,
+      first_booking: true,first_completed:true,first_received:true,
     },
   });
   await f.componentInstance.refresh();
@@ -76,14 +76,14 @@ it('keeps detailed progress and the public link in the explicit setup page', asy
       services_ready: true,
       staff_ready: true,
       schedule_ready: true,
-      first_booking: true,
+      first_booking: true,first_completed:true,first_received:true,
       appointments: 5,
     },
   });
   f.detectChanges();
   await f.whenStable();
   f.detectChanges();
-  expect(f.nativeElement.textContent).toContain('4 de 4');
+  expect(f.nativeElement.textContent).toContain('6 de 6');
   expect(f.nativeElement.querySelector('.metrics strong').textContent).toBe('5');
   expect(f.nativeElement.querySelector('[target=_blank]').getAttribute('href')).toBe(
     '/agendar/studio',

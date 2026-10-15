@@ -100,6 +100,7 @@
         Duração de {{ service.duracao_min }} minutos. Término às {{ endTime }}.
       </p>
     </section>
+    <details class="disclosure"><summary>Repetir este horário</summary><div class="field-row"><label class="field">Quantidade de visitas, incluindo esta<input name="repeatCount" type="number" min="1" max="12" [(ngModel)]="repeatCount"></label><label class="field">Intervalo<select name="repeatDays" [(ngModel)]="repeatDays"><option [ngValue]="7">Toda semana</option><option [ngValue]="14">A cada 2 semanas</option><option [ngValue]="28">A cada 4 semanas</option></select></label></div><p class="helper">Até 12 visitas. Se um horário estiver ocupado, nenhuma visita desta tentativa será criada. Reservas repetidas não geram cobrança automática.</p></details>
     <details class="disclosure">
       <summary>Observações e confirmação</summary>
       <label class="field"

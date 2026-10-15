@@ -52,6 +52,7 @@
         {{ receiptLoading ? 'Consultando…' : 'Ver comanda' }}
       </button>
     </div>
+    <p *ngIf="isFinished"><a class="action secondary" routerLink="/admin/agenda/novo" [queryParams]="{repetir:e.id,cliente:e.cliente_id,start:nextVisitStart}">Agendar próxima visita</a></p>
     <div class="detail-notes" *ngIf="e.observacoes || e.metadata?.aparelho || e.metadata?.defeito">
       <h2>Sobre o atendimento</h2>
       <p *ngIf="e.observacoes">{{ e.observacoes }}</p>

@@ -30,6 +30,8 @@ export class AdminCaixa implements OnInit {
 
   private route=inject(ActivatedRoute);private destroy=inject(DestroyRef);
   private requestedId=this.route.snapshot.queryParamMap.get('atendimento');private requestedHandled=false;
+  checkoutKey=crypto.randomUUID(); overview:any=null; overviewError='';
+  async loadOverview(){const id=this.estService.estabelecimento$.value?.id;if(!id)return;try{const {data,error}=await this.profService['supabase'].rpc('cash_overview',{p_tenant:id});if(error)throw error;if(id!==this.estService.estabelecimento$.value?.id)return;if(data?.commissions)data.commissions=await Promise.all(data.commissions.map(async(c:any)=>({...c,nome:await this.profService['security'].decryptData(c.nome)})));this.overview=data;this.overviewError='';}catch{this.overviewError='Não foi possível conferir o resumo financeiro.';}this.cdr.markForCheck();}
   message='';messageError=false;sessionError=false;sessionBusy=false;lastClosure:any=null;
   get cashTaskActive(){return this.showFechamentoModal||this.showSangriaModal;}
   get selectedClientName(){return this.clientesLista.find(c=>c.id===this.clienteSelecionadoId)?.nome||'';}
@@ -90,7 +92,7 @@ export class AdminCaixa implements OnInit {
   @ViewChild('printArea') printArea!: ElementRef;
 
   async ngOnInit() {
-    this.estService.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe(id=>{this.sessaoAtual=null;this.eventosPendentes=[];this.requestedHandled=false;this.cancelarCheckout();if(id)void Promise.all([this.checkSessaoAberta(),this.fetchPendentes()]).then(()=>this.openRequested());});
+    this.estService.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe(id=>{this.overview=null;this.overviewError='';this.sessaoAtual=null;this.eventosPendentes=[];this.requestedHandled=false;this.cancelarCheckout();if(id)void Promise.all([this.checkSessaoAberta(),this.fetchPendentes()]).then(()=>this.openRequested());});
     this.agendaService.events$.pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>void this.openRequested());
 
     this.prodService.produtos$.pipe(takeUntilDestroyed(this.destroy)).subscribe(p => {
@@ -106,7 +108,7 @@ export class AdminCaixa implements OnInit {
   // --- SESSÃO DO CAIXA ---
 
   async checkSessaoAberta() {
-    this.isLoading = true;this.sessionError=false;
+    this.isLoading = true;this.sessionError=false;void this.loadOverview();
     try {
       const estabId = this.estService.estabelecimento$.value?.id;
       if (!estabId) return;
@@ -142,33 +144,10 @@ export class AdminCaixa implements OnInit {
       const profile = this.authService.userProfileValue;
       if (!estabId || !profile) return;
 
-      const { data, error } = await this.profService['supabase']
-        .from('caixa_sessoes')
-        .insert([{
-          estabelecimento_id: estabId,
-          operador_id: profile.id,
-          operador_nome: profile.nome,
-          saldo_inicial: this.trocoInicial || 0,
-          status: 'aberto'
-        }])
-        .select()
-        .single();
+      const {data,error}=await this.profService['supabase'].rpc('open_cash_atomic',{p_tenant:estabId,p_initial:Number(this.trocoInicial||0),p_name:profile.nome});
 
       if (error) throw error;
 
-      // Lança suprimento do troco inicial
-      if (this.trocoInicial > 0) {
-        await this.profService['supabase']
-          .from('caixa_movimentacoes')
-          .insert([{
-            sessao_id: data.id,
-            tipo: 'suprimento',
-            forma_pagamento: 'dinheiro',
-            valor: this.trocoInicial,
-            descricao: 'Troco inicial de abertura',
-            operador_nome: profile.nome
-          }]);
-      }
 
       this.sessaoAtual = data;
       this.showAberturaModal = false;
@@ -190,7 +169,8 @@ export class AdminCaixa implements OnInit {
       }
     });
 
-    const calculado = entradas - saidas;
+    const openingRecorded=this.movimentacoes.some(m=>m.tipo==='suprimento'&&m.descricao==='Troco inicial de abertura');
+    const calculado = (openingRecorded?0:Number(this.sessaoAtual.saldo_inicial||0))+entradas-saidas;
 
     this.fechamentoRelatorio = {
       saldoInicial: this.sessaoAtual.saldo_inicial,
@@ -199,6 +179,7 @@ export class AdminCaixa implements OnInit {
       saldoCalculado: calculado
     };
 
+    if(this.isLoadingMovs){this.notify('Aguarde a conferência das movimentações.',true);return;}
     this.showFechamentoModal = true;
   }
 
@@ -211,18 +192,7 @@ export class AdminCaixa implements OnInit {
 
     this.sessionBusy=true;
     try {
-      const { data, error } = await this.profService['supabase']
-        .from('caixa_sessoes')
-        .update({
-          status: 'fechado',
-          data_fechamento: new Date().toISOString(),
-          saldo_final_informado: this.saldoInformado,
-          saldo_final_calculado: this.fechamentoRelatorio.saldoCalculado,
-          observacoes: (this.saldoInformado !== this.fechamentoRelatorio.saldoCalculado) ? 'Diferença de caixa registrada.' : ''
-        })
-        .eq('id', this.sessaoAtual.id)
-        .select()
-        .single();
+      const {data,error}=await this.profService['supabase'].rpc('close_cash_atomic',{p_session:this.sessaoAtual.id,p_counted:Number(this.saldoInformado)});
 
       if (error) throw error;
 
@@ -249,12 +219,14 @@ export class AdminCaixa implements OnInit {
         .eq('sessao_id', this.sessaoAtual.id)
         .order('created_at', { ascending: false });
 
+      if(error)throw error;
       if (data) {
         this.movimentacoes = data;
       }
     } catch (e) {
-      console.error(e);
+      this.notify('Não foi possível conferir as movimentações. Atualize antes de fechar o caixa.',true);
     } finally {
+      void this.loadOverview();
       this.isLoadingMovs = false;
       this.cdr.detectChanges();
     }
@@ -292,35 +264,12 @@ export class AdminCaixa implements OnInit {
     }finally{this.sessionBusy=false;this.cdr.markForCheck();}
   }
 
-  async estornarMovimento(mov: any) {
-    if (!confirm(`Deseja realmente estornar este lançamento de R$ ${mov.valor}?`)) return;
-
-    try {
-      const profile = this.authService.userProfileValue;
-      await this.profService['supabase']
-        .from('caixa_movimentacoes')
-        .insert([{
-          sessao_id: this.sessaoAtual.id,
-          tipo: 'estorno',
-          forma_pagamento: mov.forma_pagamento,
-          valor: mov.valor,
-          descricao: `Estorno Ref: ${mov.id.substring(0,8)}`,
-          operador_nome: profile?.nome
-        }]);
-
-      // Se for venda, também cancela a comanda atrelada (se houver)
-      if (mov.caixa_item_id) {
-         await this.profService['supabase']
-           .from('caixa_itens')
-           .update({ status_caixa: 'cancelado' })
-           .eq('id', mov.caixa_item_id);
-      }
-
-      alert('Lançamento estornado.');
-      this.fetchMovimentacoes();
-    } catch (e: any) {
-      alert('Erro ao estornar: ' + e.message);
-    }
+  async estornarMovimento(mov:any){
+    if(this.sessionBusy||!this.sessaoAtual)return;
+    if(!confirm(`Registrar estorno de R$ ${mov.valor}? Confira a devolução ao cliente; esta ação registra o estorno no caixa e não devolve dinheiro pelo banco.`))return;
+    this.sessionBusy=true;
+    try{const {error}=await this.profService['supabase'].rpc('reverse_cash_atomic',{p_movement:mov.id,p_session:this.sessaoAtual.id});if(error)throw error;this.notify('Estorno registrado. Confira a devolução ao cliente; produtos não voltam automaticamente ao estoque.');await this.fetchMovimentacoes();}
+    catch(e:any){this.notify(e.message||'Não foi possível estornar.',true);}finally{this.sessionBusy=false;this.cdr.markForCheck();}
   }
 
   // --- CHECKOUT EXISTENTE ---
@@ -333,25 +282,24 @@ export class AdminCaixa implements OnInit {
         .from('agenda_events')
         .select('*, clientes(nome, telefone), servicos(titulo, preco, emoji, duracao_min)')
         .eq('estabelecimento_id',establishmentId)
-        .gte('start', `${hoje}T00:00:00-03:00`)
         .lte('start', `${hoje}T23:59:59.999-03:00`)
         .eq('status', 'concluido')
         .is('cobranca_enviada', null)
         .order('start', { ascending: false });
 
       if (error) {
-        console.error('Erro ao buscar pendentes:', error);
+        this.notify('Não foi possível consultar atendimentos pendentes.',true);
       } else {
-        const { data: dataTrue } = await this.profService['supabase']
+        const { data: dataTrue,error:secondError } = await this.profService['supabase']
           .from('agenda_events')
           .select('*, clientes(nome, telefone), servicos(titulo, preco, emoji, duracao_min)')
           .eq('estabelecimento_id',establishmentId)
-          .gte('start', `${hoje}T00:00:00-03:00`)
-          .lte('start', `${hoje}T23:59:59.999-03:00`)
+            .lte('start', `${hoje}T23:59:59.999-03:00`)
           .eq('status', 'concluido')
           .eq('cobranca_enviada', false)
           .order('start', { ascending: false });
 
+        if(secondError)throw secondError;
         let arr1 = data || [];
         let arr2 = dataTrue || [];
         const combined = [...arr1, ...arr2];
@@ -396,6 +344,11 @@ export class AdminCaixa implements OnInit {
       }
     }
 
+    if(this.servicoPrincipal&&evento.profissional_id&&evento.servico_id){
+      const {data:rule,error}=await this.profService['supabase'].from('profissional_servicos').select('valor_proprio').eq('profissional_id',evento.profissional_id).eq('servico_id',evento.servico_id).maybeSingle();
+      if(error){this.notify('Não foi possível conferir o preço do profissional. Tente abrir o atendimento novamente.',true);this.servicoPrincipal=null;return;}
+      if(rule?.valor_proprio!=null)this.servicoPrincipal={...this.servicoPrincipal,preco:Number(rule.valor_proprio)};
+    }
     if (evento.cliente_id) {
       this.clienteSelecionadoId = evento.cliente_id;
       const clientes = this.clienteService.getClientes();
@@ -428,7 +381,7 @@ export class AdminCaixa implements OnInit {
   resetCheckoutState() {
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
-    this.comandaToken = '';this.checkoutComplete=false;
+    this.comandaToken = '';this.checkoutComplete=false;this.checkoutKey=crypto.randomUUID();
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
@@ -554,22 +507,10 @@ export class AdminCaixa implements OnInit {
         profissionalId: profissionalId,
         servicoId: servicoId,
         estabelecimentoId: this.estService.estabelecimento$.value?.id,
-        sessaoId: this.sessaoAtual.id
+        sessaoId: this.sessaoAtual.id,checkoutKey:this.checkoutKey,valorRecebido:this.valorRecebido
       });
 
       this.checkoutComplete=true;this.comandaToken=caixaItem.token_publico||'';
-      // Registrar Movimentação
-      const {error:movementError}=await this.profService['supabase'].from('caixa_movimentacoes').insert([{
-        sessao_id: this.sessaoAtual.id,
-        caixa_item_id: caixaItem.id,
-        tipo: 'venda',
-        forma_pagamento: this.formaPagamento,
-        valor: total,
-        descricao: `Venda #${caixaItem.comanda_fisica || caixaItem.id?.substring(0,6)}`,
-        operador_nome: this.authService.userProfileValue?.nome
-      }]);
-
-      if(movementError)throw movementError;
       this.comandaToken = caixaItem.token_publico || '';
 
       if (!isAvulso && this.eventoSelecionado) {
@@ -578,7 +519,8 @@ export class AdminCaixa implements OnInit {
 
       this.fetchMovimentacoes();
 
-      this.notify('Venda registrada. Você pode abrir ou imprimir a comanda.');
+      void this.agendaService.reload();void this.loadOverview();
+      this.notify('Recebimento de '+Number(caixaItem.valor_total).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' registrado. Você pode conferir a comanda.');
 
       this.cdr.detectChanges();
     } catch (e: any) {
@@ -673,7 +615,7 @@ export class AdminCaixa implements OnInit {
       }
     });
 
-    const saldoCalc = sessao.saldo_inicial + entradasDinheiro - saidasDinheiro;
+    const saldoCalc = Number(sessao.saldo_final_calculado ?? (Number(sessao.saldo_inicial||0)+entradasDinheiro-saidasDinheiro));
     const dif = sessao.saldo_final_informado - saldoCalc;
 
     let html = `

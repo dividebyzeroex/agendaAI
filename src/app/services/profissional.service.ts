@@ -124,105 +124,13 @@ export class ProfissionalService {
     servicoId?: string;
     estabelecimentoId?: string;
     sessaoId?: string;
+    checkoutKey: string;
+    valorRecebido?: number|null;
   }): Promise<CaixaItem> {
-    const todosServicos = [params.servicoPrincipal, ...params.servicosExtras];
-    const valorServicos = todosServicos.reduce((sum, s) => sum + s.preco, 0);
-    const valorProdutos = (params.produtos || []).reduce((sum, p) => sum + (p.preco * p.quantidade), 0);
-    const valorTotal    = valorServicos + valorProdutos - (params.fidelidadeDesconto || 0);
-
-    // 1. Atualiza o evento como finalizado (se for venda de agenda)
-    if (params.eventId) {
-      await this.supabase
-        .from('agenda_events')
-        .update({
-          status: 'concluido',
-          servicos_extras: params.servicosExtras,
-          valor_total: valorTotal,
-          cobranca_enviada: true,
-          cobranca_enviada_at: new Date().toISOString(),
-          profissional_nome: params.profissional,
-        })
-        .eq('id', params.eventId);
-    }
-
-    // 2. Cria o item de caixa
-    const { data: caixaData, error } = await this.supabase
-      .from('caixa_itens')
-      .insert([{
-        agenda_event_id: params.eventId || null,
-        origem:          params.eventId ? 'agenda' : 'avulso',
-        sessao_id:       params.sessaoId || null,
-        cliente_nome:    params.clienteNome,
-        servicos:        todosServicos,
-        valor_total:     valorTotal,
-        profissional:    params.profissional,
-        status_caixa:    params.formaPagamento ? 'pago' : 'pendente',
-        forma_pagamento: params.formaPagamento || null,
-        comanda_fisica:  params.comandaFisica || null,
-        email_cliente:   params.emailCliente || null,
-        desconto:        params.fidelidadeDesconto || 0
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    // 3. Adiciona os produtos e baixa estoque (via RPC)
-    if (params.produtos && params.produtos.length > 0) {
-      for (const prod of params.produtos) {
-        await this.supabase.rpc('add_produto_comanda', {
-          p_caixa_id: caixaData.id,
-          p_produto_id: prod.id,
-          p_quantidade: prod.quantidade
-        });
-      }
-    }
-
-    if (params.fidelidadeDesconto && params.fidelidadeDesconto > 0 && params.clienteId) {
-      await this.supabase.rpc('resgatar_fidelidade_cliente', { p_cliente_id: params.clienteId });
-    }
-
-    // 4. Calcular e Inserir Comissão
-    if (params.profissionalId && params.servicoId && params.estabelecimentoId) {
-      try {
-        const { data: regra } = await this.supabase
-          .from('profissional_servicos')
-          .select('taxa_comissao, tipo_comissao')
-          .eq('profissional_id', params.profissionalId)
-          .eq('servico_id', params.servicoId)
-          .maybeSingle();
-
-        const taxa = regra?.taxa_comissao || 0;
-        const tipo = regra?.tipo_comissao || 'percentual';
-        const valorServico = params.servicoPrincipal.preco;
-        let valorComissao = 0;
-
-        if (tipo === 'percentual') {
-          valorComissao = (valorServico * taxa) / 100;
-        } else {
-          valorComissao = taxa;
-        }
-
-        if (valorComissao >= 0) {
-          await this.supabase.from('comissoes').insert([{
-            estabelecimento_id: params.estabelecimentoId,
-            evento_id: params.eventId,
-            profissional_id: params.profissionalId,
-            servico_id: params.servicoId,
-            valor_servico: valorServico,
-            taxa_aplicada: taxa,
-            tipo_comissao: tipo,
-            valor_comissao: valorComissao,
-            status: 'pendente'
-          }]);
-        }
-      } catch (err) {
-        console.error('[ProSvc] Erro ao calcular comissão:', err);
-      }
-    }
-
-    await this.fetchCaixaPendente();
-    return caixaData;
+    const {data,error}=await this.supabase.rpc('checkout_atomic',{p_data:params,p_key:params.checkoutKey});
+    if(error)throw new Error(error.message);
+    if(!data?.id)throw new Error('Não foi possível confirmar o recebimento. Tente novamente com a mesma comanda.');
+    return data;
   }
 
   async registrarPagamento(caixaId: string, forma: string): Promise<void> {
