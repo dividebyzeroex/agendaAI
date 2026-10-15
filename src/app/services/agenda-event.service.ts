@@ -209,7 +209,15 @@ export class AgendaEventService {
     if(!estId)throw new Error('Estabelecimento não encontrado.');
     const encrypted=await this.security.encryptObject(event,['title','observacoes','profissional_nome']);
     const {data,error}=await this.supabase.rpc('create_agenda_series',{p_data:{...encrypted,estabelecimento_id:estId},p_count:count,p_days:days,p_key:key});
-    if(error)throw new Error(parseSupabaseError(error));
+    if(error){
+      // Keep ordinary bookings available while the additive database migration is pending.
+      // Never retry network/permission errors: their outcome may be uncertain.
+      if(error.code==='PGRST202'){
+        if(count===1)return [await this.addEvent(event)];
+        throw new Error('A recorrência aguarda a atualização do banco. Escolha uma visita para salvar este agendamento.');
+      }
+      throw new Error(parseSupabaseError(error));
+    }
     const rows=await Promise.all((data as AgendaEvent[]).map(e=>this.security.decryptObject(e,['title','observacoes','profissional_nome'])));
     this.ngZone.run(()=>this.eventsSubject.next([...new Map([...this.currentEvents,...rows].map(e=>[e.id,e])).values()]));
     return rows;
