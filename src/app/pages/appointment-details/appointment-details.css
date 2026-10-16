@@ -27,3 +27,5 @@
 .disclosure .form-layout {
   max-width: 540px;
 }
+
+.business-actions{border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0;padding:18px 0;margin:20px 0}.business-actions p{overflow-wrap:anywhere}.business-actions label{display:flex;flex-direction:column;gap:8px;margin:16px 0}.business-actions select{max-width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:8px}

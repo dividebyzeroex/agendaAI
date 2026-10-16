@@ -507,6 +507,7 @@ export async function connectHandler(
       const current = await reconcileConnect(stripe, db, o);
       if (current.status !== 'paid' || !current.payment_intent_id)
         throw new BillingError(409, 'Pagamento indisponível para reembolso.');
+      await preparePassRefund(db, o.id);
       await stripe.refunds.create(
         { payment_intent: current.payment_intent_id, refund_application_fee: true },
         { stripeAccount: o.account_id, idempotencyKey: 'connect-refund:' + o.id },
@@ -545,6 +546,14 @@ export async function connectHandler(
       arrivalDate: p.arrival_date,
     })),
   });
+}
+export async function preparePassRefund(db: SupabaseClient, receiptId: string) {
+  const { error } = await db.rpc('prepare_pass_refund', { p_receipt: receiptId });
+  if (error && !['PGRST202', '42883'].includes(error.code))
+    throw new BillingError(
+      409,
+      'O pacote não pode ser reembolsado agora. Estorne sessões utilizadas ou confira a situação do passe.',
+    );
 }
 export async function connectWebhook(stripe: Stripe, db: SupabaseClient, event: Stripe.Event) {
   if (!event.account) return;

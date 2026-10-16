@@ -19,7 +19,13 @@
     </header>
     <p class="feedback error" *ngIf="error" role="alert">{{ error }}</p>
     <p class="feedback" *ngIf="notice" role="status">{{ notice }}</p>
+    <section class="business-actions" *ngIf="canReceive">
+      <div class="workspace-actions"><button type="button" class="action secondary" *ngIf="isFinished" [disabled]="busy" (click)="businessAction('feedback-link')">Pedir avaliação</button><button type="button" class="action secondary" *ngIf="isActive&&e.status==='confirmado'" [disabled]="busy" (click)="businessAction('checkin-link')">Link de check-in</button><button type="button" class="action secondary" *ngIf="pendingPayment" [disabled]="busy" (click)="loadPasses()">Usar pacote ou clube</button><button type="button" class="action secondary" *ngIf="isFinished&&isOwner" [disabled]="busy" (click)="businessAction('supply-consume')">Registrar consumo de insumos</button></div>
+      <p *ngIf="customerLink"><a [href]="customerLink" target="_blank" rel="noopener">{{customerLink}}</a></p>
+      <div *ngIf="businessLoaded&&pendingPayment"><p *ngIf="!availablePasses.length">Este cliente não tem sessões disponíveis para o serviço.</p><label *ngIf="availablePasses.length">Pacote disponível<select [(ngModel)]="passId"><option value="">Selecione</option><option *ngFor="let p of availablePasses" [value]="p.id">{{p.title}} · {{p.remaining}} sessões · vence {{p.expires_at|date:'dd/MM/yyyy':'-0300'}}</option></select></label><button type="button" class="action" *ngIf="passId" [disabled]="busy" (click)="businessAction('pass-redeem')">Confirmar uso de 1 sessão</button></div>
+    </section>
     <div class="workspace-actions main-actions">
+      <button class="action" type="button" *ngIf="e.status==='pendente'" [disabled]="busy" (click)="change('confirmado')">Aprovar pedido</button>
       <button
         class="action"
         type="button"

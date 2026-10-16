@@ -1,3 +1,4 @@
+import {SupabaseService} from '../../services/supabase.service';
 import { bookingDate, bookingMinutes, slotOverlaps, nextOpeningDate } from '../../utils/booking-slots';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -19,6 +20,9 @@ type BookingStep = 'marketplace' | 'step0' | 'step1' | 'step_pro' | 'step2' | 's
 })
 export class Agendar implements OnInit {
   private route      = inject(ActivatedRoute);
+  private publicDb=inject(SupabaseService).client;
+  publicPage:any=null;bookingPending=false;
+  async loadPublicPage(){if(!this.estab?.id)return;const {data}=await this.publicDb.rpc('business_public_page',{p_tenant:this.estab.id});this.publicPage=data;this.cdr.markForCheck();}
   private pubService = inject(EstabelecimentoPublicoService);
   private cdr        = inject(ChangeDetectorRef);
   private notifService = inject(NotificationService);
@@ -122,7 +126,7 @@ export class Agendar implements OnInit {
     // Subscribe to realtime changes
     this.pubService.data$.subscribe(data => {
       if (data && data.estabelecimento) {
-        this.estab    = data.estabelecimento;
+        this.estab    = data.estabelecimento;void this.loadPublicPage();
         this.services = data.servicos || [];
         this.schedule = data.horarios || [];
         this.pros     = data.profissionais || [];
@@ -404,7 +408,8 @@ export class Agendar implements OnInit {
         throw new Error(result.error || 'Erro ao criar agendamento.');
       }
 
-      this.goToStep('done', 'Confirmando sua reserva...');
+      this.bookingPending=result.event?.status==='pendente';
+      this.goToStep('done', this.bookingPending?'Enviando seu pedido...':'Confirmando sua reserva...');
     } catch (err: any) {
       this.errorMsg = err.message || 'Erro ao criar agendamento.';
       this.isSaving = false;

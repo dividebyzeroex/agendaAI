@@ -13,20 +13,20 @@ Fonte: [essencial](https://negocios.trinks.com/solucoes/o-essencial-para-o-seu-s
 | Agenda online de serviços | Existente | `admin-agenda`, `agendar`, disponibilidade por profissional |
 | Cliente escolher horário sozinho | Existente | `/agendar/:slug`, sem conta de cliente obrigatória |
 | Confirmação de presença por link | Existente | `api/respond-appointment.ts`, tokens de confirmação |
-| Solicitação de reserva sujeita a aprovação | Parcial | Há status pendente; falta preferência explícita do estabelecimento no fluxo público |
+| Solicitação de reserva sujeita a aprovação | Implementado | Preferência em Página de reservas; pedido pendente com horário reservado, aviso público e aprovação na agenda |
 | Agendamentos recorrentes | Existente com limite | Séries internas de até 12 visitas; não é assinatura nem recorrência pública ilimitada |
-| Fila de clientes sem hora marcada | Ausente — prioridade 1 | Persistência, ordenação, chamada e conversão atômica em atendimento |
-| Rodízio de profissionais | Ausente — prioridade 1 | Entrada/saída, regras de distribuição, chamada concorrente sem duplicidade |
+| Fila de clientes sem hora marcada | Implementado | Fila persistente, cliente/serviço/preferência e chamada atômica na Agenda → Fila |
+| Rodízio de profissionais | Implementado | Ativar/pausar, ordem por última chamada, expediente, pausa e conflitos; lock por estabelecimento |
 | Cadastro de clientes e histórico | Existente | `cliente.service`, detalhes do atendimento e histórico de visitas |
 | Cadastro de profissionais e serviços | Existente | Equipe, duração/preços e vínculo profissional–serviço |
 | Autonomia do profissional | Existente na web | Portal profissional, agenda e comissões com permissões |
 | Aplicativo nativo para profissionais | Ausente | Acesso web responsivo não equivale a app nativo de loja |
 | Fechamento de conta com serviços e produtos | Existente | Caixa atômico e comanda digital |
-| Pacotes de serviços e controle de sessões | Ausente — prioridade 1 | Venda antecipada, saldo por cliente, validade, consumo e estorno sem dupla baixa |
-| Fichas de anamnese personalizadas | Ausente — prioridade 2 | Formulários versionados, autorização para dados sensíveis e histórico auditável |
+| Pacotes de serviços e controle de sessões | Implementado | Venda no caixa ou Stripe, liberação após pagamento, validade, consumo e estorno; sem nova receita no resgate |
+| Fichas de anamnese personalizadas | Implementado com limites | Modelos, snapshot de versão, respostas/consentimento e acesso restrito ao dono; sem assinatura digital |
 | Sinal de reserva | Ausente — prioridade 1 | Cobrança antes da reserva, expiração, confirmação via webhook e abatimento no fechamento |
-| Autoatendimento com check-in | Parcial | Agendamento e pagamento por link; falta check-in e modo terminal |
-| Site público do estabelecimento | Parcial | Página pública de reservas; falta portfólio/galeria e conteúdo de site independente |
+| Autoatendimento com check-in | Parcial, ampliado | Check-in por link de atendimento confirmado, janela de 2h, sem iniciar serviço; modo terminal dedicado pendente |
+| Site público do estabelecimento | Parcial, ampliado | Mensagem personalizada e galeria de até 12 imagens HTTPS na página de reservas; sem domínio/site independente |
 
 ## Financeiro, pagamentos e estoque
 
@@ -35,8 +35,8 @@ Fonte: [finanças](https://negocios.trinks.com/solucoes/simplificar-financas/), 
 | Recurso público | AgendaAI | Evidência / trabalho necessário |
 |---|---|---|
 | Abertura, entradas, saídas e fechamento de caixa | Existente | RPCs atômicas e relatório de fechamento |
-| Contas a pagar e receber com vencimento | Parcial | Vendas pendentes e movimentos; falta agenda financeira com vencimentos/baixa parcial |
-| Demonstrativo de resultados / lucro | Ausente | Faturamento não é lucro; requer custos, categorias e competência |
+| Contas a pagar e receber com vencimento | Implementado com limites | Vencimento, categoria, competência, saldo, baixas parciais idempotentes e cancelamento sem baixas; registros gerenciais não movimentam o caixa físico |
+| Demonstrativo de resultados / lucro | Parcial | Resultado por competência dos títulos cadastrados; não consolida automaticamente vendas, estoque, comissões e tarifas em DRE completo |
 | Ticket médio | Ampliado nesta entrega | Por venda paga, data de pagamento e dedução de reembolsos online conhecidos |
 | Link de pagamento | Existente, UX refeita | Stripe Connect; não utiliza Pagar.me |
 | Conta digital Stone integrada | Sem equivalente | Stripe Connect é conta vinculada de recebimentos, não conta bancária PJ com Pix |
@@ -46,12 +46,12 @@ Fonte: [finanças](https://negocios.trinks.com/solucoes/simplificar-financas/), 
 | Split e pagamento automático a profissionais | Ausente — integração externa | Repasse Connect atual é ao estabelecimento; comissão calculada não é transferência bancária |
 | Repasse em lote via conta digital | Ausente — integração externa | Exige contas de beneficiários, autorização e conciliação de transferências |
 | Antecipação de recebíveis | Ausente — oferta do provedor | Depende de elegibilidade, contrato e disponibilidade financeira |
-| Cobrança recorrente / clube de assinaturas | Ausente — prioridade 1 | Planos para consumidores, direitos de uso, renovação, inadimplência e cancelamento; assinatura SaaS não atende isso |
+| Cobrança recorrente / clube de assinaturas | Parcial | Planos e ciclos com sessões/validade, venda e renovação manual ou por link; débito recorrente automático Stripe ainda não implementado |
 | Fidelidade por visitas e desconto | Existente | Configuração e validação no checkout presencial; resgate online ainda indisponível |
 | Estoque e venda de produtos | Existente básico | Cadastro, quantidades, baixa transacional e devolução de reserva online expirada |
-| Alertas de reposição | Ausente — prioridade 2 | Estoque mínimo por item e alertas reais |
-| Consumo interno de insumos | Ausente — prioridade 2 | Ficha técnica por serviço e baixa de consumo separada de venda |
-| Valor do estoque e relatórios de reposição | Parcial | Quantidade disponível; faltam custo de aquisição e valorização |
+| Alertas de reposição | Implementado | Mínimo por produto, lista de reposição e indicador na gestão de estoque |
+| Consumo interno de insumos | Implementado | Insumos por serviço e baixa explícita no atendimento concluído, uma vez por item/atendimento |
+| Valor do estoque e relatórios de reposição | Implementado básico | Custo unitário, média ponderada nas entradas, valor atual e histórico de movimentos gerenciais |
 | Entrada de estoque por nota fiscal | Ausente — integração externa | Importação e conciliação de documento fiscal |
 | Nota de serviço, consumidor e profissional-parceiro | Ausente — integração externa | Emissor fiscal, municípios/SEFAZ, certificados quando exigidos e homologação |
 | Repasses bancários do estabelecimento | Existente via Stripe | Histórico/agenda do provedor; cadastro e banco geridos na Stripe, sem promessa de repasse instantâneo |
@@ -66,9 +66,9 @@ Fonte: [comunicação](https://negocios.trinks.com/solucoes/comunicacao-para-ir-
 | Mensagens de aniversário | Parcial | Consulta de aniversários; falta automação gerida pelo estabelecimento |
 | Convites automáticos de retorno | Parcial | Agendar próxima visita existe; falta campanha segmentada de recuperação com controle de envio |
 | SMS / lembrete premium | Parcial | Fila, worker e configuração presentes; envio real desativado até homologação |
-| E-mail marketing do estabelecimento | Ausente — prioridade 2 | Prospecção do AgendaAI não equivale a campanhas dos clientes do SaaS |
-| Pesquisa de satisfação e comentários | Ausente — prioridade 1 | Token por atendimento concluído, uma resposta, indicadores e acompanhamento privado |
-| Clube com benefícios e descontos | Ausente — prioridade 1 | Diferenciar fidelidade por visitas de assinatura recorrente paga |
+| E-mail marketing do estabelecimento | Implementado com limites | Rascunho, público por consentimento/canal, agendamento explícito, Resend e cancelamento de contato; rotina diária, até 3 campanhas × 10 destinatários por execução; sem retries de envio incerto |
+| Pesquisa de satisfação e comentários | Implementado | Nota 1–5, comentário privado, um envio por token, link com validade e indicadores de resposta da lista |
+| Clube com benefícios e descontos | Parcial | Planos de sessões por ciclo com preço próprio; fidelidade por visitas continua separada; débito automático e benefícios ilimitados pendentes |
 | Integração Google Reserve | Ausente — parceria externa | Link público não equivale a integração nativa Google Reserve |
 | Agendamento em Instagram/Facebook | Parcial | Link público compartilhável; botões nativos/integração dependem dos provedores |
 | Atendimento IA integrado ao WhatsApp | Parcial, sem equivalência homologada | Infraestrutura de workflows/classificação; falta comprovar conversa, disponibilidade, reserva e entrega ponta a ponta |
@@ -110,18 +110,18 @@ Fonte: [expansão](https://negocios.trinks.com/solucoes/para-expandir-sem-limite
 
 ## Sequência de implementação das lacunas
 
-Este documento é um backlog verificável, não uma declaração de paridade concluída. O trabalho abaixo ainda não foi implementado nesta entrega.
+Este documento é um backlog verificável, não uma declaração de paridade concluída. A implementação abaixo foi ampliada nesta revisão; pendências permanecem explícitas.
 
-| Ordem | Entrega | Critério de aceite |
+| Ordem | Entrega | Situação atual / critério |
 |---|---|---|
-| 1 | Fila e rodízio | Persistência por estabelecimento, operação sem modal, duas recepções não chamam o mesmo cliente/profissional |
-| 2 | Satisfação pós-atendimento | Uma resposta por token/atendimento, acesso privado do dono e taxa de resposta com denominador |
-| 3 | Pacotes de sessões | Venda, validade, saldo, consumo e estorno idempotentes; comissão e checkout sem duplicar receita |
-| 4 | Clube de assinaturas | Planos, cobrança Connect, benefícios, renovação e inadimplência por webhook; separar do plano SaaS |
+| 1 | Fila e rodízio | Implementado; persistência, operação inline e serialização por estabelecimento |
+| 2 | Satisfação pós-atendimento | Implementado; nota/comentário privado e denominador de convites gerados |
+| 3 | Pacotes de sessões | Implementado; venda presencial/Stripe, consumo e estorno; comissões proporcionais ao preço do pacote |
+| 4 | Clube de assinaturas | Ciclos e planos implementados; renovação automática/inadimplência recorrente pendentes |
 | 5 | Sinal na reserva | Reserva temporária, pagamento confirmado, liberação de expiração e abatimento no saldo |
-| 6 | Relacionamento | Preferências/canais, templates, supressão, agenda de campanhas e entrega confirmada por provedor |
-| 7 | Estoque e financeiro gerencial | Mínimos, consumo, custos, vencimentos e resultado por competência |
-| 8 | Estética e petshops | Fichas adequadas ao segmento, permissões e histórico; pet/tutor não tratados como a mesma entidade |
+| 6 | Relacionamento | Preferências, campanhas, segmentação, supressão e envio de e-mail implementados; aceito pelo provedor não comprova entrega; SMS/WhatsApp seguem dependências externas |
+| 7 | Estoque e financeiro gerencial | Implementados mínimos, consumo, custo, movimentos, títulos/baixas e resultado dos títulos; DRE completo pendente |
+| 8 | Estética e petshops | Fichas versionadas, consentimento, pets separados do tutor e histórico implementados; acesso de fichas restrito ao dono |
 | 9 | Integrações contratadas | Fiscal, maquininha/Pix, Google Reserve e split após disponibilidade comercial e testes do provedor |
 | 10 | Redes e plataforma de parceiros | Unidades, consolidação, transferências, API pública e aplicativos de marca |
 
@@ -130,3 +130,38 @@ Regra de produto: manter Hoje, Agenda, Clientes e Caixa como rotina principal. R
 ## Validação desta entrega
 
 Testes automatizados de métricas, privacidade/contratos Connect e estados da nova interface. Build Angular e tipagem das APIs. Navegação em navegador com backend simulado e captura em celular/desktop. Colunas das consultas conferidas no banco de produção. Nenhuma cobrança, transferência, mensagem a cliente ou conta Stripe real é criada pelos testes. Homologação financeira real e sucesso de onboarding com a chave da plataforma continuam sendo verificações separadas.
+
+## Novas áreas implementadas em 16/10/2026
+
+- `/admin/fila`: fila e rodízio; atalho também na Agenda.
+- `/admin/fidelizacao`: pacotes, ofertas de clube, ciclos, saldos e estorno de sessão. Use “Usar pacote ou clube” no atendimento concluído. A comissão usa preço do pacote dividido pelas sessões. Não há nova receita no resgate. Pacotes online só ficam ativos após confirmação Stripe. Renovar clube exige registrar nova venda; não há débito recorrente automático.
+- `/admin/satisfacao`: avaliações e resposta; convide pela página do atendimento. `/avaliar/:token` não expõe contatos.
+- `/admin/financeiro`: títulos gerenciais e baixas parciais; não representam transações bancárias iniciadas pelo sistema nem lançamentos no caixa físico.
+- `/admin/estoque`: mínimo/custo, movimentos e receitas de insumos. Consumo é confirmado explicitamente no atendimento, não disparado automaticamente por mudar um status.
+- `/admin/fichas`: modelos, consentimento, histórico e pets/tutores. Modelos preenchidos ficam preservados em snapshot.
+- `/admin/relacionamento`: preferências, campanhas e público. Preparar não envia. Agendar e-mail habilita a rotina existente às 08h de São Paulo, após o vencimento escolhido; lotes limitados a 3 campanhas e 10 destinatários por campanha em cada execução. Envio aceito pelo Resend não comprova entrega ao cliente. Falhas/incertezas não entram em retry automático. SMS/WhatsApp permanecem sem campanha automática até integração real.
+- `/admin/pagina`: apresentação, galeria e aprovação opcional. Pedidos pendentes bloqueiam o horário e podem ser aprovados na página do atendimento.
+- `/checkin/:token`: registra chegada nas duas horas anteriores ao horário confirmado, até seu fim, sem iniciar atendimento nem aprovar pedido pendente.
+- `/preferencias/:token`: revoga o canal da campanha sem expor dados pessoais.
+
+Todas as áreas ficam em Gerenciar, fora dos primeiros passos. Listas administrativas têm limite explícito de 500 registros recentes; quando houver truncamento, os indicadores avisam que se referem somente à lista. Clientes e profissionais continuam usando os cadastros existentes.
+
+Continuam pendentes: cobrança recorrente automática do clube, sinal de reserva/abatimento no fechamento, DRE integral, redes/transferências de estoque, API pública para parceiros, publicação de apps, emissor fiscal, integração de maquininha/Pix/Google Reserve, atendimento WhatsApp/IA homologado e serviços humanos/comerciais (comunidade, treinamentos, parcerias). Nenhuma dessas capacidades foi simulada como concluída.
+
+## Estado da liberação desta revisão
+
+Implementação local concluída para as oito novas áreas descritas acima. A migração `20261016131102_business_modules.sql` foi executada e testada somente no banco local de validação (PGlite). A tentativa de aplicar no Supabase de produção foi bloqueada pela revisão automática, que exige aprovação explícita da alteração abrangente do esquema. Não foi usado SQL direto nem outro caminho para contornar esse bloqueio.
+
+Antes da aprovação da migração, os módulos novos exibem indisponibilidade de infraestrutura; a página pública mantém o comportamento anterior quando a tabela de preferências ainda não existe, e a rotina de campanhas permanece inativa. Não afirmar que os novos módulos estão ativos em produção antes de aplicar e verificar o esquema.
+
+### Escopo exato da migração pendente
+
+- 17 tabelas novas com RLS, leitura por estabelecimento e acesso de fichas/avaliações/relacionamento limitado ao dono.
+- Duas colunas em `produtos`: estoque mínimo e custo unitário.
+- Operações validadas em função privada, chamada autenticada pelo RPC `business_operation`; funções públicas de tokens de avaliação/cancelamento restritas ao backend.
+- Um trigger em `caixa_itens` para ativar/cancelar passes quando o pagamento da venda muda de situação. Não altera vendas antigas ou o saldo dos caixas existentes.
+- Sem excluir tabelas ou reescrever o histórico. Sem disparar e-mails, criar cobranças ou transferir dinheiro ao aplicar a migração.
+
+Validação desta revisão: 153 testes automatizados de aplicação/APIs; migrações e cenários reais de SQL executados localmente, incluindo autorização, consumo/estorno de pacote, confirmação online, estoque, baixas parciais e fila; navegador a 390 px nas oito áreas, salvamento de formulários e resposta de avaliação com backend simulado. A homologação de transações reais continua separada.
+
+Reembolso de pacote online: antes de pedir o reembolso ao provedor, o passe sem sessões consumidas fica congelado. Se o resultado financeiro for incerto, permanece indisponível para resgate até conferência. Pacotes usados exigem estorno das sessões antes do reembolso pela aplicação. Reembolsos presenciais seguem a mesma validação dentro da transação do caixa.

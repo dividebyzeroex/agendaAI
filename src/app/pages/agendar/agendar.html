@@ -61,6 +61,7 @@
     </div>
 
     <!-- STEP INDICATOR -->
+    <section class="public-presentation" *ngIf="publicPage&&(step==='step1'||step==='step0')"><p *ngIf="publicPage.headline">{{publicPage.headline}}</p><div class="portfolio" *ngIf="publicPage.gallery?.length"><img *ngFor="let url of publicPage.gallery" [src]="url" alt="Portfólio do estabelecimento" loading="lazy" referrerpolicy="no-referrer"/></div><p *ngIf="publicPage.approval_required">As reservas aguardam confirmação da equipe.</p></section>
     <div class="step-indicator" *ngIf="step !== 'step0' && step !== 'done' && !isLoading && !isTransitioning">
       <span class="step-label">{{ stepLabel }}</span>
     </div>
@@ -339,7 +340,7 @@
           </div>
         </div>
 
-        <h2>Reserva <span class="accent">confirmada!</span></h2>
+        <h2>{{bookingPending?'Pedido recebido!':'Reserva confirmada!'}}</h2><p *ngIf="bookingPending">O horário está reservado e aguarda confirmação da equipe. Acompanhe com o estabelecimento antes de comparecer.</p>
         <p class="done-subtitle">Seu agendamento em <strong>{{ estab?.nome }}</strong> foi registrado.</p>
 
         <div class="done-details">

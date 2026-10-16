@@ -1,9 +1,11 @@
+import {businessPublic} from '../server/business-public.js';
 import { createHmac } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { adminClient, isUuid } from '../server/security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
 
+  if (req.query?.['action']) return businessPublic(req,res);
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -111,6 +113,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       clienteId = newCliente.id;
     }
 
+    const {data:preferences,error:preferencesError}=await supabase.from('business_settings').select('approval_required').eq('estabelecimento_id',estabelecimento_id).maybeSingle();
+    if(preferencesError&&!['42P01','PGRST205'].includes(preferencesError.code))return res.status(503).json({error:'Não foi possível conferir as regras da agenda.'});
     // 2. Create the agenda event
     const eventPayload: any = {
       estabelecimento_id,
@@ -119,7 +123,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       end,
       cliente_id: clienteId,
       servico_id,
-      status: 'confirmado',
+      status: preferences?.approval_required ? 'pendente' : 'confirmado',
       metadata: {origin: 'public_booking',...bookingMetadata},
       ...(bookingMetadata['pet_nome']?{observacoes:`Pet: ${bookingMetadata['pet_nome']}. Raça/espécie: ${bookingMetadata['pet_raca']||'Não informada'}. Porte: ${bookingMetadata['pet_porte']||'Não informado'}. Cuidados: ${bookingMetadata['pet_cuidados']||'Nenhum informado'}`}:{})
     };

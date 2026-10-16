@@ -1,4 +1,5 @@
 <div class="customer-page agenda-wrapper">
+  <a routerLink="/admin/fila" class="text-action">Fila de espera e rodízio →</a>
   <header class="page-heading"><div><h1>Agenda</h1><p>Escolha um horário para agendar ou um atendimento para continuar.</p></div><button type="button" class="action" (click)="newAppointment()"><i class="pi pi-plus" aria-hidden="true"></i>Novo agendamento</button></header><p class="feedback error" *ngIf="calendarError" role="alert">{{calendarError}}</p>
   <p class="feedback error" role="alert" *ngIf="agendaService.error$|async as loadError">{{loadError}} <button class="text-action" type="button" (click)="agendaService.reload()">Tentar novamente</button></p><div class="calendar-card-premium">
     <!-- Fila de Espera Toggle (Only for Barbearia/Salao) -->

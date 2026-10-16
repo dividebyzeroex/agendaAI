@@ -1,3 +1,4 @@
+import {campaignSchedule} from '../../server/business-campaigns.js';
 import {appointmentMessagingReady} from '../../server/appointment-messaging.js';
 /**
  * api/sms/send.ts — Vercel Serverless
@@ -14,6 +15,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (req.method === 'OPTIONS') return res.status(200).end();
+  if(req.query?.['action']==='campaign-schedule')return campaignSchedule(req,res);
   if(req.method==='GET'){
     try{const id=String(req.query['estabelecimento_id']||'');const db=await authorizeTenant(req,id);const [{data:settings,error},{data:messages,error:queueError}]=await Promise.all([db.from('appointment_messaging_settings').select('enabled').eq('estabelecimento_id',id).maybeSingle(),db.from('appointment_messages').select('id,kind,status,due_at,sent_at,error').eq('estabelecimento_id',id).order('created_at',{ascending:false}).limit(10)]);if(error||queueError)throw new Error('Fila indisponível');return res.status(200).json({ready:appointmentMessagingReady(),enabled:!!settings?.enabled,messages:messages||[],schedule:'Rotina diária às 08h de São Paulo; mensagens não são instantâneas.'});}catch(e){return handleError(res,e);}
   }

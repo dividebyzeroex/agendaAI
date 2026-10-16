@@ -1,3 +1,4 @@
+import {BusinessService} from '../../services/business.service';
 import { Component, ChangeDetectorRef, DestroyRef, inject, OnInit } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -18,6 +19,10 @@ import { agendaDay } from '../../utils/agenda-day';
 })
 export class AppointmentDetails implements OnInit {
   agenda = inject(AgendaEventService);
+  private business=inject(BusinessService);availablePasses:any[]=[];passId='';businessLoaded=false;customerLink='';
+  async loadPasses(){if(!this.event)return;this.busy=true;this.error='';try{const {data,error}=await this.db.from('customer_passes').select('id,title,remaining,expires_at').eq('estabelecimento_id',this.est.estabelecimento$.value?.id).eq('cliente_id',this.event.cliente_id).eq('servico_id',this.event.servico_id).eq('status','active').gt('remaining',0).gt('expires_at',new Date().toISOString());if(error)throw error;this.availablePasses=data||[];this.businessLoaded=true;}catch{this.error='Não foi possível consultar os pacotes.';}finally{this.busy=false;this.cdr.markForCheck();}}
+  async businessAction(action:string){if(this.busy||!this.event)return;this.busy=true;this.error='';try{const result=await this.business.command(action,{event_id:this.id,pass_id:this.passId});if(action==='feedback-link'||action==='checkin-link'){this.customerLink=window.location.origin+(action==='feedback-link'?'/avaliar/':'/checkin/')+result.token;this.notice='Link pronto para compartilhar com o cliente.';}else{this.notice=action==='pass-redeem'?'Sessão utilizada. Não há nova cobrança por este serviço.':'Consumo de insumos registrado.';this.businessLoaded=false;await this.agenda.reload();}}catch(e){this.error=e instanceof Error?e.message:'Não foi possível concluir.';}finally{this.busy=false;this.cdr.markForCheck();}}
+
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private db = inject(SupabaseService).client;
@@ -39,6 +44,7 @@ export class AppointmentDetails implements OnInit {
   duration = 30;
   readonly id = this.route.snapshot.paramMap.get('id') || '';
   get nextVisitStart(){if(!this.event)return '';const d=new Date(this.event.start);do{d.setUTCDate(d.getUTCDate()+14);}while(d.getTime()<=Date.now());return d.toISOString();}
+  get isOwner(){return this.auth.userProfileValue?.role==='dono';}
   get canReceive() {
     return ['dono', 'financeiro', 'recepcionista'].includes(this.auth.userProfileValue?.role || '');
   }

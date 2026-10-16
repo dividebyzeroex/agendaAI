@@ -66,7 +66,7 @@ export class AdminAnalytics implements OnInit {
         .lte(field, until)
         .order('id')
         .range(offset, offset + 499);
-      if (paid) q = q.eq('status_caixa', 'pago');
+      if (paid) q = q.eq('status_caixa', 'pago').or('origem.is.null,origem.neq.resgate');
       const { data, error } = await q.abortSignal(signal);
       if (error) throw error;
       rows.push(...(data || []));
