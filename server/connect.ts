@@ -440,7 +440,7 @@ export async function connectHandler(
           .single(),
       );
     }
-    const base = origin() + '/admin/primeiros-passos';
+    const base = origin() + '/admin/recebimentos';
     const link = await createConnectedOnboardingLink(stripe, linked.account_id, base);
     return res.status(200).json({ url: link.url });
   }

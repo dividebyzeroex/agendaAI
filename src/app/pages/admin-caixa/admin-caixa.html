@@ -3,6 +3,7 @@
     <div>
       <h2>Caixa</h2>
       <p>Receba os atendimentos e acompanhe as entradas do dia.</p>
+      <a *ngIf="isOwner" routerLink="/admin/recebimentos" class="text-action">Recebimentos online e conta Stripe →</a>
     </div>
 
     <div class="header-actions" *ngIf="sessaoAtual&&!cashTaskActive"><button type="button" class="action" (click)="iniciarVendaAvulsa()">Nova venda</button><details class="cash-menu"><summary>Gerenciar caixa <i class="pi pi-angle-down" aria-hidden="true"></i></summary><button type="button" (click)="openTask('movement')">Registrar entrada ou retirada</button><button type="button" (click)="openTask('close')">Fechar caixa</button></details></div>

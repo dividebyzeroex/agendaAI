@@ -131,7 +131,8 @@ export class CommandPaletteComponent implements AfterViewInit {
     { name: 'Ir para Gestão de Clientes', icon: 'pi-users', category: 'Navegação', action: () => this.goto('/admin/clientes') },
     { name: 'Ir para Equipe / Profissionais', icon: 'pi-user-edit', category: 'Navegação', action: () => this.goto('/admin/profissionais') },
     { name: 'Ir para Relatórios', icon: 'pi-chart-bar', category: 'Navegação', action: () => this.goto('/admin/analytics') },
-    { name: 'Ir para Financeiro / Faturamento', icon: 'pi-wallet', category: 'Navegação', action: () => this.goto('/admin/billing') },
+    { name: 'Recebimentos online / Stripe', icon: 'pi-credit-card', category: 'Navegação', action: () => this.goto('/admin/recebimentos') },
+    { name: 'Plano e assinatura AgendaAI', icon: 'pi-wallet', category: 'Navegação', action: () => this.goto('/admin/billing') },
     { name: 'Ir para Configurações', icon: 'pi-cog', category: 'Navegação', action: () => this.goto('/admin/configuracoes') },
 
     // ─── AÇÕES RÁPIDAS ───────────────────────────────────────────────────────

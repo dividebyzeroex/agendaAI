@@ -245,13 +245,13 @@ describe('Connect onboarding compatibility', () => {
     await createConnectedOnboardingLink(
       stripe,
       'acct_saved',
-      'https://example.test/admin/primeiros-passos',
+      'https://example.test/admin/recebimentos',
     );
     expect(legacy).toHaveBeenCalledWith({
       account: 'acct_saved',
       type: 'account_onboarding',
-      refresh_url: 'https://example.test/admin/primeiros-passos?connect=refresh',
-      return_url: 'https://example.test/admin/primeiros-passos?connect=return',
+      refresh_url: 'https://example.test/admin/recebimentos?connect=refresh',
+      return_url: 'https://example.test/admin/recebimentos?connect=return',
     });
   });
   it('gives a concrete activation instruction and never returns provider secrets or raw details', () => {

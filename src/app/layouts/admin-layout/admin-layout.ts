@@ -60,7 +60,7 @@ export class AdminLayout {
       .subscribe(() => this.closeSidebar());
   }
   get managementActive() {
-    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|primeiros-passos|portal)/.test(
+    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|primeiros-passos|portal)/.test(
       this.router.url,
     );
   }

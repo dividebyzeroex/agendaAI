@@ -57,3 +57,7 @@ O proprietário recebe etapa, referência da requisição Stripe, escopos `rak_*
 ## Dependência de capabilities no fluxo v1
 
 A criação no fluxo compatível solicita `card_payments` e `transfers` juntas, conforme a exigência da Stripe. Isso não inicia transferências nem muda o modelo de cobranças diretas. O payload corrigido usa uma chave idempotente versionada e estável (`connect-account-v1-cards-transfers:<estabelecimento>`). A revisão anterior foi recusada pela Stripe com HTTP 400 antes da criação; o banco não tinha contas conectadas ao aplicar a correção. Contas já persistidas continuam sendo reutilizadas pelo fluxo.
+
+## Área de recebimentos
+
+A vinculação fica em **Gerenciar → Recebimentos online** (`/admin/recebimentos`), exclusiva do dono. Não faz parte da preparação inicial da agenda. Retornos e renovação de links Stripe voltam a essa área. Conta ainda não vinculada, cadastro pendente, pronta para ativar e ativa têm mensagens e ações próprias; aceite explícito continua obrigatório. A pausa de recebimentos preserva o acompanhamento de cobranças e repasses existentes. Totais da tela abrangem somente as últimas cobranças listadas, não todo o histórico.

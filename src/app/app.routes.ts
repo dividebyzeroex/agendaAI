@@ -30,6 +30,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./pages/admin/admin').then(m => m.Admin) },
       { path: 'portal', loadComponent: () => import('./components/portal-profissional/portal-profissional').then(m => m.PortalProfissionalComponent) },
       { path: 'primeiros-passos', loadComponent: () => import('./pages/setup-workspace/setup-workspace').then(m => m.SetupWorkspace), canActivate:[roleGuard], data:{roles:['dono']} },
+      { path: 'recebimentos', loadComponent: () => import('./pages/admin-recebimentos/admin-recebimentos').then(m => m.AdminRecebimentos), canActivate: [roleGuard], data: {roles: ['dono']} },
       { path: 'agenda/novo', loadComponent: () => import('./components/agendar-modal/agendar-modal.component').then(m => m.AgendarModalComponent) },
       { path: 'agenda/atendimento/:id', loadComponent: () => import('./pages/appointment-details/appointment-details').then(m => m.AppointmentDetails) },
       { path: 'agenda', loadComponent: () => import('./pages/admin-agenda/admin-agenda').then(m => m.AdminAgenda) },

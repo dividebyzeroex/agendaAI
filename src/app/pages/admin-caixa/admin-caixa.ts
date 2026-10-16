@@ -28,6 +28,7 @@ export class AdminCaixa implements OnInit {
   private profService = inject(ProfissionalService);
   private clienteService = inject(ClienteService);
   private authService = inject(AuthService);
+  get isOwner(){return this.authService.userProfileValue?.role==='dono';}
   private cdr = inject(ChangeDetectorRef);
 
   private route=inject(ActivatedRoute);private destroy=inject(DestroyRef);
