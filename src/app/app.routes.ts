@@ -88,6 +88,7 @@ export const routes: Routes = [
       { path: 'dashboard', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole) },
       { path: 'control', loadComponent: () => import('./components/owner-control/owner-control').then(m => m.OwnerControl) },
       { path: 'growth', loadComponent: () => import('./pages/platform-growth/platform-growth').then(m => m.PlatformGrowth) },
+      { path: 'insights', loadComponent: () => import('./pages/platform-insights/platform-insights').then(m => m.PlatformInsights) },
       { path: 'tenants', loadComponent: () => import('./pages/platform-tenants/platform-tenants').then(m => m.PlatformTenants) },
       { path: 'observability', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole), data: {view:'health'} },
       { path: 'social', redirectTo: 'growth', pathMatch: 'full' },
