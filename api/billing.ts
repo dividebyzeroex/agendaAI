@@ -1,94 +1,274 @@
-import {connectHandler} from '../server/connect.js';
+import { connectHandler, connectFailure } from '../server/connect.js';
 import { ownerPaymentTest } from '../server/owner-payment-test.js';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
-import { authenticate, billingReadiness, operationalBillingReadiness, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
+import {
+  authenticate,
+  billingReadiness,
+  operationalBillingReadiness,
+  BillingError,
+  billingClients,
+  objectId,
+  ownedEstablishment,
+  quote,
+  syncSubscription,
+} from '../server/billing.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const action = req.query['action'];
-    if (action === 'status' && req.method === 'GET') return res.status(200).json(await operationalBillingReadiness());
-    if(typeof action==='string'&&action.startsWith('connect-')){const {db,stripe}=billingClients();return await connectHandler(req,res,db,stripe);}
-    const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET', 'owner-test-checkout':'POST', 'owner-test-status':'GET', 'owner-offer':'POST' };
-    if (typeof action !== 'string' || !methods[action]) throw new BillingError(400, 'Ação inválida.');
-    if (req.method !== methods[action]) { res.setHeader('Allow', methods[action]); throw new BillingError(405, 'Método não permitido.'); }
+    if (action === 'status' && req.method === 'GET')
+      return res.status(200).json(await operationalBillingReadiness());
+    if (typeof action === 'string' && action.startsWith('connect-')) {
+      const { db, stripe } = billingClients();
+      return await connectHandler(req, res, db, stripe);
+    }
+    const methods: Record<string, string> = {
+      checkout: 'POST',
+      verify: 'GET',
+      cancel: 'POST',
+      invoices: 'GET',
+      'owner-test-checkout': 'POST',
+      'owner-test-status': 'GET',
+      'owner-offer': 'POST',
+    };
+    if (typeof action !== 'string' || !methods[action])
+      throw new BillingError(400, 'Ação inválida.');
+    if (req.method !== methods[action]) {
+      res.setHeader('Allow', methods[action]);
+      throw new BillingError(405, 'Método não permitido.');
+    }
     const { db, stripe } = billingClients();
     const user = await authenticate(db, req.headers.authorization);
 
-    if(action==='owner-offer'){
-      const anon=process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY']||process.env['SUPABASE_ANON_KEY'];
-      const url=process.env['SUPABASE_URL']||process.env['NEXT_PUBLIC_SUPABASE_URL'];
-      if(!anon||!url)throw new BillingError(503,'Autorização indisponível.');
-      const {createClient}=await import('@supabase/supabase-js');
-      const scoped=createClient(url,anon,{global:{headers:{Authorization:String(req.headers.authorization)}},auth:{persistSession:false}});
-      const {data:isOwner,error:ownerError}=await scoped.rpc('is_platform_owner');
-      if(ownerError||isOwner!==true)throw new BillingError(403,'Acesso exclusivo ao proprietário.');
-      const percent=Number(req.body?.percent);const code=String(req.body?.code||'').trim().toUpperCase();
-      if(!Number.isInteger(percent)||percent<5||percent>30||!/^AG[A-Z0-9-]{5,25}$/.test(code))throw new BillingError(400,'Use código iniciado em AG e desconto entre 5% e 30%.');
-      if(!(await operationalBillingReadiness()).ready)throw new BillingError(503,'Faturamento indisponível.');
-      const expires=Math.floor(Date.now()/1000)+14*86400;
-      const coupon=await stripe.coupons.create({duration:'once',percent_off:percent,name:`AgendaAI ${code}`,metadata:{actor:user.id,reason:'activation_incentive'}},{idempotencyKey:'owner-offer-coupon:'+code});
-      const promotion=await stripe.promotionCodes.create({promotion:{type:'coupon',coupon:coupon.id},code,max_redemptions:10,expires_at:expires,restrictions:{first_time_transaction:true}},{idempotencyKey:'owner-offer-code:'+code});
-      const {error}=await db.from('commercial_agent_runs').insert({agent:'owner',status:'completed',summary:{action:'discount_created',code:promotion.code,percent,expires_at:new Date(expires*1000).toISOString(),duration:'first_invoice',max_redemptions:10,actor:user.id}});
-      if(error)throw new BillingError(503,'Cupom criado no Stripe, mas a auditoria falhou. Confira antes de divulgar.');
-      return res.status(201).json({code:promotion.code,percent,expires_at:new Date(expires*1000).toISOString(),conditions:'Desconto na primeira fatura, para primeira contratação, até 10 resgates. Válido por 14 dias.'});
+    if (action === 'owner-offer') {
+      const anon =
+        process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY'] ||
+        process.env['SUPABASE_ANON_KEY'];
+      const url = process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'];
+      if (!anon || !url) throw new BillingError(503, 'Autorização indisponível.');
+      const { createClient } = await import('@supabase/supabase-js');
+      const scoped = createClient(url, anon, {
+        global: { headers: { Authorization: String(req.headers.authorization) } },
+        auth: { persistSession: false },
+      });
+      const { data: isOwner, error: ownerError } = await scoped.rpc('is_platform_owner');
+      if (ownerError || isOwner !== true)
+        throw new BillingError(403, 'Acesso exclusivo ao proprietário.');
+      const percent = Number(req.body?.percent);
+      const code = String(req.body?.code || '')
+        .trim()
+        .toUpperCase();
+      if (
+        !Number.isInteger(percent) ||
+        percent < 5 ||
+        percent > 30 ||
+        !/^AG[A-Z0-9-]{5,25}$/.test(code)
+      )
+        throw new BillingError(400, 'Use código iniciado em AG e desconto entre 5% e 30%.');
+      if (!(await operationalBillingReadiness()).ready)
+        throw new BillingError(503, 'Faturamento indisponível.');
+      const expires = Math.floor(Date.now() / 1000) + 14 * 86400;
+      const coupon = await stripe.coupons.create(
+        {
+          duration: 'once',
+          percent_off: percent,
+          name: `AgendaAI ${code}`,
+          metadata: { actor: user.id, reason: 'activation_incentive' },
+        },
+        { idempotencyKey: 'owner-offer-coupon:' + code },
+      );
+      const promotion = await stripe.promotionCodes.create(
+        {
+          promotion: { type: 'coupon', coupon: coupon.id },
+          code,
+          max_redemptions: 10,
+          expires_at: expires,
+          restrictions: { first_time_transaction: true },
+        },
+        { idempotencyKey: 'owner-offer-code:' + code },
+      );
+      const { error } = await db
+        .from('commercial_agent_runs')
+        .insert({
+          agent: 'owner',
+          status: 'completed',
+          summary: {
+            action: 'discount_created',
+            code: promotion.code,
+            percent,
+            expires_at: new Date(expires * 1000).toISOString(),
+            duration: 'first_invoice',
+            max_redemptions: 10,
+            actor: user.id,
+          },
+        });
+      if (error)
+        throw new BillingError(
+          503,
+          'Cupom criado no Stripe, mas a auditoria falhou. Confira antes de divulgar.',
+        );
+      return res
+        .status(201)
+        .json({
+          code: promotion.code,
+          percent,
+          expires_at: new Date(expires * 1000).toISOString(),
+          conditions:
+            'Desconto na primeira fatura, para primeira contratação, até 10 resgates. Válido por 14 dias.',
+        });
     }
 
-    if (action.startsWith('owner-test-')) return await ownerPaymentTest(req,res,db,stripe,user);
+    if (action.startsWith('owner-test-')) return await ownerPaymentTest(req, res, db, stripe, user);
 
     if (action === 'verify') {
       const sessionId = req.query['session_id'];
-      if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) throw new BillingError(400, 'Sessão inválida.');
+      if (typeof sessionId !== 'string' || !sessionId.startsWith('cs_'))
+        throw new BillingError(400, 'Sessão inválida.');
       const session = await stripe.checkout.sessions.retrieve(sessionId);
       const estab = await ownedEstablishment(db, session.metadata?.['estabelecimentoId'], user.id);
-      if (session.client_reference_id !== estab.id || session.mode !== 'subscription' || session.payment_status !== 'paid' || session.status !== 'complete') throw new BillingError(400, 'Pagamento não confirmado.');
+      if (
+        session.client_reference_id !== estab.id ||
+        session.mode !== 'subscription' ||
+        session.payment_status !== 'paid' ||
+        session.status !== 'complete'
+      )
+        throw new BillingError(400, 'Pagamento não confirmado.');
       const subscriptionId = objectId(session.subscription);
       if (!subscriptionId) throw new BillingError(400, 'Assinatura não encontrada.');
-      const patch = await syncSubscription(stripe, db, subscriptionId, estab.id, session.metadata?.['planId']);
-      if (!patch['plano_expires_at'] || patch['plano'] === 'starter') throw new BillingError(409, 'Assinatura sem pagamento ativo.');
-      return res.status(200).json({ status: 'success', planId: patch['plano'], expiresAt: patch['plano_expires_at'] });
+      const patch = await syncSubscription(
+        stripe,
+        db,
+        subscriptionId,
+        estab.id,
+        session.metadata?.['planId'],
+      );
+      if (!patch['plano_expires_at'] || patch['plano'] === 'starter')
+        throw new BillingError(409, 'Assinatura sem pagamento ativo.');
+      return res
+        .status(200)
+        .json({ status: 'success', planId: patch['plano'], expiresAt: patch['plano_expires_at'] });
     }
 
-    const estab = await ownedEstablishment(db, action === 'invoices' ? req.query['estabelecimentoId'] : req.body?.estabelecimentoId, user.id);
+    const estab = await ownedEstablishment(
+      db,
+      action === 'invoices' ? req.query['estabelecimentoId'] : req.body?.estabelecimentoId,
+      user.id,
+    );
     if (action === 'checkout') {
-      if(!(await operationalBillingReadiness()).ready) throw new BillingError(503,'Contratação indisponível. Verifique a configuração da conta Stripe, webhook e contrato.');
-      if (req.body?.termsAccepted !== true) throw new BillingError(400, 'Aceite as condições da assinatura.');
-      if (req.body?.planId !== 'basico') throw new BillingError(400, 'Plano indisponível na oferta de lançamento.');
+      if (!(await operationalBillingReadiness()).ready)
+        throw new BillingError(
+          503,
+          'Contratação indisponível. Verifique a configuração da conta Stripe, webhook e contrato.',
+        );
+      if (req.body?.termsAccepted !== true)
+        throw new BillingError(400, 'Aceite as condições da assinatura.');
+      if (req.body?.planId !== 'basico')
+        throw new BillingError(400, 'Plano indisponível na oferta de lançamento.');
       const { planId, months, amount } = quote(req.body?.planId, req.body?.months);
       if (estab.stripe_subscription_id) {
         const current = await stripe.subscriptions.retrieve(estab.stripe_subscription_id);
-        if (!['canceled', 'incomplete_expired'].includes(current.status)) throw new BillingError(409, 'Já existe uma assinatura. Gerencie ou cancele o contrato atual antes de contratar outro.');
+        if (!['canceled', 'incomplete_expired'].includes(current.status))
+          throw new BillingError(
+            409,
+            'Já existe uma assinatura. Gerencie ou cancele o contrato atual antes de contratar outro.',
+          );
         // Clear only the confirmed terminated subscription, allowing a new contract to bind.
-        const { error } = await db.from('estabelecimento').update({ stripe_subscription_id: null }).eq('id', estab.id).eq('stripe_subscription_id', current.id);
+        const { error } = await db
+          .from('estabelecimento')
+          .update({ stripe_subscription_id: null })
+          .eq('id', estab.id)
+          .eq('stripe_subscription_id', current.id);
         if (error) throw new BillingError(503, 'Não foi possível preparar a assinatura.');
       }
       const configuredUrl = process.env['PROJECT_URL'];
-      if (!configuredUrl || new URL(configuredUrl).protocol !== 'https:') throw new BillingError(503, 'URL de faturamento não configurada.');
+      if (!configuredUrl || new URL(configuredUrl).protocol !== 'https:')
+        throw new BillingError(503, 'URL de faturamento não configurada.');
       const baseUrl = `${new URL(configuredUrl).origin}/admin/billing`;
       const metadata = { estabelecimentoId: estab.id, planId, months: String(months) };
-      const { error: acceptanceError } = await db.from('commercial_terms_acceptances').upsert({ user_id:user.id, version:'2026-10-10', marketing_consent:false }, { onConflict:'user_id,version', ignoreDuplicates:true });
-      if (acceptanceError) throw new BillingError(503, 'Não foi possível registrar as condições da assinatura.');
-      const session = await stripe.checkout.sessions.create({
-        mode: 'subscription', payment_method_types: ['card'], allow_promotion_codes:true,
-        ...(estab.stripe_customer_id ? { customer: estab.stripe_customer_id } : { customer_email: user.email }),
-        line_items: [{ quantity: 1, price_data: { currency: 'brl', unit_amount: amount, recurring: { interval: 'month', interval_count: months }, product_data: { name: `Agenda AI — ${planId}`, description: `Assinatura recorrente de ${months} mês(es).` } } }],
-        success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`, cancel_url: baseUrl,
-        client_reference_id: estab.id, metadata, subscription_data: { metadata },
-      }, { idempotencyKey: `checkout:${estab.id}:${planId}:${months}:${Math.floor(Date.now() / 1800000)}` });
+      const { error: acceptanceError } = await db
+        .from('commercial_terms_acceptances')
+        .upsert(
+          { user_id: user.id, version: '2026-10-10', marketing_consent: false },
+          { onConflict: 'user_id,version', ignoreDuplicates: true },
+        );
+      if (acceptanceError)
+        throw new BillingError(503, 'Não foi possível registrar as condições da assinatura.');
+      const session = await stripe.checkout.sessions.create(
+        {
+          mode: 'subscription',
+          payment_method_types: ['card'],
+          allow_promotion_codes: true,
+          ...(estab.stripe_customer_id
+            ? { customer: estab.stripe_customer_id }
+            : { customer_email: user.email }),
+          line_items: [
+            {
+              quantity: 1,
+              price_data: {
+                currency: 'brl',
+                unit_amount: amount,
+                recurring: { interval: 'month', interval_count: months },
+                product_data: {
+                  name: `Agenda AI — ${planId}`,
+                  description: `Assinatura recorrente de ${months} mês(es).`,
+                },
+              },
+            },
+          ],
+          success_url: `${baseUrl}?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: baseUrl,
+          client_reference_id: estab.id,
+          metadata,
+          subscription_data: { metadata },
+        },
+        {
+          idempotencyKey: `checkout:${estab.id}:${planId}:${months}:${Math.floor(Date.now() / 1800000)}`,
+        },
+      );
       return res.status(200).json({ sessionId: session.id, init_point: session.url });
     }
     if (action === 'cancel') {
       if (!estab.stripe_subscription_id) throw new BillingError(400, 'Assinatura não encontrada.');
-      await stripe.subscriptions.update(estab.stripe_subscription_id, { cancel_at_period_end: true });
+      await stripe.subscriptions.update(estab.stripe_subscription_id, {
+        cancel_at_period_end: true,
+      });
       await syncSubscription(stripe, db, estab.stripe_subscription_id);
-      return res.status(200).json({ status: 'cancelled', message: 'Renovação cancelada. Acesso mantido até o fim do período pago.' });
+      return res
+        .status(200)
+        .json({
+          status: 'cancelled',
+          message: 'Renovação cancelada. Acesso mantido até o fim do período pago.',
+        });
     }
     if (!estab.stripe_customer_id) return res.status(200).json({ invoices: [] });
     const invoices = await stripe.invoices.list({ customer: estab.stripe_customer_id, limit: 10 });
-    return res.status(200).json({ invoices: invoices.data.map(inv => ({ id: inv.number || inv.id, date: new Date(inv.created * 1000).toISOString().split('T')[0], amount: inv.amount_paid / 100, status: inv.status === 'paid' ? 'Paga' : 'Pendente', pdfUrl: inv.invoice_pdf || inv.hosted_invoice_url })) });
+    return res
+      .status(200)
+      .json({
+        invoices: invoices.data.map((inv) => ({
+          id: inv.number || inv.id,
+          date: new Date(inv.created * 1000).toISOString().split('T')[0],
+          amount: inv.amount_paid / 100,
+          status: inv.status === 'paid' ? 'Paga' : 'Pendente',
+          pdfUrl: inv.invoice_pdf || inv.hosted_invoice_url,
+        })),
+      });
   } catch (error) {
-    if (error instanceof BillingError) return res.status(error.status).json({ error: error.message });
+    if (typeof req.query['action'] === 'string' && req.query['action'].startsWith('connect-')) {
+      const failure = connectFailure(error);
+      console.error('Connect operation failed', {
+        action: req.query['action'],
+        type: error instanceof Error ? error.name : 'UnknownError',
+        code: (error as any)?.code || null,
+      });
+      return res.status(failure.status).json({ error: failure.message });
+    }
+    if (error instanceof BillingError)
+      return res.status(error.status).json({ error: error.message });
     console.error('Billing operation failed', error instanceof Error ? error.name : 'UnknownError');
-    return res.status(500).json({ error: 'Não foi possível processar o faturamento. Tente novamente.' });
+    return res
+      .status(500)
+      .json({ error: 'Não foi possível processar o faturamento. Tente novamente.' });
   }
 }

@@ -4,14 +4,126 @@ import type { VercelRequest, VercelResponse } from './http.js';
 import { authenticate, BillingError, objectId, ownedEstablishment } from './billing.js';
 const TERMS = 'connect-2026-10-16-r1';
 const FEE = 100;
+// Fall back only when Stripe explicitly rejects Accounts v2 support. Never retry uncertain creation through another API.
+function legacyConnectAllowed(error: any) {
+  return error?.code === 'accounts_v2_access_blocked';
+}
+export async function createConnectedAccount(stripe: Stripe, tenantId: string, email?: string) {
+  try {
+    return await stripe.v2.core.accounts.create(
+      {
+        contact_email: email,
+        identity: { country: 'BR' },
+        dashboard: 'full',
+        defaults: {
+          currency: 'brl',
+          locales: ['pt-BR'],
+          responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' },
+        },
+        configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
+        metadata: { estabelecimentoId: tenantId },
+      },
+      { idempotencyKey: 'connect-account:' + tenantId },
+    );
+  } catch (error) {
+    if (!legacyConnectAllowed(error)) throw error;
+    return await stripe.accounts.create(
+      {
+        country: 'BR',
+        email,
+        default_currency: 'brl',
+        controller: {
+          fees: { payer: 'account' },
+          losses: { payments: 'stripe' },
+          requirement_collection: 'stripe',
+          stripe_dashboard: { type: 'full' },
+        },
+        capabilities: { card_payments: { requested: true } },
+        metadata: { estabelecimentoId: tenantId },
+      },
+      { idempotencyKey: 'connect-account-v1:' + tenantId },
+    );
+  }
+}
+export async function createConnectedOnboardingLink(
+  stripe: Stripe,
+  accountId: string,
+  base: string,
+) {
+  try {
+    return await stripe.v2.core.accountLinks.create({
+      account: accountId,
+      use_case: {
+        type: 'account_onboarding',
+        account_onboarding: {
+          configurations: ['merchant'],
+          refresh_url: base + '?connect=refresh',
+          return_url: base + '?connect=return',
+        },
+      },
+    });
+  } catch (error: any) {
+    // No account creation occurs here; both APIs generate a link for the same persisted account.
+    if (
+      !legacyConnectAllowed(error) &&
+      !(error?.code === 'resource_missing' && error?.param === 'account')
+    )
+      throw error;
+    return await stripe.accountLinks.create({
+      account: accountId,
+      type: 'account_onboarding',
+      refresh_url: base + '?connect=refresh',
+      return_url: base + '?connect=return',
+    });
+  }
+}
+export function connectFailure(error: any): BillingError {
+  if (error instanceof BillingError) return error;
+  const code =
+    typeof error?.code === 'string' && /^[a-z0-9_]{2,80}$/.test(error.code) ? error.code : '';
+  if (
+    [
+      'account_create_activation_required',
+      'connect_identity_not_verified',
+      'connect_profile_not_submitted',
+      'cannot_create_connected_account',
+      'account_terms_of_service_not_accepted',
+      'account_creation_identity_verification_incomplete',
+      'account_creation_requirement_collection_and_liability_unacknowledged_and_identity_verification_incomplete',
+    ].includes(code)
+  )
+    return new BillingError(
+      409,
+      'A Stripe exige concluir a ativação e as informações da conta da plataforma. Finalize o cadastro no painel Stripe e tente vincular novamente.',
+    );
+  if (error?.type === 'StripePermissionError' || error?.type === 'StripeAuthenticationError')
+    return new BillingError(
+      503,
+      'A chave Stripe da plataforma precisa ter permissão para gerenciar contas Connect.',
+    );
+  if (error?.type === 'StripeConnectionError' || error?.type === 'StripeAPIError')
+    return new BillingError(
+      503,
+      'Não foi possível confirmar a resposta da Stripe. Tente vincular novamente; a solicitação usa a mesma identificação para evitar duplicidade.',
+    );
+  if (error?.type === 'StripeIdempotencyError' || code === 'idempotency_key_in_use')
+    return new BillingError(
+      409,
+      'A Stripe ainda está processando esta vinculação. Aguarde e tente novamente.',
+    );
+  return new BillingError(
+    502,
+    'A Stripe não concluiu a vinculação' +
+      (code ? ' (código: ' + code + ')' : '') +
+      '. Confira a configuração Connect da plataforma e tente novamente.',
+  );
+}
 export function connectWebhookSecret() {
   return process.env['STRIPE_CONNECT_WEBHOOK_SECRET'] || process.env['STRIPE_CONNECT_WEBHOOK_SEC'];
 }
 export function connectConfig() {
   return {
-    available:
-      process.env['STRIPE_CONNECT_ENABLED'] === 'true' &&
-      !!connectWebhookSecret(),
+    available: process.env['STRIPE_CONNECT_ENABLED'] === 'true' && !!connectWebhookSecret(),
     feeCents: FEE,
     termsVersion: TERMS,
   };
@@ -209,7 +321,7 @@ export async function connectHandler(
     res.setHeader('Allow', allowed[action]);
     throw new BillingError(405, 'Método não permitido.');
   }
-  if(action==='connect-info')return res.status(200).json(config);
+  if (action === 'connect-info') return res.status(200).json(config);
   if (action === 'connect-pay' || action === 'connect-receipt') {
     const { receipt, order } = await orderByToken(
       db,
@@ -242,11 +354,23 @@ export async function connectHandler(
   const user = await authenticate(db, req.headers.authorization);
   const id = req.method === 'GET' ? req.query['estabelecimentoId'] : req.body?.estabelecimentoId;
   await ownedEstablishment(db, id, user.id);
-  const linkedResult = await db.from('connect_accounts').select('*').eq('estabelecimento_id', id).maybeSingle();
+  const linkedResult = await db
+    .from('connect_accounts')
+    .select('*')
+    .eq('estabelecimento_id', id)
+    .maybeSingle();
   // The develop build can precede the approved production migration.
-  if(linkedResult.error && action==='connect-status' && !config.available && ['42P01','PGRST205'].includes(linkedResult.error.code)) return res.status(200).json({...config,linked:false,enabled:false,orders:[],payouts:[]});
-  if(linkedResult.error)throw new BillingError(503,'Não foi possível conferir os pagamentos.');
-  let linked=linkedResult.data;
+  if (
+    linkedResult.error &&
+    action === 'connect-status' &&
+    !config.available &&
+    ['42P01', 'PGRST205'].includes(linkedResult.error.code)
+  )
+    return res
+      .status(200)
+      .json({ ...config, linked: false, enabled: false, orders: [], payouts: [] });
+  if (linkedResult.error) throw new BillingError(503, 'Não foi possível conferir os pagamentos.');
+  let linked = linkedResult.data;
   if (action === 'connect-onboard') {
     if (!config.available)
       throw new BillingError(503, 'Stripe Connect ainda não foi liberado para uso.');
@@ -259,21 +383,7 @@ export async function connectHandler(
         'A plataforma precisa de uma conta Stripe brasileira para reter taxas de contas brasileiras.',
       );
     if (!linked) {
-      const account = await stripe.v2.core.accounts.create(
-        {
-          contact_email: user.email,
-          identity: { country: 'BR' },
-          dashboard: 'full',
-          defaults: {
-            currency: 'brl',
-            locales: ['pt-BR'],
-            responsibilities: { fees_collector: 'stripe', losses_collector: 'stripe' },
-          },
-          configuration: { merchant: { capabilities: { card_payments: { requested: true } } } },
-          metadata: { estabelecimentoId: String(id) },
-        },
-        { idempotencyKey: 'connect-account:' + id },
-      );
+      const account = await createConnectedAccount(stripe, String(id), user.email);
       linked = await checked(
         db
           .from('connect_accounts')
@@ -293,17 +403,7 @@ export async function connectHandler(
       );
     }
     const base = origin() + '/admin/primeiros-passos';
-    const link = await stripe.v2.core.accountLinks.create({
-      account: linked.account_id,
-      use_case: {
-        type: 'account_onboarding',
-        account_onboarding: {
-          configurations: ['merchant'],
-          refresh_url: base + '?connect=refresh',
-          return_url: base + '?connect=return',
-        },
-      },
-    });
+    const link = await createConnectedOnboardingLink(stripe, linked.account_id, base);
     return res.status(200).json({ url: link.url });
   }
   if (!linked)
@@ -390,25 +490,23 @@ export async function connectHandler(
   const payouts = ready
     ? await stripe.payouts.list({ limit: 5 }, { stripeAccount: linked.account_id })
     : { data: [] };
-  return res
-    .status(200)
-    .json({
-      ...config,
-      linked: true,
-      enabled: linked.enabled,
-      ready,
-      chargesEnabled: account.charges_enabled,
-      payoutsEnabled: account.payouts_enabled,
-      requirements: account.requirements?.currently_due?.length || 0,
-      schedule: account.settings?.payouts?.schedule?.interval || null,
-      orders,
-      payouts: payouts.data.map((p) => ({
-        id: p.id,
-        amountCents: p.amount,
-        status: p.status,
-        arrivalDate: p.arrival_date,
-      })),
-    });
+  return res.status(200).json({
+    ...config,
+    linked: true,
+    enabled: linked.enabled,
+    ready,
+    chargesEnabled: account.charges_enabled,
+    payoutsEnabled: account.payouts_enabled,
+    requirements: account.requirements?.currently_due?.length || 0,
+    schedule: account.settings?.payouts?.schedule?.interval || null,
+    orders,
+    payouts: payouts.data.map((p) => ({
+      id: p.id,
+      amountCents: p.amount,
+      status: p.status,
+      arrivalDate: p.arrival_date,
+    })),
+  });
 }
 export async function connectWebhook(stripe: Stripe, db: SupabaseClient, event: Stripe.Event) {
   if (!event.account) return;

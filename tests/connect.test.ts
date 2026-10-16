@@ -5,6 +5,9 @@ import {
   validateConnectPayment,
   reconcileConnect,
   connectHandler,
+  createConnectedAccount,
+  createConnectedOnboardingLink,
+  connectFailure,
 } from '../server/connect.js';
 const order = {
   id: 'order',
@@ -35,16 +38,30 @@ const intent: any = {
 };
 afterEach(() => vi.unstubAllEnvs());
 describe('optional Connect payments', () => {
-  it('accepts the existing abbreviated secret name while preferring the documented name',()=>{
-    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','');vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SEC','legacy-secret');vi.stubEnv('STRIPE_CONNECT_ENABLED','true');
-    expect(connectWebhookSecret()).toBe('legacy-secret');expect(connectConfig().available).toBe(true);
-    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','canonical-secret');expect(connectWebhookSecret()).toBe('canonical-secret');
+  it('accepts the existing abbreviated secret name while preferring the documented name', () => {
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET', '');
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SEC', 'legacy-secret');
+    vi.stubEnv('STRIPE_CONNECT_ENABLED', 'true');
+    expect(connectWebhookSecret()).toBe('legacy-secret');
+    expect(connectConfig().available).toBe(true);
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET', 'canonical-secret');
+    expect(connectWebhookSecret()).toBe('canonical-secret');
   });
-  it('exposes only public availability and fee without authenticating or touching Stripe',async()=>{
-    vi.stubEnv('STRIPE_CONNECT_ENABLED','true');vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','private-secret');
-    const res:any={status:vi.fn().mockReturnThis(),json:vi.fn()};
-    await connectHandler({method:'GET',query:{action:'connect-info'}} as any,res,{} as any,{} as any);
-    expect(res.json).toHaveBeenCalledWith({available:true,feeCents:100,termsVersion:'connect-2026-10-16-r1'});
+  it('exposes only public availability and fee without authenticating or touching Stripe', async () => {
+    vi.stubEnv('STRIPE_CONNECT_ENABLED', 'true');
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET', 'private-secret');
+    const res: any = { status: vi.fn().mockReturnThis(), json: vi.fn() };
+    await connectHandler(
+      { method: 'GET', query: { action: 'connect-info' } } as any,
+      res,
+      {} as any,
+      {} as any,
+    );
+    expect(res.json).toHaveBeenCalledWith({
+      available: true,
+      feeCents: 100,
+      termsVersion: 'connect-2026-10-16-r1',
+    });
     expect(JSON.stringify(res.json.mock.calls)).not.toContain('private-secret');
   });
 
@@ -158,5 +175,92 @@ describe('optional Connect payments', () => {
         {} as any,
       ),
     ).rejects.toMatchObject({ status: 403 });
+  });
+});
+
+describe('Connect onboarding compatibility', () => {
+  it('uses the current API when supported and preserves the stable creation key', async () => {
+    const create = vi.fn().mockResolvedValue({ id: 'acct_new' });
+    const legacy = vi.fn();
+    await expect(
+      createConnectedAccount(
+        { v2: { core: { accounts: { create } } }, accounts: { create: legacy } } as any,
+        'tenant',
+        'owner@example.test',
+      ),
+    ).resolves.toEqual({ id: 'acct_new' });
+    expect(create).toHaveBeenCalledWith(expect.objectContaining({ identity: { country: 'BR' } }), {
+      idempotencyKey: 'connect-account:tenant',
+    });
+    expect(legacy).not.toHaveBeenCalled();
+  });
+  it('supports an existing Stripe platform which explicitly rejects Accounts v2', async () => {
+    const current = vi.fn().mockRejectedValue({ code: 'accounts_v2_access_blocked' });
+    const legacy = vi.fn().mockResolvedValue({ id: 'acct_legacy' });
+    const stripe: any = {
+      v2: { core: { accounts: { create: current } } },
+      accounts: { create: legacy },
+    };
+    expect((await createConnectedAccount(stripe, 'tenant', 'owner@example.test')).id).toBe(
+      'acct_legacy',
+    );
+    expect(legacy).toHaveBeenCalledWith(
+      expect.objectContaining({
+        country: 'BR',
+        controller: {
+          fees: { payer: 'account' },
+          losses: { payments: 'stripe' },
+          requirement_collection: 'stripe',
+          stripe_dashboard: { type: 'full' },
+        },
+      }),
+      { idempotencyKey: 'connect-account-v1:tenant' },
+    );
+  });
+  it('does not create another account when the first creation outcome is uncertain or activation is missing', async () => {
+    const current = vi.fn();
+    const legacy = vi.fn();
+    const stripe: any = {
+      v2: { core: { accounts: { create: current } } },
+      accounts: { create: legacy },
+    };
+    for (const error of [
+      { type: 'StripeConnectionError' },
+      { code: 'connect_profile_not_submitted' },
+      { code: 'account_create_activation_required' },
+    ]) {
+      current.mockRejectedValue(error);
+      await expect(createConnectedAccount(stripe, 'tenant')).rejects.toEqual(error);
+    }
+    expect(legacy).not.toHaveBeenCalled();
+  });
+  it('creates a compatible onboarding link for exactly the persisted account', async () => {
+    const current = vi.fn().mockRejectedValue({ code: 'accounts_v2_access_blocked' });
+    const legacy = vi.fn().mockResolvedValue({ url: 'https://connect.stripe.com/setup/fixture' });
+    const stripe: any = {
+      v2: { core: { accountLinks: { create: current } } },
+      accountLinks: { create: legacy },
+    };
+    await createConnectedOnboardingLink(
+      stripe,
+      'acct_saved',
+      'https://example.test/admin/primeiros-passos',
+    );
+    expect(legacy).toHaveBeenCalledWith({
+      account: 'acct_saved',
+      type: 'account_onboarding',
+      refresh_url: 'https://example.test/admin/primeiros-passos?connect=refresh',
+      return_url: 'https://example.test/admin/primeiros-passos?connect=return',
+    });
+  });
+  it('gives a concrete activation instruction and never returns provider secrets or raw details', () => {
+    expect(connectFailure({ code: 'connect_profile_not_submitted' }).message).toContain('ativação');
+    const error = connectFailure({
+      code: 'account_capability_not_supported',
+      message: 'secret personal data',
+    });
+    expect(error.message).toContain('account_capability_not_supported');
+    expect(error.message).not.toContain('personal data');
+    expect(connectFailure({ type: 'StripePermissionError' }).message).toContain('permissão');
   });
 });

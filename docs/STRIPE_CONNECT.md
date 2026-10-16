@@ -43,3 +43,7 @@ Testes locais de migração cobrem reserva, liquidação exata, isolamento, fun�
 ## Compatibilidade de configuração
 
 O backend aceita o nome documentado `STRIPE_CONNECT_WEBHOOK_SECRET` e também o nome abreviado já cadastrado na Vercel, `STRIPE_CONNECT_WEBHOOK_SEC`. O nome documentado tem prioridade. Isso preserva o segredo existente, pois a Vercel não permite renomear variáveis Sensitive. `GET /api/billing?action=connect-info` retorna somente disponibilidade, tarifa e versão das condições, sem valores de segredos ou dados bancários.
+
+## Onboarding em plataformas existentes
+
+Quando a Stripe rejeita explicitamente Accounts v2 (`accounts_v2_access_blocked`), a aplicação cria a mesma configuração comercial usando Accounts v1 com controller properties e gera o onboarding hospedado compatível. A responsabilidade por processamento e perdas permanece com a Stripe. Não há fallback de criação para falhas de rede ou resultado incerto. A conta persistida é reutilizada. Ativação ou perfil incompleto da plataforma produz instrução específica, em vez de uma mensagem genérica de pagamento.

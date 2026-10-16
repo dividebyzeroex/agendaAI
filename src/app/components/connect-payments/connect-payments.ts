@@ -41,6 +41,9 @@ import { boundedFetch } from '../../core/helpers/bounded-fetch';
       >
         {{ s.enabled ? 'Usar somente recebimentos presenciais' : 'Ativar recebimento online' }}
       </button>
+      <p *ngIf="onboardingUrl()">
+        <a [href]="onboardingUrl()">Continuar cadastro seguro na Stripe →</a>
+      </p>
       <p>
         Os repasses bancários são processados pela Stripe conforme saldo disponível e calendário da
         conta.
@@ -138,10 +141,12 @@ export class ConnectPayments implements OnChanges {
   error = signal('');
   refundId = signal('');
   accepted = false;
+  onboardingUrl = signal('');
   private generation = 0;
   ngOnChanges() {
     this.state.set(null);
     this.accepted = false;
+    this.onboardingUrl.set('');
     void this.load();
   }
   private async request(action: string, body?: any) {
@@ -195,6 +200,7 @@ export class ConnectPayments implements OnChanges {
         !(url.hostname === 'connect.stripe.com' || url.hostname.endsWith('.stripe.com'))
       )
         throw Error('Link Stripe inválido.');
+      this.onboardingUrl.set(d.url);
       window.location.assign(d.url);
     } catch (e) {
       this.error.set(e instanceof Error ? e.message : 'Falha ao vincular.');
