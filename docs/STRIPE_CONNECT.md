@@ -53,3 +53,7 @@ Quando a Stripe rejeita explicitamente Accounts v2 (`accounts_v2_access_blocked`
 Uma recusa definitiva HTTP 403 em Accounts v2 pode usar o caminho compatível Accounts v1 com a mesma chave. A Stripe verifica separadamente as permissões dessa chamada; se também a negar, a aplicação não cria a conta. Não existe fallback para erro de autenticação nem para resultado incerto de rede.
 
 O proprietário recebe etapa, referência da requisição Stripe, escopos `rak_*` exigidos e apenas os quatro caracteres finais da chave efetivamente usada em `STRIPE_SECRET_KEY`. O registro em `logs_seguranca` contém somente esses campos filtrados, sem mensagem bruta do provedor, e-mail, valor da chave ou link de onboarding. Isso permite distinguir falta de permissões da edição de uma chave diferente no painel.
+
+## Dependência de capabilities no fluxo v1
+
+A criação no fluxo compatível solicita `card_payments` e `transfers` juntas, conforme a exigência da Stripe. Isso não inicia transferências nem muda o modelo de cobranças diretas. O payload corrigido usa uma chave idempotente versionada e estável (`connect-account-v1-cards-transfers:<estabelecimento>`). A revisão anterior foi recusada pela Stripe com HTTP 400 antes da criação; o banco não tinha contas conectadas ao aplicar a correção. Contas já persistidas continuam sendo reutilizadas pelo fluxo.

@@ -215,7 +215,7 @@ describe('Connect onboarding compatibility', () => {
           stripe_dashboard: { type: 'full' },
         },
       }),
-      { idempotencyKey: 'connect-account-v1:tenant' },
+      { idempotencyKey: 'connect-account-v1-cards-transfers:tenant' },
     );
   });
   it('does not create another account when the first creation outcome is uncertain or activation is missing', async () => {
@@ -325,4 +325,33 @@ it('reports the v1 permission refusal with its exact stage when neither API perm
     operation: 'create_account_v1',
     requestId: 'req_v1',
   });
+});
+
+it('satisfies the Stripe v1 dependency between card payments and transfers', async () => {
+  const legacy = vi.fn(async (params: any) => {
+    if (params.capabilities?.card_payments?.requested && !params.capabilities?.transfers?.requested)
+      throw {
+        type: 'StripeInvalidRequestError',
+        statusCode: 400,
+        message: 'Accounts do not currently support card_payments without transfers',
+      };
+    return { id: 'acct_valid_capabilities' };
+  });
+  const stripe: any = {
+    v2: {
+      core: {
+        accounts: {
+          create: vi.fn().mockRejectedValue({ type: 'StripePermissionError', statusCode: 403 }),
+        },
+      },
+    },
+    accounts: { create: legacy },
+  };
+  expect((await createConnectedAccount(stripe, 'tenant')).id).toBe('acct_valid_capabilities');
+  expect(legacy).toHaveBeenCalledWith(
+    expect.objectContaining({
+      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
+    }),
+    { idempotencyKey: 'connect-account-v1-cards-transfers:tenant' },
+  );
 });

@@ -42,10 +42,10 @@ export async function createConnectedAccount(stripe: Stripe, tenantId: string, e
             requirement_collection: 'stripe',
             stripe_dashboard: { type: 'full' },
           },
-          capabilities: { card_payments: { requested: true } },
+          capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
           metadata: { estabelecimentoId: tenantId },
         },
-        { idempotencyKey: 'connect-account-v1:' + tenantId },
+        { idempotencyKey: 'connect-account-v1-cards-transfers:' + tenantId },
       );
     } catch (error) {
       annotateConnectFailure(error, 'create_account_v1');
