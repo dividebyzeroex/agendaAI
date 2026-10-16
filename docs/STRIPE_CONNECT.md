@@ -47,3 +47,9 @@ O backend aceita o nome documentado `STRIPE_CONNECT_WEBHOOK_SECRET` e também o 
 ## Onboarding em plataformas existentes
 
 Quando a Stripe rejeita explicitamente Accounts v2 (`accounts_v2_access_blocked`), a aplicação cria a mesma configuração comercial usando Accounts v1 com controller properties e gera o onboarding hospedado compatível. A responsabilidade por processamento e perdas permanece com a Stripe. Não há fallback de criação para falhas de rede ou resultado incerto. A conta persistida é reutilizada. Ativação ou perfil incompleto da plataforma produz instrução específica, em vez de uma mensagem genérica de pagamento.
+
+## Diagnóstico de permissão
+
+Uma recusa definitiva HTTP 403 em Accounts v2 pode usar o caminho compatível Accounts v1 com a mesma chave. A Stripe verifica separadamente as permissões dessa chamada; se também a negar, a aplicação não cria a conta. Não existe fallback para erro de autenticação nem para resultado incerto de rede.
+
+O proprietário recebe etapa, referência da requisição Stripe, escopos `rak_*` exigidos e apenas os quatro caracteres finais da chave efetivamente usada em `STRIPE_SECRET_KEY`. O registro em `logs_seguranca` contém somente esses campos filtrados, sem mensagem bruta do provedor, e-mail, valor da chave ou link de onboarding. Isso permite distinguir falta de permissões da edição de uma chave diferente no painel.

@@ -8,6 +8,7 @@ import {
   createConnectedAccount,
   createConnectedOnboardingLink,
   connectFailure,
+  connectDiagnostics,
 } from '../server/connect.js';
 const order = {
   id: 'order',
@@ -262,5 +263,66 @@ describe('Connect onboarding compatibility', () => {
     expect(error.message).toContain('account_capability_not_supported');
     expect(error.message).not.toContain('personal data');
     expect(connectFailure({ type: 'StripePermissionError' }).message).toContain('permissão');
+  });
+});
+
+describe('safe owner onboarding diagnostics', () => {
+  it('identifies the exact key suffix, operation and required scopes without storing provider text or secrets', () => {
+    vi.stubEnv('STRIPE_SECRET_KEY', 'rk_live_privateTestKeyABCD');
+    const d = connectDiagnostics({
+      type: 'StripePermissionError',
+      code: 'permission_denied',
+      statusCode: 403,
+      connectOperation: 'create_account_v2',
+      requestId: 'req_test123',
+      message: 'private@example.test key rk_live_secret permission rak_v2_core_account_write',
+    });
+    expect(d).toMatchObject({
+      keySuffix: 'ABCD',
+      keySource: 'STRIPE_SECRET_KEY',
+      operation: 'create_account_v2',
+      requiredPermissions: ['rak_v2_core_account_write'],
+      requestId: 'req_test123',
+    });
+    expect(JSON.stringify(d)).not.toMatch(/private@example|privateTest|rk_live_secret/);
+  });
+  it('rejects unstructured error fields and distinguishes authentication failure from permissions', () => {
+    const d = connectDiagnostics({
+      code: 'secret@example.test',
+      param: 'key=secret',
+      requestId: 'https://example.test/token',
+      statusCode: '403',
+    });
+    expect(d).toMatchObject({ code: null, param: null, requestId: null, status: null });
+    expect(connectFailure({ type: 'StripeAuthenticationError' }).message).toContain('autenticação');
+  });
+});
+
+it('uses the same key with Stripe-authorized v1 resources after a definitive v2 permission rejection', async () => {
+  const create = vi.fn().mockRejectedValue({ type: 'StripePermissionError', statusCode: 403 });
+  const legacy = vi.fn().mockResolvedValue({ id: 'acct_permitted' });
+  const stripe: any = { v2: { core: { accounts: { create } } }, accounts: { create: legacy } };
+  expect((await createConnectedAccount(stripe, 'tenant')).id).toBe('acct_permitted');
+  expect(legacy).toHaveBeenCalledOnce();
+  expect(legacy.mock.calls[0][0].controller.fees.payer).toBe('account');
+});
+it('reports the v1 permission refusal with its exact stage when neither API permits account creation', async () => {
+  const denial = { type: 'StripePermissionError', statusCode: 403, requestId: 'req_v1' };
+  const stripe: any = {
+    v2: {
+      core: {
+        accounts: {
+          create: vi.fn().mockRejectedValue({ type: 'StripePermissionError', statusCode: 403 }),
+        },
+      },
+    },
+    accounts: { create: vi.fn().mockRejectedValue(denial) },
+  };
+  await expect(createConnectedAccount(stripe, 'tenant')).rejects.toMatchObject({
+    connectOperation: 'create_account_v1',
+  });
+  expect(connectDiagnostics(denial)).toMatchObject({
+    operation: 'create_account_v1',
+    requestId: 'req_v1',
   });
 });

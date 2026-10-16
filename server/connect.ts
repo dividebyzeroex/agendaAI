@@ -4,9 +4,12 @@ import type { VercelRequest, VercelResponse } from './http.js';
 import { authenticate, BillingError, objectId, ownedEstablishment } from './billing.js';
 const TERMS = 'connect-2026-10-16-r1';
 const FEE = 100;
-// Fall back only when Stripe explicitly rejects Accounts v2 support. Never retry uncertain creation through another API.
+// Use the compatible API only after a definitive v2 rejection. Stripe independently checks the same key on v1; never retry uncertain creation through another API.
 function legacyConnectAllowed(error: any) {
-  return error?.code === 'accounts_v2_access_blocked';
+  return (
+    error?.code === 'accounts_v2_access_blocked' ||
+    (error?.type === 'StripePermissionError' && error?.statusCode === 403)
+  );
 }
 export async function createConnectedAccount(stripe: Stripe, tenantId: string, email?: string) {
   try {
@@ -26,23 +29,27 @@ export async function createConnectedAccount(stripe: Stripe, tenantId: string, e
       { idempotencyKey: 'connect-account:' + tenantId },
     );
   } catch (error) {
-    if (!legacyConnectAllowed(error)) throw error;
-    return await stripe.accounts.create(
-      {
-        country: 'BR',
-        email,
-        default_currency: 'brl',
-        controller: {
-          fees: { payer: 'account' },
-          losses: { payments: 'stripe' },
-          requirement_collection: 'stripe',
-          stripe_dashboard: { type: 'full' },
+    if (!legacyConnectAllowed(error)) annotateConnectFailure(error, 'create_account_v2');
+    try {
+      return await stripe.accounts.create(
+        {
+          country: 'BR',
+          email,
+          default_currency: 'brl',
+          controller: {
+            fees: { payer: 'account' },
+            losses: { payments: 'stripe' },
+            requirement_collection: 'stripe',
+            stripe_dashboard: { type: 'full' },
+          },
+          capabilities: { card_payments: { requested: true } },
+          metadata: { estabelecimentoId: tenantId },
         },
-        capabilities: { card_payments: { requested: true } },
-        metadata: { estabelecimentoId: tenantId },
-      },
-      { idempotencyKey: 'connect-account-v1:' + tenantId },
-    );
+        { idempotencyKey: 'connect-account-v1:' + tenantId },
+      );
+    } catch (error) {
+      annotateConnectFailure(error, 'create_account_v1');
+    }
   }
 }
 export async function createConnectedOnboardingLink(
@@ -68,14 +75,40 @@ export async function createConnectedOnboardingLink(
       !legacyConnectAllowed(error) &&
       !(error?.code === 'resource_missing' && error?.param === 'account')
     )
-      throw error;
-    return await stripe.accountLinks.create({
-      account: accountId,
-      type: 'account_onboarding',
-      refresh_url: base + '?connect=refresh',
-      return_url: base + '?connect=return',
-    });
+      annotateConnectFailure(error, 'create_link_v2');
+    try {
+      return await stripe.accountLinks.create({
+        account: accountId,
+        type: 'account_onboarding',
+        refresh_url: base + '?connect=refresh',
+        return_url: base + '?connect=return',
+      });
+    } catch (error) {
+      annotateConnectFailure(error, 'create_link_v1');
+    }
   }
+}
+export function connectDiagnostics(error: any) {
+  const safe = (value: unknown, pattern: RegExp, max = 100) =>
+    typeof value === 'string' && value.length <= max && pattern.test(value) ? value : null;
+  const text = String(error?.message || error?.raw?.message || '');
+  const scopes = [...new Set(text.match(/\brak_[a-z0-9_]+\b/g) || [])].slice(0, 10);
+  const key = process.env['STRIPE_SECRET_KEY'] || '';
+  return {
+    operation: safe(error?.connectOperation, /^[a-z0-9_]+$/),
+    type: safe(error?.type, /^[A-Za-z]+$/),
+    code: safe(error?.code, /^[a-z0-9_]+$/),
+    param: safe(error?.param, /^[A-Za-z0-9_.\[\]]+$/),
+    status: Number.isInteger(error?.statusCode) ? error.statusCode : null,
+    requestId: safe(error?.requestId, /^req_[A-Za-z0-9]+$/),
+    requiredPermissions: scopes,
+    keySource: 'STRIPE_SECRET_KEY',
+    keySuffix: /^(rk|sk)_(live|test)_[A-Za-z0-9]+$/.test(key) ? key.slice(-4) : null,
+  };
+}
+function annotateConnectFailure(error: any, operation: string): never {
+  if (error && typeof error === 'object') error.connectOperation = operation;
+  throw error;
 }
 export function connectFailure(error: any): BillingError {
   if (error instanceof BillingError) return error;
@@ -96,7 +129,12 @@ export function connectFailure(error: any): BillingError {
       409,
       'A Stripe exige concluir a ativação e as informações da conta da plataforma. Finalize o cadastro no painel Stripe e tente vincular novamente.',
     );
-  if (error?.type === 'StripePermissionError' || error?.type === 'StripeAuthenticationError')
+  if (error?.type === 'StripeAuthenticationError')
+    return new BillingError(
+      503,
+      'A Stripe recusou a autenticação da chave da plataforma. Confira se a chave cadastrada na Vercel está ativa e pertence à conta correta.',
+    );
+  if (error?.type === 'StripePermissionError')
     return new BillingError(
       503,
       'A chave Stripe da plataforma precisa ter permissão para gerenciar contas Connect.',

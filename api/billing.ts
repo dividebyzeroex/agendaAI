@@ -1,4 +1,4 @@
-import { connectHandler, connectFailure } from '../server/connect.js';
+import { connectHandler, connectFailure, connectDiagnostics } from '../server/connect.js';
 import { ownerPaymentTest } from '../server/owner-payment-test.js';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import {
@@ -88,35 +88,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         { idempotencyKey: 'owner-offer-code:' + code },
       );
-      const { error } = await db
-        .from('commercial_agent_runs')
-        .insert({
-          agent: 'owner',
-          status: 'completed',
-          summary: {
-            action: 'discount_created',
-            code: promotion.code,
-            percent,
-            expires_at: new Date(expires * 1000).toISOString(),
-            duration: 'first_invoice',
-            max_redemptions: 10,
-            actor: user.id,
-          },
-        });
+      const { error } = await db.from('commercial_agent_runs').insert({
+        agent: 'owner',
+        status: 'completed',
+        summary: {
+          action: 'discount_created',
+          code: promotion.code,
+          percent,
+          expires_at: new Date(expires * 1000).toISOString(),
+          duration: 'first_invoice',
+          max_redemptions: 10,
+          actor: user.id,
+        },
+      });
       if (error)
         throw new BillingError(
           503,
           'Cupom criado no Stripe, mas a auditoria falhou. Confira antes de divulgar.',
         );
-      return res
-        .status(201)
-        .json({
-          code: promotion.code,
-          percent,
-          expires_at: new Date(expires * 1000).toISOString(),
-          conditions:
-            'Desconto na primeira fatura, para primeira contratação, até 10 resgates. Válido por 14 dias.',
-        });
+      return res.status(201).json({
+        code: promotion.code,
+        percent,
+        expires_at: new Date(expires * 1000).toISOString(),
+        conditions:
+          'Desconto na primeira fatura, para primeira contratação, até 10 resgates. Válido por 14 dias.',
+      });
     }
 
     if (action.startsWith('owner-test-')) return await ownerPaymentTest(req, res, db, stripe, user);
@@ -234,26 +230,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         cancel_at_period_end: true,
       });
       await syncSubscription(stripe, db, estab.stripe_subscription_id);
-      return res
-        .status(200)
-        .json({
-          status: 'cancelled',
-          message: 'Renovação cancelada. Acesso mantido até o fim do período pago.',
-        });
+      return res.status(200).json({
+        status: 'cancelled',
+        message: 'Renovação cancelada. Acesso mantido até o fim do período pago.',
+      });
     }
     if (!estab.stripe_customer_id) return res.status(200).json({ invoices: [] });
     const invoices = await stripe.invoices.list({ customer: estab.stripe_customer_id, limit: 10 });
-    return res
-      .status(200)
-      .json({
-        invoices: invoices.data.map((inv) => ({
-          id: inv.number || inv.id,
-          date: new Date(inv.created * 1000).toISOString().split('T')[0],
-          amount: inv.amount_paid / 100,
-          status: inv.status === 'paid' ? 'Paga' : 'Pendente',
-          pdfUrl: inv.invoice_pdf || inv.hosted_invoice_url,
-        })),
-      });
+    return res.status(200).json({
+      invoices: invoices.data.map((inv) => ({
+        id: inv.number || inv.id,
+        date: new Date(inv.created * 1000).toISOString().split('T')[0],
+        amount: inv.amount_paid / 100,
+        status: inv.status === 'paid' ? 'Paga' : 'Pendente',
+        pdfUrl: inv.invoice_pdf || inv.hosted_invoice_url,
+      })),
+    });
   } catch (error) {
     if (typeof req.query['action'] === 'string' && req.query['action'].startsWith('connect-')) {
       const failure = connectFailure(error);
@@ -262,6 +254,38 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         type: error instanceof Error ? error.name : 'UnknownError',
         code: (error as any)?.code || null,
       });
+      const onboarding =
+        req.query['action'] === 'connect-onboard' &&
+        typeof (error as any)?.type === 'string' &&
+        (error as any).type.startsWith('Stripe');
+      if (onboarding) {
+        const diagnostic = connectDiagnostics(error);
+        try {
+          const { db } = billingClients();
+          await db
+            .from('logs_seguranca')
+            .insert({
+              acao: 'stripe_connect_error',
+              estabelecimento_id: req.body?.estabelecimentoId,
+              detalhes: diagnostic,
+            });
+        } catch {
+          /* Keep the original provider failure available. */
+        }
+        const scope = diagnostic.requiredPermissions.length
+          ? ' Permissão exigida: ' + diagnostic.requiredPermissions.join(', ') + '.'
+          : '';
+        const key = diagnostic.keySuffix
+          ? ' Chave usada em STRIPE_SECRET_KEY termina em ' + diagnostic.keySuffix + '.'
+          : '';
+        const operation = diagnostic.operation ? ' Etapa: ' + diagnostic.operation + '.' : '';
+        const reference = diagnostic.requestId
+          ? ' Referência Stripe: ' + diagnostic.requestId + '.'
+          : '';
+        return res
+          .status(failure.status)
+          .json({ error: failure.message + scope + key + operation + reference, diagnostic });
+      }
       return res.status(failure.status).json({ error: failure.message });
     }
     if (error instanceof BillingError)
