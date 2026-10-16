@@ -4,11 +4,14 @@ import type { VercelRequest, VercelResponse } from './http.js';
 import { authenticate, BillingError, objectId, ownedEstablishment } from './billing.js';
 const TERMS = 'connect-2026-10-16-r1';
 const FEE = 100;
+export function connectWebhookSecret() {
+  return process.env['STRIPE_CONNECT_WEBHOOK_SECRET'] || process.env['STRIPE_CONNECT_WEBHOOK_SEC'];
+}
 export function connectConfig() {
   return {
     available:
       process.env['STRIPE_CONNECT_ENABLED'] === 'true' &&
-      !!process.env['STRIPE_CONNECT_WEBHOOK_SECRET'],
+      !!connectWebhookSecret(),
     feeCents: FEE,
     termsVersion: TERMS,
   };
@@ -192,6 +195,7 @@ export async function connectHandler(
   const action = String(req.query['action']);
   const config = connectConfig();
   const allowed: Record<string, string> = {
+    'connect-info': 'GET',
     'connect-status': 'GET',
     'connect-onboard': 'POST',
     'connect-settings': 'POST',
@@ -205,6 +209,7 @@ export async function connectHandler(
     res.setHeader('Allow', allowed[action]);
     throw new BillingError(405, 'Método não permitido.');
   }
+  if(action==='connect-info')return res.status(200).json(config);
   if (action === 'connect-pay' || action === 'connect-receipt') {
     const { receipt, order } = await orderByToken(
       db,

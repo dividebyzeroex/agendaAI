@@ -1,6 +1,7 @@
 import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   connectConfig,
+  connectWebhookSecret,
   validateConnectPayment,
   reconcileConnect,
   connectHandler,
@@ -34,6 +35,19 @@ const intent: any = {
 };
 afterEach(() => vi.unstubAllEnvs());
 describe('optional Connect payments', () => {
+  it('accepts the existing abbreviated secret name while preferring the documented name',()=>{
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','');vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SEC','legacy-secret');vi.stubEnv('STRIPE_CONNECT_ENABLED','true');
+    expect(connectWebhookSecret()).toBe('legacy-secret');expect(connectConfig().available).toBe(true);
+    vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','canonical-secret');expect(connectWebhookSecret()).toBe('canonical-secret');
+  });
+  it('exposes only public availability and fee without authenticating or touching Stripe',async()=>{
+    vi.stubEnv('STRIPE_CONNECT_ENABLED','true');vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET','private-secret');
+    const res:any={status:vi.fn().mockReturnThis(),json:vi.fn()};
+    await connectHandler({method:'GET',query:{action:'connect-info'}} as any,res,{} as any,{} as any);
+    expect(res.json).toHaveBeenCalledWith({available:true,feeCents:100,termsVersion:'connect-2026-10-16-r1'});
+    expect(JSON.stringify(res.json.mock.calls)).not.toContain('private-secret');
+  });
+
   it('is disabled until the separate Connect webhook and release flag are configured', () => {
     vi.stubEnv('STRIPE_CONNECT_ENABLED', 'false');
     vi.stubEnv('STRIPE_CONNECT_WEBHOOK_SECRET', 'whsec');

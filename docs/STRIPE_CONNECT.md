@@ -39,3 +39,7 @@ Fontes verificadas em 15/10/2026:
 ## Validação
 
 Testes locais de migração cobrem reserva, liquidação exata, isolamento, funções restritas, idempotência, comissão única, confirmação após caixa fechado e liberação única de estoque. Testes da API usam Stripe simulado para confirmar escopo da conta, parâmetros e estados. Eles não substituem a homologação real do Connect e dos webhooks.
+
+## Compatibilidade de configuração
+
+O backend aceita o nome documentado `STRIPE_CONNECT_WEBHOOK_SECRET` e também o nome abreviado já cadastrado na Vercel, `STRIPE_CONNECT_WEBHOOK_SEC`. O nome documentado tem prioridade. Isso preserva o segredo existente, pois a Vercel não permite renomear variáveis Sensitive. `GET /api/billing?action=connect-info` retorna somente disponibilidade, tarifa e versão das condições, sem valores de segredos ou dados bancários.

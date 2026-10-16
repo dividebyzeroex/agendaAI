@@ -1,4 +1,4 @@
-import {connectWebhook} from '../server/connect.js';
+import {connectWebhook,connectWebhookSecret} from '../server/connect.js';
 import { recordOwnerTest } from '../server/owner-payment-test.js';
 import type Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
@@ -9,7 +9,7 @@ export const config = { api: { bodyParser: false } };
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).send('Method Not Allowed'); }
   const connect=req.query?.['channel']==='connect';
-  const secret = process.env[connect?'STRIPE_CONNECT_WEBHOOK_SECRET':'STRIPE_WEBHOOK_SECRET'];
+  const secret = connect?connectWebhookSecret():process.env['STRIPE_WEBHOOK_SECRET'];
   if (!secret) return res.status(503).json({ error: 'Webhook unavailable' });
   try {
     const { stripe, db } = billingClients();
