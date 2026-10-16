@@ -43,7 +43,7 @@ export async function campaignSchedule(req: VercelRequest, res: VercelResponse) 
       .eq('estabelecimento_id', tenant)
       .maybeSingle();
     if (error) throw error;
-    if (!camp || !['ready', 'scheduled'].includes(camp.status))
+    if (!camp || !['ready', 'scheduled', 'paused'].includes(camp.status))
       throw new HttpError(409, 'Prepare e revise o público antes de agendar.');
     if (camp.channel !== 'email')
       throw new HttpError(
@@ -55,7 +55,7 @@ export async function campaignSchedule(req: VercelRequest, res: VercelResponse) 
       .update({ status: 'scheduled' })
       .eq('id', id)
       .eq('estabelecimento_id', tenant)
-      .in('status', ['ready', 'scheduled']);
+      .in('status', ['ready', 'scheduled', 'paused']);
     if (saved) throw saved;
     return res.status(200).json({ ok: true });
   } catch (e) {
@@ -64,11 +64,21 @@ export async function campaignSchedule(req: VercelRequest, res: VercelResponse) 
 }
 /** Runs only campaigns explicitly scheduled by their owner. No auto retry of uncertain sends. */
 export async function runCustomerCampaigns(
-  deps: { db?: any; send?: (payload: any, options: any) => Promise<any> } = {},
+  deps: {
+    db?: any;
+    send?: (payload: any, options: any) => Promise<any>;
+    pause?: (ms: number) => Promise<void>;
+    now?: () => number;
+  } = {},
 ) {
   if (!campaignReady()) return { ready: false, sent: 0, failed: 0 };
   const db = deps.db || adminClient(),
     resend = new Resend(process.env['RESEND_API_KEY']);
+  const now = deps.now || Date.now;
+  const deadline = now() + 35000;
+  const pause =
+    deps.pause || ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  let lastAttempt: number | null = null;
   let sent = 0,
     failed = 0,
     suppressed = 0;
@@ -84,19 +94,28 @@ export async function runCustomerCampaigns(
     return { ready: false, sent: 0, failed: 0 };
   if (error) throw error;
   for (const camp of camps || []) {
-    const { data: tenant } = await db
+    if (now() >= deadline) break;
+    const { data: tenant, error: tenantError } = await db
       .from('estabelecimento')
       .select('active,trial_ends_at,plano_expires_at,nome')
       .eq('id', camp.estabelecimento_id)
       .maybeSingle();
+    if (tenantError) throw tenantError;
     if (
       !tenant?.active ||
       Math.max(
         Date.parse(tenant.trial_ends_at || '') || 0,
         Date.parse(tenant.plano_expires_at || '') || 0,
       ) <= Date.now()
-    )
+    ) {
+      const { error: paused } = await db
+        .from('client_campaigns')
+        .update({ status: 'paused' })
+        .eq('id', camp.id)
+        .eq('status', 'scheduled');
+      if (paused) throw paused;
       continue;
+    }
     const { data: recipients, error: readError } = await db
       .from('campaign_recipients')
       .select('*')
@@ -105,6 +124,10 @@ export async function runCustomerCampaigns(
       .limit(10);
     if (readError) throw readError;
     for (const recipient of recipients || []) {
+      if (now() >= deadline) break;
+      // Space provider calls, then recheck preferences before claiming the recipient.
+      if (lastAttempt !== null) await pause(Math.max(0, 550 - (now() - lastAttempt)));
+      if (now() >= deadline) break;
       const { data: pref, error: prefError } = await db
         .from('client_contact_preferences')
         .select('consent')
@@ -157,6 +180,7 @@ export async function runCustomerCampaigns(
       if (!claim) continue;
       try {
         const unsubscribe = projectOrigin() + '/preferencias/' + recipient.token;
+        lastAttempt = now();
         const { data, error } = await (deps.send || resend.emails.send.bind(resend.emails))(
           {
             from: `${String(tenant.nome)
@@ -167,7 +191,10 @@ export async function runCustomerCampaigns(
             html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:32px;color:#172033"><h2>${escapeHtml(tenant.nome)}</h2><p style="white-space:pre-wrap;line-height:1.8">${escapeHtml(camp.message)}</p><hr/><p style="font-size:12px;color:#64748b">Você autorizou este estabelecimento a entrar em contato. <a href="${escapeHtml(unsubscribe)}">Parar de receber mensagens</a></p></div>`,
             headers: { 'List-Unsubscribe': `<${unsubscribe}>` },
           },
-          { idempotencyKey: 'customer-campaign:' + recipient.id },
+          {
+            idempotencyKey: 'customer-campaign:' + recipient.id,
+            signal: AbortSignal.timeout(8000),
+          },
         );
         if (error || !data?.id) throw Error('Provider did not acknowledge');
         const { error: saved } = await db
@@ -186,6 +213,23 @@ export async function runCustomerCampaigns(
         if (saved) throw saved;
         failed++;
       }
+    }
+    // Uncertain in-flight sends stay visible for reconciliation, but must not block other campaigns.
+    const { data: waiting, error: waitingError } = await db
+      .from('campaign_recipients')
+      .select('id')
+      .eq('campaign_id', camp.id)
+      .eq('status', 'pending')
+      .limit(1)
+      .maybeSingle();
+    if (waitingError) throw waitingError;
+    if (!waiting) {
+      const { error: closed } = await db
+        .from('client_campaigns')
+        .update({ status: 'completed' })
+        .eq('id', camp.id)
+        .eq('status', 'scheduled');
+      if (closed) throw closed;
     }
   }
   return { ready: true, sent, failed, suppressed };

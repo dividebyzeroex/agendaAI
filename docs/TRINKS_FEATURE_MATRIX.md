@@ -165,3 +165,16 @@ O build da develop foi aprovado no Vercel. A atualização da aplicação de pro
 Validação desta revisão: 153 testes automatizados de aplicação/APIs; migrações e cenários reais de SQL executados localmente, incluindo autorização, consumo/estorno de pacote, confirmação online, estoque, baixas parciais e fila; navegador a 390 px nas oito áreas, salvamento de formulários e resposta de avaliação com backend simulado. A homologação de transações reais continua separada.
 
 Reembolso de pacote online: antes de pedir o reembolso ao provedor, o passe sem sessões consumidas fica congelado. Se o resultado financeiro for incerto, permanece indisponível para resgate até conferência. Pacotes usados exigem estorno das sessões antes do reembolso pela aplicação. Reembolsos presenciais seguem a mesma validação dentro da transação do caixa.
+
+
+## Continuidade: campanhas sem bloqueio de lotes — 16/10/2026
+
+- Campanhas sem novos destinatários pendentes passam a `completed`, liberando os próximos lotes. Envio previamente reivindicado e sem confirmação continua visível para conferência; não é repetido automaticamente e não bloqueia outras campanhas.
+- Campanhas de estabelecimentos sem acesso ativo passam a `paused`. Após regularização, o dono retoma o agendamento explicitamente. Falhas ao consultar o acesso não são confundidas com suspensão.
+- Espaçamento local de 550 ms entre tentativas no mesmo worker, prazo de 8 segundos para resposta do provedor e orçamento de 35 segundos para iniciar novos envios. Destinatários ainda não processados permanecem pendentes para a rotina seguinte. O limite diário atual de 3 campanhas e 10 destinatários por campanha permanece explícito.
+- Totais por campanha são calculados no banco sobre todo o público. A lista é consultada por campanha, com páginas de 50 pessoas; não depende da antiga lista global de 500 destinatários.
+- Contagens distinguem pendentes, aceitos pelo provedor, retirados e envios em conferência. Aceitação pelo provedor continua sem comprovar entrega.
+- Migração aplicada e verificada no Supabase de produção: `20261016155712_campaign_worker_progress.sql`; amplia somente os estados permitidos, cria índices de fila e RPC de agregação com SECURITY INVOKER, RLS e autorização do dono. Não altera preferências nem dispara mensagens ao ser aplicada.
+- Validação: 160 testes de aplicação/APIs, tipagem e build; todas as migrações e cenários de SQL locais, incluindo contagem de 511 destinatários e bloqueio de acesso anônimo/entre estabelecimentos; navegador com backend simulado a 390 px, oito áreas e paginação do público.
+
+Sinal de reserva e renovação automática do clube continuam pendentes. Esta revisão não cria cobranças, reembolsos ou transferências reais.

@@ -875,8 +875,28 @@
             {{ c.due_at | date: 'dd/MM/yyyy HH:mm' : '-0300' }}
           </p>
           <p>{{ c.message }}</p>
+          <ng-container *ngIf="campaignProgress[c.id] as progress">
+            <p class="campaign-progress" aria-label="Andamento da campanha">
+              {{ progress.total }} no público · {{ progress.pending }} pendentes ·
+              {{ progress.sent }} aceitos pelo provedor · {{ progress.suppressed }} retirados
+            </p>
+            <p class="warning" *ngIf="+progress.failed + +progress.sending > 0">
+              {{ +progress.failed + +progress.sending }} envio(s) precisam de conferência. Confira o
+              provedor antes de repetir; o cliente pode ter recebido a mensagem.
+            </p>
+          </ng-container>
+          <p class="hint" *ngIf="c.status === 'scheduled'">
+            Próxima rotina diária às 08h de São Paulo, após a data escolhida. Até 10 destinatários
+            por campanha em cada execução.
+          </p>
+          <p class="hint" *ngIf="c.status === 'paused'">
+            O acesso do estabelecimento precisa estar ativo. Após regularizar, retome o envio.
+          </p>
+          <button type="button" (click)="loadCampaignRecipients(c.id)">
+            Ver público desta campanha
+          </button>
         </div>
-        <div class="actions" *ngIf="c.status !== 'cancelled'">
+        <div class="actions" *ngIf="c.status !== 'cancelled' && c.status !== 'completed'">
           <button
             *ngIf="c.status === 'draft' || c.status === 'ready'"
             type="button"
@@ -892,11 +912,13 @@
             Preparar público</button
           ><button
             type="button"
-            *ngIf="c.status === 'ready' && c.channel === 'email'"
+            *ngIf="(c.status === 'ready' || c.status === 'paused') && c.channel === 'email'"
             (click)="scheduleCampaign(c.id)"
             [disabled]="busy"
           >
-            Agendar envio por e-mail</button
+            {{
+              c.status === 'paused' ? 'Retomar envio por e-mail' : 'Agendar envio por e-mail'
+            }}</button
           ><button
             type="button"
             (click)="act('campaign-cancel', { id: c.id }, 'Campanha cancelada.')"
@@ -906,12 +928,44 @@
           </button>
         </div>
       </article>
-      <section *ngIf="data['campaign_recipients']?.length">
-        <h2>Público das campanhas</h2>
-        <article class="row" *ngFor="let r of data['campaign_recipients']">
+      <section *ngIf="selectedCampaign">
+        <h2>Público: {{ campaignTitle(selectedCampaign) }}</h2>
+        <p class="hint">
+          {{ recipientTotal }} destinatários nesta campanha. Exibindo até 50 por página.
+        </p>
+        <p role="status" *ngIf="recipientLoading">Conferindo público…</p>
+        <p class="feedback error" role="alert" *ngIf="recipientError">{{ recipientError }}</p>
+        <p class="empty" *ngIf="!recipientLoading && !recipientError && !campaignRecipients.length">
+          Nenhum destinatário nesta página.
+        </p>
+        <article class="row" *ngFor="let r of campaignRecipients">
           <strong>{{ customer(r.cliente_id) }}</strong
           ><span>{{ label(r.status) }}</span>
         </article>
+        <div class="actions">
+          <button
+            type="button"
+            [disabled]="recipientLoading || recipientPage === 0"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage - 1)"
+          >
+            Anterior
+          </button>
+          <span>Página {{ recipientPage + 1 }}</span>
+          <button
+            type="button"
+            [disabled]="recipientLoading || (recipientPage + 1) * 50 >= recipientTotal"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage + 1)"
+          >
+            Próxima
+          </button>
+          <button
+            type="button"
+            *ngIf="recipientError"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage)"
+          >
+            Tentar novamente
+          </button>
+        </div>
       </section>
     </ng-container>
     <form *ngSwitchCase="'pagina'" (ngSubmit)="saveSettings()">

@@ -42,7 +42,7 @@ const config: Record<string, { title: string; description: string; tables: strin
   relacionamento: {
     title: 'Relacionamento',
     description: 'Prepare campanhas e controle os canais autorizados por cada cliente.',
-    tables: ['client_contact_preferences', 'client_campaigns', 'campaign_recipients'],
+    tables: ['client_contact_preferences', 'client_campaigns'],
   },
   pagina: {
     title: 'Página de reservas',
@@ -68,6 +68,15 @@ export class BusinessWorkspace implements OnInit {
   module = this.route.snapshot.data['module'] as string;
   config = config[this.module];
   data: Record<string, any[]> = {};
+  campaignProgress: Record<string, any> = {};
+  selectedCampaign = '';
+  campaignRecipients: any[] = [];
+  recipientTotal = 0;
+  recipientPage = 0;
+  recipientLoading = false;
+  recipientError = '';
+  private recipientGeneration = 0;
+  private recipientAbort?: AbortController;
   loaded = false;
   loading = false;
   busy = false;
@@ -94,18 +103,29 @@ export class BusinessWorkspace implements OnInit {
     this.destroy.onDestroy(() => {
       ++this.generation;
       this.abort?.abort();
+      this.recipientAbort?.abort();
+      ++this.recipientGeneration;
     });
   }
   ngOnInit() {
     this.est.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe((id) => {
       this.tenant = id || '';
       this.form = {};
+      this.busy = false;
       this.clients = [];
       this.services = [];
       this.professionals = [];
       this.events = [];
       this.receiptUrl = '';
       this.data = {};
+      this.campaignProgress = {};
+      this.selectedCampaign = '';
+      this.campaignRecipients = [];
+      this.recipientTotal = 0;
+      this.recipientError = '';
+      this.recipientAbort?.abort();
+      ++this.recipientGeneration;
+      this.recipientLoading = false;
       this.editing = false;
       this.notice = '';
       void this.load();
@@ -148,6 +168,12 @@ export class BusinessWorkspace implements OnInit {
           return { table, rows: data || [], count };
         }),
       );
+      for (const r of tables) if (r.status === 'rejected') throw r.reason;
+      const campaigns = tables.find(
+        (r) => r.status === 'fulfilled' && r.value.table === 'client_campaigns',
+      );
+      const campaignIds =
+        campaigns?.status === 'fulfilled' ? campaigns.value.rows.map((r: any) => r.id) : [];
       const lookups = await Promise.allSettled([
         this.db.rpc('get_clientes_by_estab', { p_estab_id: tenant }).abortSignal(signal),
         this.db.rpc('get_servicos_by_estab', { p_estab_id: tenant }).abortSignal(signal),
@@ -160,6 +186,11 @@ export class BusinessWorkspace implements OnInit {
           .order('start', { ascending: false })
           .limit(500)
           .abortSignal(signal),
+        this.module === 'relacionamento'
+          ? this.db
+              .rpc('campaign_progress', { p_tenant: tenant, p_campaigns: campaignIds })
+              .abortSignal(signal)
+          : Promise.resolve({ data: [], error: null }),
       ]);
       if (g !== this.generation) return;
       for (const r of tables) if (r.status === 'rejected') throw r.reason;
@@ -183,14 +214,19 @@ export class BusinessWorkspace implements OnInit {
         Promise.all(value(3).map((e: any) => this.security.decryptObject(e, ['title']))),
       ]);
       if (g !== this.generation) return;
+      this.campaignProgress = Object.fromEntries(value(4).map((r: any) => [r.campaign_id, r]));
       this.clients = clients;
       this.professionals = pros.filter((p: any) => p.ativo);
       this.events = events;
       this.services = value(1).filter((s: any) => s.ativo !== false);
       this.loaded = true;
+      if (this.selectedCampaign)
+        void this.loadCampaignRecipients(this.selectedCampaign, this.recipientPage);
       if (truncated)
         this.notice =
-          'Mostrando os 500 registros mais recentes de cada lista. Os resumos desta tela abrangem somente os registros exibidos.';
+          this.module === 'relacionamento'
+            ? 'Mostrando as 500 campanhas e preferências mais recentes. Os totais de cada campanha incluem todo o seu público.'
+            : 'Mostrando os 500 registros mais recentes de cada lista. Os resumos desta tela abrangem somente os registros exibidos.';
       const settings = this.data['business_settings']?.[0];
       if (settings) {
         this.headline = settings.headline;
@@ -262,6 +298,50 @@ export class BusinessWorkspace implements OnInit {
       segment: 'inactive',
       due_at: new Date().toLocaleString('sv-SE').slice(0, 16).replace(' ', 'T'),
     };
+  }
+  async loadCampaignRecipients(campaignId: string, page = 0) {
+    const tenant = this.tenant;
+    if (!tenant || page < 0) return;
+    const g = ++this.recipientGeneration;
+    this.recipientAbort?.abort();
+    this.recipientAbort = new AbortController();
+    const signal = this.recipientAbort.signal;
+    const timer = setTimeout(
+      () => this.recipientAbort?.signal === signal && this.recipientAbort.abort(),
+      15000,
+    );
+    this.selectedCampaign = campaignId;
+    this.recipientPage = page;
+    this.campaignRecipients = [];
+    this.recipientLoading = true;
+    this.recipientError = '';
+    try {
+      const { data, error, count } = await this.db
+        .from('campaign_recipients')
+        .select('id,cliente_id,status,provider_id,sent_at', { count: 'exact' })
+        .eq('estabelecimento_id', tenant)
+        .eq('campaign_id', campaignId)
+        .order('created_at', { ascending: true })
+        .order('id', { ascending: true })
+        .range(page * 50, page * 50 + 49)
+        .abortSignal(signal);
+      if (g !== this.recipientGeneration) return;
+      if (error) throw error;
+      this.campaignRecipients = data || [];
+      this.recipientTotal = count || 0;
+    } catch {
+      if (g === this.recipientGeneration)
+        this.recipientError = 'Não foi possível conferir o público. Tente novamente.';
+    } finally {
+      clearTimeout(timer);
+      if (g === this.recipientGeneration) {
+        this.recipientLoading = false;
+        this.cdr.markForCheck();
+      }
+    }
+  }
+  campaignTitle(id: string) {
+    return (this.data['client_campaigns'] || []).find((c) => c.id === id)?.title || 'Campanha';
   }
   customer(id: string) {
     return this.clients.find((c) => c.id === id)?.nome || 'Cliente não identificado';
@@ -419,6 +499,8 @@ export class BusinessWorkspace implements OnInit {
           receivable: 'A receber',
           draft: 'Rascunho',
           scheduled: 'Envio agendado',
+          completed: 'Lotes processados',
+          paused: 'Pausada por acesso indisponível',
           sending: 'Envio em conferência',
           ready: 'Público preparado',
           email: 'E-mail',

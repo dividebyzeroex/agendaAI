@@ -20,6 +20,10 @@ function fixture() {
           filters.push((r) => r[k] === v);
           return q;
         },
+        in: (k: string, v: any[]) => {
+          filters.push((r) => v.includes(r[k]));
+          return q;
+        },
         lte: (k: string, v: any) => {
           filters.push((r) => r[k] <= v);
           return q;
@@ -74,7 +78,8 @@ it('sends only an explicitly scheduled campaign, escapes content and uses durabl
   expect(tables.campaign_recipients[0]).toMatchObject({ status: 'sent', provider_id: 'provider' });
   expect(send.mock.calls[0][0].html).toContain('&lt;script&gt;');
   expect(send.mock.calls[0][0].html).toContain('/preferencias/random-token');
-  expect(send.mock.calls[0][1]).toEqual({ idempotencyKey: 'customer-campaign:r' });
+  expect(send.mock.calls[0][1]).toMatchObject({ idempotencyKey: 'customer-campaign:r' });
+  expect(send.mock.calls[0][1].signal).toBeInstanceOf(AbortSignal);
   await runCustomerCampaigns({ db: fixture(), send });
   expect(send).toHaveBeenCalledTimes(1);
 });
@@ -104,4 +109,73 @@ it('leaves blocked or expired establishments unsent', async () => {
   await runCustomerCampaigns({ db: fixture(), send });
   expect(send).not.toHaveBeenCalled();
   expect(tables.campaign_recipients[0].status).toBe('pending');
+});
+
+it('closes exhausted campaigns so they do not occupy future worker slots', async () => {
+  const send = vi.fn().mockResolvedValue({ data: { id: 'ack' } });
+  await runCustomerCampaigns({ db: fixture(), send });
+  expect(tables.client_campaigns[0].status).toBe('completed');
+});
+
+it('retains scheduled state while another batch is pending and paces calls', async () => {
+  tables.campaign_recipients = Array.from({ length: 11 }, (_, i) => ({
+    ...tables.campaign_recipients[0],
+    id: 'r' + i,
+  }));
+  const send = vi.fn().mockResolvedValue({ data: { id: 'ack' } }),
+    pause = vi.fn().mockResolvedValue(undefined);
+  await runCustomerCampaigns({ db: fixture(), send, pause, now: () => 1000 });
+  expect(send).toHaveBeenCalledTimes(10);
+  expect(pause).toHaveBeenCalledTimes(9);
+  expect(pause).toHaveBeenCalledWith(550);
+  expect(tables.client_campaigns[0].status).toBe('scheduled');
+  await runCustomerCampaigns({ db: fixture(), send, pause });
+  expect(send).toHaveBeenCalledTimes(11);
+  expect(tables.client_campaigns[0].status).toBe('completed');
+});
+it('moves exhausted campaigns out of selection so the fourth campaign runs next time', async () => {
+  const camp = tables.client_campaigns[0];
+  tables.client_campaigns = Array.from({ length: 4 }, (_, i) => ({ ...camp, id: 'c' + i }));
+  tables.campaign_recipients[0].campaign_id = 'c3';
+  const send = vi.fn().mockResolvedValue({ data: { id: 'ack' } });
+  await runCustomerCampaigns({ db: fixture(), send });
+  expect(send).not.toHaveBeenCalled();
+  await runCustomerCampaigns({ db: fixture(), send });
+  expect(send).toHaveBeenCalledTimes(1);
+});
+it('pauses inactive campaigns so they cannot monopolize selection', async () => {
+  tables.estabelecimento[0].active = false;
+  const send = vi.fn();
+  await runCustomerCampaigns({ db: fixture(), send });
+  expect(tables.client_campaigns[0].status).toBe('paused');
+  expect(tables.campaign_recipients[0].status).toBe('pending');
+  expect(send).not.toHaveBeenCalled();
+});
+it('releases the slot without resending a previously claimed uncertain recipient', async () => {
+  tables.campaign_recipients[0].status = 'sending';
+  const send = vi.fn();
+  await runCustomerCampaigns({ db: fixture(), send });
+  expect(tables.client_campaigns[0].status).toBe('completed');
+  expect(tables.campaign_recipients[0].status).toBe('sending');
+  expect(send).not.toHaveBeenCalled();
+});
+it('preserves the next pending recipient when the execution budget runs out', async () => {
+  tables.campaign_recipients.push({ ...tables.campaign_recipients[0], id: 'r2' });
+  let time = 0;
+  const send = vi.fn().mockImplementation(async () => {
+    time = 36000;
+    return { data: { id: 'ack' } };
+  });
+  await runCustomerCampaigns({ db: fixture(), send, now: () => time });
+  expect(send).toHaveBeenCalledTimes(1);
+  expect(tables.campaign_recipients[1].status).toBe('pending');
+  expect(tables.client_campaigns[0].status).toBe('scheduled');
+});
+it('claims a recipient only once when workers overlap', async () => {
+  const send = vi.fn().mockResolvedValue({ data: { id: 'ack' } });
+  await Promise.all([
+    runCustomerCampaigns({ db: fixture(), send }),
+    runCustomerCampaigns({ db: fixture(), send }),
+  ]);
+  expect(send).toHaveBeenCalledTimes(1);
 });
