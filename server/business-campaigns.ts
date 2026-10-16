@@ -97,7 +97,7 @@ export async function runCustomerCampaigns(
     if (now() >= deadline) break;
     const { data: tenant, error: tenantError } = await db
       .from('estabelecimento')
-      .select('active,trial_ends_at,plano_expires_at,nome')
+      .select('active,trial_ends_at,plano_expires_at,nome,slug')
       .eq('id', camp.estabelecimento_id)
       .maybeSingle();
     if (tenantError) throw tenantError;
@@ -142,7 +142,15 @@ export async function runCustomerCampaigns(
         .eq('id', camp.id)
         .maybeSingle();
       if (campError) throw campError;
-      if (!pref?.consent || current?.status !== 'scheduled') {
+      let eligible = true;
+      if (camp.retention_rule_id) {
+        const { data, error } = await db.rpc('retention_recipient_eligible', {
+          p_recipient: recipient.id,
+        });
+        if (error) throw error;
+        eligible = data === true;
+      }
+      if (!pref?.consent || current?.status !== 'scheduled' || !eligible) {
         const { error } = await db
           .from('campaign_recipients')
           .update({ status: 'suppressed' })
@@ -188,7 +196,7 @@ export async function runCustomerCampaigns(
               .slice(0, 80)} <${process.env['RESEND_FROM_EMAIL']}>`,
             to: [customer.email],
             subject: camp.title,
-            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:32px;color:#172033"><h2>${escapeHtml(tenant.nome)}</h2><p style="white-space:pre-wrap;line-height:1.8">${escapeHtml(camp.message)}</p><hr/><p style="font-size:12px;color:#64748b">Você autorizou este estabelecimento a entrar em contato. <a href="${escapeHtml(unsubscribe)}">Parar de receber mensagens</a></p></div>`,
+            html: `<div style="font-family:Arial,sans-serif;max-width:600px;margin:auto;padding:32px;color:#172033"><h2>${escapeHtml(tenant.nome)}</h2><p style="white-space:pre-wrap;line-height:1.8">${escapeHtml(camp.message.replaceAll('{negocio}', String(tenant.nome)).replaceAll('{link}', projectOrigin() + '/agendar/' + String(tenant.slug || '')))}</p><hr/><p style="font-size:12px;color:#64748b">Você autorizou este estabelecimento a entrar em contato. <a href="${escapeHtml(unsubscribe)}">Parar de receber mensagens</a></p></div>`,
             headers: { 'List-Unsubscribe': `<${unsubscribe}>` },
           },
           {

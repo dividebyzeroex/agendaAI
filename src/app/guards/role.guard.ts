@@ -1,7 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
-import { firstValueFrom } from 'rxjs';
+import { EstabelecimentoService } from '../services/estabelecimento.service';
+import { firstValueFrom, filter, take, timeout } from 'rxjs';
 
 /**
  * Guarda de Rotas baseada em Roles (Cargos).
@@ -11,14 +12,30 @@ import { firstValueFrom } from 'rxjs';
 export const roleGuard: CanActivateFn = async (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
+  const est = inject(EstabelecimentoService);
 
   // 1. Garante que temos uma sessão ativa
   const hasSession = await authService.checkSession();
   if (!hasSession) return router.parseUrl('/login');
 
   // 2. Obtém o perfil do usuário (primeira emissão válida)
+  try {
+    await firstValueFrom(
+      est.isLoading$.pipe(
+        filter((v) => !v),
+        take(1),
+        timeout(20000),
+      ),
+    );
+  } catch {
+    return router.parseUrl('/login');
+  }
+  authService.setUnitRole(
+    est.estabelecimento$.value?.role || null,
+    est.estabelecimento$.value?.profile_id || null,
+  );
   const profile = await firstValueFrom(authService.profile$);
-  
+
   if (!profile) {
     // Se não houver perfil, redireciona para o login (segurança)
     return router.parseUrl('/login');

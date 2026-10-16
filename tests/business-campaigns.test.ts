@@ -179,3 +179,13 @@ it('claims a recipient only once when workers overlap', async () => {
   ]);
   expect(send).toHaveBeenCalledTimes(1);
 });
+
+it('suppresses a prepared retention invite when the client has become ineligible', async () => {
+  tables.client_campaigns[0].retention_rule_id = 'rule';
+  const send = vi.fn(),
+    db: any = fixture();
+  db.rpc = vi.fn().mockResolvedValue({ data: false, error: null });
+  await runCustomerCampaigns({ db, send });
+  expect(send).not.toHaveBeenCalled();
+  expect(tables.campaign_recipients[0].status).toBe('suppressed');
+});

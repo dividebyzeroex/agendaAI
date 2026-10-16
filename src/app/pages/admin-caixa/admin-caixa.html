@@ -288,6 +288,8 @@
 
           <div class="chk-section">
              <h4>Pagamento</h4>
+             <p *ngIf="!depositVerified" role="alert">O sinal ainda não foi confirmado. Reabra o atendimento após conferir Recebimentos.</p>
+             <p *ngIf="prepaidAmount > 0">Sinal já recebido: <strong>R$ {{ prepaidAmount | number:'1.2-2' }}</strong>. O total abaixo corresponde somente ao saldo.</p>
              <div class="form-group">
                <label>Forma de Pagamento *</label>
                <select [(ngModel)]="formaPagamento" class="ag-select">
@@ -325,7 +327,7 @@
           </div>
 
           <button class="btn-primary primary" style="width: 100%; margin-top: 16px;"
-            [disabled]="isFinalizing || !formaPagamento || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))"
+            [disabled]="isFinalizing || !depositVerified || !formaPagamento || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))"
             (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
               <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
               <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>

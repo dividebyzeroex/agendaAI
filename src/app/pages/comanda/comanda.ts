@@ -26,6 +26,8 @@ export class ComandaComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   onlineStatus = signal('');
+  reservationStatus = signal('');
+  paymentPurpose = signal('');
   paymentBusy = signal(false);
   paymentError = signal('');
   async conferirPagamento() {
@@ -36,6 +38,8 @@ export class ComandaComponent implements OnInit {
       if (!r.ok) return;
       const d = await r.json();
       this.onlineStatus.set(d.online ? d.status : '');
+      this.reservationStatus.set(d.reservationStatus || '');
+      this.paymentPurpose.set(d.purpose || '');
       if (d.status === 'paid' && this.caixaItem)
         this.caixaItem = { ...this.caixaItem, status_caixa: 'pago' };
     } catch {

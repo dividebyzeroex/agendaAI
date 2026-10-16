@@ -26,10 +26,10 @@ beforeEach(async () => {
     imports: [AdminLayout],
     providers: [
       provideRouter([]),
-      { provide: AuthService, useValue: { profile$: profile, logout: vi.fn() } },
+      { provide: AuthService, useValue: { profile$: profile, logout: vi.fn(),setUnitRole:vi.fn() } },
       {
         provide: EstabelecimentoService,
-        useValue: { estabelecimento$: new BehaviorSubject({ nome: 'Meu Studio', slug: 'studio' }) },
+        useValue: { units$:new BehaviorSubject([]),estabelecimento$: new BehaviorSubject({ nome: 'Meu Studio', slug: 'studio' }) },
       },
       { provide: AppActivityService, useValue: {} },
       NotificationService,

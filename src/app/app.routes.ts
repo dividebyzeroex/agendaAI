@@ -6,106 +6,315 @@ import { billingGuard } from './guards/billing.guard';
 import { roleGuard } from './guards/role.guard';
 import { platformOwnerGuard } from './guards/platform-owner.guard';
 
-
 export const routes: Routes = [
   { path: '', component: Landing, pathMatch: 'full' },
-  { path: 'demonstracao', loadComponent: () => import('./pages/product-demo/product-demo').then(m => m.ProductDemo) },
-  { path: 'avaliar/:token', loadComponent: () => import('./pages/customer-action/customer-action').then(m=>m.CustomerAction) },
-  { path: 'preferencias/:token', loadComponent: () => import('./pages/customer-action/customer-action').then(m=>m.CustomerAction), data:{unsubscribe:true} },
-  { path: 'checkin/:token', loadComponent: () => import('./pages/customer-action/customer-action').then(m=>m.CustomerAction), data:{checkin:true} },
-  { path: 'login', loadComponent: () => import('./pages/login/login').then(m => m.Login) },
-  { path: 'termos', loadComponent: () => import('./pages/terms/terms').then(m => m.Terms) },
-  { path: 'primeiro-acesso', loadComponent: () => import('./pages/primeiro-acesso/primeiro-acesso').then(m => m.PrimeiroAcesso) },
-  { path: 'onboarding', loadComponent: () => import('./pages/onboarding/onboarding').then(m => m.Onboarding), canActivate: [authGuard] },
+  {
+    path: 'demonstracao',
+    loadComponent: () => import('./pages/product-demo/product-demo').then((m) => m.ProductDemo),
+  },
+  {
+    path: 'clube/:token',
+    loadComponent: () => import('./pages/customer-club/customer-club').then((m) => m.CustomerClub),
+  },
+  {
+    path: 'avaliar/:token',
+    loadComponent: () =>
+      import('./pages/customer-action/customer-action').then((m) => m.CustomerAction),
+  },
+  {
+    path: 'preferencias/:token',
+    loadComponent: () =>
+      import('./pages/customer-action/customer-action').then((m) => m.CustomerAction),
+    data: { unsubscribe: true },
+  },
+  {
+    path: 'checkin/:token',
+    loadComponent: () =>
+      import('./pages/customer-action/customer-action').then((m) => m.CustomerAction),
+    data: { checkin: true },
+  },
+  { path: 'login', loadComponent: () => import('./pages/login/login').then((m) => m.Login) },
+  { path: 'termos', loadComponent: () => import('./pages/terms/terms').then((m) => m.Terms) },
+  {
+    path: 'primeiro-acesso',
+    loadComponent: () =>
+      import('./pages/primeiro-acesso/primeiro-acesso').then((m) => m.PrimeiroAcesso),
+  },
+  {
+    path: 'onboarding',
+    loadComponent: () => import('./pages/onboarding/onboarding').then((m) => m.Onboarding),
+    canActivate: [authGuard],
+  },
   // Rota pública de agendamento — /agendar/:slug (ex: /agendar/barbearia-do-joao)
-  { path: 'agendar/:slug', loadComponent: () => import('./pages/agendar/agendar').then(m => m.Agendar) },
+  {
+    path: 'agendar/:slug',
+    loadComponent: () => import('./pages/agendar/agendar').then((m) => m.Agendar),
+  },
   // Fallback genérico sem slug
-  { path: 'agendar', loadComponent: () => import('./pages/agendar/agendar').then(m => m.Agendar) },
+  {
+    path: 'agendar',
+    loadComponent: () => import('./pages/agendar/agendar').then((m) => m.Agendar),
+  },
   // Rota pública para visualização de comanda
-  { path: 'comanda/:token', loadComponent: () => import('./pages/comanda/comanda').then(m => m.ComandaComponent) },
+  {
+    path: 'comanda/:token',
+    loadComponent: () => import('./pages/comanda/comanda').then((m) => m.ComandaComponent),
+  },
 
   {
     path: 'admin',
-    loadComponent: () => import('./layouts/admin-layout/admin-layout').then(m => m.AdminLayout),
+    loadComponent: () => import('./layouts/admin-layout/admin-layout').then((m) => m.AdminLayout),
     canActivate: [authGuard, billingGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./pages/admin/admin').then(m => m.Admin) },
-      { path: 'portal', loadComponent: () => import('./components/portal-profissional/portal-profissional').then(m => m.PortalProfissionalComponent) },
-      { path: 'primeiros-passos', loadComponent: () => import('./pages/setup-workspace/setup-workspace').then(m => m.SetupWorkspace), canActivate:[roleGuard], data:{roles:['dono']} },
-      { path: 'fila', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'fila',roles:['dono','recepcionista','financeiro']} },
-      { path: 'fidelizacao', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'fidelizacao',roles:['dono']} },
-      { path: 'satisfacao', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'satisfacao',roles:['dono']} },
-      { path: 'financeiro', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'financeiro',roles:['dono']} },
-      { path: 'estoque', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'estoque',roles:['dono']} },
-      { path: 'fichas', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'fichas',roles:['dono']} },
-      { path: 'relacionamento', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'relacionamento',roles:['dono']} },
-      { path: 'pagina', loadComponent: () => import('./pages/business-workspace/business-workspace').then(m=>m.BusinessWorkspace), canActivate:[roleGuard], data:{module:'pagina',roles:['dono']} },
-      { path: 'recebimentos', loadComponent: () => import('./pages/admin-recebimentos/admin-recebimentos').then(m => m.AdminRecebimentos), canActivate: [roleGuard], data: {roles: ['dono']} },
-      { path: 'agenda/novo', loadComponent: () => import('./components/agendar-modal/agendar-modal.component').then(m => m.AgendarModalComponent) },
-      { path: 'agenda/atendimento/:id', loadComponent: () => import('./pages/appointment-details/appointment-details').then(m => m.AppointmentDetails) },
-      { path: 'agenda', loadComponent: () => import('./pages/admin-agenda/admin-agenda').then(m => m.AdminAgenda) },
-      { path: 'clientes/novo', loadComponent: () => import('./components/novo-cliente-modal/novo-cliente-modal.component').then(m => m.NovoClienteModalComponent) },
-      { path: 'clientes/editar/:id', loadComponent: () => import('./components/novo-cliente-modal/novo-cliente-modal.component').then(m => m.NovoClienteModalComponent) },
-      { path: 'clientes', loadComponent: () => import('./pages/admin-clientes/admin-clientes').then(m => m.AdminClientes) },
-      { path: 'configuracoes', loadComponent: () => import('./pages/admin-configuracoes/admin-configuracoes').then(m => m.AdminConfiguracoes) },
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./pages/admin/admin').then((m) => m.Admin),
+      },
+      {
+        path: 'portal',
+        loadComponent: () =>
+          import('./components/portal-profissional/portal-profissional').then(
+            (m) => m.PortalProfissionalComponent,
+          ),
+      },
+      {
+        path: 'primeiros-passos',
+        loadComponent: () =>
+          import('./pages/setup-workspace/setup-workspace').then((m) => m.SetupWorkspace),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
+      },
+      {
+        path: 'fila',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'fila', roles: ['dono', 'recepcionista', 'financeiro'] },
+      },
+      {
+        path: 'clube',
+        loadComponent: () =>
+          import('./pages/growth-workspace/growth-workspace').then((m) => m.GrowthWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'clube', roles: ['dono'] },
+      },
+      {
+        path: 'resultados',
+        loadComponent: () =>
+          import('./pages/growth-workspace/growth-workspace').then((m) => m.GrowthWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'resultados', roles: ['dono'] },
+      },
+      {
+        path: 'retencao',
+        loadComponent: () =>
+          import('./pages/growth-workspace/growth-workspace').then((m) => m.GrowthWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'retencao', roles: ['dono'] },
+      },
+      {
+        path: 'unidades',
+        loadComponent: () =>
+          import('./pages/growth-workspace/growth-workspace').then((m) => m.GrowthWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'unidades', roles: ['dono'] },
+      },
+      {
+        path: 'fidelizacao',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'fidelizacao', roles: ['dono'] },
+      },
+      {
+        path: 'satisfacao',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'satisfacao', roles: ['dono'] },
+      },
+      {
+        path: 'financeiro',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'financeiro', roles: ['dono'] },
+      },
+      {
+        path: 'estoque',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'estoque', roles: ['dono'] },
+      },
+      {
+        path: 'fichas',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'fichas', roles: ['dono'] },
+      },
+      {
+        path: 'relacionamento',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'relacionamento', roles: ['dono'] },
+      },
+      {
+        path: 'pagina',
+        loadComponent: () =>
+          import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
+        canActivate: [roleGuard],
+        data: { module: 'pagina', roles: ['dono'] },
+      },
+      {
+        path: 'recebimentos',
+        loadComponent: () =>
+          import('./pages/admin-recebimentos/admin-recebimentos').then((m) => m.AdminRecebimentos),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
+      },
+      {
+        path: 'agenda/novo',
+        loadComponent: () =>
+          import('./components/agendar-modal/agendar-modal.component').then(
+            (m) => m.AgendarModalComponent,
+          ),
+      },
+      {
+        path: 'agenda/atendimento/:id',
+        loadComponent: () =>
+          import('./pages/appointment-details/appointment-details').then(
+            (m) => m.AppointmentDetails,
+          ),
+      },
+      {
+        path: 'agenda',
+        loadComponent: () => import('./pages/admin-agenda/admin-agenda').then((m) => m.AdminAgenda),
+      },
+      {
+        path: 'clientes/novo',
+        loadComponent: () =>
+          import('./components/novo-cliente-modal/novo-cliente-modal.component').then(
+            (m) => m.NovoClienteModalComponent,
+          ),
+      },
+      {
+        path: 'clientes/editar/:id',
+        loadComponent: () =>
+          import('./components/novo-cliente-modal/novo-cliente-modal.component').then(
+            (m) => m.NovoClienteModalComponent,
+          ),
+      },
+      {
+        path: 'clientes',
+        loadComponent: () =>
+          import('./pages/admin-clientes/admin-clientes').then((m) => m.AdminClientes),
+      },
+      {
+        path: 'configuracoes',
+        loadComponent: () =>
+          import('./pages/admin-configuracoes/admin-configuracoes').then(
+            (m) => m.AdminConfiguracoes,
+          ),
+      },
       {
         path: 'analytics',
-        loadComponent: () => import('./pages/admin-analytics/admin-analytics').then(m => m.AdminAnalytics),
+        loadComponent: () =>
+          import('./pages/admin-analytics/admin-analytics').then((m) => m.AdminAnalytics),
         canActivate: [roleGuard],
-        data: { roles: ['dono', 'financeiro'] }
+        data: { roles: ['dono', 'financeiro'] },
       },
       {
         path: 'profissionais',
-        loadComponent: () => import('./pages/admin-profissionais/admin-profissionais').then(m => m.AdminProfissionais),
+        loadComponent: () =>
+          import('./pages/admin-profissionais/admin-profissionais').then(
+            (m) => m.AdminProfissionais,
+          ),
         canActivate: [roleGuard],
-        data: { roles: ['dono'] }
+        data: { roles: ['dono'] },
       },
       {
         path: 'produtos',
-        loadComponent: () => import('./pages/admin-produtos/admin-produtos').then(m => m.AdminProdutos),
+        loadComponent: () =>
+          import('./pages/admin-produtos/admin-produtos').then((m) => m.AdminProdutos),
         canActivate: [roleGuard],
-        data: { roles: ['dono', 'gerente'] }
+        data: { roles: ['dono', 'gerente'] },
       },
       {
         path: 'caixa',
-        loadComponent: () => import('./pages/admin-caixa/admin-caixa').then(m => m.AdminCaixa),
+        loadComponent: () => import('./pages/admin-caixa/admin-caixa').then((m) => m.AdminCaixa),
         canActivate: [roleGuard],
-        data: { roles: ['dono', 'financeiro', 'recepcionista'] }
+        data: { roles: ['dono', 'financeiro', 'recepcionista'] },
       },
       {
         path: 'comissoes',
-        loadComponent: () => import('./pages/admin-comissoes/admin-comissoes').then(m => m.AdminComissoes),
+        loadComponent: () =>
+          import('./pages/admin-comissoes/admin-comissoes').then((m) => m.AdminComissoes),
         canActivate: [roleGuard],
-        data: { roles: ['dono', 'financeiro', 'barbeiro'] }
+        data: { roles: ['dono', 'financeiro', 'barbeiro'] },
       },
       {
         path: 'billing',
-        loadComponent: () => import('./pages/admin-billing/admin-billing').then(m => m.AdminBilling),
+        loadComponent: () =>
+          import('./pages/admin-billing/admin-billing').then((m) => m.AdminBilling),
         canActivate: [roleGuard],
-        data: { roles: ['dono'] }
+        data: { roles: ['dono'] },
       },
       {
         path: 'chatbots',
-        redirectTo: 'configuracoes', pathMatch: 'full'
-      }
-    ]
+        redirectTo: 'configuracoes',
+        pathMatch: 'full',
+      },
+    ],
   },
   {
     path: 'platform-admin',
-    loadComponent: () => import('./layouts/platform-layout/platform-layout').then(m => m.PlatformLayout),
+    loadComponent: () =>
+      import('./layouts/platform-layout/platform-layout').then((m) => m.PlatformLayout),
     canActivate: [platformOwnerGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole) },
-      { path: 'control', loadComponent: () => import('./components/owner-control/owner-control').then(m => m.OwnerControl) },
-      { path: 'growth', loadComponent: () => import('./pages/platform-growth/platform-growth').then(m => m.PlatformGrowth) },
-      { path: 'tenants', loadComponent: () => import('./pages/platform-tenants/platform-tenants').then(m => m.PlatformTenants) },
-      { path: 'observability', loadComponent: () => import('./pages/owner-console/owner-console').then(m => m.OwnerConsole), data: {view:'health'} },
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./pages/owner-console/owner-console').then((m) => m.OwnerConsole),
+      },
+      {
+        path: 'control',
+        loadComponent: () =>
+          import('./components/owner-control/owner-control').then((m) => m.OwnerControl),
+      },
+      {
+        path: 'growth',
+        loadComponent: () =>
+          import('./pages/platform-growth/platform-growth').then((m) => m.PlatformGrowth),
+      },
+      {
+        path: 'tenants',
+        loadComponent: () =>
+          import('./pages/platform-tenants/platform-tenants').then((m) => m.PlatformTenants),
+      },
+      {
+        path: 'observability',
+        loadComponent: () =>
+          import('./pages/owner-console/owner-console').then((m) => m.OwnerConsole),
+        data: { view: 'health' },
+      },
       { path: 'social', redirectTo: 'growth', pathMatch: 'full' },
-      { path: 'billing', loadComponent: () => import('./pages/platform-billing/platform-billing').then(m => m.PlatformBilling) },
-      { path: 'settings', loadComponent: () => import('./pages/platform-settings/platform-settings').then(m => m.PlatformSettings) }
-    ]
+      {
+        path: 'billing',
+        loadComponent: () =>
+          import('./pages/platform-billing/platform-billing').then((m) => m.PlatformBilling),
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./pages/platform-settings/platform-settings').then((m) => m.PlatformSettings),
+      },
+    ],
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: '' },
 ];

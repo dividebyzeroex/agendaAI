@@ -118,6 +118,7 @@
       </section>
     </ng-container>
     <ng-container *ngSwitchCase="'fidelizacao'">
+      <p><a routerLink="/admin/clube">Configurar adesões e renovação mensal automática →</a></p>
       <div class="toolbar">
         <button class="primary" type="button" (click)="start('sell')">Vender pacote ou ciclo</button
         ><button type="button" (click)="start('package')">Criar pacote</button
@@ -169,8 +170,8 @@
           /></label>
         </div>
         <p class="hint" *ngIf="form.kind === 'membership'">
-          Cada ciclo libera o número de sessões definido. Nesta versão, a renovação é registrada no
-          caixa; não há débito automático.
+          Cada ciclo avulso libera o número de sessões definido e é registrado no caixa. Para adesão
+          e débito mensal automático, use a área Clube recorrente.
         </p>
         <div class="actions">
           <button class="primary" [disabled]="busy">Criar oferta</button
@@ -334,6 +335,7 @@
       <p class="empty" *ngIf="!feedback.length">Ainda não há convites de avaliação.</p>
     </ng-container>
     <ng-container *ngSwitchCase="'financeiro'">
+      <p><a routerLink="/admin/resultados">Abrir DRE, projeção e conciliação →</a></p>
       <div class="metrics">
         <div>
           <span>A pagar em aberto</span><strong>{{ financial.pay | currency: 'BRL' }}</strong>
@@ -763,6 +765,9 @@
       </section>
     </ng-container>
     <ng-container *ngSwitchCase="'relacionamento'">
+      <p>
+        <a routerLink="/admin/retencao">Configurar convites automáticos de retorno e renovação →</a>
+      </p>
       <p class="hint">
         Prepare o público e a mensagem aqui. E-mails podem ser agendados após revisar o público.
         Outros canais dependem de integração e homologação. Preparar uma campanha não dispara
@@ -968,38 +973,64 @@
         </div>
       </section>
     </ng-container>
-    <form *ngSwitchCase="'pagina'" (ngSubmit)="saveSettings()">
+    <ng-container *ngSwitchCase="'pagina'">
       <section>
-        <h2>Apresentação do negócio</h2>
-        <label
-          >Mensagem de boas-vindas<textarea
-            name="headline"
-            [(ngModel)]="headline"
-            maxlength="300"
-            rows="3"
-            placeholder="Conte o que o cliente encontra no seu espaço."
-          ></textarea></label
-        ><label
-          >Fotos do portfólio (links HTTPS, um por linha; até 12)<textarea
-            name="gallery"
-            [(ngModel)]="gallery"
-            rows="5"
-            placeholder="https://…/foto.jpg"
-          ></textarea>
-        </label>
-      </section>
-      <section>
-        <h2>Novas reservas</h2>
-        <label class="check"
-          ><input type="checkbox" name="approval" [(ngModel)]="approval" /> Quero aprovar os pedidos
-          antes de confirmar</label
-        >
-        <p>
-          Quando ativado, o horário fica reservado como pendente e você confirma pela agenda. Quando
-          desativado, a reserva já nasce confirmada.
+        <h2>Sinal na reserva</h2>
+        <p class="hint">
+          Opcional e disponível com Stripe Connect ativo. O sinal entra como adiantamento e é
+          abatido no caixa. Reservas com sinal exigem pelo menos 45 minutos de antecedência; o
+          pagamento tem prazo de 35 minutos. O horário só é liberado após a Stripe confirmar a
+          expiração. Alterações e cancelamentos exigem tratar a cobrança em Recebimentos.
         </p>
+        <label
+          >Percentual do serviço<select [(ngModel)]="depositPercent">
+            <option [ngValue]="0">Não exigir sinal</option>
+            <option *ngFor="let p of [10, 20, 30, 40, 50]" [ngValue]="p">{{ p }}%</option>
+          </select></label
+        >
+        <p class="hint">
+          Sinal mínimo de R$ 2, limitado à metade do serviço. Serviços abaixo de R$ 4 ficam sem
+          sinal. A plataforma retém R$ 1 por pagamento confirmado, além das taxas Stripe.
+        </p>
+        <div class="actions">
+          <button type="button" [disabled]="busy" (click)="saveDeposit()">
+            Salvar regra de sinal</button
+          ><a routerLink="/admin/recebimentos">Configurar recebimentos</a>
+        </div>
       </section>
-      <button class="primary" [disabled]="busy">Salvar página e regras</button>
-    </form>
+      <form (ngSubmit)="saveSettings()">
+        <section>
+          <h2>Apresentação do negócio</h2>
+          <label
+            >Mensagem de boas-vindas<textarea
+              name="headline"
+              [(ngModel)]="headline"
+              maxlength="300"
+              rows="3"
+              placeholder="Conte o que o cliente encontra no seu espaço."
+            ></textarea></label
+          ><label
+            >Fotos do portfólio (links HTTPS, um por linha; até 12)<textarea
+              name="gallery"
+              [(ngModel)]="gallery"
+              rows="5"
+              placeholder="https://…/foto.jpg"
+            ></textarea>
+          </label>
+        </section>
+        <section>
+          <h2>Novas reservas</h2>
+          <label class="check"
+            ><input type="checkbox" name="approval" [(ngModel)]="approval" /> Quero aprovar os
+            pedidos antes de confirmar</label
+          >
+          <p>
+            Quando ativado, o horário fica reservado como pendente e você confirma pela agenda.
+            Quando desativado, a reserva já nasce confirmada.
+          </p>
+        </section>
+        <button class="primary" [disabled]="busy">Salvar página e regras</button>
+      </form>
+    </ng-container>
   </ng-container>
 </div>

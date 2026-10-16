@@ -116,12 +116,12 @@ describe('optional Connect payments', () => {
     expect(stripe.checkout.sessions.retrieve).toHaveBeenCalledWith(
       'cs_order',
       {},
-      { stripeAccount: 'acct_shop' },
+      { stripeAccount: 'acct_shop',timeout:8000,maxNetworkRetries:0 },
     );
     expect(stripe.paymentIntents.retrieve).toHaveBeenCalledWith(
       'pi_order',
       { expand: ['latest_charge.balance_transaction'] },
-      { stripeAccount: 'acct_shop' },
+      { stripeAccount: 'acct_shop',timeout:8000,maxNetworkRetries:0 },
     );
     expect(db.rpc).toHaveBeenCalledWith(
       'settle_connect_order',
@@ -360,13 +360,13 @@ it('satisfies the Stripe v1 dependency between card payments and transfers', asy
 it('freezes a prepaid pass before provider refund and fails closed for a refused freeze', async () => {
   const rpc = vi.fn().mockResolvedValue({ data: true, error: null });
   await preparePassRefund({ rpc } as any, 'receipt');
-  expect(rpc).toHaveBeenCalledWith('prepare_pass_refund', { p_receipt: 'receipt' });
+  expect(rpc).toHaveBeenCalledWith('prepare_growth_refund', { p_receipt: 'receipt' });
   rpc.mockResolvedValue({ data: null, error: { code: 'P0001' } });
   await expect(preparePassRefund({ rpc } as any, 'receipt')).rejects.toThrow(
     'O pacote não pode ser reembolsado',
   );
 });
-it('keeps pre-migration legacy receipts compatible when the pass module does not exist', async () => {
+it('fails closed when the required financial protection migration is unavailable', async () => {
   const rpc = vi.fn().mockResolvedValue({ error: { code: 'PGRST202' } });
-  await expect(preparePassRefund({ rpc } as any, 'legacy')).resolves.toBeUndefined();
+  await expect(preparePassRefund({ rpc } as any, 'legacy')).rejects.toThrow('não pode ser reembolsado');
 });

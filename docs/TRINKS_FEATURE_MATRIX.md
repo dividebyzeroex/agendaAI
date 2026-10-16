@@ -24,7 +24,7 @@ Fonte: [essencial](https://negocios.trinks.com/solucoes/o-essencial-para-o-seu-s
 | Fechamento de conta com serviços e produtos | Existente | Caixa atômico e comanda digital |
 | Pacotes de serviços e controle de sessões | Implementado | Venda no caixa ou Stripe, liberação após pagamento, validade, consumo e estorno; sem nova receita no resgate |
 | Fichas de anamnese personalizadas | Implementado com limites | Modelos, snapshot de versão, respostas/consentimento e acesso restrito ao dono; sem assinatura digital |
-| Sinal de reserva | Ausente — prioridade 1 | Cobrança antes da reserva, expiração, confirmação via webhook e abatimento no fechamento |
+| Sinal de reserva | Implementado | Percentual opcional, reserva pendente, confirmação Stripe, expiração verificada e abatimento no fechamento |
 | Autoatendimento com check-in | Parcial, ampliado | Check-in por link de atendimento confirmado, janela de 2h, sem iniciar serviço; modo terminal dedicado pendente |
 | Site público do estabelecimento | Parcial, ampliado | Mensagem personalizada e galeria de até 12 imagens HTTPS na página de reservas; sem domínio/site independente |
 
@@ -36,7 +36,7 @@ Fonte: [finanças](https://negocios.trinks.com/solucoes/simplificar-financas/), 
 |---|---|---|
 | Abertura, entradas, saídas e fechamento de caixa | Existente | RPCs atômicas e relatório de fechamento |
 | Contas a pagar e receber com vencimento | Implementado com limites | Vencimento, categoria, competência, saldo, baixas parciais idempotentes e cancelamento sem baixas; registros gerenciais não movimentam o caixa físico |
-| Demonstrativo de resultados / lucro | Parcial | Resultado por competência dos títulos cadastrados; não consolida automaticamente vendas, estoque, comissões e tarifas em DRE completo |
+| Demonstrativo de resultados / lucro | Implementado gerencial | Vendas, consumo/vencimento de créditos, devoluções, custos capturados, comissões, títulos classificados e taxas; ausência de custo/taxa é sinalizada |
 | Ticket médio | Ampliado nesta entrega | Por venda paga, data de pagamento e dedução de reembolsos online conhecidos |
 | Link de pagamento | Existente, UX refeita | Stripe Connect; não utiliza Pagar.me |
 | Conta digital Stone integrada | Sem equivalente | Stripe Connect é conta vinculada de recebimentos, não conta bancária PJ com Pix |
@@ -46,7 +46,7 @@ Fonte: [finanças](https://negocios.trinks.com/solucoes/simplificar-financas/), 
 | Split e pagamento automático a profissionais | Ausente — integração externa | Repasse Connect atual é ao estabelecimento; comissão calculada não é transferência bancária |
 | Repasse em lote via conta digital | Ausente — integração externa | Exige contas de beneficiários, autorização e conciliação de transferências |
 | Antecipação de recebíveis | Ausente — oferta do provedor | Depende de elegibilidade, contrato e disponibilidade financeira |
-| Cobrança recorrente / clube de assinaturas | Parcial | Planos e ciclos com sessões/validade, venda e renovação manual ou por link; débito recorrente automático Stripe ainda não implementado |
+| Cobrança recorrente / clube de assinaturas | Implementado | Mandato mensal explícito, cartão salvo pela Stripe, taxa fixa de R$ 1 por pagamento, calendário mensal, inadimplência, regularização e cancelamento pelo cliente |
 | Fidelidade por visitas e desconto | Existente | Configuração e validação no checkout presencial; resgate online ainda indisponível |
 | Estoque e venda de produtos | Existente básico | Cadastro, quantidades, baixa transacional e devolução de reserva online expirada |
 | Alertas de reposição | Implementado | Mínimo por produto, lista de reposição e indicador na gestão de estoque |
@@ -64,11 +64,11 @@ Fonte: [comunicação](https://negocios.trinks.com/solucoes/comunicacao-para-ir-
 |---|---|---|
 | Lembretes e confirmações automáticos WhatsApp | Parcial | Links/ações de contato não equivalem a rotina WhatsApp homologada com templates e entrega |
 | Mensagens de aniversário | Parcial | Consulta de aniversários; falta automação gerida pelo estabelecimento |
-| Convites automáticos de retorno | Parcial | Agendar próxima visita existe; falta campanha segmentada de recuperação com controle de envio |
+| Convites automáticos de retorno | Implementado | Regras opcionais de retorno, vencimento de pacote e inatividade; consentimento, rechecagem, deduplicação e intervalo de sete dias por cliente |
 | SMS / lembrete premium | Parcial | Fila, worker e configuração presentes; envio real desativado até homologação |
-| E-mail marketing do estabelecimento | Implementado com limites | Rascunho, público por consentimento/canal, agendamento explícito, Resend e cancelamento de contato; rotina diária, até 3 campanhas × 10 destinatários por execução; sem retries de envio incerto |
+| E-mail marketing do estabelecimento | Implementado com limites | Rascunho, público por consentimento/canal, agendamento explícito, Resend e cancelamento de contato; rotina a cada cinco minutos, até 3 campanhas × 10 destinatários por execução; sem retries de envio incerto |
 | Pesquisa de satisfação e comentários | Implementado | Nota 1–5, comentário privado, um envio por token, link com validade e indicadores de resposta da lista |
-| Clube com benefícios e descontos | Parcial | Planos de sessões por ciclo com preço próprio; fidelidade por visitas continua separada; débito automático e benefícios ilimitados pendentes |
+| Clube com benefícios e descontos | Implementado para sessões | Ciclos mensais com débito automático e preço congelado no contrato; fidelidade por visitas separada; benefícios ilimitados não oferecidos |
 | Integração Google Reserve | Ausente — parceria externa | Link público não equivale a integração nativa Google Reserve |
 | Agendamento em Instagram/Facebook | Parcial | Link público compartilhável; botões nativos/integração dependem dos provedores |
 | Atendimento IA integrado ao WhatsApp | Parcial, sem equivalência homologada | Infraestrutura de workflows/classificação; falta comprovar conversa, disponibilidade, reserva e entrega ponta a ponta |
@@ -84,9 +84,9 @@ Fonte: [expansão](https://negocios.trinks.com/solucoes/para-expandir-sem-limite
 | Desempenho por profissional | Implementado nesta entrega | Agendados, concluídos, faltas e cancelamentos em 30/90 dias |
 | Retorno de clientes | Implementado nesta entrega | Clientes identificados com 2+ visitas concluídas no período; denominador explícito |
 | Dashboard e relatórios financeiros | Parcial, ampliado | Recebido, ticket, vendas pagas, CSV e caixa; não equivale a catálogo de 130 relatórios |
-| Relatórios consolidados de redes | Ausente — prioridade 3 | Hierarquia de rede/unidade, permissões e agregações; console Owner é operação do SaaS |
-| Gestão centralizada de unidades | Parcial na infraestrutura | Isolamento por estabelecimento não é gestão padronizada de franquia |
-| Transferência e estoque unificado entre unidades | Ausente — prioridade 3 | Transferência com dupla movimentação e auditoria |
+| Relatórios consolidados de redes | Implementado para unidades do mesmo dono | Cadastros por unidade, recebimentos/devoluções do mês, cobranças pendentes, atendimentos e clubes; não confundir recebimento com lucro |
+| Gestão centralizada de unidades | Implementado para unidades próprias | Rede, criação/vínculo de unidades, troca de contexto e permissões da equipe por unidade; faturamento e Connect independentes |
+| Transferência e estoque unificado entre unidades | Transferência implementada | Estoque por unidade, saída no envio, entrada confirmada no destino, cancelamento, custo ponderado e auditoria; catálogo não é unificado automaticamente |
 | Aplicativo exclusivo / white label | Ausente — prioridade 3 | Marca, publicação nas lojas, unidade e gestão de versões |
 | Integração por API para parceiros | Parcial interno | Endpoints internos não são API pública com documentação, credenciais e limites por parceiro |
 | Migração assistida | Parcial | Importação CSV de clientes; falta agenda/histórico e serviço de implantação assistida |
@@ -117,10 +117,10 @@ Este documento é um backlog verificável, não uma declaração de paridade con
 | 1 | Fila e rodízio | Implementado; persistência, operação inline e serialização por estabelecimento |
 | 2 | Satisfação pós-atendimento | Implementado; nota/comentário privado e denominador de convites gerados |
 | 3 | Pacotes de sessões | Implementado; venda presencial/Stripe, consumo e estorno; comissões proporcionais ao preço do pacote |
-| 4 | Clube de assinaturas | Ciclos e planos implementados; renovação automática/inadimplência recorrente pendentes |
+| 4 | Clube de assinaturas | Implementado com adesão explícita, renovação automática e regularização de inadimplência |
 | 5 | Sinal na reserva | Reserva temporária, pagamento confirmado, liberação de expiração e abatimento no saldo |
 | 6 | Relacionamento | Preferências, campanhas, segmentação, supressão e envio de e-mail implementados; aceito pelo provedor não comprova entrega; SMS/WhatsApp seguem dependências externas |
-| 7 | Estoque e financeiro gerencial | Implementados mínimos, consumo, custo, movimentos, títulos/baixas e resultado dos títulos; DRE completo pendente |
+| 7 | Estoque e financeiro gerencial | Implementados estoque, títulos/baixas, DRE gerencial, projeção e conciliação Stripe |
 | 8 | Estética e petshops | Fichas versionadas, consentimento, pets separados do tutor e histórico implementados; acesso de fichas restrito ao dono |
 | 9 | Integrações contratadas | Fiscal, maquininha/Pix, Google Reserve e split após disponibilidade comercial e testes do provedor |
 | 10 | Redes e plataforma de parceiros | Unidades, consolidação, transferências, API pública e aplicativos de marca |
@@ -134,19 +134,19 @@ Testes automatizados de métricas, privacidade/contratos Connect e estados da no
 ## Novas áreas implementadas em 16/10/2026
 
 - `/admin/fila`: fila e rodízio; atalho também na Agenda.
-- `/admin/fidelizacao`: pacotes, ofertas de clube, ciclos, saldos e estorno de sessão. Use “Usar pacote ou clube” no atendimento concluído. A comissão usa preço do pacote dividido pelas sessões. Não há nova receita no resgate. Pacotes online só ficam ativos após confirmação Stripe. Renovar clube exige registrar nova venda; não há débito recorrente automático.
+- `/admin/fidelizacao`: pacotes, ofertas de clube, ciclos, saldos e estorno de sessão. Use “Usar pacote ou clube” no atendimento concluído. A comissão usa preço do pacote dividido pelas sessões. Não há nova receita no resgate. Pacotes online só ficam ativos após confirmação Stripe. Ciclos avulsos são renovados por nova venda. Débito mensal automático usa adesão em `/admin/clube`, com autorização do cliente.
 - `/admin/satisfacao`: avaliações e resposta; convide pela página do atendimento. `/avaliar/:token` não expõe contatos.
 - `/admin/financeiro`: títulos gerenciais e baixas parciais; não representam transações bancárias iniciadas pelo sistema nem lançamentos no caixa físico.
 - `/admin/estoque`: mínimo/custo, movimentos e receitas de insumos. Consumo é confirmado explicitamente no atendimento, não disparado automaticamente por mudar um status.
 - `/admin/fichas`: modelos, consentimento, histórico e pets/tutores. Modelos preenchidos ficam preservados em snapshot.
-- `/admin/relacionamento`: preferências, campanhas e público. Preparar não envia. Agendar e-mail habilita a rotina existente às 08h de São Paulo, após o vencimento escolhido; lotes limitados a 3 campanhas e 10 destinatários por campanha em cada execução. Envio aceito pelo Resend não comprova entrega ao cliente. Falhas/incertezas não entram em retry automático. SMS/WhatsApp permanecem sem campanha automática até integração real.
+- `/admin/relacionamento`: preferências, campanhas e público. Preparar não envia. Agendar e-mail habilita o processamento a cada cinco minutos, após a data escolhida; lotes limitados a 3 campanhas e 10 destinatários por campanha em cada execução. Envio aceito pelo Resend não comprova entrega ao cliente. Falhas/incertezas não entram em retry automático. SMS/WhatsApp permanecem sem campanha automática até integração real.
 - `/admin/pagina`: apresentação, galeria e aprovação opcional. Pedidos pendentes bloqueiam o horário e podem ser aprovados na página do atendimento.
 - `/checkin/:token`: registra chegada nas duas horas anteriores ao horário confirmado, até seu fim, sem iniciar atendimento nem aprovar pedido pendente.
 - `/preferencias/:token`: revoga o canal da campanha sem expor dados pessoais.
 
 Todas as áreas ficam em Gerenciar, fora dos primeiros passos. Listas administrativas têm limite explícito de 500 registros recentes; quando houver truncamento, os indicadores avisam que se referem somente à lista. Clientes e profissionais continuam usando os cadastros existentes.
 
-Continuam pendentes: cobrança recorrente automática do clube, sinal de reserva/abatimento no fechamento, DRE integral, redes/transferências de estoque, API pública para parceiros, publicação de apps, emissor fiscal, integração de maquininha/Pix/Google Reserve, atendimento WhatsApp/IA homologado e serviços humanos/comerciais (comunidade, treinamentos, parcerias). Nenhuma dessas capacidades foi simulada como concluída.
+Após os cinco módulos abaixo, continuam pendentes: API pública para parceiros, publicação de apps, emissor fiscal, integração de maquininha/Pix/Google Reserve, atendimento WhatsApp/IA homologado e serviços humanos/comerciais (comunidade, treinamentos, parcerias). Nenhuma dessas capacidades foi simulada como concluída.
 
 ## Estado da liberação desta revisão
 
@@ -177,4 +177,74 @@ Reembolso de pacote online: antes de pedir o reembolso ao provedor, o passe sem 
 - Migração aplicada e verificada no Supabase de produção: `20261016155712_campaign_worker_progress.sql`; amplia somente os estados permitidos, cria índices de fila e RPC de agregação com SECURITY INVOKER, RLS e autorização do dono. Não altera preferências nem dispara mensagens ao ser aplicada.
 - Validação: 160 testes de aplicação/APIs, tipagem e build; todas as migrações e cenários de SQL locais, incluindo contagem de 511 destinatários e bloqueio de acesso anônimo/entre estabelecimentos; navegador com backend simulado a 390 px, oito áreas e paginação do público.
 
-Sinal de reserva e renovação automática do clube continuam pendentes. Esta revisão não cria cobranças, reembolsos ou transferências reais.
+Na revisão seguinte, os cinco módulos de crescimento abaixo substituem esta pendência. A correção de campanhas, isoladamente, não criou cobranças, reembolsos ou transferências reais.
+
+
+## Cinco módulos de crescimento — 16/10/2026
+
+Esta revisão implementa o escopo aprovado de sinal, clube recorrente, DRE/projeção/conciliação, retenção e multiunidades. As capacidades abaixo têm backend, interface e testes; integrações externas fora desse escopo continuam identificadas na matriz.
+
+### 1. Sinal opcional — Gerenciar → Página de reservas
+
+- Percentual de 10% a 50%, ou desativado. Exige Connect ativo. Sinal mínimo R$ 2 e máximo de metade do serviço; serviços abaixo de R$ 4 não exigem sinal.
+- Antecedência mínima de 45 minutos. Checkout Stripe com expiração fixa em 35 minutos. O horário é liberado somente após prova de expiração ou consulta completa ao provedor que confirme ausência de sessão.
+- Registro de reserva, sinal, comanda e ordem ocorre em uma transação. Repetições usam chave e fingerprint do pedido; não criam outra reserva nem cobrança.
+- Reserva permanece pendente até o pagamento. Se o dono exigir aprovação, continua pendente mesmo depois de pagar, até a aprovação da equipe.
+- Caixa mostra o sinal confirmado, cobra apenas o saldo e calcula comissão sobre o serviço inteiro após desconto. Não há nova receita de caixa para o sinal no fechamento.
+- Cancelamento/remarcação exige cancelar ou reembolsar a cobrança em Recebimentos. Reembolso pendente congela o uso. Saldo final pago precisa ser reembolsado antes do sinal.
+
+### 2. Clube recorrente — Gerenciar → Clube recorrente
+
+- Ofertas de clube são cadastradas em Pacotes e ofertas. O dono gera a adesão e compartilha `/clube/:token`; nenhum débito é feito só por criar o contrato.
+- O cliente aceita o preço mensal, o uso futuro do cartão, o vencimento sem acumular sessões e o cancelamento. A Stripe coleta/salva o cartão. AgendaAI não recebe dados de cartão.
+- Recorrência é gerida pelo AgendaAI com PaymentIntents `off_session` na conta vinculada; **não cria uma Stripe Billing Subscription**. Assim, a taxa da plataforma continua fixa em R$ 1 por pagamento, sem aproximação percentual. As taxas próprias da Stripe continuam adicionais.
+- Cada vencimento tem ciclo e tentativa únicos. O calendário preserva o dia original, ajustando meses curtos: 31/jan → 28/fev → 31/mar. Pagamento regularizado com atraso inicia novo período sem cobrar automaticamente os meses perdidos.
+- Sessões só são criadas após confirmação financeira. Cancelar renovação mantém os direitos do ciclo pago até vencer. Uma cobrança já iniciada pode concluir; reembolso de ciclo exige tratar sessões consumidas e cancela as próximas renovações.
+- Falha de cartão/autenticação aparece como pagamento pendente. O cliente regulariza no link. Resultado de débito desconhecido nunca é repetido automaticamente: webhook, pesquisa positiva na Stripe e conciliação recuperam a tentativa; ausência em pesquisa não autoriza outro débito.
+
+### 3. Visão financeira — Gerenciar → Visão financeira
+
+- DRE gerencial por competência: vendas/serviços, sessões consumidas, créditos vencidos, outras receitas, descontos/devoluções, impostos, custos, margem, comissões, despesas operacionais/financeiras, taxas e resultado.
+- Sinais antes da conclusão e créditos não vencidos ficam separados de receita. Reembolsos de pacotes são alocados proporcionalmente à parcela reconhecida e ao saldo; depois do vencimento, a devolução reverte receita já reconhecida.
+- Custos de produtos são capturados na venda e os insumos no consumo. Custos não informados e valores históricos ausentes ficam explícitos; não se reconstrói custo antigo usando o preço atual. O resultado fica marcado como parcial quando faltam dados materiais.
+- Títulos podem ser classificados ou excluídos do DRE para evitar duplicar venda/comissão já registrada. A classificação usa competência; a projeção usa o valor ainda em aberto e vencimento.
+- Projeção de 30/60/90 dias parte do saldo inicial **informado**, inclui atrasados e compromissos cadastrados; não é consulta de saldo bancário nem previsão de vendas não realizadas.
+- Conciliação lê cobranças da conta Stripe, confirma status/valores/taxas e registra devoluções e devoluções de taxa por data do provedor. Líquido das transações originais, reembolsos e retorno de taxas são exibidos separadamente. Não comprova crédito no extrato bancário.
+- Consulta manual em lotes de até dez ordens, com prazo por execução; repita para conferir o próximo lote. Reembolsos pendentes não liberam reserva ou direitos como se estivessem concluídos.
+
+### 4. Retenção — Gerenciar → Retenção automática
+
+- Três regras opcionais: retorno após N dias, pacote com saldo perto do vencimento e recuperação de inativos. Começam desativadas.
+- Somente e-mail autorizado. No máximo um convite automático por cliente em sete dias. A mesma visita/pacote não gera convite repetido pela mesma regra.
+- Reserva futura, novo atendimento, perda de elegibilidade, revogação de contato ou regra desativada suprimem mensagens ainda não enviadas. Clubes com renovação automática não recebem convite de renovar pacote manual.
+- Mensagens aceitas pelo provedor são contabilizadas como aceitas, sem afirmar entrega. Envios incertos ficam para conferência.
+
+### 5. Minha rede — Gerenciar → Minha rede
+
+- Criar rede, criar novas unidades ou vincular unidades já pertencentes ao mesmo usuário. Não concede acesso a outra empresa nem representa gestão jurídica de franquias independentes.
+- Seletor no topo muda a unidade. Agenda, clientes, equipe, caixa, plano e conta Stripe permanecem separados. Proprietário pode abrir unidade vencida para regularizar a assinatura; colaboradores não recebem acesso operacional vencido.
+- Consolidado real por unidade e mês: cadastros, recebimentos líquidos de devoluções registradas, cobranças pendentes, atendimentos concluídos e clubes ativos. Pessoas cadastradas em duas unidades contam como dois cadastros.
+- Permissão de atendimento, recepção ou financeiro por cadastro profissional/unidade, com ativação/bloqueio. O backend reavalia o vínculo; token de login não autoriza manter uma permissão removida.
+- Transferência com retirada da origem, estado em trânsito, confirmação no destino, custo ponderado, cancelamento devolvendo à origem uma vez e auditoria. O usuário confirma produtos equivalentes e unidades de medida; não há catálogo global/SKU inferido automaticamente.
+
+### Execução assíncrona e operação
+
+- Rotina PostgreSQL `pg_cron` + `pg_net` chama o endpoint existente a cada cinco minutos. Não adiciona funções serverless ao limite de 12 do Vercel.
+- Credencial aleatória criada no esquema privado, sem retorno ao navegador; endpoints de claim/finalização executáveis somente pelo backend. Lease de 90 segundos impede dois workers de cobrar/enviar ao mesmo tempo.
+- Limites por execução: até cinco contratos de renovação, três campanhas com dez destinatários cada, cinco reservas a conferir e cinco pagamentos de clube a reconciliar; orçamento por rotina preserva a duração da função. A fila continua no próximo ciclo de cinco minutos, sem repetir um débito incerto.
+- A rotina diária anterior de lembretes continua separada. Regras novas e contratos existentes não são ativados por migração.
+- Migrações: `20261016161458_growth_payments.sql`, `20261016161501_growth_management.sql`, `20261016162857_growth_worker_schedule.sql`. Onze tabelas públicas novas com RLS, uma tabela privada de controle, operações autenticadas com isolamento e funções de pagamento somente para o backend.
+- Homologação de cartão, onboarding e entrega real de mensagem continuam distintas dos testes simulados. Nenhum teste desta revisão cobra cartão, envia mensagem a cliente ou faz transferência bancária real.
+
+
+### Validação e liberação dos cinco módulos
+
+- 180 testes de aplicação/APIs aprovados; migrações e cenários de dinheiro/sessões, inadimplência, expiração, DRE, autorização e transferência executados no PostgreSQL local de validação. Onze novas tabelas públicas verificadas com RLS, sem leitura anônima e sem escrita direta pelo navegador.
+- Build Angular e tipagem das APIs aprovados. Navegador com backend simulado em 390 e 1440 px, sem overflow; criação de adesão, consentimento/cancelamento, configuração de retenção e envio/recebimento de estoque.
+- As três migrações de crescimento foram aplicadas no Supabase de produção. O nome remoto do lote de pagamentos é `growth_payment_features`. A agenda `agendaai-growth-workers` está ativa em `*/5 * * * *`.
+- Ocorrência corrigida durante a liberação: a busca inicial incluiu e reaplicou por engano `20261014202051_owner_growth_intelligence.sql`, registrada remotamente com nome `growth_payments`. A única função sobreposta por revisão posterior era `owner_business_snapshot`. A migração de reparo `20261016170430_restore_owner_snapshot.sql` restaurou a projeção atual, e a verificação de produção confirmou `owner_business_snapshot_base`, `received_bookings` e ausência de execução anônima. Não foram disparadas cobranças ou reescritos saldos históricos por essa reaplicação.
+- Os avisos de advisors sobre cotação/página/comanda públicas SECURITY DEFINER correspondem a projeções intencionalmente públicas, com campos limitados e token quando necessário. A tabela privada de controle não tem políticas de navegador: somente backend/cron pode acessá-la.
+
+A troca de unidade também usa o cadastro profissional da unidade ativa, além da permissão. Ajuste adicional aplicado e testado em `20261016170752_unit_context_profile.sql`, sem usar o primeiro cadastro vinculado como contexto das demais unidades.
+
+O cancelamento de próximas renovações funciona independentemente da disponibilidade da Stripe. Quando a consulta do provedor falha, o link do clube mantém os dados registrados e sinaliza que a atualização financeira está em conferência, sem impedir o cancelamento.

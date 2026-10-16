@@ -52,6 +52,9 @@ export class AdminLayout {
   );
   readonly isOperational = this.profile$.pipe(map((p) => p?.role === 'operacional'));
   constructor() {
+    this.est.estabelecimento$
+      .pipe(takeUntilDestroyed(this.destroy))
+      .subscribe((e) => this.auth.setUnitRole(e?.role || null, e?.profile_id || null));
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
@@ -60,7 +63,7 @@ export class AdminLayout {
       .subscribe(() => this.closeSidebar());
   }
   get managementActive() {
-    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|primeiros-passos|portal)/.test(
+    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|resultados|clube|retencao|unidades|primeiros-passos|portal)/.test(
       this.router.url,
     );
   }

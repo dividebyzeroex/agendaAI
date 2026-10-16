@@ -30,7 +30,8 @@ const owner='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-800
 await db.query(`insert into auth.users(id,email,email_confirmed_at) values($1,'joao.almeida_msbrasil@outlook.com',now()),($2,'other@example.test',now())`,[owner,other]);
 for(const f of (await readdir(new URL('../supabase/migrations/',import.meta.url))).sort()){
  if(!f.endsWith('.sql'))continue;
- await db.exec(await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8'));
+ const migration=await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8');
+ try{await db.exec(migration);}catch(e){console.error('Migration context',f,e.position,e.internalPosition,e.internalQuery,e.where);throw e;}
  console.log('APPLIED LOCALLY',f);
 }
 await db.query(`insert into public.estabelecimento(id,user_id,nome,slug) values($1,$2,'Test Business','test-business')`,[tenant,owner]);
@@ -322,4 +323,5 @@ const fullProgress=(await asRole('authenticated',other,`select * from campaign_p
 assert.equal(Number(fullProgress.total),511);assert.equal(Number(fullProgress.sent),510);
 assert.equal(Number(fullProgress.pending)+Number(fullProgress.sending)+Number(fullProgress.sent)+Number(fullProgress.failed)+Number(fullProgress.suppressed),511);
 console.log('PASS: campaign lifecycle, aggregate counts beyond 500 recipients, authenticated owner-only execution and cross-tenant isolation.');
+await (await import('./growth-database.mjs')).verifyGrowth({db,asRole,owner,other,tenant,pilot,proId,svcId,clientId,product,cancelSession,pay,cmd});
 await db.close();

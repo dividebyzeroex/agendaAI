@@ -77,7 +77,7 @@ beforeEach(async () => {
   pro = {
     fetchProfissionais: vi.fn().mockResolvedValue([{ id: 'pro', nome: 'João' }]),
     finalizarEEnviarCaixa: vi.fn().mockResolvedValue({ id: 'cash', token_publico: 'receipt' }),
-    supabase: { from: vi.fn(() => ({ insert: vi.fn().mockResolvedValue({ error: null }) })) },
+    supabase: { from: vi.fn(() => {const q:any={insert:vi.fn().mockResolvedValue({error:null}),select:()=>q,eq:()=>q,abortSignal:()=>q,maybeSingle:async()=>({data:null,error:null})};return q;}) },
   };
   auth = {
     userProfileValue: { id: 'user', nome: 'João', role: 'dono' },

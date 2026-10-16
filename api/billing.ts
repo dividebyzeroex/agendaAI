@@ -1,3 +1,5 @@
+import { adminClient } from '../server/security.js';
+import { clubHandler } from '../server/growth-payments.js';
 import { connectHandler, connectFailure, connectDiagnostics } from '../server/connect.js';
 import { ownerPaymentTest } from '../server/owner-payment-test.js';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
@@ -19,6 +21,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const action = req.query['action'];
     if (action === 'status' && req.method === 'GET')
       return res.status(200).json(await operationalBillingReadiness());
+    if (typeof action === 'string' && action.startsWith('club-')) {
+      if (action === 'club-cancel')
+        return await clubHandler(req, res, adminClient(), undefined as any);
+      if (action === 'club-info') {
+        let stripe;
+        try {
+          stripe = billingClients().stripe;
+        } catch {}
+        return await clubHandler(req, res, adminClient(), stripe as any);
+      }
+      const { db, stripe } = billingClients();
+      return await clubHandler(req, res, db, stripe);
+    }
     if (typeof action === 'string' && action.startsWith('connect-')) {
       const { db, stripe } = billingClients();
       return await connectHandler(req, res, db, stripe);
@@ -262,13 +277,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const diagnostic = connectDiagnostics(error);
         try {
           const { db } = billingClients();
-          await db
-            .from('logs_seguranca')
-            .insert({
-              acao: 'stripe_connect_error',
-              estabelecimento_id: req.body?.estabelecimentoId,
-              detalhes: diagnostic,
-            });
+          await db.from('logs_seguranca').insert({
+            acao: 'stripe_connect_error',
+            estabelecimento_id: req.body?.estabelecimentoId,
+            detalhes: diagnostic,
+          });
         } catch {
           /* Keep the original provider failure available. */
         }

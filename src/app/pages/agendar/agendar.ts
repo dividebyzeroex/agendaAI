@@ -1,10 +1,19 @@
-import {SupabaseService} from '../../services/supabase.service';
-import { bookingDate, bookingMinutes, slotOverlaps, nextOpeningDate } from '../../utils/booking-slots';
+import { SupabaseService } from '../../services/supabase.service';
+import {
+  bookingDate,
+  bookingMinutes,
+  slotOverlaps,
+  nextOpeningDate,
+} from '../../utils/booking-slots';
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { EstabelecimentoPublicoService, EstabelecimentoPublico, ProfissionalPublico } from '../../services/estabelecimento-publico.service';
+import {
+  EstabelecimentoPublicoService,
+  EstabelecimentoPublico,
+  ProfissionalPublico,
+} from '../../services/estabelecimento-publico.service';
 import { Servico, Horario } from '../../services/estabelecimento.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
 import { NotificationService } from '../../services/notification.service';
@@ -19,12 +28,21 @@ type BookingStep = 'marketplace' | 'step0' | 'step1' | 'step_pro' | 'step2' | 's
   styleUrls: ['./agendar.css'],
 })
 export class Agendar implements OnInit {
-  private route      = inject(ActivatedRoute);
-  private publicDb=inject(SupabaseService).client;
-  publicPage:any=null;bookingPending=false;
-  async loadPublicPage(){if(!this.estab?.id)return;const {data}=await this.publicDb.rpc('business_public_page',{p_tenant:this.estab.id});this.publicPage=data;this.cdr.markForCheck();}
+  private route = inject(ActivatedRoute);
+  private publicDb = inject(SupabaseService).client;
+  publicPage: any = null;
+  bookingPending = false;
+  quote: any = null;
+  quoteLoading = false;
+  private reservationAttempt = { fingerprint: '', key: crypto.randomUUID() };
+  async loadPublicPage() {
+    if (!this.estab?.id) return;
+    const { data } = await this.publicDb.rpc('business_public_page', { p_tenant: this.estab.id });
+    this.publicPage = data;
+    this.cdr.markForCheck();
+  }
   private pubService = inject(EstabelecimentoPublicoService);
-  private cdr        = inject(ChangeDetectorRef);
+  private cdr = inject(ChangeDetectorRef);
   private notifService = inject(NotificationService);
 
   get config() {
@@ -36,9 +54,9 @@ export class Agendar implements OnInit {
   progress = 0;
   isLoading = true;
   isTransitioning = false;
-  isSaving  = false;
-  notFound  = false;
-  errorMsg  = '';
+  isSaving = false;
+  notFound = false;
+  errorMsg = '';
   transitionMsg = '';
 
   // --- Fetched Data ---
@@ -62,20 +80,43 @@ export class Agendar implements OnInit {
   custPhone: string = '';
 
   // --- Extra Metadata (Nicho) ---
-  petNome='';petRaca='';petPorte='';petCuidados='';
+  petNome = '';
+  petRaca = '';
+  petPorte = '';
+  petCuidados = '';
   aparelho: string = '';
   defeito: string = '';
 
   // --- Time Slots ---
   slots: { time: string; available: boolean }[] = [];
-  slotsLoading=false;private slotsRequest=0;assignedProfessionals:Partial<Record<string,ProfissionalPublico>>={};
-  get bookingProfessional(){return this.selectedPro||this.assignedProfessionals[this.selectedTime]||null;}
+  slotsLoading = false;
+  private slotsRequest = 0;
+  assignedProfessionals: Partial<Record<string, ProfissionalPublico>> = {};
+  get bookingProfessional() {
+    return this.selectedPro || this.assignedProfessionals[this.selectedTime] || null;
+  }
 
   // --- Calendar navigation ---
-  calendarDays: { date: string; dayName: string; dayNum: number; monthShort: string; isToday: boolean; isSelected: boolean; isClosed: boolean }[] = [];
+  calendarDays: {
+    date: string;
+    dayName: string;
+    dayNum: number;
+    monthShort: string;
+    isToday: boolean;
+    isSelected: boolean;
+    isClosed: boolean;
+  }[] = [];
 
   get progressValue(): number {
-    const p: Record<BookingStep, number> = { marketplace: 0, step0: 10, step1: 33, step_pro: 33, step2: 66, step3: 90, done: 100 };
+    const p: Record<BookingStep, number> = {
+      marketplace: 0,
+      step0: 10,
+      step1: 33,
+      step_pro: 33,
+      step2: 66,
+      step3: 90,
+      done: 100,
+    };
     return p[this.step];
   }
 
@@ -87,19 +128,21 @@ export class Agendar implements OnInit {
       step_pro: `Passo 1 de 3 · Escolha o ${this.config.labelProfissional}`,
       step2: 'Passo 2 de 3 · Selecione o horário',
       step3: 'Passo 3 de 3 · Confirmação',
-      done: 'Concluído'
+      done: 'Concluído',
     };
     return labels[this.step];
   }
 
   get filteredServices() {
     if (this.categoriaAtiva === 'Todos') return this.services;
-    return this.services.filter(s => (s as any).categoria === this.categoriaAtiva);
+    return this.services.filter((s) => (s as any).categoria === this.categoriaAtiva);
   }
 
   get prosForSelectedService() {
     if (!this.selectedService) return [];
-    return this.pros.filter(p => !p.servicos?.length || p.servicos.includes(this.selectedService!.id!));
+    return this.pros.filter(
+      (p) => !p.servicos?.length || p.servicos.includes(this.selectedService!.id!),
+    );
   }
 
   // --- Marketplace State ---
@@ -124,14 +167,15 @@ export class Agendar implements OnInit {
     this.step = 'step1';
 
     // Subscribe to realtime changes
-    this.pubService.data$.subscribe(data => {
+    this.pubService.data$.subscribe((data) => {
       if (data && data.estabelecimento) {
-        this.estab    = data.estabelecimento;void this.loadPublicPage();
+        this.estab = data.estabelecimento;
+        void this.loadPublicPage();
         this.services = data.servicos || [];
         this.schedule = data.horarios || [];
-        this.pros     = data.profissionais || [];
+        this.pros = data.profissionais || [];
         this.isLoading = false;
-        this.notFound  = false;
+        this.notFound = false;
 
         // Se estava no marketplace por algum erro prévio, e agora carregou dados via socket:
         if (this.step === 'marketplace') {
@@ -140,7 +184,7 @@ export class Agendar implements OnInit {
 
         // Build categories from services
         const cats = new Set<string>();
-        this.services.forEach(s => {
+        this.services.forEach((s) => {
           if ((s as any).categoria) cats.add((s as any).categoria);
         });
         this.categorias = cats.size > 0 ? ['Todos', ...Array.from(cats)] : [];
@@ -173,9 +217,11 @@ export class Agendar implements OnInit {
             title: 'Não Encontrado',
             message: 'O link acessado é inválido. Busque o estabelecimento abaixo.',
             type: 'WARNING',
-            icon: 'pi pi-exclamation-triangle'
+            icon: 'pi pi-exclamation-triangle',
           });
-        } catch (e) { console.error('Sem NotifService:', e); }
+        } catch (e) {
+          console.error('Sem NotifService:', e);
+        }
 
         this.performSearch(); // Busca inicial
       }
@@ -213,7 +259,12 @@ export class Agendar implements OnInit {
 
   // === STEP NAVIGATION ===
 
-  async goToStep(next:BookingStep,_msg:string){this.step=next;this.isTransitioning=false;this.cdr.markForCheck();window.scrollTo({top:0,behavior:'auto'});}
+  async goToStep(next: BookingStep, _msg: string) {
+    this.step = next;
+    this.isTransitioning = false;
+    this.cdr.markForCheck();
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
 
   goBack() {
     this.errorMsg = '';
@@ -240,7 +291,13 @@ export class Agendar implements OnInit {
     }
   }
 
-  goStepPro(){if(this.selectedService){if(this.prosForSelectedService.length===1)this.selectedPro=this.prosForSelectedService[0];this.goStep2();}}
+  goStepPro() {
+    if (this.selectedService) {
+      if (this.prosForSelectedService.length === 1)
+        this.selectedPro = this.prosForSelectedService[0];
+      this.goStep2();
+    }
+  }
 
   pickPro(p: ProfissionalPublico | null) {
     this.selectedPro = p;
@@ -248,7 +305,8 @@ export class Agendar implements OnInit {
 
   goStep2() {
     if (this.selectedService) {
-      if (!this.selectedDate) this.selectedDate = nextOpeningDate(this.schedule,this.selectedService.duracao_min||30);
+      if (!this.selectedDate)
+        this.selectedDate = nextOpeningDate(this.schedule, this.selectedService.duracao_min || 30);
       this.step = 'step2';
       this.buildCalendarDays();
       this.refreshSlots();
@@ -261,18 +319,31 @@ export class Agendar implements OnInit {
     this.calendarDays = [];
     const today = new Date(bookingDate() + 'T12:00:00-03:00');
     const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
-    const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const monthNames = [
+      'Jan',
+      'Fev',
+      'Mar',
+      'Abr',
+      'Mai',
+      'Jun',
+      'Jul',
+      'Ago',
+      'Set',
+      'Out',
+      'Nov',
+      'Dez',
+    ];
 
     for (let i = 0; i < 14; i++) {
       const d = new Date(today);
       d.setDate(d.getDate() + i);
       const dateStr = bookingDate(d);
       const parts = dateStr.split('-').map(Number);
-      const day = new Date(Date.UTC(parts[0],parts[1]-1,parts[2]));
+      const day = new Date(Date.UTC(parts[0], parts[1] - 1, parts[2]));
       const dow = day.getUTCDay();
 
       // Check if this day is a working day
-      const dayConfig = this.schedule.find(h => h.dia_semana === dow);
+      const dayConfig = this.schedule.find((h) => h.dia_semana === dow);
       const isClosed = !dayConfig || !dayConfig.ativo;
 
       this.calendarDays.push({
@@ -290,47 +361,108 @@ export class Agendar implements OnInit {
   selectDate(day: any) {
     if (day.isClosed) return;
     this.selectedDate = day.date;
-    this.calendarDays.forEach(d => d.isSelected = d.date === day.date);
+    this.calendarDays.forEach((d) => (d.isSelected = d.date === day.date));
     this.refreshSlots();
   }
 
   async refreshSlots() {
-    const request=++this.slotsRequest;const date=this.selectedDate;
-    this.selectedTime='';this.slots=[];this.assignedProfessionals={};this.slotsLoading=false;
-    if(!date||!this.selectedService)return;
-    const dow=new Date(date+'T12:00:00-03:00').getUTCDay();
-    const hours=this.schedule.find(h=>h.dia_semana===dow&&h.ativo);
-    if(!hours?.abre||!hours.fecha)return;
-    this.slotsLoading=true;this.errorMsg='';this.cdr.markForCheck();
-    try{
-      const busy=await this.pubService.getBusyIntervals(this.estab!.id!,date);
-      if(request!==this.slotsRequest)return;
-      const duration=this.selectedService.duracao_min||30;
-      const minutes=(value:string)=>Number(value.slice(0,2))*60+Number(value.slice(3,5));
-      const today=date===bookingDate();const now=bookingMinutes(new Date());
-      const candidates=this.selectedPro?[this.selectedPro]:this.prosForSelectedService;
-      for(let current=minutes(hours.abre);current+duration<=minutes(hours.fecha);current+=30){
-        const time=`${Math.floor(current/60).toString().padStart(2,'0')}:${(current%60).toString().padStart(2,'0')}`;
-        const available=candidates.find(pro=>{const d=pro.disponibilidades?.find(item=>item.dia_semana===dow);return d?.ativo&&d.hora_inicio&&d.hora_fim&&current>=minutes(d.hora_inicio)&&current+duration<=minutes(d.hora_fim)&&!(d.intervalo_inicio&&d.intervalo_fim&&current<minutes(d.intervalo_fim)&&current+duration>minutes(d.intervalo_inicio))&&!slotOverlaps(date,time,duration,busy,pro.id);});
-        const free=this.pros.length?!!available:!slotOverlaps(date,time,duration,busy);
-        this.slots.push({time,available:free&&!(today&&current<=now)});
-        if(available)this.assignedProfessionals[time]=available;
+    const request = ++this.slotsRequest;
+    const date = this.selectedDate;
+    this.selectedTime = '';
+    this.slots = [];
+    this.assignedProfessionals = {};
+    this.slotsLoading = false;
+    if (!date || !this.selectedService) return;
+    const dow = new Date(date + 'T12:00:00-03:00').getUTCDay();
+    const hours = this.schedule.find((h) => h.dia_semana === dow && h.ativo);
+    if (!hours?.abre || !hours.fecha) return;
+    this.slotsLoading = true;
+    this.errorMsg = '';
+    this.cdr.markForCheck();
+    try {
+      const busy = await this.pubService.getBusyIntervals(this.estab!.id!, date);
+      if (request !== this.slotsRequest) return;
+      const duration = this.selectedService.duracao_min || 30;
+      const minutes = (value: string) => Number(value.slice(0, 2)) * 60 + Number(value.slice(3, 5));
+      const today = date === bookingDate();
+      const now = bookingMinutes(new Date());
+      const candidates = this.selectedPro ? [this.selectedPro] : this.prosForSelectedService;
+      for (
+        let current = minutes(hours.abre);
+        current + duration <= minutes(hours.fecha);
+        current += 30
+      ) {
+        const time = `${Math.floor(current / 60)
+          .toString()
+          .padStart(2, '0')}:${(current % 60).toString().padStart(2, '0')}`;
+        const available = candidates.find((pro) => {
+          const d = pro.disponibilidades?.find((item) => item.dia_semana === dow);
+          return (
+            d?.ativo &&
+            d.hora_inicio &&
+            d.hora_fim &&
+            current >= minutes(d.hora_inicio) &&
+            current + duration <= minutes(d.hora_fim) &&
+            !(
+              d.intervalo_inicio &&
+              d.intervalo_fim &&
+              current < minutes(d.intervalo_fim) &&
+              current + duration > minutes(d.intervalo_inicio)
+            ) &&
+            !slotOverlaps(date, time, duration, busy, pro.id)
+          );
+        });
+        const free = this.pros.length ? !!available : !slotOverlaps(date, time, duration, busy);
+        this.slots.push({
+          time,
+          available:
+            free && !(today && current <= now + (this.publicPage?.deposit_percent > 0 ? 45 : 0)),
+        });
+        if (available) this.assignedProfessionals[time] = available;
       }
-    }catch{if(request===this.slotsRequest)this.errorMsg='Não foi possível consultar os horários. Tente novamente.';}
-    finally{if(request===this.slotsRequest){this.slotsLoading=false;this.cdr.markForCheck();}}
+    } catch {
+      if (request === this.slotsRequest)
+        this.errorMsg = 'Não foi possível consultar os horários. Tente novamente.';
+    } finally {
+      if (request === this.slotsRequest) {
+        this.slotsLoading = false;
+        this.cdr.markForCheck();
+      }
+    }
   }
 
-  get availableSlots(){return this.slots.filter(slot=>slot.available);}
-  get hasAvailableSlots(){return this.availableSlots.length>0;}
+  get availableSlots() {
+    return this.slots.filter((slot) => slot.available);
+  }
+  get hasAvailableSlots() {
+    return this.availableSlots.length > 0;
+  }
 
   selectTime(slot: any) {
     if (!slot.available) return;
     this.selectedTime = slot.time;
   }
 
-  confirmarStep2() {
-    if (this.selectedDate && this.selectedTime) {
-      this.goToStep('step3', 'Preparando resumo...');
+  async confirmarStep2() {
+    if (!this.selectedDate || !this.selectedTime || this.quoteLoading) return;
+    this.quoteLoading = true;
+    this.errorMsg = '';
+    try {
+      const { data, error } = await this.publicDb
+        .rpc('quote_booking', {
+          p_tenant: this.estab!.id,
+          p_service: this.selectedService!.id,
+          p_pro: this.bookingProfessional?.id || null,
+        })
+        .abortSignal(AbortSignal.timeout(15000));
+      if (error || !data) throw Error('Não foi possível conferir o valor. Tente novamente.');
+      this.quote = data;
+      await this.goToStep('step3', 'Preparando resumo...');
+    } catch (e) {
+      this.errorMsg = e instanceof Error ? e.message : 'Não foi possível conferir o valor.';
+    } finally {
+      this.quoteLoading = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -342,9 +474,9 @@ export class Agendar implements OnInit {
     if (value.length > 11) value = value.substring(0, 11);
 
     if (value.length >= 7) {
-      value = `(${value.substring(0,2)}) ${value.substring(2,7)}-${value.substring(7)}`;
+      value = `(${value.substring(0, 2)}) ${value.substring(2, 7)}-${value.substring(7)}`;
     } else if (value.length >= 3) {
-      value = `(${value.substring(0,2)}) ${value.substring(2)}`;
+      value = `(${value.substring(0, 2)}) ${value.substring(2)}`;
     }
     this.custPhone = value;
   }
@@ -353,7 +485,7 @@ export class Agendar implements OnInit {
     const nameClean = this.custName.trim();
     const phoneClean = this.custPhone.replace(/\D/g, '');
 
-    if (nameClean.length<2) {
+    if (nameClean.length < 2) {
       this.errorMsg = 'Informe seu nome com pelo menos duas letras.';
       return;
     }
@@ -362,9 +494,15 @@ export class Agendar implements OnInit {
       return;
     }
 
-    if(this.isSaving)return;
-    if(!this.selectedService||!this.selectedDate||!this.selectedTime){this.errorMsg='Escolha um serviço e horário antes de confirmar.';return;}
-    if(this.pros.length&&!this.bookingProfessional){this.errorMsg='O horário mudou. Escolha um horário disponível novamente.';return;}
+    if (this.isSaving) return;
+    if (!this.selectedService || !this.selectedDate || !this.selectedTime) {
+      this.errorMsg = 'Escolha um serviço e horário antes de confirmar.';
+      return;
+    }
+    if (this.pros.length && !this.bookingProfessional) {
+      this.errorMsg = 'O horário mudou. Escolha um horário disponível novamente.';
+      return;
+    }
     this.isSaving = true;
     this.errorMsg = '';
 
@@ -378,13 +516,36 @@ export class Agendar implements OnInit {
         }
         eventMeta = { aparelho: this.aparelho, defeito: this.defeito };
       }
-      if(this.config.id==='petshop'){if(!this.petNome.trim()){this.errorMsg='Informe o nome do pet.';this.isSaving=false;return;}eventMeta={pet_nome:this.petNome.trim(),pet_raca:this.petRaca.trim(),pet_porte:this.petPorte,pet_cuidados:this.petCuidados.trim()};}
+      if (this.config.id === 'petshop') {
+        if (!this.petNome.trim()) {
+          this.errorMsg = 'Informe o nome do pet.';
+          this.isSaving = false;
+          return;
+        }
+        eventMeta = {
+          pet_nome: this.petNome.trim(),
+          pet_raca: this.petRaca.trim(),
+          pet_porte: this.petPorte,
+          pet_cuidados: this.petCuidados.trim(),
+        };
+      }
       const startDt = new Date(`${this.selectedDate}T${this.selectedTime}:00-03:00`);
       const duration = this.selectedService?.duracao_min || 30;
       const endDt = new Date(startDt.getTime() + duration * 60000);
 
       const eventTitle = `${this.selectedService?.emoji || this.config.emojiPadrao} ${nameClean} | ${this.selectedService?.titulo}`;
 
+      const fingerprint = JSON.stringify([
+        this.estab!.id,
+        this.selectedService?.id,
+        this.bookingProfessional?.id,
+        startDt.toISOString(),
+        nameClean,
+        phoneClean,
+        eventMeta,
+      ]);
+      if (this.reservationAttempt.fingerprint !== fingerprint)
+        this.reservationAttempt = { fingerprint, key: crypto.randomUUID() };
       // Call the public API — NO AUTH REQUIRED
       const response = await fetch('/api/public-booking', {
         method: 'POST',
@@ -398,7 +559,8 @@ export class Agendar implements OnInit {
           cliente_nome: nameClean,
           cliente_telefone: phoneClean,
           title: eventTitle,
-          event_metadata: eventMeta
+          event_metadata: eventMeta,
+          reservation_key: this.reservationAttempt.key,
         }),
       });
 
@@ -408,8 +570,15 @@ export class Agendar implements OnInit {
         throw new Error(result.error || 'Erro ao criar agendamento.');
       }
 
-      this.bookingPending=result.event?.status==='pendente';
-      this.goToStep('done', this.bookingPending?'Enviando seu pedido...':'Confirmando sua reserva...');
+      if (result.deposit_token) {
+        window.location.assign('/comanda/' + encodeURIComponent(result.deposit_token));
+        return;
+      }
+      this.bookingPending = result.event?.status === 'pendente';
+      this.goToStep(
+        'done',
+        this.bookingPending ? 'Enviando seu pedido...' : 'Confirmando sua reserva...',
+      );
     } catch (err: any) {
       this.errorMsg = err.message || 'Erro ao criar agendamento.';
       this.isSaving = false;
@@ -425,13 +594,19 @@ export class Agendar implements OnInit {
 
   getInitials(name?: string): string {
     if (!name) return 'AI';
-    const parts = name.split(' ').filter(p => p.length > 0);
+    const parts = name.split(' ').filter((p) => p.length > 0);
     if (parts.length >= 2) return (parts[0][0] + parts[1][0]).toUpperCase();
     return parts[0].substring(0, 2).toUpperCase();
   }
 
   formatDate(d: string) {
-    return d ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' }) : '';
+    return d
+      ? new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', {
+          weekday: 'long',
+          day: '2-digit',
+          month: 'long',
+        })
+      : '';
   }
 
   formatPrice(price: number): string {
@@ -439,12 +614,19 @@ export class Agendar implements OnInit {
   }
 
   newBooking() {
+    this.reservationAttempt = { fingerprint: '', key: crypto.randomUUID() };
+    this.quote = null;
     this.step = 'step1';
     this.selectedService = null;
     this.selectedPro = null;
     this.selectedDate = '';
     this.selectedTime = '';
-    this.petNome='';this.petRaca='';this.petPorte='';this.petCuidados='';this.aparelho='';this.defeito='';
+    this.petNome = '';
+    this.petRaca = '';
+    this.petPorte = '';
+    this.petCuidados = '';
+    this.aparelho = '';
+    this.defeito = '';
     this.custName = '';
     this.custPhone = '';
     this.errorMsg = '';

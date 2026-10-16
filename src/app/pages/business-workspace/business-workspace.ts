@@ -1,3 +1,4 @@
+import { GrowthService } from '../../services/growth.service';
 import { Component, inject, DestroyRef, ChangeDetectorRef, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -65,6 +66,8 @@ export class BusinessWorkspace implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private destroy = inject(DestroyRef);
   business = inject(BusinessService);
+  growth = inject(GrowthService);
+  depositPercent = 0;
   module = this.route.snapshot.data['module'] as string;
   config = config[this.module];
   data: Record<string, any[]> = {};
@@ -111,6 +114,7 @@ export class BusinessWorkspace implements OnInit {
     this.est.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe((id) => {
       this.tenant = id || '';
       this.form = {};
+      this.depositPercent=0;this.approval=false;this.headline='';this.gallery='';
       this.busy = false;
       this.clients = [];
       this.services = [];
@@ -232,6 +236,7 @@ export class BusinessWorkspace implements OnInit {
         this.headline = settings.headline;
         this.gallery = (settings.gallery || []).join('\n');
         this.approval = settings.approval_required;
+        this.depositPercent = settings.deposit_percent || 0;
       }
     } catch (e) {
       if (g === this.generation)
@@ -466,6 +471,26 @@ export class BusinessWorkspace implements OnInit {
       this.answers = [];
       this.selectedTemplate = '';
       this.consent = false;
+    }
+  }
+  async saveDeposit() {
+    if (this.busy) return;
+    this.busy = true;
+    this.error = '';
+    const tenant = this.tenant;
+    try {
+      await this.growth.command(tenant, 'deposit-settings', {
+        percent: Number(this.depositPercent),
+      });
+      if (tenant !== this.tenant) return;
+      this.notice = 'Regra de sinal atualizada. Reservas existentes mantêm as condições originais.';
+      await this.load();
+    } catch (e) {
+      if (tenant === this.tenant)
+        this.error = e instanceof Error ? e.message : 'Não foi possível salvar.';
+    } finally {
+      this.busy = false;
+      this.cdr.markForCheck();
     }
   }
   async saveSettings() {
