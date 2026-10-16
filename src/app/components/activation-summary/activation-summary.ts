@@ -1,3 +1,4 @@
+import {ConnectPayments} from '../connect-payments/connect-payments';
 import {AppointmentMessaging} from '../appointment-messaging/appointment-messaging';
 import { ChangeDetectorRef, Component, HostListener, inject, Input, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -11,7 +12,7 @@ export interface ActivationSummary {
   services_ready: boolean; staff_ready: boolean; schedule_ready: boolean; first_booking: boolean;
   appointments: number; completed: number; public_bookings: number; clients: number; cash_records: number; first_completed?:boolean;first_received?:boolean|null;
 }
-@Component({selector:'app-activation-summary',standalone:true,imports:[CommonModule,RouterLink,QuickStart,AppointmentMessaging],templateUrl:'./activation-summary.html',styleUrls:['./activation-summary.css']})
+@Component({selector:'app-activation-summary',standalone:true,imports:[CommonModule,RouterLink,QuickStart,AppointmentMessaging,ConnectPayments],templateUrl:'./activation-summary.html',styleUrls:['./activation-summary.css']})
 export class ActivationSummaryComponent implements OnInit, OnDestroy {
   @Input() expanded = false;
   private est = inject(EstabelecimentoService);

@@ -1,3 +1,5 @@
+import {SupabaseService} from '../../services/supabase.service';
+import {boundedFetch} from '../../core/helpers/bounded-fetch';
 import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
 import {ActivatedRoute,RouterLink} from '@angular/router';
 import {DestroyRef} from '@angular/core';
@@ -30,6 +32,8 @@ export class AdminCaixa implements OnInit {
 
   private route=inject(ActivatedRoute);private destroy=inject(DestroyRef);
   private requestedId=this.route.snapshot.queryParamMap.get('atendimento');private requestedHandled=false;
+  private connectDb=inject(SupabaseService).client;onlineEnabled=false;onlinePending=false;
+  async loadConnect(){this.onlineEnabled=false;const id=this.estService.estabelecimento$.value?.id;if(!id)return;try{const {data:{session}}=await this.connectDb.auth.getSession();const r=await boundedFetch('/api/billing?action=connect-status&estabelecimentoId='+id,{headers:{Authorization:'Bearer '+session?.access_token}});const state=await r.json();if(id===this.estService.estabelecimento$.value?.id)this.onlineEnabled=r.ok&&state.available&&state.enabled&&state.ready;}catch{}this.cdr.markForCheck();}
   checkoutKey=crypto.randomUUID(); overview:any=null; overviewError='';
   async loadOverview(){const id=this.estService.estabelecimento$.value?.id;if(!id)return;try{const {data,error}=await this.profService['supabase'].rpc('cash_overview',{p_tenant:id});if(error)throw error;if(id!==this.estService.estabelecimento$.value?.id)return;if(data?.commissions)data.commissions=await Promise.all(data.commissions.map(async(c:any)=>({...c,nome:await this.profService['security'].decryptData(c.nome)})));this.overview=data;this.overviewError='';}catch{this.overviewError='Não foi possível conferir o resumo financeiro.';}this.cdr.markForCheck();}
   message='';messageError=false;sessionError=false;sessionBusy=false;lastClosure:any=null;
@@ -92,7 +96,7 @@ export class AdminCaixa implements OnInit {
   @ViewChild('printArea') printArea!: ElementRef;
 
   async ngOnInit() {
-    this.estService.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe(id=>{this.overview=null;this.overviewError='';this.sessaoAtual=null;this.eventosPendentes=[];this.requestedHandled=false;this.cancelarCheckout();if(id)void Promise.all([this.checkSessaoAberta(),this.fetchPendentes()]).then(()=>this.openRequested());});
+    this.estService.activeId$.pipe(takeUntilDestroyed(this.destroy)).subscribe(id=>{this.overview=null;this.overviewError='';this.sessaoAtual=null;this.eventosPendentes=[];this.requestedHandled=false;this.cancelarCheckout();if(id)void this.loadConnect();if(id)void Promise.all([this.checkSessaoAberta(),this.fetchPendentes()]).then(()=>this.openRequested());});
     this.agendaService.events$.pipe(takeUntilDestroyed(this.destroy)).subscribe(()=>void this.openRequested());
 
     this.prodService.produtos$.pipe(takeUntilDestroyed(this.destroy)).subscribe(p => {
@@ -381,7 +385,7 @@ export class AdminCaixa implements OnInit {
   resetCheckoutState() {
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
-    this.comandaToken = '';this.checkoutComplete=false;this.checkoutKey=crypto.randomUUID();
+    this.comandaToken = '';this.checkoutComplete=false;this.onlinePending=false;this.checkoutKey=crypto.randomUUID();
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
@@ -501,7 +505,8 @@ export class AdminCaixa implements OnInit {
         profissional: profissionalNome,
         comandaFisica: this.comandaFisica,
         emailCliente: this.emailCliente,
-        formaPagamento: this.formaPagamento,
+        formaPagamento: this.formaPagamento==='online'?'cartao_credito':this.formaPagamento,
+        online:this.formaPagamento==='online',
         fidelidadeDesconto: this.getDescontoFidelidade(),
         clienteId: clienteId,
         profissionalId: profissionalId,
@@ -510,8 +515,13 @@ export class AdminCaixa implements OnInit {
         sessaoId: this.sessaoAtual.id,checkoutKey:this.checkoutKey,valorRecebido:this.valorRecebido
       });
 
+      this.onlinePending=caixaItem.status_caixa==='pendente';
       this.checkoutComplete=true;this.comandaToken=caixaItem.token_publico||'';
       this.comandaToken = caixaItem.token_publico || '';
+      if(this.onlinePending){
+        const response=await boundedFetch('/api/billing?action=connect-pay',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:this.comandaToken})});
+        const result=await response.json();if(!response.ok)throw Error(result.error||'Cobrança preparada; confira o link e não registre novamente.');
+      }
 
       if (!isAvulso && this.eventoSelecionado) {
         this.eventosPendentes = this.eventosPendentes.filter(e => e.id !== this.eventoSelecionado!.id);
@@ -520,11 +530,11 @@ export class AdminCaixa implements OnInit {
       this.fetchMovimentacoes();
 
       void this.agendaService.reload();void this.loadOverview();
-      this.notify('Recebimento de '+Number(caixaItem.valor_total).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' registrado. Você pode conferir a comanda.');
+      this.notify(this.onlinePending?'Cobrança criada. Compartilhe a comanda para o cliente pagar. O recebimento será confirmado pela Stripe.':'Recebimento de '+Number(caixaItem.valor_total).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})+' registrado. Você pode conferir a comanda.');
 
       this.cdr.detectChanges();
     } catch (e: any) {
-      this.notify(this.checkoutComplete?'Venda registrada, mas não foi possível atualizar as movimentações. Não registre novamente; confira o caixa.':'Não foi possível concluir: '+e.message,true);
+      this.notify(this.checkoutComplete?(this.onlinePending?'Cobrança pendente criada. Não crie outra cobrança; confira a comanda ou cancele em Preparar minha agenda → Receber pela aplicação.':'Venda registrada, mas não foi possível atualizar as movimentações. Não registre novamente; confira o caixa.'):'Não foi possível concluir: '+e.message,true);
     } finally {
       this.isFinalizing = false;
       this.cdr.detectChanges();

@@ -1,18 +1,19 @@
 <div class="comanda-wrapper">
   <div class="comanda-container">
-    <div *ngIf="loading" class="loading-state">
+    <div *ngIf="loading()" class="loading-state">
       <i class="pi pi-spin pi-spinner"></i>
       <p>Carregando sua comanda...</p>
     </div>
 
-    <div *ngIf="error && !loading" class="error-state">
+    <div *ngIf="error() && !loading()" class="error-state">
       <i class="pi pi-times-circle"></i>
-      <p>{{ error }}</p>
+      <p role="alert">{{ error() }}</p>
+      <button type="button" *ngIf="token" (click)="carregarComanda()">Tentar novamente</button>
     </div>
 
-    <div *ngIf="caixaItem && !loading" class="comanda-content">
+    <div *ngIf="caixaItem && !loading()" class="comanda-content">
       <div class="comanda-header">
-        <div class="brand">{{ nomeEstabelecimento }}</div>
+        <div class="brand">{{ nomeEstabelecimento() }}</div>
         <h1>Sua Comanda Digital</h1>
         <p class="date">Atendimento em: {{ caixaItem.created_at | date:'dd/MM/yyyy HH:mm' }}</p>
         <span class="status-badge" [class.pago]="caixaItem.status_caixa === 'pago'">
@@ -64,9 +65,19 @@
         </div>
       </div>
       
+      <div class="comanda-footer" *ngIf="onlineStatus()">
+        <p *ngIf="onlineStatus()==='pending'">Pagamento online pendente.</p>
+        <button type="button" *ngIf="onlineStatus()==='pending'" (click)="pagar()" [disabled]="paymentBusy()">{{paymentBusy()?'Abrindo pagamento…':'Pagar com segurança pela Stripe'}}</button>
+        <p *ngIf="onlineStatus()==='paid'">Pagamento confirmado pela Stripe.</p>
+        <p *ngIf="onlineStatus()==='expired'">Esta cobrança expirou. Solicite um novo link ao estabelecimento.</p>
+        <p *ngIf="onlineStatus()==='refunded'">Pagamento reembolsado.</p>
+        <p *ngIf="onlineStatus()==='disputed'">Pagamento em análise.</p>
+        <p *ngIf="paymentError()" role="alert">{{paymentError()}}</p>
+        <button type="button" (click)="carregarComanda()" [disabled]="loading()||paymentBusy()">Atualizar pagamento</button>
+      </div>
       <div class="comanda-footer">
         <p>Obrigado pela preferência!</p>
-        <p class="small-text">Esta é uma via digital gerada pelo {{ nomeEstabelecimento }}.</p>
+        <p class="small-text">Esta é uma via digital gerada pelo {{ nomeEstabelecimento() }}.</p>
       </div>
     </div>
   </div>

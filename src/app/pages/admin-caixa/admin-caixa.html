@@ -207,15 +207,15 @@
         <!-- SUCESSO -->
         <div class="checkout-success" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && checkoutComplete">
           <div class="success-icon"><i class="pi pi-check-circle"></i></div>
-          <h3>Venda Registrada!</h3>
-          <p>Comanda gerada e caixa atualizado.</p>
+          <h3>{{onlinePending?'Aguardando pagamento':'Venda registrada!'}}</h3>
+          <p>{{onlinePending?'Compartilhe o link da comanda. O cliente paga no checkout Stripe.':'Comanda gerada e caixa atualizado.'}}</p>
 
-          <button class="btn-ghost" style="margin-top: 16px; width: 100%; border-color: var(--primary-color); color: var(--primary-color);" (click)="imprimirComprovante({cliente_nome: eventoSelecionado?.title, profissional: eventoSelecionado?.profissional_nome}, getValorTotalCheckout(), showVendaAvulsaModal)">
+          <button *ngIf="!onlinePending" class="btn-ghost" style="margin-top: 16px; width: 100%; border-color: var(--primary-color); color: var(--primary-color);" (click)="imprimirComprovante({cliente_nome: eventoSelecionado?.title, profissional: eventoSelecionado?.profissional_nome}, getValorTotalCheckout(), showVendaAvulsaModal)">
             <i class="pi pi-print"></i> Imprimir recibo
           </button>
 
           <div class="comanda-link-box" *ngIf="comandaToken">
-            <p>Link de acesso público (recibo digital):</p>
+            <p>{{onlinePending?'Link para pagamento:':'Recibo digital:'}}</p>
             <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Acessar Comanda Digital</a>
           </div>
 
@@ -291,6 +291,7 @@
                <label>Forma de Pagamento *</label>
                <select [(ngModel)]="formaPagamento" class="ag-select">
                  <option value="">Selecione...</option>
+                 <option *ngIf="onlineEnabled" value="online">Link de pagamento · Stripe</option>
                  <option value="pix">PIX</option>
                  <option value="dinheiro">Dinheiro</option>
                  <option value="cartao_credito">Cartão de Crédito</option>
@@ -311,6 +312,7 @@
              </div>
           </div>
 
+          <p *ngIf="formaPagamento==='online'">R$ 1,00 de taxa AgendaAI + tarifas Stripe. O recebimento só será registrado após confirmação do pagamento. Para resgatar fidelidade, use recebimento presencial.</p>
           <div class="chk-total">
              <span>Total a Receber</span>
              <div style="display: flex; flex-direction: column; align-items: flex-end;">
@@ -326,7 +328,7 @@
             (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
               <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
               <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
-              {{ showVendaAvulsaModal ? 'Registrar venda' : 'Registrar recebimento' }}
+              {{formaPagamento==='online'?'Gerar cobrança online':showVendaAvulsaModal?'Registrar venda':'Registrar recebimento'}}
           </button>
           </ng-container>
 

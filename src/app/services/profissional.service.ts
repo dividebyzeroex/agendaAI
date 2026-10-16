@@ -124,6 +124,7 @@ export class ProfissionalService {
     servicoId?: string;
     estabelecimentoId?: string;
     sessaoId?: string;
+    online?: boolean;
     checkoutKey: string;
     valorRecebido?: number|null;
   }): Promise<CaixaItem> {

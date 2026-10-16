@@ -1,3 +1,4 @@
+import {connectHandler} from '../server/connect.js';
 import { ownerPaymentTest } from '../server/owner-payment-test.js';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { authenticate, billingReadiness, operationalBillingReadiness, BillingError, billingClients, objectId, ownedEstablishment, quote, syncSubscription } from '../server/billing.js';
@@ -7,6 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const action = req.query['action'];
     if (action === 'status' && req.method === 'GET') return res.status(200).json(await operationalBillingReadiness());
+    if(typeof action==='string'&&action.startsWith('connect-')){const {db,stripe}=billingClients();return await connectHandler(req,res,db,stripe);}
     const methods: Record<string, string> = { checkout: 'POST', verify: 'GET', cancel: 'POST', invoices: 'GET', 'owner-test-checkout':'POST', 'owner-test-status':'GET', 'owner-offer':'POST' };
     if (typeof action !== 'string' || !methods[action]) throw new BillingError(400, 'Ação inválida.');
     if (req.method !== methods[action]) { res.setHeader('Allow', methods[action]); throw new BillingError(405, 'Método não permitido.'); }

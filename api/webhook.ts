@@ -1,3 +1,4 @@
+import {connectWebhook} from '../server/connect.js';
 import { recordOwnerTest } from '../server/owner-payment-test.js';
 import type Stripe from 'stripe';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
@@ -7,7 +8,8 @@ export const config = { api: { bodyParser: false } };
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== 'POST') { res.setHeader('Allow', 'POST'); return res.status(405).send('Method Not Allowed'); }
-  const secret = process.env['STRIPE_WEBHOOK_SECRET'];
+  const connect=req.query?.['channel']==='connect';
+  const secret = process.env[connect?'STRIPE_CONNECT_WEBHOOK_SECRET':'STRIPE_WEBHOOK_SECRET'];
   if (!secret) return res.status(503).json({ error: 'Webhook unavailable' });
   try {
     const { stripe, db } = billingClients();
@@ -25,6 +27,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try { event = stripe.webhooks.constructEvent(Buffer.concat(chunks), signature, secret); }
     catch { return res.status(400).json({ error: 'Invalid signature' }); }
 
+    if(connect){await connectWebhook(stripe,db,event);return res.status(200).json({received:true});}
+    if(event.account)return res.status(200).json({received:true});
     if (event.type === 'checkout.session.completed' || event.type === 'checkout.session.async_payment_succeeded') {
       const session = event.data.object as Stripe.Checkout.Session;
       if(session.metadata?.['purpose']==='owner_live_test') await recordOwnerTest(db,session,event.id);
