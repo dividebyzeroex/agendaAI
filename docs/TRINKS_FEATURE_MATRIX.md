@@ -150,11 +150,11 @@ Continuam pendentes: cobrança recorrente automática do clube, sinal de reserva
 
 ## Estado da liberação desta revisão
 
-Implementação local concluída para as oito novas áreas descritas acima. A migração `20261016131102_business_modules.sql` foi executada e testada somente no banco local de validação (PGlite). A tentativa de aplicar no Supabase de produção foi bloqueada pela revisão automática, que exige aprovação explícita da alteração abrangente do esquema. Não foi usado SQL direto nem outro caminho para contornar esse bloqueio.
+A migração `20261016131102_business_modules.sql` foi aplicada no Supabase de produção em 16/10/2026, após aprovação explícita do proprietário. O bloqueio inicial da revisão automática foi respeitado; a aplicação só ocorreu depois da aprovação. Verificação de produção: 17 tabelas criadas, todas com RLS e sem SELECT para anon; operação autenticada protege ausência de identidade; avaliação, revogação de contato e preparação de reembolso executáveis apenas pelo backend. A apresentação pública retorna somente mensagem, galeria e preferência de aprovação.
 
-Antes da aprovação da migração, os módulos novos exibem indisponibilidade de infraestrutura; a página pública mantém o comportamento anterior quando a tabela de preferências ainda não existe, e a rotina de campanhas permanece inativa. Não afirmar que os novos módulos estão ativos em produção antes de aplicar e verificar o esquema.
+O build da develop foi aprovado no Vercel. A atualização da aplicação de produção deve usar este mesmo conjunto de fontes; homologação financeira e entrega real de mensagens continuam separadas dos testes com backend simulado.
 
-### Escopo exato da migração pendente
+### Escopo da migração aprovada
 
 - 17 tabelas novas com RLS, leitura por estabelecimento e acesso de fichas/avaliações/relacionamento limitado ao dono.
 - Duas colunas em `produtos`: estoque mínimo e custo unitário.
