@@ -1,6 +1,8 @@
 import { SupabaseService } from '../../services/supabase.service';
 import { boundedFetch } from '../../core/helpers/bounded-fetch';
-import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { interval } from 'rxjs';
+import { PayQrComponent } from '../../components/pay-qr/pay-qr';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,7 +19,7 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-admin-caixa',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, PayQrComponent],
   templateUrl: './admin-caixa.html',
   styleUrls: ['./admin-caixa.css'],
 })
@@ -40,6 +42,151 @@ export class AdminCaixa implements OnInit {
   private connectDb = inject(SupabaseService).client;
   onlineEnabled = false;
   onlinePending = false;
+  expressCheckoutUrl = '';
+  payQrUrl = '';
+  pendingOnline: Array<{
+    id: string; token: string; customer: string; amount: number; createdAt: string;
+  }> = [];
+  pendingOnlineLoading = false;
+  pendingOnlineError = '';
+  payQrToken = '';
+  payQrLabel = '';
+  payQrAmount = 0;
+  activePaymentChecking = false;
+  private pendingCheckInFlight = false;
+
+  getPayUrl(token: string): string { return window.location.origin + '/comanda/' + token; }
+  getExpressPayUrl(token: string): string {
+    if (token === this.payQrToken && this.payQrUrl) return this.payQrUrl;
+    if (token === this.comandaToken && this.expressCheckoutUrl) return this.expressCheckoutUrl;
+    return this.getPayUrl(token);
+  }
+  private verifiedStripeUrl(value: unknown): string {
+    if (typeof value !== 'string') throw Error('Link de pagamento não retornado.');
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'checkout.stripe.com')
+      throw Error('Endereço do checkout Stripe inválido.');
+    return parsed.toString();
+  }
+
+  async loadPendingCharges() {
+    const tenant = this.estService.estabelecimento$.value?.id;
+    if (!tenant || !this.sessaoAtual || this.pendingCheckInFlight) return;
+    this.pendingCheckInFlight = true;
+    this.pendingOnlineLoading = true;
+    this.pendingOnlineError = '';
+    try {
+      // Both tables have existing tenant-scoped RLS; no public admin endpoint is required.
+      const {data: orders, error: orderError} = await this.connectDb
+        .from('connect_orders')
+        .select('id,amount_cents,status,created_at')
+        .eq('estabelecimento_id', tenant)
+        .eq('purpose', 'checkout')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(25);
+      if (orderError) throw orderError;
+      const ids = (orders || []).map(o => o.id);
+      if (!ids.length) {
+        if (tenant === this.estService.estabelecimento$.value?.id) this.pendingOnline = [];
+        return;
+      }
+      const { data: receipts, error: receiptError } = await this.connectDb.from('caixa_itens')
+        .select('id,cliente_nome,token_publico,valor_total,status_caixa')
+        .eq('estabelecimento_id', tenant)
+        .in('id', ids);
+      if (receiptError) throw receiptError;
+      const receiptById = new Map((receipts || []).map(r => [r.id, r]));
+      if (tenant !== this.estService.estabelecimento$.value?.id) return;
+      this.pendingOnline = (orders || []).flatMap(o => {
+        const receipt = receiptById.get(o.id);
+        if (!receipt || receipt.status_caixa !== 'pendente' || !receipt.token_publico) return [];
+        return [{ id:o.id, token:receipt.token_publico, customer:receipt.cliente_nome || 'Cliente',
+          amount:Number(o.amount_cents || 0)/100, createdAt:o.created_at }];
+      });
+    } catch {
+      if (tenant === this.estService.estabelecimento$.value?.id)
+        this.pendingOnlineError = 'Não foi possível atualizar os pagamentos pendentes.';
+    } finally {
+      this.pendingOnlineLoading = false;
+      this.pendingCheckInFlight = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async reviewActivePayment() {
+    if (!this.onlinePending || !this.comandaToken || this.activePaymentChecking) return;
+    const token = this.comandaToken;
+    this.activePaymentChecking = true;
+    try {
+      const result = await boundedFetch('/api/billing?action=connect-receipt&token=' + encodeURIComponent(token));
+      if (!result.ok) return;
+      const status = await result.json();
+      if (this.comandaToken !== token) return;
+      if (status.online && status.status === 'paid') {
+        this.onlinePending = false;
+        this.notify('Pagamento confirmado pela Stripe. A comanda foi baixada.');
+        void this.fetchMovimentacoes();
+        void this.loadPendingCharges();
+      } else if (status.online && ['expired','refunded','disputed'].includes(status.status)) {
+        this.notify('Cobrança requer atenção: ' + status.status + '. Consulte Recebimentos.', true);
+      }
+    } catch {
+      // Webhook is authoritative. Network problems must never mark a charge as paid.
+    } finally {
+      this.activePaymentChecking = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  async openPendingQr(item: {token:string;customer:string;amount:number}) {
+    const token = item.token;
+    this.payQrToken = token;
+    this.payQrUrl = this.getPayUrl(token);
+    this.payQrLabel = item.customer;
+    this.payQrAmount = item.amount;
+    this.cdr.markForCheck();
+    // An existing Stripe checkout session is reused, not duplicated.
+    if (!this.onlineEnabled) return;
+    try {
+      const response = await boundedFetch('/api/billing?action=connect-pay', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token})
+      });
+      const data = await response.json();
+      if (response.ok && this.payQrToken === token)
+        this.payQrUrl = this.verifiedStripeUrl(data.url);
+    } catch {
+      // Safe fallback: the public comanda can still open Stripe Checkout.
+    } finally { this.cdr.markForCheck(); }
+  }
+  closePendingQr() {
+    this.payQrToken = '';
+    this.payQrUrl = '';
+    this.payQrLabel = '';
+    this.payQrAmount = 0;
+  }
+  @HostListener('document:keydown.escape')
+  onEscape() { if (this.payQrToken) this.closePendingQr(); }
+
+  async copyPayLink(token: string) {
+    try {
+      await navigator.clipboard.writeText(this.getExpressPayUrl(token));
+      this.notify('Link de pagamento copiado.');
+    } catch {
+      this.notify('Não foi possível copiar. Abra a comanda pelo link.', true);
+    }
+  }
+  async sharePayLink(token: string) {
+    const url = this.getExpressPayUrl(token);
+    if (typeof navigator.share !== 'function') return this.copyPayLink(token);
+    try {
+      await navigator.share({title:'Pagamento da comanda',text:'Acesse sua comanda e escolha como pagar:',url});
+    } catch (error: any) {
+      if (error?.name !== 'AbortError') this.notify('Não foi possível compartilhar o link.', true);
+    }
+  }
+
   async loadConnect() {
     this.onlineEnabled = false;
     const id = this.estService.estabelecimento$.value?.id;
@@ -182,18 +329,28 @@ export class AdminCaixa implements OnInit {
       this.overview = null;
       this.overviewError = '';
       this.sessaoAtual = null;
+      this.pendingOnline = [];
+      this.closePendingQr();
       this.eventosPendentes = [];
       this.requestedHandled = false;
       this.cancelarCheckout();
       if (id) void this.loadConnect();
       if (id)
-        void Promise.all([this.checkSessaoAberta(), this.fetchPendentes()]).then(() =>
-          this.openRequested(),
-        );
+        void Promise.all([this.checkSessaoAberta(), this.fetchPendentes()]).then(() => {
+          void this.loadPendingCharges();
+          return this.openRequested();
+        });
     });
     this.agendaService.events$
       .pipe(takeUntilDestroyed(this.destroy))
       .subscribe(() => void this.openRequested());
+
+    // Non-blocking payment observation. Stops automatically when the cashier page is destroyed.
+    interval(16000).pipe(takeUntilDestroyed(this.destroy)).subscribe(() => {
+      if (document.visibilityState !== 'visible' || !this.sessaoAtual) return;
+      void this.loadPendingCharges();
+      void this.reviewActivePayment();
+    });
 
     this.prodService.produtos$.pipe(takeUntilDestroyed(this.destroy)).subscribe((p) => {
       this.produtosCatalogo = p.filter((x) => x.ativo && x.estoque > 0);
@@ -263,6 +420,7 @@ export class AdminCaixa implements OnInit {
       this.sessaoAtual = data;
       this.showAberturaModal = false;
       void this.fetchMovimentacoes();
+      void this.loadPendingCharges();
       await this.openRequested();
       this.notify('Caixa aberto.');
     } catch (e: any) {
@@ -584,7 +742,9 @@ export class AdminCaixa implements OnInit {
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
     this.comandaToken = '';
+    this.expressCheckoutUrl = '';
     this.checkoutComplete = false;
+    this.closePendingQr();
     this.onlinePending = false;
     this.checkoutKey = crypto.randomUUID();
     this.comandaFisica = '';
@@ -753,7 +913,6 @@ export class AdminCaixa implements OnInit {
       this.onlinePending = caixaItem.status_caixa === 'pendente';
       this.checkoutComplete = true;
       this.comandaToken = caixaItem.token_publico || '';
-      this.comandaToken = caixaItem.token_publico || '';
       if (this.onlinePending) {
         const response = await boundedFetch('/api/billing?action=connect-pay', {
           method: 'POST',
@@ -765,6 +924,7 @@ export class AdminCaixa implements OnInit {
           throw Error(
             result.error || 'Cobrança preparada; confira o link e não registre novamente.',
           );
+        this.expressCheckoutUrl = this.verifiedStripeUrl(result.url);
       }
 
       if (!isAvulso && this.eventoSelecionado) {
@@ -774,6 +934,7 @@ export class AdminCaixa implements OnInit {
       }
 
       this.fetchMovimentacoes();
+      if (this.onlinePending) void this.loadPendingCharges();
 
       void this.agendaService.reload();
       void this.loadOverview();

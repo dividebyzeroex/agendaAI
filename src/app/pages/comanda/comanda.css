@@ -179,3 +179,57 @@ button { border: 0; border-radius: 10px; background: #4f46e5; color: #fff; paddi
 button:disabled { opacity: .6; cursor: wait; }
 button:focus-visible { outline: 3px solid #a5b4fc; outline-offset: 3px; }
 [role="alert"] { color: #b91c1c; }
+
+
+/* Pay Express: lightweight customer-first experience and prominent payment action */
+.comanda-wrapper {background:radial-gradient(ellipse 80% 50% at 50% 0%,#eae1fb,#f9f7fd 75%);padding:24px 15px 60px;font-family:Inter,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.comanda-container {max-width:480px;border-radius:23px;box-shadow:0 26px 75px rgba(38,20,72,.10);border:1px solid #e9e1f2;}
+.comanda-container::before {background:linear-gradient(90deg,#4f2a91,#9764e7);height:5px;}
+.express-branding {display:flex;align-items:center;gap:7px;padding:18px 21px;border-bottom:1px solid #eee8f6;font-weight:750;color:#251733;font-size:.88rem;letter-spacing:-.02em;}
+.express-branding b {color:#7652b6;}
+.express-mark {color:#7652b6;font-size:1.05rem;margin-right:1px;}
+.express-security {margin-left:auto;color:#6e6479;font-size:.69rem;font-weight:600;letter-spacing:0;white-space:nowrap;}
+.express-security .pi {color:#7d58b8;margin-right:2px;}
+.comanda-header {padding:24px 22px 22px;border-color:#e6e0ed;}
+.comanda-header .brand {color:#8155ba;letter-spacing:.11em;font-size:.74rem;}
+.comanda-header h1 {color:#251832;letter-spacing:-.025em;font-size:1.52rem;}
+.comanda-body {padding:23px 24px;}
+.item-row {gap:15px;line-height:1.55;}
+.item-price {white-space:nowrap;}
+.total-row {font-size:1.05rem;}
+.total-row strong {font-size:1.73rem;color:#321e4c;}
+.status-badge {background:#fff7e8;color:#946321;}
+.status-badge.pago {background:#e4f7ec;color:#17734a;}
+.express-payment {margin:0 16px 17px;border-radius:17px;overflow:hidden;border:1px solid #e2d8ef;background:linear-gradient(180deg,#f8f3ff 0%,#fff 100%);padding:23px 20px;text-align:left;}
+.express-payment-title {display:flex;gap:12px;align-items:center;margin-bottom:16px;}
+.express-payment-icon {width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;background:#ece0fd;color:#6c3fae;font-size:1.08rem;}
+.express-kicker {font-size:.65rem;color:#7959ad;font-weight:800;letter-spacing:.1em;}
+.express-payment h2 {font-size:1.1rem;line-height:1.3;letter-spacing:-.022em;color:#271536;margin:5px 0 0;font-weight:800;}
+.express-payment p {font-size:.86rem;line-height:1.65;color:#675d73;margin:11px 0 17px;}
+.express-pay-button {width:100%;min-height:54px;display:flex;align-items:center;justify-content:center;gap:10px;background:#7041bf;border-radius:12px;color:#fff;font-size:.95rem;font-weight:750;border:0;padding:15px;box-shadow:0 12px 27px rgba(95,53,174,.16);margin:16px 0 13px;transition:background .15s;}
+.express-pay-button:hover {background:#593299;}
+.express-payment .express-methods {margin:0 0 10px;font-size:.72rem;text-align:center;color:#7a7086;}
+.express-methods .pi {color:#8d6ac2;}
+.express-status-refresh {display:flex;align-items:center;justify-content:center;gap:7px;min-height:38px;width:100%;background:transparent;color:#5d4090;border:1px solid #e1d6f0;border-radius:10px;font-size:.8rem;font-weight:650;margin:10px 0 8px;padding:8px;}
+.express-status-refresh:hover {background:#f1eaf8;}
+.express-payment .express-auto-status {display:flex;gap:8px;align-items:center;justify-content:center;margin:7px 0 0;font-size:.7rem;color:#80758b;}
+.express-dot {width:7px;height:7px;flex:none;border-radius:50%;background:#8d62d0;box-shadow:0 0 0 3px #eee6fa;}
+.express-finished,.express-attention {text-align:center;padding:12px 0;}
+.express-finished-icon {font-size:3.3rem;color:#15834b;margin-bottom:14px;}
+.express-finished h2 {font-size:1.35rem;}
+.express-attention .pi {font-size:2rem;color:#a57629;margin-bottom:12px;}
+.express-payment .express-payment-error {padding:11px 12px;border:1px solid #f2baba;border-radius:10px;background:#fff4f4;color:#ad3333;font-size:.8rem;}
+.comanda-footer {background:#faf8fd;border-color:#ece7f2;}
+.comanda-footer .small-text {color:#847a91;}
+button:focus-visible {outline:3px solid #a58be3;outline-offset:2px;}
+@media(max-width:480px){
+ .comanda-wrapper {padding:10px 8px 36px;}
+ .comanda-container {border-radius:16px;}
+ .express-branding {padding:14px;font-size:.83rem;}
+ .express-security {font-size:.64rem;}
+ .comanda-header {padding:20px 16px;}
+ .comanda-body {padding:19px 17px;}
+ .express-payment {margin:0 10px 13px;padding:20px 14px;}
+ .express-pay-button {min-height:52px;}
+}
+@media(prefers-reduced-motion:reduce) {.express-pay-button {transition:none;}}

@@ -411,6 +411,19 @@ export async function ensureSession(stripe: Stripe, db: SupabaseClient, order: a
       { stripeAccount: order.account_id },
     );
   else {
+    // Reuse the email collected by the establishment when the customer provided one.
+    // Stripe hosts all sensitive payment fields; no new merchant-side card form.
+    let checkoutEmail: string | undefined;
+    if (order.purpose !== 'club') {
+      const {data} = await db.from('caixa_itens')
+        .select('email_cliente')
+        .eq('id', order.id)
+        .eq('estabelecimento_id', order.estabelecimento_id)
+        .maybeSingle();
+      const candidate = String(data?.email_cliente || '').trim();
+      if (candidate.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate))
+        checkoutEmail = candidate;
+    }
     // Do not create a second session after Stripe's 24-hour idempotency retention.
     if (Date.now() - epoch > (order.purpose === 'deposit' ? 4 * 60000 : 23 * 3600000))
       throw new BillingError(409, 'Peça ao estabelecimento para revisar esta cobrança.');
@@ -441,6 +454,7 @@ export async function ensureSession(stripe: Stripe, db: SupabaseClient, order: a
       {
         mode: 'payment',
         payment_method_types: pixReady ? ['card', 'pix'] : ['card'],
+        ...(checkoutEmail ? { customer_email: checkoutEmail } : {}),
         ...(club
           ? club.customer_id
             ? { customer: club.customer_id }

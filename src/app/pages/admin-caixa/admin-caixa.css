@@ -435,3 +435,64 @@
 .customer-page .quiet-metrics>div{min-width:0;padding:0 12px}
 .customer-page .quiet-metrics>div:first-child{padding-left:0}
 .customer-page .quiet-metrics strong{font-size:clamp(17px,4.5vw,25px);overflow-wrap:anywhere}
+
+
+/* AgendaAI Pay Express - checkout station and pending payments */
+.express-queue {
+  border:1px solid rgba(118,73,192,.18);
+  background:linear-gradient(122deg,rgba(252,251,255,.98),rgba(246,241,255,.91));
+  border-radius:17px;padding:18px 20px;margin:14px 0 22px;
+  box-shadow:0 8px 28px rgba(41,21,79,.045);
+}
+.express-queue-header,.express-queue-title {display:flex;align-items:center;gap:14px;}
+.express-queue-header {justify-content:space-between;flex-wrap:wrap;}
+.express-queue-title {min-width:0;}
+.express-queue-icon {display:grid;place-items:center;flex:none;width:43px;height:43px;background:#ece2fc;color:#7041b7;border-radius:12px;}
+.express-queue h3 {font-size:1rem;color:var(--text-color,#282338);margin:0 0 5px;}
+.express-queue p {font-size:.81rem;line-height:1.55;margin:0;color:var(--text-muted,#756b80);}
+.express-queue .express-empty {padding:16px 2px 0;}
+.express-queue .express-disclaimer {margin-top:14px;}
+.express-queue-list {display:grid;gap:8px;margin-top:16px;max-height:255px;overflow:auto;}
+.express-pending-item {display:flex;align-items:center;gap:15px;padding:12px 14px;border:1px solid #eae3f4;border-radius:12px;background:#fff;min-width:0;flex-wrap:wrap;}
+.express-pending-info {flex:1;min-width:145px;display:flex;flex-direction:column;gap:5px;}
+.express-pending-info strong {font-size:.84rem;color:#30263e;overflow-wrap:anywhere;}
+.express-pending-info span {font-size:.73rem;color:#71697c;}
+.express-pending-info em {color:#936316;font-style:normal;}
+.express-pending-amount {font-size:.92rem;color:#241731;white-space:nowrap;font-variant-numeric:tabular-nums;}
+.express-btn {display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:10px 13px;border-radius:10px;min-height:41px;min-width:0;font-size:.8rem;font-weight:700;line-height:1.2;cursor:pointer;text-decoration:none;font-family:inherit;box-sizing:border-box;}
+.express-btn:hover {text-decoration:none;filter:brightness(.95);}
+.express-btn:focus-visible,.express-dialog-close:focus-visible {outline:3px solid #b79afa;outline-offset:2px;}
+.express-btn:disabled {opacity:.56;cursor:wait;}
+.express-outline {color:#5f3698;border:1px solid #d9c9ef;background:white;}
+.express-quiet {color:#65557b;border:1px solid transparent;background:transparent;}
+.express-primary {background:#7543c7;color:white;border:1px solid #7543c7;}
+.checkout-success {height:auto;min-height:440px;justify-content:flex-start;padding-top:30px;}
+.checkout-success .success-icon {font-size:3.3rem;line-height:1.2;}
+.checkout-success .express-waiting {color:#7543c7;}
+.express-checkout {display:flex;flex-direction:column;align-items:center;gap:14px;width:min(100%,390px);background:linear-gradient(180deg,#f9f6ff,#fff);border:1px solid #e6dbf5;border-radius:17px;padding:21px 16px;margin-top:17px;box-sizing:border-box;}
+.express-checkout .express-checkout-tag {font-size:.67rem;color:#6940a3;letter-spacing:.16em;font-weight:800;margin:0;}
+.express-checkout-total,.express-dialog-amount {font-size:clamp(1.55rem,2.6vw,2.1rem);color:#2c1943;letter-spacing:-.04em;font-weight:800;font-variant-numeric:tabular-nums;}
+.express-checkout .express-instruction {max-width:320px;margin:0;color:#574b64;font-size:.81rem;line-height:1.55;}
+.express-checkout-actions {display:flex;justify-content:center;gap:8px;flex-wrap:wrap;width:100%;}
+.express-checkout .express-checkout-hint {font-size:.73rem;color:#796b8b;line-height:1.5;margin:0;}
+.express-checkout-hint .pi {color:#7543c7;}
+.express-dialog-backdrop {position:fixed;inset:0;z-index:9999;display:grid;place-items:center;padding:14px;background:rgba(20,11,39,.68);backdrop-filter:blur(5px);overflow-y:auto;}
+.express-dialog {position:relative;display:flex;flex-direction:column;align-items:center;gap:16px;background:#fff;color:#2b1c42;border-radius:23px;box-shadow:0 30px 85px rgba(0,0,0,.23);padding:32px 25px 25px;max-width:420px;width:100%;box-sizing:border-box;text-align:center;}
+.express-dialog-close {position:absolute;top:12px;right:12px;width:34px;height:34px;border:0;border-radius:10px;background:#f2edfa;color:#6948a0;cursor:pointer;}
+.express-dialog-kicker {font-size:.68rem;letter-spacing:.14em;color:#845abf;font-weight:800;}
+.express-dialog h2 {font-size:1.18rem;line-height:1.35;overflow-wrap:anywhere;margin:0;}
+.express-dialog>p {max-width:290px;font-size:.83rem;line-height:1.5;color:#6c6178;margin:0;}
+.express-dialog>.express-primary {width:100%;}
+@media(max-width:780px) {
+  .express-queue {padding:15px;}
+  .express-queue-header {align-items:flex-start;}
+  .express-pending-item {gap:10px;}
+  .express-pending-info {flex-basis:55%;}
+  .express-pending-amount {margin-left:auto;}
+  .express-queue .express-btn {min-height:44px;}
+  .express-pending-item .express-btn {flex:1;}
+  .express-dialog {padding:32px 15px 22px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  .express-btn {transition:none;}
+}
