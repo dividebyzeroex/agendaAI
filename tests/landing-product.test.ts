@@ -25,12 +25,17 @@ describe('AgendaAI product story and conversion experience',()=>{
   });
   it('represents a parallel and sequential multi-professional visit as a single receipt',()=>{
     expect(html).toContain('id="multi-service"');
-    expect(html).toContain('EM PREPARAÇÃO PARA LIBERAÇÃO');
+    expect(html).toContain('MULTISSERVIÇOS · JÁ DISPONÍVEL');
+    expect(html).toContain('combine até oito serviços por atendimento');
+    expect(html).toContain('Experimentar multisserviços');
+    expect(html).not.toMatch(/em preparação|em fase de liberação/i);
     expect(html).toContain('14:00–14:40');
     expect(html).toContain('14:40–15:00');
     expect(html).toContain('14:00–14:45');
     expect(html).toContain('Uma única comanda');
-    expect(component).toContain('Multisserviços em preparação');
+    expect(component).toContain("note:'Disponível no painel'");
+    expect(component).toContain('Cada serviço da comanda mantém seu profissional responsável');
+    expect(component).not.toMatch(/multisserviços em preparação|está em preparação para liberação/i);
   });
   it('allows exploring capabilities by operational area',()=>{
     expect(html).toContain("selectCapabilityPillar(pillar.id)");
