@@ -153,12 +153,30 @@ export class Landing implements OnInit {
     return this.segments.find(s => s.id === this.activeSegmentId) || this.segments[0];
   }
 
+  readonly capabilities = [
+    {category:'AGENDA',icon:'pi-calendar',name:'Agendamento online',description:'Link público para reservar serviço, profissional e horário. Compartilhe pelo Instagram, WhatsApp ou site.'},
+    {category:'RECEPÇÃO',icon:'pi-clock',name:'Fila e encaixes',description:'Acompanhe quem chegou sem agendamento, organize o atendimento e encaixe horários quando necessário.'},
+    {category:'ATENDIMENTO',icon:'pi-receipt',name:'Comandas e comissões',description:'Registre serviços e produtos, acompanhe o caixa e consulte os repasses da equipe.'},
+    {category:'RECEBIMENTOS',icon:'pi-credit-card',name:'Pagamentos e sinal',description:'Recebimentos online e reservas com sinal, conforme o provedor conectado e as condições aplicáveis.',note:'Integração necessária'},
+    {category:'EXPERIÊNCIA',icon:'pi-user',name:'Área do cliente',description:'Acesso privado para consultar reservas e solicitar alterações permitidas pelas regras do estabelecimento.'},
+    {category:'RECORRÊNCIA',icon:'pi-refresh',name:'Clubes e pacotes',description:'Organize benefícios, sessões pré-pagas e recorrência, com liberação vinculada aos pagamentos quando configurado.',note:'Requer configuração'},
+    {category:'RELACIONAMENTO',icon:'pi-heart',name:'Fidelização e retorno',description:'Acompanhe o histórico e prepare campanhas para quem autorizou receber comunicações.'},
+    {category:'PRODUTOS',icon:'pi-box',name:'Estoque e consumo',description:'Cadastre produtos e insumos, acompanhe movimentações e planeje reposições da operação.'},
+    {category:'FINANCEIRO',icon:'pi-chart-bar',name:'Resultados do negócio',description:'Controle contas a pagar e receber, movimentações e relatórios para acompanhar a operação.'},
+    {category:'ESCALA',icon:'pi-building',name:'Gestão de unidades',description:'Organize unidades e controle de acesso em operações que precisam ampliar a gestão.',note:'Conforme módulo disponível'},
+    {category:'SUA MARCA',icon:'pi-image',name:'Página de agendamento',description:'Personalize informações do seu espaço e compartilhe uma página de reservas com sua identidade.'},
+    {category:'QUALIDADE',icon:'pi-star',name:'Avaliações e atendimento',description:'Colete feedback, acompanhe a satisfação e identifique oportunidades de melhoria da experiência.'}
+  ];
+
   faqs = [
-    { q: 'O que está incluído nos 30 dias gratuitos?', a: 'Um período para avaliar a plataforma com sua empresa, configurar a agenda e conhecer os recursos disponíveis. Não pedimos cartão e não existe cobrança automática ao terminar o teste. A contratação de um plano é uma decisão separada.', open: true },
-    { q: 'Posso compartilhar a agenda no WhatsApp?', a: 'Sim. Compartilhe o link público do seu estabelecimento no WhatsApp, Instagram ou site. O cliente escolhe o serviço e o horário pelo link. Um robô de conversa no WhatsApp não está incluído nesta oferta.', open: false },
-    { q: 'Minha equipe continua no controle?', a: 'O painel permite acompanhar clientes, profissionais e agendamentos. A equipe deve revisar as configurações e supervisionar respostas de IA, especialmente em situações que exigem julgamento humano.', open: false },
-    { q: 'Vocês garantem redução de faltas ou mais vendas?', a: 'Não prometemos resultados fixos. A proposta é apoiar a organização e o acompanhamento dos atendimentos. Use o teste para medir os efeitos na sua operação e decidir com dados reais.', open: false },
-    { q: 'Como funciona a contratação depois do teste?', a: 'Você escolhe um plano e confirma as condições e o pagamento quando a contratação estiver disponível. O teste não gera uma assinatura automática. Consulte os termos para entender os requisitos da operação comercial.', open: false }
+    { q: 'Como funcionam os 30 dias gratuitos?', a: 'Você cadastra seu negócio e pode configurar serviços, profissionais e o link de agendamento para avaliar a rotina real. Não pedimos cartão e não fazemos cobrança automática. A assinatura é opcional ao final do teste.', open: true },
+    { q: 'O plano Essencial custa mesmo R$ 97 por mês?', a: 'Sim. O plano Essencial anunciado custa R$ 97/mês na contratação mensal e oferece agenda e link público de agendamento, até cinco profissionais ativos, cadastro de clientes e serviços, histórico, caixa e suporte por e-mail. Recursos adicionais podem ter condições próprias.', open: false },
+    { q: 'Meus clientes conseguem agendar pelo WhatsApp?', a: 'Você pode compartilhar o link de reservas pelo WhatsApp, Instagram ou site para o cliente agendar online. Isso não significa que um robô de WhatsApp esteja incluso; mensagens automatizadas exigem integração própria e autorização do destinatário.', open: false },
+    { q: 'O AgendaAI recebe pagamentos e sinal de reservas?', a: 'O sistema tem módulos de recebimentos e sinal. A utilização depende de ativar o provedor de pagamento compatível e atender às condições da integração. Tarifas de processamento podem ser cobradas pelo prestador.', open: false },
+    { q: 'Posso oferecer clube, pacotes ou sessões antecipadas?', a: 'A plataforma contempla recursos de clubes recorrentes e sessões pré-pagas. Eles exigem a configuração adequada de serviços, regras e pagamentos; confirme a disponibilidade para o seu negócio e plano durante o teste.', open: false },
+    { q: 'Meu cliente pode consultar ou cancelar reservas?', a: 'Há uma área privativa vinculada a reservas. As ações disponíveis respeitam as regras do estabelecimento e, quando houver pagamento antecipado, o cancelamento pode exigir tratamento financeiro adicional.', open: false },
+    { q: 'Preciso migrar tudo ou instalar algum programa?', a: 'Não. Comece com um serviço e um profissional, compartilhe a agenda e amplie gradualmente. O AgendaAI funciona pelo navegador. Também é possível importar cadastros de clientes por planilha, conforme o fluxo disponibilizado no painel.', open: false },
+    { q: 'Vocês garantem mais vendas ou redução de faltas?', a: 'Não prometemos percentuais de resultado. O AgendaAI oferece ferramentas para organizar atendimento e acompanhar desempenho. A recomendação é testar com seus próprios dados e avaliar o impacto na rotina.', open: false }
   ];
 
   constructor(
