@@ -42,6 +42,8 @@ export class AdminCaixa implements OnInit {
   private connectDb = inject(SupabaseService).client;
   onlineEnabled = false;
   onlinePending = false;
+  expressCheckoutUrl = '';
+  payQrUrl = '';
   pendingOnline: Array<{
     id: string; token: string; customer: string; amount: number; createdAt: string;
   }> = [];
@@ -54,6 +56,18 @@ export class AdminCaixa implements OnInit {
   private pendingCheckInFlight = false;
 
   getPayUrl(token: string): string { return window.location.origin + '/comanda/' + token; }
+  getExpressPayUrl(token: string): string {
+    if (token === this.payQrToken && this.payQrUrl) return this.payQrUrl;
+    if (token === this.comandaToken && this.expressCheckoutUrl) return this.expressCheckoutUrl;
+    return this.getPayUrl(token);
+  }
+  private verifiedStripeUrl(value: unknown): string {
+    if (typeof value !== 'string') throw Error('Link de pagamento não retornado.');
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:' || parsed.hostname !== 'checkout.stripe.com')
+      throw Error('Endereço do checkout Stripe inválido.');
+    return parsed.toString();
+  }
 
   async loadPendingCharges() {
     const tenant = this.estService.estabelecimento$.value?.id;
@@ -125,14 +139,30 @@ export class AdminCaixa implements OnInit {
     }
   }
 
-  openPendingQr(item: {token:string;customer:string;amount:number}) {
-    this.payQrToken = item.token;
+  async openPendingQr(item: {token:string;customer:string;amount:number}) {
+    const token = item.token;
+    this.payQrToken = token;
+    this.payQrUrl = this.getPayUrl(token);
     this.payQrLabel = item.customer;
     this.payQrAmount = item.amount;
     this.cdr.markForCheck();
+    // An existing Stripe checkout session is reused, not duplicated.
+    if (!this.onlineEnabled) return;
+    try {
+      const response = await boundedFetch('/api/billing?action=connect-pay', {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({token})
+      });
+      const data = await response.json();
+      if (response.ok && this.payQrToken === token)
+        this.payQrUrl = this.verifiedStripeUrl(data.url);
+    } catch {
+      // Safe fallback: the public comanda can still open Stripe Checkout.
+    } finally { this.cdr.markForCheck(); }
   }
   closePendingQr() {
     this.payQrToken = '';
+    this.payQrUrl = '';
     this.payQrLabel = '';
     this.payQrAmount = 0;
   }
@@ -141,14 +171,14 @@ export class AdminCaixa implements OnInit {
 
   async copyPayLink(token: string) {
     try {
-      await navigator.clipboard.writeText(this.getPayUrl(token));
+      await navigator.clipboard.writeText(this.getExpressPayUrl(token));
       this.notify('Link de pagamento copiado.');
     } catch {
       this.notify('Não foi possível copiar. Abra a comanda pelo link.', true);
     }
   }
   async sharePayLink(token: string) {
-    const url = this.getPayUrl(token);
+    const url = this.getExpressPayUrl(token);
     if (typeof navigator.share !== 'function') return this.copyPayLink(token);
     try {
       await navigator.share({title:'Pagamento da comanda',text:'Acesse sua comanda e escolha como pagar:',url});
@@ -390,6 +420,7 @@ export class AdminCaixa implements OnInit {
       this.sessaoAtual = data;
       this.showAberturaModal = false;
       void this.fetchMovimentacoes();
+      void this.loadPendingCharges();
       await this.openRequested();
       this.notify('Caixa aberto.');
     } catch (e: any) {
@@ -711,6 +742,7 @@ export class AdminCaixa implements OnInit {
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
     this.comandaToken = '';
+    this.expressCheckoutUrl = '';
     this.checkoutComplete = false;
     this.closePendingQr();
     this.onlinePending = false;
@@ -892,6 +924,7 @@ export class AdminCaixa implements OnInit {
           throw Error(
             result.error || 'Cobrança preparada; confira o link e não registre novamente.',
           );
+        this.expressCheckoutUrl = this.verifiedStripeUrl(result.url);
       }
 
       if (!isAvulso && this.eventoSelecionado) {
