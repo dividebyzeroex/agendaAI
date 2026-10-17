@@ -8,6 +8,9 @@ export interface ServicoExtra {
   titulo: string;
   preco: number;
   emoji?: string;
+  eventId?: string;
+  servicoId?: string;
+  profissionalId?: string;
 }
 
 export interface CaixaItem {

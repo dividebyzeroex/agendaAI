@@ -6,6 +6,7 @@ import { interval } from 'rxjs';
 import { PayQrComponent } from '../../components/pay-qr/pay-qr';
 import { PayDisplayService } from '../../services/pay-display.service';
 import { ProfessionalIdentityService } from '../../services/professional-identity.service';
+import { MultiServiceService, GroupedService } from '../../services/multi-service.service';
 import { DisplaySnapshot, DisplayItem, createDisplaySecret, displayUrl } from '../../core/pay-display-protocol';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DestroyRef } from '@angular/core';
@@ -46,6 +47,7 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
   private connectDb = inject(SupabaseService).client;
   readonly payDisplay = inject(PayDisplayService);
   private professionalIdentity = inject(ProfessionalIdentityService);
+  private multiService = inject(MultiServiceService);
   displayPairingUrl = '';
   displayPairingError = '';
   displayPairingBusy = false;
@@ -100,6 +102,10 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
     if (this.servicoPrincipal?.titulo && Number(this.servicoPrincipal.preco) >= 0)
       list.push({title:String(this.servicoPrincipal.titulo).slice(0,90),
         unitPrice:Number(this.servicoPrincipal.preco),quantity:1});
+    for (const child of this.extraServices) {
+      if(list.length>=30)break;
+      list.push({title:child.title,unitPrice:child.price,quantity:1});
+    }
     for (const entry of this.comandaProdutos.slice(0,29)) {
       if (entry.quantidade > 0 && entry.produto?.nome)
         list.push({title:String(entry.produto.nome).slice(0,90),
@@ -519,6 +525,86 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
   // Checkout State
   eventoSelecionado: AgendaEvent | null = null;
   servicoPrincipal: any;
+  extraServices: GroupedService[] = [];
+  staffForServices:Array<{id:string;nome:string}>=[];
+  get availableExtraServices(){return this.estService.servicos$.value.filter(s=>s.ativo!==false);}
+  extraServiceId = '';
+  extraProfessionalId = '';
+  extraMode:'paralelo'|'sequencial' = 'sequencial';
+  extraServiceBusy=false;
+  extraServicesError='';
+  private selectedExtrasFor = '';
+  get groupedServiceTotal():number {
+    return this.extraServices.reduce((sum,s)=>sum+s.price,0);
+  }
+  async loadGroupedServiceItems(rootId:string):Promise<void> {
+    this.selectedExtrasFor=rootId;
+    this.extraServicesError='';
+    try {
+      const [children, rawStaff] = await Promise.all([
+        this.multiService.loadChildren(rootId),
+        this.profService.fetchProfissionais(this.estService.estabelecimento$.value!.id)
+      ]);
+      const tenant=this.estService.estabelecimento$.value?.id || '';
+      const names=await this.professionalIdentity.names(tenant,rawStaff.map(p=>p.id));
+      const staff=rawStaff.filter(p=>p.id && p.ativo!==false).map(p=>({
+        id:p.id,nome:names.get(p.id)||'Profissional cadastrado'
+      }));
+      const extras=await Promise.all(children.map(async event=>{
+        const service=this.estService.servicos$.value.find(v=>v.id===event.servico_id);
+        const price=await this.multiService.priceOf(event.servico_id!,event.profissional_id!);
+        return {
+          id:event.id,servico_id:event.servico_id!,profissional_id:event.profissional_id!,
+          start:event.start,end:event.end,title:service?.titulo||'Serviço',
+          name:names.get(event.profissional_id!)||event.profissional_nome||'Profissional',
+          price,status:event.status,isExtra:true
+        } as GroupedService;
+      }));
+      if(this.eventoSelecionado?.id!==rootId) return;
+      this.staffForServices=staff;
+      this.extraServices=extras;
+      this.checkoutKey=crypto.randomUUID();
+      this.syncCustomerDisplay();
+    } catch(e:any) {
+      if(this.eventoSelecionado?.id!==rootId) return;
+      this.depositVerified=false;
+      this.extraServicesError=e?.message||'Não foi possível conferir os serviços da comanda.';
+      this.notify(this.extraServicesError,true);
+    } finally {this.cdr.markForCheck();}
+  }
+  async addExtraServiceToAttendance():Promise<void> {
+    const root=this.eventoSelecionado;
+    if(!root?.id || !this.extraServiceId || !this.extraProfessionalId || this.extraServiceBusy ||
+       this.checkoutComplete || !this.depositVerified) return;
+    this.extraServiceBusy=true;
+    try {
+      const staff=this.staffForServices.find(p=>p.id===this.extraProfessionalId);
+      const client=this.clientesLista.find(p=>p.id===this.clienteSelecionadoId);
+      if(!staff || !client) throw Error('Selecione profissional e cliente válidos.');
+      const latest=Math.max(Date.now(),Date.parse(root.end),
+        ...this.extraServices.map(s=>Date.parse(s.end)));
+      const start=this.extraMode==='paralelo'
+        ? new Date(Math.max(Date.now(),Date.parse(root.start))).toISOString()
+        : new Date(latest).toISOString();
+      await this.multiService.addService(root.id,this.extraServiceId,
+        this.extraProfessionalId,start,this.extraMode,client.nome,staff.nome,crypto.randomUUID());
+      this.extraServiceId='';
+      await this.loadGroupedServiceItems(root.id);
+      this.notify('Serviço extra adicionado à comanda e à agenda do profissional.');
+    } catch(e:any){this.notify(e.message||'Não foi possível adicionar serviço.',true);}
+    finally {this.extraServiceBusy=false;this.cdr.markForCheck();}
+  }
+  async removeExtraServiceFromAttendance(item:GroupedService):Promise<void>{
+    const root=this.eventoSelecionado;
+    if(!root?.id || this.extraServiceBusy || this.checkoutComplete)return;
+    this.extraServiceBusy=true;
+    try{
+      await this.multiService.removeService(root.id,item.id);
+      await this.loadGroupedServiceItems(root.id);
+      this.notify('Serviço extra retirado antes de emitir a cobrança.');
+    }catch(e:any){this.notify(e.message||'Não foi possível remover serviço.',true);}
+    finally{this.extraServiceBusy=false;this.cdr.markForCheck();}
+  }
   produtosCatalogo: Produto[] = [];
   prodSelecionadoId = '';
   comandaProdutos: { produto: Produto; quantidade: number }[] = [];
@@ -851,7 +937,9 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
         if (secondError) throw secondError;
         let arr1 = data || [];
         let arr2 = dataTrue || [];
-        const combined = [...arr1, ...arr2];
+        // Group members occupy each professional's calendar but only the
+        // parent receives the single combined payment and customer receipt.
+        const combined = [...arr1, ...arr2].filter(e=>!e.metadata?.parent_event_id);
 
         const professionalIds = combined.map(e=>e.profissional_id).filter(Boolean);
         let professionalNames = new Map<string,string>();
@@ -886,7 +974,18 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
     return new Date(dt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
   }
 
-  async selecionarEvento(evento: AgendaEvent) {
+  async selecionarEvento(evento: AgendaEvent): Promise<void> {
+    // Clicking an individual colleague's booked slot still opens the parent comanda.
+    const parent=evento.metadata?.parent_event_id;
+    if(parent){
+      const known=this.agendaService.currentEvents.find(e=>e.id===parent);
+      if(known) return this.selecionarEvento(known);
+      const tenant=this.estService.estabelecimento$.value?.id;
+      const {data,error}=await this.connectDb.from('agenda_events').select('*')
+        .eq('estabelecimento_id',tenant).eq('id',parent).maybeSingle();
+      if(error||!data) {this.notify('Comanda principal não encontrada.',true);return;}
+      return this.selecionarEvento(data as AgendaEvent);
+    }
     if (!this.sessaoAtual) {
       this.notify('Abra o caixa abaixo para receber este atendimento.');
       return;
@@ -967,6 +1066,7 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
       }
     }
 
+    await this.loadGroupedServiceItems(evento.id);
     this.syncCustomerDisplay();
     this.cdr.detectChanges();
   }
@@ -982,6 +1082,11 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
     this.prepaidAmount = 0;
     this.depositVerified = true;
     this.comandaProdutos = [];
+    this.extraServices = [];
+    this.staffForServices = [];
+    this.extraServiceId = '';
+    this.extraProfessionalId = '';
+    this.extraServicesError = '';
     this.prodSelecionadoId = '';
     this.productBarcode = '';
     this.comandaToken = '';
@@ -1097,7 +1202,7 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
       (sum, cp) => sum + cp.produto.preco * cp.quantidade,
       0,
     );
-    return Math.max(0, servico - fidelidadeDesc + produtos - this.prepaidAmount);
+    return Math.max(0, servico + this.groupedServiceTotal - fidelidadeDesc + produtos - this.prepaidAmount);
   }
 
   getDescontoFidelidade(): number {
@@ -1167,7 +1272,10 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
         servicoPrincipal: this.servicoPrincipal
           ? ({ titulo: this.servicoPrincipal.titulo, preco: this.servicoPrincipal.preco } as any)
           : null,
-        servicosExtras: [],
+        servicosExtras: this.extraServices.map(child=>({
+          eventId:child.id,titulo:child.title,preco:child.price,
+          profissionalId:child.profissional_id,servicoId:child.servico_id
+        })),
         produtos: this.comandaProdutos.map((cp) => ({
           id: cp.produto.id!,
           nome: cp.produto.nome,
@@ -1219,7 +1327,8 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
 
       if (!isAvulso && this.eventoSelecionado) {
         this.eventosPendentes = this.eventosPendentes.filter(
-          (e) => e.id !== this.eventoSelecionado!.id,
+          (e) => e.id !== this.eventoSelecionado!.id &&
+            e.metadata?.parent_event_id !== this.eventoSelecionado!.id,
         );
       }
 
@@ -1297,8 +1406,13 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
     if (this.servicoPrincipal) {
       html += `<div class="flex-between"><span>1x ${this.servicoPrincipal.titulo}</span><span>R$ ${this.servicoPrincipal.preco.toFixed(2)}</span></div>`;
     }
+    const escapeHtml=(value:string)=>String(value).replace(/[&<>"']/g,
+      c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'} as Record<string,string>)[c]);
+    this.extraServices.forEach(child=>{
+      html += `<div class="flex-between"><span>1x ${escapeHtml(child.title)} (${escapeHtml(child.name)})</span><span>R$ ${child.price.toFixed(2)}</span></div>`;
+    });
     this.comandaProdutos.forEach((cp) => {
-      html += `<div class="flex-between"><span>${cp.quantidade}x ${cp.produto.nome}</span><span>R$ ${(cp.produto.preco * cp.quantidade).toFixed(2)}</span></div>`;
+      html += `<div class="flex-between"><span>${cp.quantidade}x ${escapeHtml(cp.produto.nome)}</span><span>R$ ${(cp.produto.preco * cp.quantidade).toFixed(2)}</span></div>`;
     });
 
     if (this.aplicarFidelidade) {

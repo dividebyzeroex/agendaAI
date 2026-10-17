@@ -61,3 +61,25 @@
   font-size: 15px;
   font-weight: 550;
 }
+
+
+/* One booking, several staff slots — compact but explicit schedule composition. */
+.multi-booking-selector{border:1px solid var(--glass-border,#e3dbee);background:var(--card-bg,#fff);padding:16px;border-radius:15px;display:grid;gap:12px;margin:18px 0}
+.multi-booking-heading{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}
+.multi-booking-heading strong{font-size:.95rem}
+.multi-booking-heading p{margin:4px 0}
+.multi-add-button{background:var(--primary-color,#6655ed);color:white;border:0;border-radius:10px;display:inline-flex;align-items:center;gap:7px;padding:11px 13px;font-size:.8rem;font-weight:700;cursor:pointer}
+.multi-add-button:disabled{opacity:.5}
+.multi-booking-entry{padding:14px;border-radius:12px;border:1px solid var(--glass-border,#e4deed);background:var(--surface-0,#faf9fe)}
+.multi-entry-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.multi-entry-title strong{font-size:.86rem}
+.multi-remove-button{border:0;background:transparent;color:#9a465f;font-size:.83rem;cursor:pointer;padding:6px}
+.multi-entry-fields{display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px}
+.multi-entry-fields label{font-size:.72rem;display:grid;gap:5px;color:var(--text-muted,#766d86);font-weight:650}
+.multi-entry-fields select{min-width:0;width:100%;background:var(--input-bg,#fff);color:var(--text-main,#362b4a);border:1px solid var(--glass-border,#e3dbee);border-radius:8px;min-height:42px;padding:8px;font-size:.78rem}
+.multi-booking-time{font-size:.75rem;color:var(--primary-color,#6950aa);margin:10px 0 0}
+.multi-booking-summary{border-radius:11px;background:var(--primary-soft,#f4edff);padding:13px;display:grid;gap:5px}
+.multi-booking-summary strong{font-size:.95rem}
+.multi-booking-summary span{font-size:.78rem;color:var(--text-muted,#746b84)}
+.multi-booking-summary p{margin:0}
+@media(max-width:720px){.multi-entry-fields{grid-template-columns:1fr}.multi-booking-heading{align-items:start}.multi-add-button{width:100%;justify-content:center}}

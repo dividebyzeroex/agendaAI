@@ -570,3 +570,28 @@
 .cash-physical-order label{display:block;font-size:.73rem;font-weight:700;color:#564967;margin:13px 0 7px}
 .cash-physical-order .ag-select{width:100%;box-sizing:border-box}
 .cash-physical-order p{font-size:.72rem!important;line-height:1.55!important;margin:7px 0 0!important;color:#7f718d!important}
+
+
+/* Multi-service bill: per-line professional attribution without extra checkout screens. */
+.cash-multiservice{margin:17px 0;padding:17px;border:1px solid #e3dbea;border-radius:14px;background:linear-gradient(140deg,#fcfbff,#f8f5fe)}
+.cash-multi-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.cash-multi-heading h4{margin:0 0 5px;color:#38294c;font-size:1rem}
+.cash-multi-heading p,.cash-multi-add p{margin:0;color:#786b89;font-size:.78rem;line-height:1.6}
+.cash-multi-count{font-size:.7rem;font-weight:750;color:#7548b8;background:#f0e9fa;white-space:nowrap;padding:7px 9px;border-radius:20px}
+.cash-multi-row{display:flex;align-items:center;gap:14px;border-bottom:1px solid #e9e1f4;padding:12px 0}
+.cash-multi-row>div{display:grid;gap:4px;flex:1;min-width:0}
+.cash-multi-row strong{font-size:.85rem;color:#35273f}
+.cash-multi-row small{font-size:.73rem;color:#756985}
+.cash-multi-row b{font-size:.85rem;color:#342148;white-space:nowrap}
+.cash-multi-remove{background:#fff;border:1px solid #e0d0eb;color:#945b77;border-radius:9px;min-height:35px;min-width:35px;cursor:pointer}
+.cash-multi-add{margin-top:11px}
+.cash-multi-add summary{cursor:pointer;display:flex;align-items:center;gap:8px;color:#7046a4;font-size:.82rem;font-weight:750;padding:7px 0}
+.cash-multi-controls{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.cash-multi-controls label{display:grid;gap:6px;font-size:.73rem;font-weight:750;color:#4e3d65}
+.cash-multi-controls label:last-child{grid-column:1/-1}
+.cash-multi-controls select{min-width:0;width:100%;box-sizing:border-box}
+.cash-multi-save{background:#7245b7;border:0;border-radius:10px;color:#fff;min-height:43px;padding:10px 15px;font-weight:700;cursor:pointer;margin-top:13px}
+.cash-multi-save:disabled{opacity:.5;cursor:not-allowed}
+.cash-multi-subtotal{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid #ddd1ee;margin-top:12px;padding-top:15px;font-size:.85rem;color:#5e4e70}
+.cash-multiservice button:focus-visible,.cash-multiservice select:focus-visible{outline:3px solid #b193e3;outline-offset:2px}
+@media(max-width:620px){.cash-multi-controls{grid-template-columns:1fr}.cash-multi-controls label:last-child{grid-column:auto}.cash-multiservice{padding:13px}}
