@@ -76,7 +76,7 @@ beforeEach(async () => {
   };
   pro = {
     fetchProfissionais: vi.fn().mockResolvedValue([{ id: 'pro', nome: 'João' }]),
-    finalizarEEnviarCaixa: vi.fn().mockResolvedValue({ id: 'cash', token_publico: 'receipt' }),
+    finalizarEEnviarCaixa: vi.fn().mockResolvedValue({ id: 'cash', token_publico: 'receipt', status_caixa: 'pago', forma_pagamento: 'pix' }),
     supabase: { from: vi.fn(() => {const q:any={insert:vi.fn().mockResolvedValue({error:null}),select:()=>q,eq:()=>q,abortSignal:()=>q,maybeSingle:async()=>({data:null,error:null})};return q;}) },
   };
   auth = {
@@ -316,6 +316,7 @@ it('does not open a print popup or duplicate a receipt after a successful checko
   c.clienteSelecionadoId = 'client';
   c.servicoPrincipal = service;
   c.formaPagamento = 'pix';
+  c.manualPaymentConfirmed = true;
   const print = vi.spyOn(c, 'imprimirComprovante').mockImplementation(() => {});
   vi.spyOn(c, 'fetchMovimentacoes').mockResolvedValue(undefined);
   await c.finalizarEGerarComanda(true);
@@ -381,20 +382,16 @@ it('does not offer a professional during their lunch break', async () => {
   expect(c.slots.find((s) => s.time === '13:00')?.available).toBe(true);
 });
 
-it('prevents re-registering a sale if the receipt exists but its cash movement update fails', async () => {
+it('does not claim a card payment was received when the staff has not confirmed it', async () => {
   const c = TestBed.runInInjectionContext(() => new AdminCaixa());
   c.sessaoAtual = { id: 'session' };
   c.clientesLista = [customer];
   c.clienteSelecionadoId = 'client';
   c.servicoPrincipal = service;
-  c.formaPagamento = 'pix';
-  pro.finalizarEEnviarCaixa.mockResolvedValue({ id: 'cash' });
-  pro.supabase.from.mockReturnValue({
-    insert: vi.fn().mockResolvedValue({ error: new Error('network') }),
-  });
+  c.formaPagamento = 'cartao_credito';
+  c.manualPaymentConfirmed = false;
   await c.finalizarEGerarComanda(true);
-  await c.finalizarEGerarComanda(true);
-  expect(c.checkoutComplete).toBe(true);
-  expect(pro.finalizarEEnviarCaixa).toHaveBeenCalledOnce();
-  expect(c.message).toContain('Não registre novamente');
+  expect(c.checkoutComplete).toBe(false);
+  expect(pro.finalizarEEnviarCaixa).not.toHaveBeenCalled();
+  expect(c.message).toContain('Confirme que o pagamento foi recebido');
 });

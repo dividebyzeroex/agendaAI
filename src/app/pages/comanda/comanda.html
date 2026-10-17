@@ -21,15 +21,9 @@
         <div class="brand">{{ nomeEstabelecimento() }}</div>
         <h1>{{ caixaItem.origem === 'sinal' ? 'Sinal da reserva' : 'Sua comanda digital' }}</h1>
         <p class="date">Atendimento em: {{ caixaItem.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
-        <span class="status-badge" [class.pago]="caixaItem.status_caixa === 'pago'">
-          {{
-            caixaItem.status_caixa === 'pago'
-              ? 'PAGO'
-              : caixaItem.status_caixa === 'cancelado'
-                ? 'CANCELADO'
-                : 'PENDENTE'
-          }}
-        </span>
+        <span class="status-badge" [class.pago]="receiptPaid" [class.registrado]="receiptRecorded"
+          aria-live="polite">{{receiptLabel}}</span>
+        <p class="receipt-status-warning" *ngIf="receiptWarning()" role="status">{{receiptWarning()}}</p>
       </div>
 
       <div class="comanda-body">
@@ -76,11 +70,22 @@
           <strong>R$ {{ caixaItem.valor_total | number: '1.2-2' }}</strong>
         </div>
 
-        <div class="pagamento-info" *ngIf="caixaItem.status_caixa === 'pago'">
-          <p>
-            Pago via: <strong>{{ caixaItem.forma_pagamento }}</strong>
-          </p>
-          <p>Data do pagamento: {{ caixaItem.pago_em | date: 'dd/MM/yyyy HH:mm' }}</p>
+        <div class="pagamento-info" *ngIf="receiptPaid || receiptRecorded">
+          <p>{{ receiptPaid ? 'Confirmado pela Stripe:' : 'Registrado pelo estabelecimento:' }}
+            <strong>{{ paymentMethodLabel }}</strong></p>
+          <p *ngIf="paidAt()">Data do registro: {{ paidAt() | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="receipt-manual-explanation" *ngIf="receiptRecorded" role="note">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <p><strong>Pagamento registrado pelo estabelecimento.</strong>
+            Esta comanda não foi cobrada pela Stripe. Se você ainda não pagou,
+            avise a recepção para corrigir o lançamento e emitir uma cobrança online.
+            Não faça outro pagamento antes da conferência.</p>
+        </div>
+        <div class="receipt-manual-explanation" *ngIf="receiptSource() === 'merchant' && receiptState() === 'pendente'">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <p>Este link não possui uma cobrança Stripe ativa. Solicite ao estabelecimento
+            que gere um link de pagamento no AgendaAI Pay Express.</p>
         </div>
       </div>
 

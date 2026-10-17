@@ -345,14 +345,36 @@
              <p *ngIf="prepaidAmount > 0">Sinal já recebido: <strong>R$ {{ prepaidAmount | number:'1.2-2' }}</strong>. O total abaixo corresponde somente ao saldo.</p>
              <div class="form-group">
                <label>Forma de Pagamento *</label>
-               <select [(ngModel)]="formaPagamento" class="ag-select">
-                 <option value="">Selecione...</option>
-                 <option *ngIf="onlineEnabled" value="online">Link de pagamento · Stripe</option>
-                 <option value="pix">PIX</option>
-                 <option value="dinheiro">Dinheiro</option>
-                 <option value="cartao_credito">Cartão de Crédito</option>
-                 <option value="cartao_debito">Cartão de Débito</option>
+               <select [(ngModel)]="formaPagamento" (ngModelChange)="onPaymentMethodChanged($event)" class="ag-select">
+                 <option value="">Como deseja receber?</option>
+                 <optgroup *ngIf="onlineEnabled" label="COBRAR AGORA · O CLIENTE AINDA NÃO PAGOU">
+                   <option value="online">AgendaAI Pay Express · Link e QR pela Stripe</option>
+                 </optgroup>
+                 <optgroup label="REGISTRAR SOMENTE APÓS RECEBER PRESENCIALMENTE">
+                   <option value="pix">Pix já recebido no banco ou maquininha</option>
+                   <option value="dinheiro">Dinheiro já recebido no balcão</option>
+                   <option value="cartao_credito">Crédito já aprovado na maquininha</option>
+                   <option value="cartao_debito">Débito já aprovado na maquininha</option>
+                 </optgroup>
                </select>
+               <p class="cash-payment-route-hint" *ngIf="formaPagamento === 'online'">
+                 <i class="pi pi-qrcode" aria-hidden="true"></i>
+                 Esta ação cria uma cobrança <strong>pendente</strong>. Mostre o QR para que o cliente pague.
+                 O pagamento somente será confirmado após a validação da Stripe.
+               </p>
+               <p class="cash-payment-route-hint" *ngIf="!onlineEnabled">
+                 <i class="pi pi-info-circle" aria-hidden="true"></i>
+                 Para receber por link ou QR Code, ative a Stripe Connect em
+                 <a routerLink="/admin/recebimentos">Recebimentos</a>.
+                 As opções abaixo apenas registram pagamentos já recebidos.
+               </p>
+               <label class="cash-received-confirmation" *ngIf="requiresManualConfirmation()">
+                 <input type="checkbox" [(ngModel)]="manualPaymentConfirmed"
+                   aria-label="Confirmo que já recebi este pagamento fora do AgendaAI" />
+                 <span><strong>Confirmo que o cliente já pagou {{getValorTotalCheckout() | currency:'BRL'}} fora do AgendaAI.</strong>
+                   A comanda será marcada <b>PAGA imediatamente</b>. Esta opção não cria um link nem um QR de cobrança.
+                   Se o cliente ainda não pagou, use o <b>AgendaAI Pay Express</b> acima.</span>
+               </label>
              </div>
 
              <div class="form-group mt-3" *ngIf="formaPagamento === 'dinheiro'" style="margin-top: 16px;">
@@ -380,11 +402,11 @@
           </div>
 
           <button class="btn-primary primary" style="width: 100%; margin-top: 16px;"
-            [disabled]="isFinalizing || !depositVerified || !formaPagamento || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))"
+            [disabled]="isFinalizing || !depositVerified || !canSubmitCashPayment(formaPagamento, manualPaymentConfirmed) || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))"
             (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
               <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
               <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
-              {{formaPagamento==='online'?'Gerar cobrança online':showVendaAvulsaModal?'Registrar venda':'Registrar recebimento'}}
+              {{formaPagamento==='online'?'Gerar cobrança e QR Code':'Confirmar pagamento já recebido'}}
           </button>
           </ng-container>
 

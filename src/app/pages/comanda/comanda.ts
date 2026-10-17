@@ -27,6 +27,36 @@ export class ComandaComponent implements OnInit {
   loading = signal(true);
   error = signal('');
   onlineStatus = signal('');
+  receiptSource = signal<'checking' | 'stripe' | 'merchant' | 'unavailable'>('checking');
+  receiptState = signal('checking');
+  paidAt = signal<string | null>(null);
+  recordedMethod = signal('');
+  receiptWarning = signal('');
+  get receiptLabel(): string {
+    const state = this.receiptState();
+    if (this.receiptSource() === 'checking' || this.receiptSource() === 'unavailable')
+      return 'CONFERINDO';
+    if (this.receiptSource() === 'merchant' && state === 'pago') return 'REGISTRADO NO CAIXA';
+    if (state === 'paid' || state === 'pago') return 'PAGO';
+    if (state === 'cancelado' || state === 'refunded') return 'CANCELADO';
+    if (state === 'expired') return 'EXPIRADO';
+    if (state === 'disputed' || state === 'refund_pending') return 'EM ANÁLISE';
+    return 'PENDENTE';
+  }
+  get receiptPaid(): boolean {
+    return this.receiptSource() === 'stripe' && this.receiptState() === 'paid';
+  }
+  get receiptRecorded(): boolean {
+    return this.receiptSource() === 'merchant' && this.receiptState() === 'pago';
+  }
+  get paymentMethodLabel(): string {
+    if (this.receiptSource() === 'stripe') return 'Stripe Connect';
+    return ({
+      pix:'Pix externo', dinheiro:'Dinheiro',
+      cartao_credito:'Cartão de crédito presencial',
+      cartao_debito:'Cartão de débito presencial'
+    } as Record<string,string>)[this.recordedMethod()] || 'Não informado';
+  }
   reservationStatus = signal('');
   paymentPurpose = signal('');
   paymentBusy = signal(false);
@@ -43,13 +73,22 @@ export class ComandaComponent implements OnInit {
       if (!r.ok || this.token !== token) return;
       const d = await r.json();
       if (this.token !== token) return;
+      if (typeof d.online !== 'boolean' || typeof d.status !== 'string')
+        throw Error('Resposta incompleta ao consultar a cobrança.');
+      this.receiptSource.set(d.online ? 'stripe' : 'merchant');
+      this.receiptState.set(d.status);
       this.onlineStatus.set(d.online ? d.status : '');
+      this.recordedMethod.set(d.paymentMethod || '');
+      this.paidAt.set(d.paidAt || null);
+      this.receiptWarning.set('');
       this.reservationStatus.set(d.reservationStatus || '');
       this.paymentPurpose.set(d.purpose || '');
-      if (d.status === 'paid' && this.caixaItem)
+      if (d.online && d.status === 'paid' && this.caixaItem)
         this.caixaItem = { ...this.caixaItem, status_caixa: 'pago' };
     } catch {
-      /* The receipt remains available when the payment provider is unreachable. */
+      // The RPC alone must not be treated as proof of a Stripe payment.
+      if (this.receiptSource() === 'checking') this.receiptSource.set('unavailable');
+      this.receiptWarning.set('Não foi possível verificar a situação do pagamento. Tente atualizar.');
     } finally {
       this.checkingPayment.set(false);
     }
@@ -97,6 +136,11 @@ export class ComandaComponent implements OnInit {
     this.loading.set(true);
     this.paymentError.set('');
     this.onlineStatus.set('');
+    this.receiptSource.set('checking');
+    this.receiptState.set('checking');
+    this.recordedMethod.set('');
+    this.paidAt.set(null);
+    this.receiptWarning.set('');
     this.error.set('');
     this.caixaItem = null;
     this.produtos = [];
