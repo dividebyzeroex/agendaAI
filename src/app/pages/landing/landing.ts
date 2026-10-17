@@ -47,6 +47,33 @@ export class Landing implements OnInit {
   isScrolled = false;
   isMobileMenuOpen = false;
   isAnnualBilling = false;
+  // Demonstration only. No remote payment is ever created by this preview.
+  checkoutScene: 'cart' | 'payment' | 'success' = 'cart';
+  readonly checkoutScenes = [
+    {id:'cart' as const,number:'01',label:'Comanda ao vivo'},
+    {id:'payment' as const,number:'02',label:'Pagar com QR'},
+    {id:'success' as const,number:'03',label:'Pagamento confirmado'}
+  ];
+  setCheckoutScene(scene: 'cart' | 'payment' | 'success'): void {
+    this.checkoutScene = scene;
+  }
+
+  activeCapabilityPillar: 'all' | 'attendance' | 'payments' | 'growth' | 'management' = 'all';
+  readonly capabilityPillars = [
+    {id:'all' as const,name:'Todos'},
+    {id:'attendance' as const,name:'Atendimento'},
+    {id:'payments' as const,name:'Recebimentos'},
+    {id:'growth' as const,name:'Relacionamento'},
+    {id:'management' as const,name:'Gestão'}
+  ];
+  selectCapabilityPillar(id: 'all' | 'attendance' | 'payments' | 'growth' | 'management'):void {
+    this.activeCapabilityPillar=id;
+  }
+  get visibleCapabilities(){
+    return this.activeCapabilityPillar==='all'
+      ? this.capabilities
+      : this.capabilities.filter(c=>c.pillar===this.activeCapabilityPillar);
+  }
 
   // Active Segment in Chameleon section
   activeSegmentId = 'barbearia';
@@ -79,8 +106,8 @@ export class Landing implements OnInit {
       id: 'barbearia',
       name: 'Barbearias & Salões',
       category: 'Beleza & Estilo',
-      headline: 'Agenda, equipe e serviços em um só lugar.',
-      description: 'Cadastre cortes, barbas e tratamentos, organize os horários de cada profissional e compartilhe seu link de agendamento com os clientes.',
+      headline: 'Do primeiro horário ao último pagamento, tudo conectado.',
+      description: 'Organize os horários, receba pela plataforma quando a Stripe Connect estiver habilitada e entregue uma jornada de atendimento mais fluida da recepção ao caixa.',
       terms: [
         { label: 'Vocabulário', value: 'Cortes, Barbas, Cadeiras, Horários' },
         { label: 'Operação', value: 'Visualização dos horários de atendimento' },
@@ -154,25 +181,33 @@ export class Landing implements OnInit {
   }
 
   readonly capabilities = [
-    {category:'AGENDA',icon:'pi-calendar',name:'Agendamento online',description:'Link público para reservar serviço, profissional e horário. Compartilhe pelo Instagram, WhatsApp ou site.'},
-    {category:'RECEPÇÃO',icon:'pi-clock',name:'Fila e encaixes',description:'Acompanhe quem chegou sem agendamento, organize o atendimento e encaixe horários quando necessário.'},
-    {category:'ATENDIMENTO',icon:'pi-receipt',name:'Comandas e comissões',description:'Registre serviços e produtos, acompanhe o caixa e consulte os repasses da equipe.'},
-    {category:'RECEBIMENTOS',icon:'pi-credit-card',name:'Pagamentos e sinal',description:'Recebimentos online e reservas com sinal, conforme o provedor conectado e as condições aplicáveis.',note:'Integração necessária'},
-    {category:'EXPERIÊNCIA',icon:'pi-user',name:'Área do cliente',description:'Acesso privado para consultar reservas e solicitar alterações permitidas pelas regras do estabelecimento.'},
-    {category:'RECORRÊNCIA',icon:'pi-refresh',name:'Clubes e pacotes',description:'Organize benefícios, sessões pré-pagas e recorrência, com liberação vinculada aos pagamentos quando configurado.',note:'Requer configuração'},
-    {category:'RELACIONAMENTO',icon:'pi-heart',name:'Fidelização e retorno',description:'Acompanhe o histórico e prepare campanhas para quem autorizou receber comunicações.'},
-    {category:'PRODUTOS',icon:'pi-box',name:'Estoque e consumo',description:'Cadastre produtos e insumos, acompanhe movimentações e planeje reposições da operação.'},
-    {category:'FINANCEIRO',icon:'pi-chart-bar',name:'Resultados do negócio',description:'Controle contas a pagar e receber, movimentações e relatórios para acompanhar a operação.'},
-    {category:'ESCALA',icon:'pi-building',name:'Gestão de unidades',description:'Organize unidades e controle de acesso em operações que precisam ampliar a gestão.',note:'Conforme módulo disponível'},
-    {category:'SUA MARCA',icon:'pi-image',name:'Página de agendamento',description:'Personalize informações do seu espaço e compartilhe uma página de reservas com sua identidade.'},
-    {category:'QUALIDADE',icon:'pi-star',name:'Avaliações e atendimento',description:'Colete feedback, acompanhe a satisfação e identifique oportunidades de melhoria da experiência.'}
+    {pillar:'attendance',category:'AGENDA',icon:'pi-calendar',name:'Agenda online compartilhável',description:'O cliente escolhe horário, profissional e serviço em uma página com a identidade do seu espaço.'},
+    {pillar:'attendance',category:'RECEPÇÃO',icon:'pi-users',name:'Fila, encaixes e check-in',description:'Organize chegadas, atendimentos sem reserva, confirmação e ocupação dos profissionais.'},
+    {pillar:'attendance',category:'EQUIPE',icon:'pi-sitemap',name:'Serviços com vários profissionais',description:'Corte e manicure em paralelo, ou barba e sobrancelha em sequência, com um atendimento agrupado.',note:'Em preparação para liberação'},
+    {pillar:'attendance',category:'COMANDA',icon:'pi-receipt',name:'Serviços e produtos no atendimento',description:'Monte a comanda enquanto o cliente é atendido. Acompanhe itens, preços e responsáveis.'},
+    {pillar:'payments',category:'PAY EXPRESS',icon:'pi-desktop',name:'Checkout em duas telas',description:'O caixa opera de um lado e o cliente acompanha os valores no visor pareado, sem ver dados administrativos.',note:'Requer segunda tela'},
+    {pillar:'payments',category:'STRIPE CONNECT',icon:'pi-credit-card',name:'Pagamento digital integrado',description:'Com a conta Stripe Connect habilitada, emita cobranças online por link ou QR Code e acompanhe a confirmação.',note:'Ativação e tarifas aplicáveis'},
+    {pillar:'payments',category:'RESERVAS',icon:'pi-wallet',name:'Sinal e comanda digital',description:'Associe pagamentos antecipados às reservas e ofereça acesso à comanda digital ou recibo conforme a operação.',note:'Conforme configuração'},
+    {pillar:'payments',category:'REPASSES',icon:'pi-percentage',name:'Comissões individualizadas',description:'Regras padrão ou específicas por serviço; a evolução multisserviços atribui cada execução ao profissional correto.',note:'Multisserviços em preparação'},
+    {pillar:'growth',category:'RELACIONAMENTO',icon:'pi-heart',name:'Fidelidade e retorno',description:'Histórico, benefícios e campanhas de relacionamento para clientes que autorizaram comunicações.'},
+    {pillar:'growth',category:'RECORRÊNCIA',icon:'pi-refresh',name:'Clubes e pacotes',description:'Sessões pré-pagas, planos recorrentes e controle de utilização, quando habilitados.',note:'Configuração adicional'},
+    {pillar:'growth',category:'EXPERIÊNCIA',icon:'pi-user',name:'Área privativa do cliente',description:'Acesso às próprias reservas e ações permitidas pelas regras do estabelecimento.'},
+    {pillar:'growth',category:'QUALIDADE',icon:'pi-star',name:'Feedback e avaliações',description:'Registre a experiência de quem foi atendido e encontre oportunidades para melhorar.'},
+    {pillar:'management',category:'ESTOQUE',icon:'pi-box',name:'Produtos, insumos e reposição',description:'Acompanhe movimentações, consumo interno e pontos de atenção para a reposição.'},
+    {pillar:'management',category:'FINANCEIRO',icon:'pi-chart-bar',name:'Caixa e visão financeira',description:'Movimentações, contas a pagar e receber, relatórios e acompanhamento de resultados.'},
+    {pillar:'management',category:'OPERAÇÃO',icon:'pi-building',name:'Unidades e permissões',description:'Estruture o acesso da equipe e acompanhe diferentes unidades conforme o módulo contratado.',note:'Conforme plano'},
+    {pillar:'management',category:'SUA MARCA',icon:'pi-image',name:'Página com identidade própria',description:'Seu estabelecimento em primeiro plano, com serviços e informações para agendar.'}
   ];
 
   faqs = [
     { q: 'Como funcionam os 30 dias gratuitos?', a: 'Você cadastra seu negócio e pode configurar serviços, profissionais e o link de agendamento para avaliar a rotina real. Não pedimos cartão e não fazemos cobrança automática. A assinatura é opcional ao final do teste.', open: true },
     { q: 'O plano Essencial custa mesmo R$ 97 por mês?', a: 'Sim. O plano Essencial anunciado custa R$ 97/mês na contratação mensal e oferece agenda e link público de agendamento, até cinco profissionais ativos, cadastro de clientes e serviços, histórico, caixa e suporte por e-mail. Recursos adicionais podem ter condições próprias.', open: false },
     { q: 'Meus clientes conseguem agendar pelo WhatsApp?', a: 'Você pode compartilhar o link de reservas pelo WhatsApp, Instagram ou site para o cliente agendar online. Isso não significa que um robô de WhatsApp esteja incluso; mensagens automatizadas exigem integração própria e autorização do destinatário.', open: false },
-    { q: 'O AgendaAI recebe pagamentos e sinal de reservas?', a: 'O sistema tem módulos de recebimentos e sinal. A utilização depende de ativar o provedor de pagamento compatível e atender às condições da integração. Tarifas de processamento podem ser cobradas pelo prestador.', open: false },
+    { q: 'Como funciona o Stripe Connect no AgendaAI?', a: 'O estabelecimento pode vincular sua própria conta Stripe Connect ao AgendaAI, sujeito à habilitação e análise do provedor. A plataforma gera cobranças integradas e acompanha o status por confirmação do servidor. Taxas do AgendaAI e da Stripe podem se aplicar; o vínculo não significa uma parceria ou endosso comercial da Stripe.', open: false },
+    { q: 'O cliente precisa preencher dados de cartão no balcão?', a: 'Não no caixa do salão. Com o Pay Express ativo, a segunda tela pode apresentar a comanda e o QR da cobrança. O cliente usa o próprio celular e o checkout seguro hospedado pelo provedor. O AgendaAI exibe sucesso somente após confirmar o pagamento pelo sistema.', open: false },
+    { q: 'A segunda tela precisa ler uma comanda a cada atendimento?', a: 'Não. Depois de parear o visor do cliente, a seleção do atendimento no caixa sincroniza itens e valores automaticamente. A leitura manual é opcional para comandas físicas ou recuperação de cobrança existente.', open: false },
+    { q: 'Posso ter dois profissionais atendendo a mesma pessoa?', a: 'O fluxo multisserviços está em preparação para liberação. A proposta permite reservar serviços em paralelo com profissionais diferentes ou adicionar serviços sequenciais no atendimento, reunindo tudo em uma comanda e calculando comissões por profissional. Consulte a disponibilidade desse recurso na sua conta.', open: false },
+    { q: 'Quais tipos de recebimento ficam registrados?', a: 'O AgendaAI diferencia cobranças Stripe pendentes de pagamentos presenciais já recebidos. Para registrar dinheiro, Pix ou maquininha externa, o atendente confirma o recebimento; cobranças Stripe só são consideradas pagas após a validação pelo provedor.', open: false },
     { q: 'Posso oferecer clube, pacotes ou sessões antecipadas?', a: 'A plataforma contempla recursos de clubes recorrentes e sessões pré-pagas. Eles exigem a configuração adequada de serviços, regras e pagamentos; confirme a disponibilidade para o seu negócio e plano durante o teste.', open: false },
     { q: 'Meu cliente pode consultar ou cancelar reservas?', a: 'Há uma área privativa vinculada a reservas. As ações disponíveis respeitam as regras do estabelecimento e, quando houver pagamento antecipado, o cancelamento pode exigir tratamento financeiro adicional.', open: false },
     { q: 'Preciso migrar tudo ou instalar algum programa?', a: 'Não. Comece com um serviço e um profissional, compartilhe a agenda e amplie gradualmente. O AgendaAI funciona pelo navegador. Também é possível importar cadastros de clientes por planilha, conforme o fluxo disponibilizado no painel.', open: false },

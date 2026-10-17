@@ -10,11 +10,11 @@
 
       <nav class="nav-links desktop-only">
         <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
+        <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express</a>
+        <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
         <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
-        <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
         <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
-        <a href="#precos" (click)="scrollTo('precos')">Preços</a>
-        <a href="#faq" (click)="scrollTo('faq')">Dúvidas</a>
+        <a href="#precos" (click)="scrollTo('precos')">Planos</a>
       </nav>
 
       <div class="header-actions">
@@ -31,6 +31,8 @@
   <div class="mobile-nav" id="landing-mobile-nav" [class.open]="isMobileMenuOpen" [attr.aria-hidden]="!isMobileMenuOpen">
     <div class="mobile-links">
       <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
+      <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express e Stripe</a>
+      <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
       <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
       <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
       <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
@@ -48,20 +50,25 @@
     <!-- ═══════════════ HERO ═══════════════ -->
     <section class="hero-section" id="hero">
       <div class="hero-content">
-        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> Gestão para barbearias, salões e estética</div>
-        <h1 class="hero-title">Da primeira reserva ao próximo cliente. <span>Seu negócio mais bem cuidado.</span></h1>
-        <p class="hero-subtitle">Agenda online, equipe, caixa e relacionamento em um só lugar. Comece pelo essencial e conheça recursos de pagamentos, fidelização e gestão conforme as necessidades do seu negócio.</p>
+        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> A operação completa do seu salão, em uma plataforma</div>
+        <h1 class="hero-title">Seu cliente vem pela experiência. <span>Seu negócio cresce com a operação.</span></h1>
+        <p class="hero-subtitle">Agenda, recepção, profissionais, comanda digital e recebimentos integrados. Uma jornada que começa na reserva, acompanha o atendimento e termina com um checkout à altura da sua marca.</p>
+        <div class="hero-feature-proof" aria-label="Diferenciais da plataforma">
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento online</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Checkout em duas telas</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Stripe Connect integrado</span>
+        </div>
         <div class="hero-cta-group">
           <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
           <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração</button>
         </div>
-        <p class="hero-cta-note">Sem cartão de crédito. Sem cobrança automática. Sem compromisso de contratar.</p>
+        <p class="hero-cta-note">30 dias grátis sem cartão. Pagamentos integrados disponíveis mediante habilitação; taxas de processamento e condições adicionais podem se aplicar.</p>
         <div class="hero-metrics-row" aria-label="Vantagens do teste">
           <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na prática</span></div>
           <div class="metric-divider"></div>
           <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Plano Essencial, depois do teste</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">Uma plataforma</span><span class="m-lbl">Agenda, clientes e operação</span></div>
+          <div class="metric-item"><span class="m-val">Do agendamento ao caixa</span><span class="m-lbl">Um fluxo para a equipe e o cliente</span></div>
         </div>
       </div>
 
@@ -158,6 +165,163 @@
       </div>
     </section>
 
+
+    <!-- PAY EXPRESS / INTERACTIVE TWO-SCREEN CUSTOMER JOURNEY -->
+    <section class="product-pay-section" id="pay-express" aria-labelledby="pay-title">
+      <div class="container">
+        <div class="pay-editorial-header">
+          <div>
+            <span class="product-kicker"><span class="kicker-dash" aria-hidden="true"></span> AGENDAAI PAY EXPRESS</span>
+            <h2 id="pay-title">Um caixa para a equipe. <em>Uma experiência para o cliente.</em></h2>
+          </div>
+          <div class="pay-head-aside">
+            <div class="pay-stripe-line"><i class="pi pi-credit-card" aria-hidden="true"></i>
+              <span>Pagamentos integrados com <strong>Stripe Connect</strong></span>
+            </div>
+            <p>Conecte uma conta habilitada e ofereça cobrança online por link e QR Code. O cliente usa o próprio celular — sem digitar dados de cartão no balcão.</p>
+          </div>
+        </div>
+
+        <div class="pay-experience-layout">
+          <div class="pay-story-column">
+            <p class="pay-story-caption">EXPERIMENTE A JORNADA · SIMULAÇÃO INTERATIVA</p>
+            <div class="pay-scene-selector" role="tablist" aria-label="Etapas simuladas do Pay Express">
+              <button type="button" *ngFor="let scene of checkoutScenes" role="tab"
+                [attr.aria-selected]="checkoutScene===scene.id"
+                [class.active]="checkoutScene===scene.id"
+                (click)="setCheckoutScene(scene.id)">
+                <span class="pay-scene-n">{{scene.number}}</span>
+                <span>{{scene.label}}</span>
+                <i class="pi pi-arrow-right" aria-hidden="true"></i>
+              </button>
+            </div>
+            <div class="pay-explainer" aria-live="polite">
+              <ng-container [ngSwitch]="checkoutScene">
+                <div *ngSwitchCase="'cart'">
+                  <span class="pay-phase-label">01 / LANÇAMENTO AUTOMÁTICO</span>
+                  <h3>Os valores aparecem enquanto o atendimento acontece.</h3>
+                  <p>Selecionou o cliente no caixa? O visor pareado acompanha a comanda em tempo real. Sem escanear um código a cada atendimento.</p>
+                </div>
+                <div *ngSwitchCase="'payment'">
+                  <span class="pay-phase-label">02 / COBRANÇA PENDENTE</span>
+                  <h3>O QR aparece. A equipe continua atendendo.</h3>
+                  <p>O cliente abre a cobrança no próprio aparelho. Os dados de pagamento são tratados pelo checkout do provedor, sem exposição ao caixa.</p>
+                </div>
+                <div *ngSwitchCase="'success'">
+                  <span class="pay-phase-label">03 / CONFIRMAÇÃO REAL</span>
+                  <h3>Obrigado só depois da confirmação.</h3>
+                  <p>Na operação real, o visor mostra o sucesso depois que o sistema valida o pagamento pela Stripe. Um link criado não é confundido com venda paga.</p>
+                </div>
+              </ng-container>
+            </div>
+            <div class="pay-story-benefits">
+              <span><i class="pi pi-sync" aria-hidden="true"></i> Sincronização do caixa para o visor</span>
+              <span><i class="pi pi-shield" aria-hidden="true"></i> Visor sem acesso administrativo</span>
+              <span><i class="pi pi-check-circle" aria-hidden="true"></i> Confirmação de pagamento validada</span>
+            </div>
+          </div>
+
+          <div class="pay-devices-scene" aria-label="Prévia ilustrativa do checkout em duas telas">
+            <div class="pay-device cashier-device">
+              <div class="pay-device-topline">
+                <span class="pay-device-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+                <span>CAIXA · EQUIPE</span><i class="pi pi-lock" aria-hidden="true"></i>
+              </div>
+              <div class="pay-cash-body">
+                <div class="pay-cash-head"><span>Atendimento</span><strong>Comanda #014</strong></div>
+                <div class="pay-cash-customer"><span class="pay-cash-avatar">M</span>
+                  <div><strong>Mariana Silva</strong><small>Atendimento em andamento</small></div>
+                </div>
+                <div class="pay-cash-item"><div><strong>Corte feminino</strong><small>Camila · Serviço</small></div><span>R$ 70,00</span></div>
+                <div class="pay-cash-item"><div><strong>Hidratação</strong><small>Camila · Adicionado no atendimento</small></div><span>R$ 40,00</span></div>
+                <div class="pay-cash-total"><span>Total</span><strong>R$ 110,00</strong></div>
+                <div class="pay-cash-action" [class.is-pending]="checkoutScene==='payment'" [class.is-done]="checkoutScene==='success'">
+                  <ng-container [ngSwitch]="checkoutScene">
+                    <span *ngSwitchCase="'cart'"><i class="pi pi-receipt" aria-hidden="true"></i> Comanda sincronizada</span>
+                    <span *ngSwitchCase="'payment'"><i class="pi pi-clock" aria-hidden="true"></i> Aguardando pagamento</span>
+                    <span *ngSwitchCase="'success'"><i class="pi pi-check-circle" aria-hidden="true"></i> Recebimento confirmado*</span>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+            <div class="pay-device customer-device" aria-live="polite">
+              <div class="pay-device-topline"><span>VISOR · CLIENTE</span><i class="pi pi-desktop" aria-hidden="true"></i></div>
+              <div class="pay-customer-body">
+                <div class="pay-customer-brand"><span class="pay-brand-mark">✦</span><span>ATELIÊ <b>MAR</b><small>BY AGENDAAI</small></span></div>
+                <ng-container [ngSwitch]="checkoutScene">
+                  <div *ngSwitchCase="'cart'" class="pay-customer-view">
+                    <span class="pay-customer-overline">SEU ATENDIMENTO</span>
+                    <h3>Acompanhe a sua comanda.</h3>
+                    <div class="pay-client-line"><span>Corte feminino</span><strong>R$ 70</strong></div>
+                    <div class="pay-client-line"><span>Hidratação</span><strong>R$ 40</strong></div>
+                    <div class="pay-client-grand"><small>TOTAL ATUAL</small><strong>R$ 110,00</strong></div>
+                  </div>
+                  <div *ngSwitchCase="'payment'" class="pay-customer-view pay-view-payment">
+                    <span class="pay-customer-overline">PRONTO PARA PAGAR</span>
+                    <h3>Seu pagamento, no seu ritmo.</h3>
+                    <div class="pay-qr-illustration" aria-label="Ícone ilustrativo de QR Code. Não escaneável"><i class="pi pi-qrcode" aria-hidden="true"></i><span>PRÉVIA</span></div>
+                    <div class="pay-client-grand"><small>VALOR A PAGAR</small><strong>R$ 110,00</strong></div>
+                    <p>QR ilustrativo — o código real é gerado somente na cobrança.</p>
+                  </div>
+                  <div *ngSwitchCase="'success'" class="pay-customer-view pay-view-success">
+                    <span class="pay-success-symbol"><i class="pi pi-check" aria-hidden="true"></i></span>
+                    <span class="pay-customer-overline">EXEMPLO DE PAGAMENTO CONFIRMADO</span>
+                    <h3>Obrigado pela visita!</h3>
+                    <p>O seu atendimento foi um prazer.</p>
+                    <div class="pay-client-grand"><small>TOTAL RECEBIDO · SIMULAÇÃO</small><strong>R$ 110,00</strong></div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+            <p class="pay-demo-disclaimer">* Demonstração fictícia e interativa. Nenhum pagamento é gerado aqui. Na operação real, a confirmação depende da Stripe e da validação do servidor.</p>
+          </div>
+        </div>
+        <div class="pay-integration-band">
+          <div class="pay-band-icon"><i class="pi pi-link" aria-hidden="true"></i></div>
+          <div><strong>Stripe Connect no fluxo do seu estabelecimento</strong>
+            <p>O negócio vincula uma conta elegível para processar cobranças digitais. O AgendaAI orquestra comanda, link, QR e status; processamento, elegibilidade e repasses seguem as condições da Stripe.</p></div>
+          <button type="button" (click)="goToLogin()">Conhecer o Pay Express <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- MULTI-PROFESSIONAL STORY / RELEASE TRANSPARENCY -->
+    <section class="product-multi-section" id="multi-service" aria-labelledby="multi-title">
+      <div class="container multi-layout">
+        <div class="multi-copy">
+          <span class="product-kicker multi-kicker"><span class="kicker-dash" aria-hidden="true"></span> NOVA EVOLUÇÃO · EM PREPARAÇÃO PARA LIBERAÇÃO</span>
+          <h2 id="multi-title">Um cliente. <em>Vários profissionais.</em> Uma única experiência.</h2>
+          <p>O corte pode acontecer enquanto outra profissional faz as unhas. A barba pode entrar depois — mesmo quando o cliente decide no meio do atendimento.</p>
+          <div class="multi-feature-list">
+            <div><span class="multi-feature-icon"><i class="pi pi-users" aria-hidden="true"></i></span>
+              <div><strong>Em paralelo, sem conflito</strong><p>Reserve profissionais diferentes no mesmo horário para um único cliente.</p></div></div>
+            <div><span class="multi-feature-icon"><i class="pi pi-list-check" aria-hidden="true"></i></span>
+              <div><strong>Adicione serviços durante a visita</strong><p>Inclua barba, sobrancelha ou tratamentos que não estavam no agendamento original.</p></div></div>
+            <div><span class="multi-feature-icon"><i class="pi pi-percentage" aria-hidden="true"></i></span>
+              <div><strong>Uma comanda, comissões individuais</strong><p>Cada execução mantém o profissional responsável e sua própria regra de comissão.</p></div></div>
+          </div>
+          <p class="multi-release-note"><i class="pi pi-info-circle" aria-hidden="true"></i> Funcionalidade em fase de liberação. A disponibilidade pode variar até a conclusão da implantação.</p>
+          <button class="multi-cta-link" type="button" (click)="scrollTo('recursos')">Explorar outros recursos <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+        <div class="multi-demo" aria-label="Exemplo ilustrativo de serviços simultâneos e sequenciais">
+          <div class="multi-demo-top"><span>ATENDIMENTO AGRUPADO <small>EXEMPLO ILUSTRATIVO</small></span><i class="pi pi-ellipsis-h" aria-hidden="true"></i></div>
+          <div class="multi-demo-customer"><span class="multi-avatar">PS</span><div><strong>Pedro Santos</strong><small>3 serviços · 2 profissionais</small></div><span class="multi-demo-status">Em atendimento</span></div>
+          <div class="multi-calendar-head"><strong>Agenda combinada</strong><span>14:00 — 15:00</span></div>
+          <div class="multi-timeline-hours"><span>14:00</span><span>14:20</span><span>14:40</span><span>15:00</span></div>
+          <div class="multi-timeline-row"><span class="multi-pro-label"><b>JP</b><small>Barbeiro</small></span><div class="multi-timeline-track">
+            <span class="multi-slot multi-slot-cut">Corte <small>14:00–14:40</small></span>
+            <span class="multi-slot multi-slot-beard">Barba <small>14:40–15:00</small></span>
+          </div></div>
+          <div class="multi-timeline-row"><span class="multi-pro-label"><b>Ana</b><small>Manicure</small></span><div class="multi-timeline-track">
+            <span class="multi-slot multi-slot-nails">Manicure <small>14:00–14:45</small></span>
+          </div></div>
+          <div class="multi-cart-divider"></div>
+          <div class="multi-demo-receipt"><div><i class="pi pi-receipt" aria-hidden="true"></i><span>Uma única comanda</span></div><strong>R$ 160,00</strong></div>
+          <div class="multi-demo-foot"><span><i class="pi pi-check-circle" aria-hidden="true"></i> Valores por serviço</span><span><i class="pi pi-check-circle" aria-hidden="true"></i> Comissões por profissional</span></div>
+        </div>
+      </div>
+    </section>
+
     <!-- ═══════════════ HOW IT WORKS ═══════════════ -->
     <section class="section-block border-top" id="como-funciona">
       <div class="container">
@@ -194,11 +358,11 @@
       <div class="container">
         <div class="evolution-heading">
           <div><span class="evolution-label">Além da agenda</span><h2 id="evolution-title">Seu cliente agenda. Você acompanha tudo o que vem depois.</h2></div>
-          <p>O AgendaAI evoluiu para conectar atendimento, recebimento e relacionamento. Ative recursos adicionais conforme o seu plano e as integrações disponíveis.</p>
+          <p>O AgendaAI une a jornada de compra, o trabalho da equipe e o relacionamento pós-visita — com configurações e integrações que acompanham o crescimento.</p>
         </div>
         <div class="evolution-steps">
           <article class="evolution-step"><span class="evolution-index">01 / RESERVAR</span><div class="evolution-icon"><i class="pi pi-calendar-plus" aria-hidden="true"></i></div><h3>O horário fica com você</h3><p>Reservas pelo link público, profissionais disponíveis, encaixes e fila de atendimento organizados.</p><span class="evolution-keyword">Agenda + recepção</span></article>
-          <article class="evolution-step"><span class="evolution-index">02 / ATENDER &amp; RECEBER</span><div class="evolution-icon"><i class="pi pi-wallet" aria-hidden="true"></i></div><h3>Da comanda ao recebimento</h3><p>Serviços, produtos, repasses e caixa. Recebimentos online e sinal disponíveis quando configurados.</p><span class="evolution-keyword">Operação + financeiro</span></article>
+          <article class="evolution-step"><span class="evolution-index">02 / ATENDER &amp; RECEBER</span><div class="evolution-icon"><i class="pi pi-wallet" aria-hidden="true"></i></div><h3>Da comanda ao recebimento</h3><p>Comanda digital, serviços, produtos e o Pay Express com visor do cliente. Receba online ao habilitar a integração Stripe Connect.</p><span class="evolution-keyword">Operação + financeiro</span></article>
           <article class="evolution-step"><span class="evolution-index">03 / FAZER VOLTAR</span><div class="evolution-icon"><i class="pi pi-heart" aria-hidden="true"></i></div><h3>Um relacionamento que continua</h3><p>Histórico, retorno do cliente, pacotes, clubes e campanhas para os canais autorizados.</p><span class="evolution-keyword">Fidelização + recorrência</span></article>
         </div>
         <div class="evolution-bottom"><span>Sem trocar a sua rotina de uma vez. Comece com uma agenda e amplie quando fizer sentido.</span><button type="button" (click)="goToDemo()">Ver como funciona <i class="pi pi-arrow-right" aria-hidden="true"></i></button></div>
@@ -266,9 +430,15 @@
     <!-- PRODUCT CAPABILITIES -->
     <section class="section-block capabilities-section" id="recursos">
       <div class="container">
-        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Do primeiro horário ao fechamento do mês, encontre o que precisa sem espalhar o controle por vários aplicativos.</p></div>
-        <div class="capabilities-grid">
-          <article class="capability-card" *ngFor="let item of capabilities">
+        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Escolha o que deseja explorar: atendimento, pagamentos, relacionamento ou gestão. Tudo pensado para trabalhar em conjunto, sem espalhar o controle por vários sistemas.</p></div>
+        <div class="capability-filters" role="group" aria-label="Filtrar recursos por área">
+            <button type="button" *ngFor="let pillar of capabilityPillars"
+              [class.is-selected]="activeCapabilityPillar===pillar.id"
+              [attr.aria-pressed]="activeCapabilityPillar===pillar.id"
+              (click)="selectCapabilityPillar(pillar.id)">{{pillar.name}}</button>
+          </div>
+          <div class="capabilities-grid" aria-live="polite">
+          <article class="capability-card" *ngFor="let item of visibleCapabilities">
             <div class="capability-top"><span class="capability-icon"><i class="pi" [ngClass]="item.icon" aria-hidden="true"></i></span><span class="capability-category">{{item.category}}</span></div>
             <h3>{{item.name}}</h3><p>{{item.description}}</p><span *ngIf="item.note" class="capability-note">{{item.note}}</span>
           </article>

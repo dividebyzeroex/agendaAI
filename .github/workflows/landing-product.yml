@@ -1,0 +1,32 @@
+name: Product Landing — tests and Angular build
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/app/pages/landing/**'
+      - 'src/index.html'
+      - 'tests/landing-product.test.ts'
+      - '.github/workflows/landing-product.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  product-landing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Product and API regression tests
+        run: npm run test:api
+      - name: Backend typecheck
+        run: npm run typecheck:api
+      - name: Angular production build
+        run: npm run build
