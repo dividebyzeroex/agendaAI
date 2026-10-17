@@ -6,7 +6,7 @@
       <a *ngIf="isOwner" routerLink="/admin/recebimentos" class="text-action">Recebimentos online e conta Stripe →</a>
     </div>
 
-    <div class="header-actions" *ngIf="sessaoAtual&&!cashTaskActive"><button type="button" class="action" (click)="iniciarVendaAvulsa()">Nova venda</button><details class="cash-menu"><summary>Gerenciar caixa <i class="pi pi-angle-down" aria-hidden="true"></i></summary><button type="button" (click)="openTask('movement')">Registrar entrada ou retirada</button><button type="button" (click)="openTask('close')">Fechar caixa</button></details></div>
+    <div class="header-actions" *ngIf="sessaoAtual&&!cashTaskActive"><button type="button" class="action" (click)="iniciarVendaAvulsa()">Nova venda</button><button type="button" class="action action-display" (click)="openCustomerDisplay()"><i class="pi pi-desktop" aria-hidden="true"></i> Display do cliente</button><details class="cash-menu"><summary>Gerenciar caixa <i class="pi pi-angle-down" aria-hidden="true"></i></summary><button type="button" (click)="openTask('movement')">Registrar entrada ou retirada</button><button type="button" (click)="openTask('close')">Fechar caixa</button></details></div>
   </div>
 
   <section class="quiet-metrics" *ngIf="overview as o" aria-label="Resumo financeiro"><div><strong>{{o.received|currency:'BRL'}}</strong><span>Recebido hoje</span></div><div><strong>{{o.pending|currency:'BRL'}}</strong><span>Atendimentos a receber</span></div><div><strong>{{o.withdrawals|currency:'BRL'}}</strong><span>Retiradas hoje</span></div></section>
@@ -14,6 +14,63 @@
   <p class="feedback error" *ngIf="overviewError" role="alert">{{overviewError}} <button class="text-action" (click)="loadOverview()">Tentar novamente</button></p>
   <details class="disclosure" *ngIf="overview?.commissions?.length"><summary>Comissões geradas hoje</summary><p *ngFor="let c of overview.commissions">{{c.nome}} · {{c.amount|currency:'BRL'}}</p><p class="helper">Comissão sobre o serviço após desconto de fidelidade, conforme regra do profissional. Retiradas incluem despesas e outras saídas; não são cálculo de lucro.</p></details>
   <p class="feedback" [class.error]="messageError" *ngIf="message" [attr.role]="messageError?'alert':'status'">{{message}}</p>
+
+  <!-- Customer-facing paired display. The URL fragment contains a private pairing secret. -->
+  <section class="cash-display-panel" *ngIf="sessaoAtual" aria-labelledby="cash-display-title">
+    <div class="cash-display-top">
+      <div class="cash-display-heading">
+        <span class="cash-display-mark"><i class="pi pi-desktop" aria-hidden="true"></i></span>
+        <div>
+          <span class="cash-display-tag">AGENDAAI PAY EXPRESS</span>
+          <h3 id="cash-display-title">Display do cliente</h3>
+          <p>Conecte o monitor uma vez. Depois, basta selecionar o atendimento ou cliente no caixa: serviços, produtos e valores aparecem automaticamente, sem escanear uma comanda.</p>
+          <p class="cash-display-auto"><i class="pi pi-sync" aria-hidden="true"></i> Sincronização automática ao selecionar o cliente</p>
+        </div>
+      </div>
+      <div class="cash-display-actions">
+        <span class="cash-display-state" *ngIf="displayPairingUrl" [class.cash-display-paired]="payDisplay.viewerConnected()">
+          <i class="pi" [ngClass]="payDisplay.viewerConnected() ? 'pi-check-circle' : 'pi-circle'" aria-hidden="true"></i>
+          {{payDisplay.viewerConnected() ? 'Visor pareado' : 'Aguardando visor'}}
+        </span>
+        <button type="button" class="cash-display-main-btn" (click)="openCustomerDisplay()">
+          <i class="pi pi-external-link" aria-hidden="true"></i> {{displayPairingUrl ? 'Reabrir visor' : 'Abrir segunda tela'}}
+        </button>
+      </div>
+    </div>
+    <div class="cash-display-details" *ngIf="displayPairingUrl">
+      <div class="cash-pairing-qr">
+        <app-pay-qr [value]="displayPairingUrl" [size]="126"
+          label="QR de pareamento privado do display do cliente"></app-pay-qr>
+        <div>
+          <strong>Parear apenas o monitor ou tablet</strong>
+          <p>Este QR é usado somente uma vez para conectar a segunda tela. Não é a comanda do cliente e não será exigido em cada atendimento.</p>
+          <p class="cash-display-security"><i class="pi pi-lock" aria-hidden="true"></i> Trate este QR como privado: quem tiver o link poderá ver a tela pareada.</p>
+          <div class="cash-display-link-actions">
+            <button type="button" class="cash-display-secondary" (click)="copyDisplayPairingUrl()"><i class="pi pi-copy" aria-hidden="true"></i> Copiar link</button>
+            <button type="button" class="cash-display-disconnect" (click)="disconnectCustomerDisplay()"><i class="pi pi-times-circle" aria-hidden="true"></i> Encerrar pareamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cash-display-error" *ngIf="displayPairingError" role="alert">{{displayPairingError}}</p>
+    <details class="cash-display-scan">
+      <summary><i class="pi pi-qrcode" aria-hidden="true"></i> Comanda física ou recuperação de cobrança · opcional</summary>
+      <form class="cash-display-scan-form" (ngSubmit)="readCustomerComanda()">
+        <label for="cash-comanda-code">Código impresso da comanda, ID de atendimento ou link de cobrança</label>
+        <div>
+          <input id="cash-comanda-code" type="text" name="comandaScanValue"
+            autocomplete="off" [(ngModel)]="comandaScanValue"
+            placeholder="Apenas para comanda física ou cobrança já emitida"
+            aria-describedby="cash-comanda-hint" />
+          <button type="submit" class="cash-display-main-btn" [disabled]="comandaScanBusy || !comandaScanValue.trim()">
+            {{comandaScanBusy ? 'Lendo…' : 'Localizar comanda'}}
+          </button>
+        </div>
+        <small id="cash-comanda-hint">A seleção normal do cliente sincroniza o visor sem leitura. Para uma comanda física, use o identificador impresso; para recuperar uma cobrança existente, use o link ou QR. O código físico precisa estar previamente associado à venda. Só são recuperadas cobranças pendentes deste estabelecimento.</small>
+      </form>
+    </details>
+  </section>
+
   <!-- Express: pending charges remain accessible while the reception handles another client. -->
   <section class="express-queue" *ngIf="sessaoAtual && (onlineEnabled || pendingOnline.length || pendingOnlineError)" aria-labelledby="express-queue-title">
     <div class="express-queue-header">
@@ -286,6 +343,13 @@
           <div class="chk-section"><h4>Cliente</h4><p *ngIf="selectedClientName"><strong>{{selectedClientName}}</strong></p><details [open]="!clienteSelecionadoId"><summary>{{clienteSelecionadoId?'Trocar cliente':'Selecionar cliente'}}</summary><select aria-label="Cliente do recebimento" [(ngModel)]="clienteSelecionadoId" (change)="onClienteChange()" class="ag-select"><option value="">Escolher cliente</option><option *ngFor="let c of clientesLista" [value]="c.id">{{c.nome}} · {{c.telefone||'Sem telefone'}}</option></select><a routerLink="/admin/clientes/novo" class="text-action" *ngIf="!clientesLista.length">Cadastrar cliente</a></details></div>
 
           <ng-container *ngIf="clienteSelecionadoId">
+            <details class="chk-section cash-physical-order">
+              <summary><i class="pi pi-tag" aria-hidden="true"></i> Associar comanda física (opcional)</summary>
+              <label for="cash-physical-code">Código da comanda impressa</label>
+              <input id="cash-physical-code" type="text" maxlength="64" autocomplete="off"
+                [(ngModel)]="comandaFisica" class="ag-select" placeholder="Ex.: MESA-014 ou número do cartão" />
+              <p>Sem necessidade no atendimento digital. Preencha somente se houver uma comanda física com código próprio; ela ficará associada à cobrança gerada.</p>
+            </details>
             <div class="chk-section" *ngIf="!showVendaAvulsaModal">
              <h4>Serviço Realizado</h4>
              <div class="chk-item" *ngIf="servicoPrincipal">
@@ -324,6 +388,16 @@
                </select>
                <button class="btn-primary" (click)="addProdutoNaComanda()" style="width: auto; padding: 0 16px;"><i class="pi pi-plus"></i></button>
              </div>
+
+             <form class="cash-barcode-row" (ngSubmit)="addProductByBarcode()">
+               <label for="cash-barcode-input"><i class="pi pi-barcode" aria-hidden="true"></i> Ler código de barras de produto</label>
+               <div>
+                 <input id="cash-barcode-input" name="productBarcode" type="text" autocomplete="off"
+                   [(ngModel)]="productBarcode" placeholder="Bipe ou digite o código e pressione Enter" />
+                 <button type="submit" class="cash-display-secondary" [disabled]="!productBarcode.trim()">Adicionar</button>
+               </div>
+               <small>Use um leitor USB/Bluetooth ou digite o código. Os itens são exibidos imediatamente no display do cliente.</small>
+             </form>
 
              <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
                 <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">

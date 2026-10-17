@@ -1,0 +1,132 @@
+<div class="display-shell" [class.display-success]="screen() === 'success'" [class.display-active]="screen() === 'draft' || screen() === 'awaiting'">
+  <div class="display-glow display-glow-one" aria-hidden="true"></div>
+  <div class="display-glow display-glow-two" aria-hidden="true"></div>
+
+  <header class="display-header">
+    <div class="display-merchant">
+      <div class="display-merchant-mark" aria-hidden="true">
+        <img *ngIf="snapshot()?.logoUrl" [src]="snapshot()!.logoUrl" alt="" />
+        <i *ngIf="!snapshot()?.logoUrl" class="pi pi-sparkles"></i>
+      </div>
+      <div>
+        <span class="display-overline">SEJA BEM-VINDO</span>
+        <strong class="display-merchant-name">{{ companyName() }}</strong>
+      </div>
+    </div>
+    <div class="display-header-side">
+      <span class="display-connection" [class.is-offline]="offline()">
+        <i class="display-connection-dot" aria-hidden="true"></i>
+        {{offline() ? 'Aguardando recepção' : screen()==='unpaired' ? 'Pareamento necessário' : 'Tela do cliente'}}
+      </span>
+      <button class="display-fullscreen" type="button" aria-label="Expandir display para tela cheia"
+        title="Tela cheia" (click)="fullscreen()"><i class="pi pi-expand" aria-hidden="true"></i></button>
+    </div>
+  </header>
+
+  <main class="display-main" [ngSwitch]="screen()">
+    <section *ngSwitchCase="'unpaired'" class="display-center display-pairing">
+      <div class="display-icon display-icon-purple"><i class="pi pi-desktop"></i></div>
+      <p class="display-eyebrow">DISPLAY DO CLIENTE</p>
+      <h1>Aguardando conexão</h1>
+      <p>{{pairingError() || 'Abra a tela do cliente pelo caixa para conectar este dispositivo.'}}</p>
+      <div class="display-steps">Abra o <strong>Caixa</strong> no AgendaAI → <strong>Display do cliente</strong> → leia o QR de pareamento.</div>
+    </section>
+
+    <section *ngSwitchCase="'idle'" class="display-center display-idle">
+      <div class="display-idle-icon" aria-hidden="true"><i class="pi pi-sparkles"></i></div>
+      <div class="display-idle-content">
+        <p class="display-eyebrow">UM NOVO JEITO DE SER ATENDIDO</p>
+        <h1>Seu momento.<br /><em>Nosso cuidado.</em></h1>
+        <p>Aproveite sua experiência. Sua comanda aparecerá aqui quando o atendimento estiver pronto.</p>
+      </div>
+      <div class="display-idle-clock">{{dateTime}}</div>
+    </section>
+
+    <section *ngSwitchCase="'draft'" class="display-order">
+      <div class="display-order-main">
+        <p class="display-eyebrow"><span class="display-live-dot"></span> COMANDA EM ANDAMENTO</p>
+        <h1>Acompanhe seu pedido.</h1>
+        <p class="display-lede">Confira os serviços e produtos enquanto a recepção prepara seu pagamento.</p>
+        <div class="display-line-items">
+          <div class="display-item" *ngFor="let item of items">
+            <div class="display-item-name"><span class="display-quantity">{{item.quantity}}×</span><span>{{item.title}}</span></div>
+            <strong>{{item.quantity * item.unitPrice | currency:'BRL'}}</strong>
+          </div>
+          <p class="display-no-items" *ngIf="!items.length">Os serviços e produtos aparecerão aqui à medida que forem adicionados.</p>
+        </div>
+        <div class="display-adjustments" *ngIf="(snapshot()?.discount || 0) > 0 || (snapshot()?.prepaid || 0) > 0">
+          <div *ngIf="(snapshot()?.discount || 0)>0"><span>Desconto</span><span>− {{snapshot()?.discount | currency:'BRL'}}</span></div>
+          <div *ngIf="(snapshot()?.prepaid || 0)>0"><span>Sinal já pago</span><span>− {{snapshot()?.prepaid | currency:'BRL'}}</span></div>
+        </div>
+      </div>
+      <div class="display-total-side">
+        <div class="display-total-card">
+          <span class="display-total-label">TOTAL DA COMANDA</span>
+          <div class="display-total-value">{{total | currency:'BRL'}}</div>
+          <div class="display-total-divider"></div>
+          <p><i class="pi pi-shield"></i> Você confere cada item antes de pagar.</p>
+          <div class="display-total-illustration"><i class="pi pi-receipt"></i></div>
+        </div>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'awaiting'" class="display-order display-payment">
+      <div class="display-order-main">
+        <p class="display-eyebrow"><span class="display-live-dot"></span> PRONTO PARA PAGAR</p>
+        <h1>Seu pedido está pronto.</h1>
+        <p class="display-lede">Tudo certo? Use a câmera do seu celular para pagar com segurança.</p>
+        <div class="display-line-items">
+          <div class="display-item" *ngFor="let item of items">
+            <div class="display-item-name"><span class="display-quantity">{{item.quantity}}×</span><span>{{item.title}}</span></div>
+            <strong>{{item.quantity * item.unitPrice | currency:'BRL'}}</strong>
+          </div>
+        </div>
+        <div class="display-adjustments" *ngIf="(snapshot()?.discount || 0)>0 || (snapshot()?.prepaid || 0)>0">
+          <div *ngIf="(snapshot()?.discount || 0)>0"><span>Desconto</span><span>− {{snapshot()?.discount | currency:'BRL'}}</span></div>
+          <div *ngIf="(snapshot()?.prepaid || 0)>0"><span>Sinal já pago</span><span>− {{snapshot()?.prepaid | currency:'BRL'}}</span></div>
+        </div>
+        <div class="display-awaiting"><i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Aguardando a confirmação segura do pagamento…</div>
+      </div>
+      <div class="display-total-side">
+        <div class="display-pay-card">
+          <span class="display-total-label">TOTAL A PAGAR</span>
+          <div class="display-pay-amount">{{total | currency:'BRL'}}</div>
+          <app-pay-qr *ngIf="paymentUrl" [value]="paymentUrl" [size]="220"
+            label="QR Code seguro para abrir o checkout no celular"></app-pay-qr>
+          <p class="display-qr-label"><i class="pi pi-mobile" aria-hidden="true"></i> Aponte a câmera para o QR</p>
+          <p class="display-qr-sub">Nenhum aplicativo do AgendaAI é necessário.<br />O pagamento ocorre na Stripe.</p>
+        </div>
+      </div>
+    </section>
+
+    <section *ngSwitchCase="'success'" class="display-center display-confirmed" role="status" aria-live="polite">
+      <div class="display-success-symbol"><i class="pi pi-check"></i></div>
+      <p class="display-eyebrow">CONFIRMADO PELO PROVEDOR DE PAGAMENTO</p>
+      <h1>Pagamento aprovado!</h1>
+      <p class="display-success-amount">{{total | currency:'BRL'}}</p>
+      <p>Obrigado pela preferência. Foi um prazer receber você!</p>
+      <div class="display-success-foot"><i class="pi pi-shield" aria-hidden="true"></i> Confirmação recebida do servidor da Stripe</div>
+    </section>
+
+    <section *ngSwitchCase="'recorded'" class="display-center display-recorded" role="status" aria-live="polite">
+      <div class="display-icon display-icon-purple"><i class="pi pi-check-circle"></i></div>
+      <p class="display-eyebrow">REGISTRADO PELA RECEPÇÃO</p>
+      <h1>Obrigado pela visita!</h1>
+      <p class="display-success-amount">{{total | currency:'BRL'}}</p>
+      <p>O estabelecimento registrou o pagamento no balcão. Esta tela não representa uma confirmação da Stripe.</p>
+    </section>
+
+    <section *ngSwitchCase="'issue'" class="display-center display-issue" role="alert">
+      <div class="display-icon display-icon-purple"><i class="pi pi-info-circle"></i></div>
+      <p class="display-eyebrow">PRECISA DE ATENÇÃO</p>
+      <h1>Fale com a recepção.</h1>
+      <p>{{paymentIssue()}}</p>
+      <p>Não faça outro pagamento até conferir a situação com o estabelecimento.</p>
+    </section>
+  </main>
+
+  <footer class="display-footer">
+    <div class="display-footer-help"><i class="pi pi-lock" aria-hidden="true"></i> Informações de pagamento protegidas</div>
+    <div class="display-powered">Uma experiência <strong>Agenda<span>AI</span></strong><span class="display-powered-separator"></span> Pay Express</div>
+  </footer>
+</div>

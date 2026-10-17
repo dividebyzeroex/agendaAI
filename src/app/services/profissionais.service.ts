@@ -51,6 +51,8 @@ export interface ProfissionalServico {
   profissional_id?: string;
   servico_id: string;
   valor_proprio?: number;
+  taxa_comissao?: number | null; // NULL inherits professional's comissao_padrao; 0 is explicit 0%
+  tipo_comissao?: 'percentual' | 'fixo';
   servicos?: { titulo: string; emoji: string; preco: number };
 }
 
@@ -269,6 +271,28 @@ export class ProfissionaisService {
       }
     });
     if (error) throw error;
+    await this.fetchAll();
+  }
+
+  /** Configure a service-level commission exception, or NULL to inherit the professional default. */
+  async salvarComissaoServico(profissionalId: string, servicoId: string,
+    tipo: 'padrao' | 'percentual' | 'fixo', valor: number | null): Promise<void> {
+    const estabId = this.estService.estabelecimento$.value?.id;
+    if (!estabId || !profissionalId || !servicoId) throw new Error('Profissional e serviço não identificados.');
+    if (tipo !== 'padrao' && (!Number.isFinite(valor) || valor === null || valor < 0 ||
+      (tipo === 'percentual' && valor > 100) || (tipo === 'fixo' && valor > 100000)))
+      throw new Error('Informe uma comissão válida: de 0 a 100% ou valor fixo positivo.');
+    const rate = tipo === 'padrao' ? null : valor;
+    const { data, error } = await this.supabase
+      .from('profissional_servicos')
+      .update({ taxa_comissao:rate, tipo_comissao:tipo === 'fixo' ? 'fixo' : 'percentual' })
+      .eq('estabelecimento_id',estabId)
+      .eq('profissional_id',profissionalId)
+      .eq('servico_id',servicoId)
+      .select('id')
+      .maybeSingle();
+    if (error) throw new Error(parseSupabaseError(error));
+    if (!data) throw new Error('Não foi possível atualizar a regra. Confirme sua permissão no estabelecimento.');
     await this.fetchAll();
   }
 
