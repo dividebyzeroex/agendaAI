@@ -1,0 +1,669 @@
+<main class="growth-page">
+  <a [routerLink]="'/admin/' + config.back">← {{ config.backLabel }}</a>
+  <header>
+    <div>
+      <h1>{{ config.title }}</h1>
+      <p>{{ config.description }}</p>
+    </div>
+    <button type="button" (click)="load()" [disabled]="loading || busy">Atualizar</button>
+  </header>
+  <p role="status" *ngIf="loading">Conferindo informações…</p>
+  <p role="alert" class="message error" *ngIf="error">{{ error }}</p>
+  <p role="status" class="message" *ngIf="notice">{{ notice }}</p>
+  <p *ngIf="shareUrl">
+    <a [href]="shareUrl" target="_blank" rel="noopener">Abrir link do cliente →</a>
+    <button type="button" (click)="copy(shareUrl)">Copiar link</button>
+  </p>
+  <ng-container *ngIf="loaded && !loading" [ngSwitch]="module">
+    <ng-container *ngSwitchCase="'clube'">
+      <p class="hint">
+        Cada adesão exige autorização do cliente. O preço fica fixo no contrato; novas ofertas não
+        alteram quem já aderiu. A Stripe processa o cartão e retém R$ 1 por pagamento para a
+        plataforma, além das taxas próprias. Não há cobrança quando o contrato é criado.
+      </p>
+      <p class="warning" *ngIf="!worker?.scheduled || !worker?.healthy">
+        {{
+          worker?.scheduled
+            ? 'A rotina automática ainda não confirmou uma execução saudável recente. Confira novamente em alguns minutos.'
+            : 'A rotina automática aguarda ativação da infraestrutura.'
+        }}
+      </p>
+      <div class="toolbar">
+        <button type="button" class="primary" (click)="editing = !editing; form = {}">
+          Nova adesão</button
+        ><a routerLink="/admin/fidelizacao">Gerenciar ofertas e saldos</a>
+      </div>
+      <form
+        *ngIf="editing"
+        class="editor"
+        (ngSubmit)="
+          act(
+            'club-create',
+            form,
+            'Link de adesão criado. Compartilhe com o cliente para ele autorizar e pagar.'
+          )
+        "
+      >
+        <h2>Gerar link de adesão</h2>
+        <div class="fields">
+          <label
+            >Cliente<select name="client" [(ngModel)]="form.cliente_id" required>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Oferta mensal<select name="bundle" [(ngModel)]="form.bundle_id" required>
+              <option *ngFor="let b of bundles" [value]="b.id">
+                {{ b.title }} · {{ b.price | currency: 'BRL' }} · {{ b.sessions }} sessões/mês
+              </option>
+            </select></label
+          >
+        </div>
+        <p class="hint" *ngIf="!bundles.length">
+          Crie uma oferta de clube em <a routerLink="/admin/fidelizacao">Pacotes e ofertas</a> antes
+          da adesão.
+        </p>
+        <p class="hint">
+          O cliente autoriza o débito mensal no próprio link. Sessões não acumulam entre ciclos.
+          Cancelar a renovação mantém o saldo do ciclo pago até o vencimento. Uma cobrança já
+          iniciada pode ser concluída.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy || !bundles.length">Gerar link</button
+          ><button type="button" (click)="editing = false">Voltar</button>
+        </div>
+      </form>
+      <p class="empty" *ngIf="!clubs.length">
+        Nenhuma adesão ainda. Crie um link e convide seu primeiro cliente.
+      </p>
+      <article class="record" *ngFor="let c of clubs">
+        <div>
+          <h2>{{ client(c.cliente_id) }}</h2>
+          <p>{{ c.title }} · {{ c.price | currency: 'BRL' }}/mês · {{ c.sessions }} sessões</p>
+          <p>
+            {{ label(c.status) }} ·
+            {{ c.renew_enabled ? 'Renovação autorizada' : 'Renovação desativada' }}
+          </p>
+          <p *ngIf="c.next_due">
+            Próximo vencimento: {{ c.next_due | date: 'dd/MM/yyyy' : '+0000' }}
+          </p>
+        </div>
+        <div class="actions">
+          <a [href]="clubLink(c)" target="_blank" rel="noopener">Abrir clube</a
+          ><button type="button" (click)="copy(clubLink(c))">Copiar link</button
+          ><button type="button" *ngIf="c.status !== 'cancelled'" (click)="cancelId = c.id">
+            Cancelar renovação
+          </button>
+        </div>
+        <div class="inline-confirm" *ngIf="cancelId === c.id">
+          <p>
+            Cancelar os próximos débitos deste cliente? O saldo já pago segue válido até vencer.
+          </p>
+          <div class="actions">
+            <button
+              type="button"
+              [disabled]="busy"
+              (click)="
+                act(
+                  'club-cancel',
+                  { id: c.id },
+                  'Renovação cancelada. O ciclo pago permanece disponível até vencer.'
+                )
+              "
+            >
+              Confirmar cancelamento</button
+            ><button type="button" (click)="cancelId = ''">Manter renovação</button>
+          </div>
+        </div>
+      </article>
+    </ng-container>
+    <ng-container *ngSwitchCase="'resultados'">
+      <div class="finance-outcome" *ngIf="report">
+        <span
+          >{{ resultIsPartial ? 'Resultado gerencial parcial' : 'Resultado gerencial' }} ·
+          {{ month }}</span
+        ><strong [class.negative]="resultAmount < 0">{{ resultAmount | currency: 'BRL' }}</strong>
+      </div>
+      <form class="toolbar" (ngSubmit)="load()">
+        <label>Competência<input type="month" name="month" [(ngModel)]="month" required /></label
+        ><label
+          >Saldo inicial informado para a projeção<input
+            type="number"
+            name="opening"
+            step="0.01"
+            [(ngModel)]="opening" /></label
+        ><button [disabled]="busy">Aplicar</button>
+      </form>
+      <nav class="tabs" aria-label="Visões financeiras">
+        <button type="button" [class.selected]="tab === 'dre'" (click)="tab = 'dre'">
+          Resultado</button
+        ><button type="button" [class.selected]="tab === 'projection'" (click)="tab = 'projection'">
+          Projeção</button
+        ><button
+          type="button"
+          [class.selected]="tab === 'reconciliation'"
+          (click)="tab = 'reconciliation'"
+        >
+          Conciliação Stripe
+        </button>
+      </nav>
+      <section *ngIf="tab === 'dre' && report">
+        <h2>DRE gerencial</h2>
+        <details>
+          <summary>Como este resultado é calculado</summary>
+          <p class="hint">
+            Vendas pela competência do atendimento; pacotes e clubes pelo consumo de sessões; demais
+            receitas e despesas pela competência dos títulos. Sinais e sessões não consumidas ficam
+            separados como adiantamentos. Não duplique vendas ou comissões em títulos manuais. Este
+            relatório não substitui a escrituração contábil.
+          </p>
+        </details>
+        <p class="warning" *ngIf="report.warnings.unclassified_titles">
+          {{ report.warnings.unclassified_titles }} título(s) sem classificação específica. Receitas
+          entram em outras receitas e despesas em despesas operacionais até você classificar.
+        </p>
+        <p
+          class="warning"
+          *ngIf="
+            report.warnings.pending_refunds ||
+            report.warnings.unknown_product_cost ||
+            report.warnings.unknown_supply_cost ||
+            report.warnings.unknown_stripe_fee ||
+            report.warnings.fee_refunds_pending ||
+            report.warnings.unreconciled_refunds
+          "
+        >
+          O resultado ainda tem informações a conferir:
+          {{ report.warnings.unknown_product_cost }} item(ns) sem custo histórico,
+          {{ report.warnings.unknown_supply_cost }} consumo(s) sem custo confirmado,
+          {{ report.warnings.unknown_stripe_fee }} cobrança(s) sem taxa Stripe e
+          {{ report.warnings.unreconciled_refunds }} reembolso(s) sem detalhamento e
+          {{ report.warnings.fee_refunds_pending }} devolução(ões) de taxa a conferir. Há
+          {{ report.warnings.pending_refunds }} reembolso(s) em processamento. Valores desconhecidos
+          não são estimados.
+        </p>
+        <dl class="statement">
+          <div *ngFor="let row of report.dre" [class.subtotal]="row.subtotal">
+            <dt>{{ row.label }}</dt>
+            <dd [class.negative]="row.amount < 0">{{ row.amount | currency: 'BRL' }}</dd>
+          </div>
+        </dl>
+        <div class="metrics">
+          <div>
+            <span>Sinais ainda não utilizados</span
+            ><strong>{{ report.advances | currency: 'BRL' }}</strong>
+          </div>
+          <div>
+            <span>Saldo de sessões não consumidas</span
+            ><strong>{{ report.unconsumed_packages | currency: 'BRL' }}</strong>
+          </div>
+        </div>
+        <details>
+          <summary>Classificar títulos e evitar duplicidades</summary>
+          <p class="hint">
+            Marque “Não incluir no DRE” se este título já estiver representado por uma venda,
+            comissão ou outro lançamento automático.
+          </p>
+          <article class="record" *ngFor="let r of titles">
+            <div>
+              <strong>{{ r.description }}</strong>
+              <p>
+                {{ r.amount | currency: 'BRL' }} · {{ r.competence | date: 'MM/yyyy' : '+0000' }}
+              </p>
+            </div>
+            <label
+              >Classificação<select [(ngModel)]="r.dre_section">
+                <option value="">Escolher</option>
+                <option *ngFor="let s of sectionsFor(r.kind)" [value]="s.value">
+                  {{ s.label }}
+                </option>
+              </select></label
+            ><label class="check"
+              ><input type="checkbox" [(ngModel)]="r.exclude_from_dre" />Não incluir no DRE</label
+            ><button
+              type="button"
+              [disabled]="busy || !r.dre_section"
+              (click)="
+                act(
+                  'title-classify',
+                  { id: r.id, section: r.dre_section, exclude: r.exclude_from_dre },
+                  'Classificação atualizada.'
+                )
+              "
+            >
+              Salvar classificação
+            </button>
+          </article>
+          <p *ngIf="!titles.length">Nenhum título nesta competência.</p>
+        </details>
+      </section>
+      <section *ngIf="tab === 'projection' && report">
+        <h2>Compromissos dos próximos 90 dias</h2>
+        <p class="hint">
+          Parte do saldo informado acima e dos títulos em aberto, incluindo atrasados. Recebimentos
+          futuros dependem da quitação. Não é o saldo consultado no banco e não inclui vendas ainda
+          não realizadas.
+        </p>
+        <div class="forecast" *ngFor="let p of report.projection">
+          <h3>{{ p.days }} dias</h3>
+          <dl class="statement">
+            <div>
+              <dt>A receber</dt>
+              <dd>{{ p.receivable | currency: 'BRL' }}</dd>
+            </div>
+            <div>
+              <dt>A pagar</dt>
+              <dd>{{ p.payable | currency: 'BRL' }}</dd>
+            </div>
+            <div class="subtotal">
+              <dt>Saldo projetado</dt>
+              <dd [class.negative]="p.balance < 0">{{ p.balance | currency: 'BRL' }}</dd>
+            </div>
+          </dl>
+        </div>
+        <a routerLink="/admin/financeiro">Gerenciar títulos e baixas →</a>
+      </section>
+      <section *ngIf="tab === 'reconciliation' && report">
+        <h2>Recebimentos e taxas</h2>
+        <p class="hint">
+          Dados da Stripe armazenados após confirmação e conciliação. O líquido é o saldo da
+          transação informado pela Stripe; não comprova depósito bancário. Taxas e reembolsos devem
+          ser conferidos antes de considerar o resultado final.
+        </p>
+        <dl class="statement">
+          <div>
+            <dt>Pagamentos confirmados no mês</dt>
+            <dd>{{ report.reconciliation.paid | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Taxas de processamento e plataforma conhecidas</dt>
+            <dd>{{ report.reconciliation.fees | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Líquido das transações originais</dt>
+            <dd>{{ report.reconciliation.net | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Pagamentos devolvidos no mês</dt>
+            <dd>{{ report.reconciliation.refunds | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Taxa de plataforma devolvida no mês</dt>
+            <dd>{{ report.reconciliation.fee_refunds | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Cobranças pendentes, todos os períodos</dt>
+            <dd>{{ report.reconciliation.pending | currency: 'BRL' }}</dd>
+          </div>
+          <div>
+            <dt>Divergências de status</dt>
+            <dd>{{ report.reconciliation.mismatches }}</dd>
+          </div>
+        </dl>
+        <button type="button" [disabled]="busy" (click)="reconcile()">
+          {{ busy ? 'Conferindo…' : 'Conferir próximo lote na Stripe' }}</button
+        ><a routerLink="/admin/recebimentos">Ver conta e repasses →</a>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'retencao'">
+      <p class="hint">
+        As regras começam desativadas. Quando ativadas, usam somente e-mail autorizado, retiram quem
+        revogou o contato e conferem a elegibilidade novamente antes do envio. Cada cliente recebe
+        no máximo um convite automático a cada sete dias. Aceitação pelo provedor não comprova
+        entrega.
+      </p>
+      <p class="message">
+        {{
+          worker?.scheduled
+            ? 'Rotina programada a cada cinco minutos.'
+            : 'Rotina automática aguarda a infraestrutura.'
+        }}
+        <span *ngIf="worker?.last_run_at"
+          >Última execução: {{ worker.last_run_at | date: 'dd/MM HH:mm' : '-0300' }}.</span
+        >
+      </p>
+      <p class="warning" *ngIf="worker?.scheduled && !worker?.healthy">
+        A última execução precisa ser conferida ou ainda não ocorreu.
+      </p>
+      <form class="rule" *ngFor="let r of rules" (ngSubmit)="saveRule(r)">
+        <h2>{{ label(r.kind) }}</h2>
+        <p class="hint">
+          {{
+            r.kind === 'renewal'
+              ? 'Convida quem tem pacote com saldo perto do vencimento. Clubes de renovação automática ficam fora desta regra.'
+              : 'Usa o último atendimento concluído e não envia se houver próximo horário marcado.'
+          }}
+        </p>
+        <label class="check"
+          ><input type="checkbox" [name]="'enabled' + r.kind" [(ngModel)]="r.enabled" />Ativar envio
+          automático por e-mail</label
+        >
+        <div class="fields">
+          <label
+            >{{
+              r.kind === 'renewal' ? 'Dias antes do vencimento' : 'Dias desde o último atendimento'
+            }}<input
+              type="number"
+              [name]="'days' + r.kind"
+              min="1"
+              max="365"
+              [(ngModel)]="r.days"
+              required /></label
+          ><label
+            >Assunto<input
+              [name]="'title' + r.kind"
+              maxlength="120"
+              minlength="2"
+              [(ngModel)]="r.title"
+              required
+          /></label>
+        </div>
+        <label
+          >Mensagem<textarea
+            [name]="'message' + r.kind"
+            rows="4"
+            minlength="5"
+            maxlength="2000"
+            [(ngModel)]="r.message"
+            required
+          ></textarea>
+        </label>
+        <p class="hint">
+          Use <code>{{ '{negocio}' }}</code> para o nome do estabelecimento e
+          <code>{{ '{link}' }}</code> para a página de agendamento.
+        </p>
+        <p *ngIf="ruleSummary[r.id] as s">
+          {{ s.total }} convites preparados · {{ s.pending }} pendentes · {{ s.sent }} aceitos pelo
+          provedor · {{ s.review }} em conferência
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar regra</button
+          ><span class="hint" *ngIf="r.last_scanned_at"
+            >Última verificação: {{ r.last_scanned_at | date: 'dd/MM HH:mm' : '-0300' }}</span
+          >
+        </div>
+      </form>
+    </ng-container>
+    <ng-container *ngSwitchCase="'unidades'">
+      <p class="hint">
+        Uma rede reúne unidades do mesmo proprietário. Cada unidade mantém clientes, equipe, caixa,
+        assinatura e conta Stripe próprios. O seletor no topo troca o contexto com as permissões
+        daquela unidade.
+      </p>
+      <form
+        *ngIf="!networks.length"
+        class="editor"
+        (ngSubmit)="act('network-create', form, 'Rede criada.')"
+      >
+        <h2>Criar minha rede</h2>
+        <label
+          >Nome da rede<input
+            name="networkName"
+            [(ngModel)]="form.name"
+            minlength="2"
+            maxlength="120"
+            required /></label
+        ><button class="primary" [disabled]="busy">Criar rede com esta unidade</button>
+      </form>
+      <ng-container *ngIf="networks.length"
+        ><label *ngIf="networks.length > 1"
+          >Rede<select [(ngModel)]="networkId" (ngModelChange)="load()">
+            <option *ngFor="let n of networks" [value]="n.id">{{ n.name }}</option>
+          </select></label
+        >
+        <div class="metrics">
+          <div>
+            <span>Cadastros de clientes nas unidades</span
+            ><strong>{{ networkTotals.clients }}</strong>
+          </div>
+          <div>
+            <span>Recebido no mês, após devoluções registradas</span
+            ><strong>{{ networkTotals.received | currency: 'BRL' }}</strong>
+          </div>
+          <div>
+            <span>Cobranças pendentes</span
+            ><strong>{{ networkTotals.pending | currency: 'BRL' }}</strong>
+          </div>
+        </div>
+        <p class="hint">
+          Um mesmo cliente cadastrado em duas unidades conta duas vezes. Recebimentos incluem sinais
+          e pacotes e representam caixa, não receita do DRE.
+        </p>
+        <article class="record" *ngFor="let u of units">
+          <div>
+            <h2>{{ u.name }}</h2>
+            <p>
+              {{ u.clients }} cadastros · {{ u.appointments }} atendimentos concluídos no mês ·
+              {{ u.clubs }} clubes ativos
+            </p>
+            <p>
+              {{ u.received | currency: 'BRL' }} recebidos no mês ·
+              {{ u.pending | currency: 'BRL' }} pendentes
+            </p>
+            <p class="warning" *ngIf="!u.active">
+              Unidade com acesso suspenso ou vencido. Regularize a assinatura ao abrir.
+            </p>
+          </div>
+          <button type="button" (click)="est.switchUnit(u.id)">Abrir unidade</button>
+        </article>
+        <details>
+          <summary>Adicionar unidade à rede</summary>
+          <form
+            class="editor"
+            (ngSubmit)="
+              act(
+                'network-unit-create',
+                { network_id: networkId, name: form.name, city: form.city, segment: form.segment },
+                'Unidade criada. Abra a unidade para cadastrar equipe, serviços e horários.'
+              )
+            "
+          >
+            <h3>Nova unidade</h3>
+            <div class="fields">
+              <label
+                >Nome<input
+                  name="name"
+                  [(ngModel)]="form.name"
+                  minlength="2"
+                  maxlength="120"
+                  required /></label
+              ><label>Cidade<input name="city" [(ngModel)]="form.city" maxlength="120" /></label
+              ><label
+                >Segmento<select name="segment" [(ngModel)]="form.segment">
+                  <option value="barbearia">Barbearia</option>
+                  <option value="beleza">Beleza e estética</option>
+                  <option value="petshop">Petshop</option>
+                </select></label
+              >
+            </div>
+            <p class="hint">
+              A nova unidade tem assinatura própria e usa as condições de teste vigentes. Nenhuma
+              cobrança é iniciada ao criá-la.
+            </p>
+            <button class="primary" [disabled]="busy">Criar unidade</button>
+          </form>
+          <form
+            *ngIf="availableUnits.length"
+            class="editor"
+            (ngSubmit)="
+              act(
+                'network-link',
+                { network_id: networkId, unit_id: form.existing_unit },
+                'Unidade vinculada.'
+              )
+            "
+          >
+            <h3>Vincular unidade já cadastrada</h3>
+            <label
+              >Unidade própria<select name="existing" [(ngModel)]="form.existing_unit" required>
+                <option *ngFor="let u of availableUnits" [value]="u.id">{{ u.nome }}</option>
+              </select></label
+            ><button [disabled]="busy">Vincular unidade</button>
+          </form>
+        </details>
+        <section>
+          <h2>Transferências de estoque</h2>
+          <p class="hint">
+            Confira se os dois produtos representam o mesmo item e a mesma unidade de medida. Ao
+            enviar, a quantidade sai da origem. Ao receber, entra no destino com o custo da
+            transferência.
+          </p>
+          <button type="button" (click)="editing = !editing; form = { quantity: 1 }">
+            Nova transferência
+          </button>
+          <form
+            class="editor"
+            *ngIf="editing"
+            (ngSubmit)="
+              act(
+                'transfer-send',
+                {
+                  network_id: networkId,
+                  source_product: form.source_product,
+                  target_unit: form.target_unit,
+                  target_product: form.target_product,
+                  quantity: form.quantity,
+                },
+                'Transferência enviada. Confirme o recebimento quando o produto chegar.'
+              )
+            "
+          >
+            <p>
+              Origem: <strong>{{ unit(tenant) }}</strong>
+            </p>
+            <div class="fields">
+              <label
+                >Produto de origem<select name="source" [(ngModel)]="form.source_product" required>
+                  <option *ngFor="let p of productsAt(tenant)" [value]="p.id">
+                    {{ p.nome }} · saldo {{ p.estoque }}
+                  </option>
+                </select></label
+              ><label
+                >Destino<select
+                  name="target"
+                  [(ngModel)]="form.target_unit"
+                  (ngModelChange)="form.target_product = ''"
+                  required
+                >
+                  <option
+                    *ngFor="let u of units"
+                    [value]="u.id"
+                    [disabled]="u.id === tenant || !u.active"
+                  >
+                    {{ u.name }}
+                  </option>
+                </select></label
+              ><label
+                >Produto equivalente no destino<select
+                  name="targetProduct"
+                  [(ngModel)]="form.target_product"
+                  required
+                >
+                  <option *ngFor="let p of productsAt(form.target_unit)" [value]="p.id">
+                    {{ p.nome }}
+                  </option>
+                </select></label
+              ><label
+                >Quantidade<input
+                  name="quantity"
+                  type="number"
+                  min="1"
+                  max="100000"
+                  step="1"
+                  [(ngModel)]="form.quantity"
+                  required
+              /></label>
+            </div>
+            <button class="primary" [disabled]="busy">Enviar transferência</button>
+          </form>
+          <p class="empty" *ngIf="!transfers.length">Nenhuma transferência nesta rede.</p>
+          <article class="record" *ngFor="let tr of transfers">
+            <div>
+              <strong>{{ unit(tr.source_unit) }} → {{ unit(tr.target_unit) }}</strong>
+              <p>
+                {{ product(tr.source_product) }} · {{ tr.quantity }} unidade(s) ·
+                {{ label(tr.status) }}
+              </p>
+              <small>{{ tr.created_at | date: 'dd/MM/yyyy HH:mm' : '-0300' }}</small>
+            </div>
+            <div class="actions" *ngIf="tr.status === 'in_transit'">
+              <button
+                type="button"
+                [disabled]="busy"
+                (click)="
+                  act('transfer-receive', { id: tr.id }, 'Recebimento confirmado.', tr.target_unit)
+                "
+              >
+                Confirmar recebimento</button
+              ><button
+                type="button"
+                [disabled]="busy"
+                (click)="
+                  act(
+                    'transfer-cancel',
+                    { id: tr.id },
+                    'Transferência cancelada. Saldo devolvido à origem.',
+                    tr.source_unit
+                  )
+                "
+              >
+                Cancelar transferência
+              </button>
+            </div>
+          </article>
+          <p class="hint">Últimas 100 transferências desta rede.</p>
+        </section>
+        <details>
+          <summary>Permissões da equipe nesta unidade</summary>
+          <form
+            class="editor"
+            (ngSubmit)="
+              act(
+                'unit-role',
+                {
+                  network_id: networkId,
+                  professional_id: form.professional_id,
+                  role: form.role,
+                  active: !!form.active,
+                },
+                'Permissão desta unidade atualizada.'
+              )
+            "
+          >
+            <p class="hint">
+              O acesso pertence à unidade atual. O colaborador precisa entrar com seu usuário
+              vinculado ao cadastro profissional. O proprietário mantém seu acesso.
+            </p>
+            <div class="fields">
+              <label
+                >Colaborador<select
+                  name="professional"
+                  [(ngModel)]="form.professional_id"
+                  (ngModelChange)="selectProfessional($event)"
+                  required
+                >
+                  <option *ngFor="let p of professionals" [value]="p.id">{{ p.nome }}</option>
+                </select></label
+              ><label
+                >Permissão<select name="role" [(ngModel)]="form.role" required>
+                  <option value="barbeiro">Atendimentos (sem caixa)</option>
+                  <option value="recepcionista">Recepção, clientes e caixa</option>
+                  <option value="financeiro">Financeiro e caixa</option>
+                </select></label
+              >
+            </div>
+            <label class="check"
+              ><input name="active" type="checkbox" [(ngModel)]="form.active" />Acesso ativo nesta
+              unidade</label
+            ><button [disabled]="busy">Salvar permissão</button>
+          </form>
+        </details>
+        <details *ngIf="audit.length">
+          <summary>Últimas alterações da rede</summary>
+          <p *ngFor="let a of audit">
+            {{ a.created_at | date: 'dd/MM HH:mm' : '-0300' }} · {{ label(a.action) }}
+          </p>
+        </details>
+      </ng-container>
+    </ng-container>
+  </ng-container>
+</main>

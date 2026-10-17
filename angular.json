@@ -29,7 +29,8 @@
               "src/styles.css",
               "src/styles/themes/light.css",
               "src/styles/themes/dark.css",
-              "src/styles/themes/glass.css"
+              "src/styles/themes/glass.css",
+              "src/styles/customer-workspace.css"
             ]
           },
           "configurations": {

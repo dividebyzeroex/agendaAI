@@ -37,24 +37,7 @@ export class QueryEngineService {
     }
 
     if (text.includes('lucro') || text.includes('faturamento') || text.includes('dinheiro') || text.includes('receita')) {
-      // Calculate real revenue from event values if present, else use an approximate baseline
-      let total = events.reduce((acc, e) => acc + (e.valor_total || 0), 0);
-      
-      // If no values recorded (maybe old architecture), fallback to a more realistic estimate than flat 120
-      if (total === 0) total = count * 85; 
-
-      const pix = Math.round(total * 0.6);
-      const card = Math.round(total * 0.3);
-      const cash = Math.round(total * 0.1);
-
-      return {
-        message: `Faturamento real acumulado: R$ ${total.toLocaleString('pt-BR')},00. Distribuição estimada por meio de pagamento baseada no perfil do negócio.`,
-        type: 'pie',
-        data: {
-          labels: ['Pix', 'Cartão', 'Dinheiro'],
-          datasets: [{ data: [pix, card, cash], backgroundColor: ['#10b981', '#4f46e5', '#f43f5e'] }]
-        }
-      };
+      return { message: 'Consulte os recebimentos registrados no Caixa. Agendamentos não comprovam faturamento ou lucro.', type:'text' };
     }
 
     if (text.includes('faltas') || text.includes('no-show') || text.includes('cancelamentos')) {

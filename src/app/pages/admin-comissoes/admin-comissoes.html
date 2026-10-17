@@ -1,0 +1,98 @@
+<div class="ag-page">
+  <div class="page-header">
+    <div>
+      <h2>Dashboard de <span class="gradient-text">Comissões</span></h2>
+      <p>Gerencie pagamentos e comissões por serviço da sua equipe.</p>
+    </div>
+  </div>
+
+  <div class="elite-loader-container" *ngIf="isLoading">
+    <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
+    <div class="loader-text">Calculando finanças...</div>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
+    <!-- Métricas Bento Grid -->
+    <div class="metrics-grid">
+      <div class="metric-card bento-card">
+        <div class="m-icon" style="color: #ef4444; background: rgba(239,68,68,0.1);"><i class="pi pi-wallet"></i></div>
+        <div class="m-content">
+          <label>Pendente de Pagamento</label>
+          <h3>R$ {{ totalAberto | number:'1.2-2' }}</h3>
+        </div>
+      </div>
+      <div class="metric-card bento-card">
+        <div class="m-icon" style="color: #10b981; background: rgba(16,185,129,0.1);"><i class="pi pi-check-circle"></i></div>
+        <div class="m-content">
+          <label>Total Já Pago</label>
+          <h3>R$ {{ totalPago | number:'1.2-2' }}</h3>
+        </div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-bar bento-card">
+      <div class="f-group">
+        <i class="pi pi-search"></i>
+        <input type="text" [(ngModel)]="filtroProfissional" class="glass-input" placeholder="Buscar profissional..." />
+      </div>
+      <div class="f-group">
+        <i class="pi pi-filter"></i>
+        <select [(ngModel)]="filtroStatus" class="glass-input">
+          <option value="todos">Todos os Status</option>
+          <option value="pendente">Pendentes</option>
+          <option value="pago">Pagos</option>
+          <option value="estornado">Estornados</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Tabela -->
+    <div class="table-container bento-card">
+      <table class="ag-table">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Profissional</th>
+            <th>Serviço</th>
+            <th>Valor Serviço</th>
+            <th>Regra</th>
+            <th>Comissão</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let c of comissoesFiltradas">
+            <td>{{ c.data_evento | date:'dd/MM HH:mm' }}</td>
+            <td class="bold">{{ c.profissional_nome }}</td>
+            <td>{{ c.servico_nome }}</td>
+            <td>R$ {{ c.valor_servico | number:'1.2-2' }}</td>
+            <td>
+              <span class="badge gray">
+                {{ c.tipo_comissao === 'percentual' ? (c.taxa_aplicada + '%') : ('R$ ' + c.taxa_aplicada) }}
+              </span>
+            </td>
+            <td class="bold color-primary">R$ {{ c.valor_comissao | number:'1.2-2' }}</td>
+            <td>
+              <span class="status-pill" [attr.data-status]="c.status">{{ c.status | uppercase }}</span>
+            </td>
+            <td class="actions-cell">
+              <button class="btn-action success" *ngIf="c.status === 'pendente'" (click)="pagarComissao(c)" title="Marcar como Pago">
+                <i class="pi pi-check"></i>
+              </button>
+              <button class="btn-action danger" *ngIf="c.status !== 'estornado'" (click)="estornarComissao(c)" title="Estornar">
+                <i class="pi pi-undo"></i>
+              </button>
+            </td>
+          </tr>
+          <tr *ngIf="comissoesFiltradas.length === 0">
+            <td colspan="8" class="empty-state">
+              Nenhuma comissão encontrada para este filtro.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</div>

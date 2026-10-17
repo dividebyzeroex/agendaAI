@@ -1,18 +1,22 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute,RouterLink } from '@angular/router';
 import { EstabelecimentoService, Servico, Horario, Estabelecimento } from '../../services/estabelecimento.service';
-import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { SegmentoConfigService } from '../../services/segmento-config.service';
 
 @Component({
   selector: 'app-admin-configuracoes',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,RouterLink],
   templateUrl: './admin-configuracoes.html',
   styleUrls: ['./admin-configuracoes.css']
 })
 export class AdminConfiguracoes implements OnInit {
+  private cdr = inject(ChangeDetectorRef);
+  private destroyRef = inject(DestroyRef);
+  private route = inject(ActivatedRoute);
   public isLoadingService = inject(EstabelecimentoService);
   private estabelecimentoService = inject(EstabelecimentoService);
   segmentoConfig = inject(SegmentoConfigService);
@@ -21,7 +25,7 @@ export class AdminConfiguracoes implements OnInit {
   servicos: Servico[] = [];
   horarios: Horario[] = [];
 
-  activeTab: 'negocio' | 'servicos' | 'horarios' = 'negocio';
+  activeTab: 'negocio' | 'servicos' | 'horarios' | 'fidelidade' = 'negocio';
   isSaving = false;
   savedMsg = '';
 
@@ -30,12 +34,19 @@ export class AdminConfiguracoes implements OnInit {
   showNovoServico = false;
 
   ngOnInit() {
-    this.estabelecimentoService.estabelecimento$.subscribe(e => { 
-      if (e) this.estabelecimento = { ...e }; 
+    this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params=>{const tab=params.get('tab');if(tab==='servicos'||tab==='horarios'||tab==='negocio'||tab==='fidelidade')this.activeTab=tab;this.cdr.markForCheck();});
+    this.estabelecimentoService.estabelecimento$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(e => {
+      if (e) {
+        this.estabelecimento = { ...e };
+        if (!this.estabelecimento.config_fidelidade) {
+          this.estabelecimento.config_fidelidade = { ativo: false, visitas_meta: 10, desconto_percentual: 15 };
+        }
+      }
       this.novoServico.emoji = this.segmentoConfig.current.emojiPadrao;
+      this.cdr.markForCheck();
     });
-    this.estabelecimentoService.servicos$.subscribe(s => (this.servicos = [...s]));
-    this.estabelecimentoService.horarios$.subscribe(h => (this.horarios = [...h]));
+    this.estabelecimentoService.servicos$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(s => { this.servicos = [...s]; this.cdr.markForCheck(); });
+    this.estabelecimentoService.horarios$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(h => { this.horarios = [...h]; this.cdr.markForCheck(); });
   }
 
   setTab(t: typeof this.activeTab) { this.activeTab = t; }
@@ -43,8 +54,8 @@ export class AdminConfiguracoes implements OnInit {
   /** URL pública do portal de agendamento deste estabelecimento */
   get publicLink(): string {
     if (!this.estabelecimento?.nome) return '';
-    const slug = EstabelecimentoPublicoService.slugify(this.estabelecimento.nome);
-    return `${window.location.origin}/agendar/${slug}`;
+    const slug = this.estabelecimento.slug;
+    return slug ? `${window.location.origin}/agendar/${encodeURIComponent(slug)}` : '';
   }
 
   linkCopiado = false;
@@ -58,8 +69,7 @@ export class AdminConfiguracoes implements OnInit {
   /** URL do portal do profissional (para compartilhar com a equipe) */
   get proLink(): string {
     if (!this.estabelecimento?.nome) return '';
-    const slug = EstabelecimentoPublicoService.slugify(this.estabelecimento.nome);
-    return `${window.location.origin}/pro/${slug}`;
+    return `${window.location.origin}/login`;
   }
 
   proLinkCopiado = false;
@@ -79,6 +89,7 @@ export class AdminConfiguracoes implements OnInit {
       this.showSuccessMsg('Erro ao salvar: ' + e.message);
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 

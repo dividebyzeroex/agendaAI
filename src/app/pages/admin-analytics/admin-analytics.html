@@ -1,108 +1,157 @@
-<div class="ag-page">
-  <div class="bento-header">
+<div class="ag-page report-page">
+  <header class="report-header">
     <div>
-      <h2>Analytics <span class="gradient-text">com IA</span></h2>
-      <p>Acompanhe o desempenho do seu negócio em tempo real.</p>
+      <h1>Seu negócio em números</h1>
+      <p>Entenda o movimento e decida onde agir.</p>
     </div>
-    <div class="ai-badge">
-      <i class="pi pi-sparkles"></i> Inteligência Operacional
-    </div>
-  </div>
-
-  <!-- KPI Cards -->
-  <div class="stats-row" *ngIf="!isLoadingStats">
-    <div class="stat-card">
-      <div class="stat-icon cli"><i class="pi pi-users"></i></div>
-      <div class="stat-content">
-        <span class="stat-label">Total de Clientes</span>
-        <h3 class="stat-value">{{ stats.clientesTotal }}</h3>
-        <span class="stat-hint">na base de dados</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon fat"><i class="pi pi-money-bill"></i></div>
-      <div class="stat-content">
-        <span class="stat-label">Faturamento Mensal</span>
-        <h3 class="stat-value">R$ {{ stats.faturamentoMes | number:'1.0-0' }}</h3>
-        <span class="stat-hint">consolidado</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon tic"><i class="pi pi-chart-line"></i></div>
-      <div class="stat-content">
-        <span class="stat-label">Ticket Médio</span>
-        <h3 class="stat-value">R$ {{ stats.ticketMedio | number:'1.0-0' }}</h3>
-        <span class="stat-hint">por atendimento</span>
-      </div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-icon res"><i class="pi pi-calendar-check"></i></div>
-      <div class="stat-content">
-        <span class="stat-label">Agendamentos do Dia</span>
-        <h3 class="stat-value">{{ stats.agendamentosHoje }}</h3>
-        <span class="stat-hint">para hoje</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Elite Loader -->
-  <div class="elite-loader-container" *ngIf="isLoadingStats" style="min-height: 200px; background: var(--active-bg); border-radius: 20px; border: 1px solid var(--glass-border);">
-    <div class="elite-scissor-wrap"></div>
-    <div class="loader-text">Analisando métricas com IA...</div>
-  </div>
-
-  <!-- Query Box -->
-  <div class="query-card">
-    <div class="query-box" [class.active]="userInput.length > 0">
-      <i class="pi pi-search"></i>
-      <input
-        type="text"
-        [(ngModel)]="userInput"
-        (keyup.enter)="ask()"
-        placeholder='Tente: "Qual meu faturamento?" ou "Quantos agendamentos tenho?"'
-      />
-      <button class="query-btn" [class.ready]="userInput.trim()" [disabled]="!userInput.trim() || isQuerying" (click)="ask()">
-        <i class="pi pi-sparkles" *ngIf="!isQuerying"></i>
-        <i class="pi pi-spin pi-spinner" *ngIf="isQuerying"></i>
+    <div class="controls">
+      <label for="report-period">Período</label
+      ><select id="report-period" [(ngModel)]="days" (ngModelChange)="load()">
+        <option [ngValue]="30">Últimos 30 dias</option>
+        <option [ngValue]="90">Últimos 90 dias</option></select
+      ><button type="button" (click)="load()" [disabled]="loading">Atualizar</button
+      ><button type="button" (click)="export()" [disabled]="loading || !summary">
+        Exportar CSV
       </button>
     </div>
-
-    <div class="suggestions">
-      Tente perguntar:
-      <button class="chip" (click)="userInput='Quantos agendamentos tenho?'; ask()">Quantos agendamentos?</button>
-      <button class="chip" (click)="userInput='Qual meu faturamento?'; ask()">Faturamento</button>
-      <button class="chip" (click)="userInput='Quantas faltas registradas?'; ask()">Faltas / No-shows</button>
+  </header>
+  <p *ngIf="loading" role="status">Conferindo agenda e recebimentos…</p>
+  <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+  <ng-container *ngIf="summary as s">
+    <p class="period">
+      {{ periodStart | date: 'dd/MM/yyyy' : '-0300' }} a
+      {{ periodEnd | date: 'dd/MM/yyyy HH:mm' : '-0300' }} · Horário de São Paulo
+    </p>
+    <div class="metrics" *ngIf="financial as f">
+      <div>
+        <span>Recebido no período</span><strong>{{ f.total | currency: 'BRL' }}</strong
+        ><small>{{ f.count }} vendas pagas</small>
+      </div>
+      <div>
+        <span>Ticket médio</span><strong>{{ f.ticket | currency: 'BRL' }}</strong
+        ><small>por venda paga</small>
+      </div>
+      <div>
+        <span>Clientes atendidos</span><strong>{{ s.clientsServed }}</strong
+        ><small>{{ clients }} clientes na base atual</small>
+      </div>
+      <div>
+        <span>Atendimentos concluídos</span><strong>{{ s.completed }}</strong
+        ><small>{{ s.scheduled }} agendamentos sem cancelados</small>
+      </div>
     </div>
-  </div>
-
-  <!-- Result Area -->
-  <div class="result-card" *ngIf="lastResult" [@fadeIn]>
-    <div class="ai-response">
-      <div class="ai-icon"><i class="pi pi-sparkles"></i></div>
-      <p>{{ lastResult.message }}</p>
-    </div>
-
-    <!-- Bar Chart -->
-    <div class="chart-section" *ngIf="lastResult.type === 'bar'">
-      <div class="bar-row" *ngFor="let lbl of lastResult.data?.labels; let i = index">
-        <span class="bar-label">{{ lbl }}</span>
-        <div class="bar-track">
-          <div class="bar-fill"
-            [style.background]="lastResult.data?.datasets[0].backgroundColor[i]"
-            [style.width]="(lastResult.data?.datasets[0].data[i] / 10 * 100) + '%'">
-          </div>
+    <p class="method">
+      Recebimentos pela data do pagamento, descontados reembolsos online conhecidos. Valores antes
+      de tarifas e custos; não representam lucro nem saldo bancário.
+    </p>
+    <section aria-labelledby="heat-title">
+      <h2 id="heat-title">Quando seu negócio tem mais movimento?</h2>
+      <p>
+        Quantidade de agendamentos por dia e hora de início. Use os horários de maior movimento para
+        planejar a equipe.
+      </p>
+      <p *ngIf="!s.heat.length">
+        Ainda não há agendamentos com presença prevista ou realizada neste período.
+      </p>
+      <div
+        class="heat-scroll"
+        *ngIf="s.heat.length"
+        tabindex="0"
+        aria-label="Mapa de movimento, role para visualizar todas as colunas"
+      >
+        <table class="heat">
+          <caption>
+            Agendamentos por hora de início, sem cancelados e faltas
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Hora</th>
+              <th scope="col" *ngFor="let day of dayLabels">{{ day }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of s.heat">
+              <th scope="row">{{ row.hour }}h</th>
+              <td
+                *ngFor="let count of row.counts; let d = index"
+                [attr.data-level]="level(count)"
+                [attr.title]="dayLabels[d] + ' às ' + row.hour + 'h: ' + count + ' agendamentos'"
+              >
+                {{ count }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="method">
+        Volume acumulado no período, sem horários futuros. Células vazias não comprovam
+        disponibilidade: não comparam jornada, folgas ou duração dos serviços. Tons mais escuros
+        indicam maior volume.
+      </p>
+    </section>
+    <section aria-labelledby="return-title">
+      <h2 id="return-title">Retorno e comparecimento</h2>
+      <div class="metrics compact">
+        <div>
+          <span>Voltaram no período</span><strong>{{ s.returnRate | number: '1.0-1' }}%</strong
+          ><small
+            >{{ s.returning }} de {{ s.clientsServed }} clientes com 2 ou mais visitas
+            concluídas</small
+          >
         </div>
-        <span class="bar-val">{{ lastResult.data?.datasets[0].data[i] }}</span>
+        <div>
+          <span>Faltas registradas</span><strong>{{ s.noShowRate | number: '1.0-1' }}%</strong
+          ><small
+            >{{ s.noShows }} faltas / {{ s.completed + s.noShows }} concluídos ou faltas</small
+          >
+        </div>
+        <div>
+          <span>Cancelamentos</span><strong>{{ s.cancelled }}</strong
+          ><small>pela data prevista do atendimento</small>
+        </div>
       </div>
-    </div>
-
-    <!-- Pie Legend -->
-    <div class="pie-section" *ngIf="lastResult.type === 'pie'">
-      <div class="pie-item" *ngFor="let lbl of lastResult.data?.labels; let i = index">
-        <div class="pie-dot" [style.background]="lastResult.data?.datasets[0].backgroundColor[i]"></div>
-        <span>{{ lbl }}</span>
-        <strong>R$ {{ lastResult.data?.datasets[0].data[i] | number }}</strong>
+      <p class="method">
+        Retorno considera somente visitas concluídas com cliente identificado. Não é taxa de
+        retenção de toda a base. Status ainda não atualizados ficam fora do cálculo de faltas.
+      </p>
+    </section>
+    <section aria-labelledby="team-title">
+      <h2 id="team-title">Desempenho da equipe</h2>
+      <p *ngIf="!s.professionals.length">Os resultados aparecem após registrar os atendimentos.</p>
+      <div
+        class="table-scroll"
+        *ngIf="s.professionals.length"
+        tabindex="0"
+        aria-label="Desempenho por profissional"
+      >
+        <table>
+          <caption>
+            Atendimentos no período selecionado
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col">Profissional</th>
+              <th scope="col">Agendados*</th>
+              <th scope="col">Concluídos</th>
+              <th scope="col">Faltas</th>
+              <th scope="col">Cancelados</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let p of s.professionals">
+              <th scope="row">{{ p.name }}</th>
+              <td>{{ p.scheduled }}</td>
+              <td>{{ p.completed }}</td>
+              <td>{{ p.noShows }}</td>
+              <td>{{ p.cancelled }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </div>
-  </div>
+      <p class="method">
+        * Agendados exclui cancelamentos. Serviços concluídos não comprovam recebimento. Compare
+        também jornada e tipos de serviço antes de avaliar produtividade.
+      </p>
+    </section>
+  </ng-container>
 </div>

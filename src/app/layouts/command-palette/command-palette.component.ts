@@ -2,7 +2,8 @@ import { Component, HostListener, inject, ElementRef, ViewChild, AfterViewInit }
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { AgendaEventService } from '../../services/agenda-event.service';
+import { AuthService } from '../../services/auth.service';
+import { EstabelecimentoService } from '../../services/estabelecimento.service';
 
 interface CommandItem {
   icon: string;
@@ -20,13 +21,13 @@ interface CommandItem {
       <div class="palette-container" (click)="$event.stopPropagation()">
         <div class="palette-header">
           <i class="pi pi-search search-icon"></i>
-          <input 
+          <input
             #searchInput
-            type="text" 
-            [(ngModel)]="searchQuery" 
+            type="text"
+            [(ngModel)]="searchQuery"
             (ngModelChange)="filterCommands()"
             (keydown)="handleKeydown($event)"
-            placeholder="Type a command or search... (e.g. 'agenda')" 
+            placeholder="Buscar uma função, como agenda ou clientes"
             class="search-input"
           />
           <div class="esc-hint">esc</div>
@@ -34,8 +35,8 @@ interface CommandItem {
         <div class="palette-body">
           <ng-container *ngFor="let category of filteredCategories">
             <div class="category-name">{{ category }}</div>
-            <div 
-              class="command-item" 
+            <div
+              class="command-item"
               *ngFor="let cmd of groupedCommands[category]; let i = index"
               [class.active]="isSelected(cmd)"
               (click)="executeCommand(cmd)"
@@ -46,12 +47,12 @@ interface CommandItem {
             </div>
           </ng-container>
           <div class="no-results" *ngIf="flatFilteredCommands.length === 0">
-            No commands found for "{{searchQuery}}"
+            Nenhuma função encontrada para "{{searchQuery}}"
           </div>
         </div>
         <div class="palette-footer">
-          <span class="footer-hint"><i class="pi pi-arrow-up"></i><i class="pi pi-arrow-down"></i> to navigate</span>
-          <span class="footer-hint"><i class="pi pi-check"></i> enter to select</span>
+          <span class="footer-hint"><i class="pi pi-arrow-up"></i><i class="pi pi-arrow-down"></i> para navegar</span>
+          <span class="footer-hint"><i class="pi pi-check"></i> Enter para abrir</span>
         </div>
       </div>
     </div>
@@ -108,46 +109,44 @@ interface CommandItem {
     }
     .footer-hint { font-size: 0.75rem; color: #64748b; display: flex; align-items: center; gap: 4px; }
     .footer-hint i { font-size: 0.7rem; }
-    
+
     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     @keyframes slideDown { from { opacity: 0; transform: translateY(-15px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
   `]
 })
 export class CommandPaletteComponent implements AfterViewInit {
   @ViewChild('searchInput') searchInput!: ElementRef;
-  
+
   isOpen = false;
   searchQuery = '';
   selectedIndex = 0;
-  
+
   router = inject(Router);
-  agendaService = inject(AgendaEventService);
+  private auth=inject(AuthService);private est=inject(EstabelecimentoService);
 
   commands: CommandItem[] = [
     // ─── NAVEGAÇÃO ───────────────────────────────────────────────────────────
-    { name: 'Ir para Dashboard', icon: 'pi-home', category: 'Navegação', action: () => this.goto('/admin') },
+    { name: 'Hoje', icon: 'pi-home', category: 'Navegação', action: () => this.goto('/admin') },
     { name: 'Ir para Minha Agenda', icon: 'pi-calendar', category: 'Navegação', action: () => this.goto('/admin/agenda') },
     { name: 'Ir para Gestão de Clientes', icon: 'pi-users', category: 'Navegação', action: () => this.goto('/admin/clientes') },
     { name: 'Ir para Equipe / Profissionais', icon: 'pi-user-edit', category: 'Navegação', action: () => this.goto('/admin/profissionais') },
-    { name: 'Ir para Analytics / Inteligência AI', icon: 'pi-chart-bar', category: 'Navegação', action: () => this.goto('/admin/analytics') },
-    { name: 'Ir para Financeiro / Faturamento', icon: 'pi-wallet', category: 'Navegação', action: () => this.goto('/admin/billing') },
+    { name: 'Ir para Relatórios', icon: 'pi-chart-bar', category: 'Navegação', action: () => this.goto('/admin/analytics') },
+    { name: 'Recebimentos online / Stripe', icon: 'pi-credit-card', category: 'Navegação', action: () => this.goto('/admin/recebimentos') },
+    { name: 'Plano e assinatura AgendaAI', icon: 'pi-wallet', category: 'Navegação', action: () => this.goto('/admin/billing') },
     { name: 'Ir para Configurações', icon: 'pi-cog', category: 'Navegação', action: () => this.goto('/admin/configuracoes') },
-    
+
     // ─── AÇÕES RÁPIDAS ───────────────────────────────────────────────────────
     { name: 'Novo Agendamento Rápido', icon: 'pi-plus-circle', category: 'Ações Rápidas', action: () => this.createQuickEvent() },
-    { name: 'Cadastrar Novo Cliente', icon: 'pi-user-plus', category: 'Ações Rápidas', action: () => this.goto('/admin/clientes') },
+    { name: 'Cadastrar Novo Cliente', icon: 'pi-user-plus', category: 'Ações Rápidas', action: () => this.goto('/admin/clientes/novo') },
     { name: 'Cadastrar Novo Profissional', icon: 'pi-id-card', category: 'Ações Rápidas', action: () => this.goto('/admin/profissionais') },
-    
+
     // ─── SISTEMA ─────────────────────────────────────────────────────────────
-    { name: 'Visualizar Página Pública (Agendamento)', icon: 'pi-external-link', category: 'Sistema', action: () => this.goto('/') },
-    { name: 'Atendimento e Suporte', icon: 'pi-question-circle', category: 'Sistema', action: () => alert('Suporte AgendaAi: contato@agenda.ai') },
+    { name: 'Visualizar Página Pública (Agendamento)', icon: 'pi-external-link', category: 'Sistema', action: () => {const slug=this.est.estabelecimento$.value?.slug;if(slug)this.goto('/agendar/'+slug);} },
+    { name: 'Atendimento e Suporte', icon: 'pi-question-circle', category: 'Sistema', action: () => {this.close();document.querySelector<HTMLButtonElement>('app-support-widget button')?.click();} },
     { name: 'Sair / Logout', icon: 'pi-sign-out', category: 'Sistema', action: () => this.logout() }
   ];
 
-  logout() {
-    localStorage.removeItem('ag-mock-user');
-    this.goto('/login');
-  }
+  logout(){this.close();void this.auth.logout();}
 
   flatFilteredCommands: CommandItem[] = [];
   groupedCommands: Record<string, CommandItem[]> = {};
@@ -193,32 +192,14 @@ export class CommandPaletteComponent implements AfterViewInit {
     this.close();
   }
 
-  createQuickEvent() {
-    this.close();
-    setTimeout(() => {
-      const title = prompt('Command: Novo Agendamento. Qual o nome/serviço?');
-      if (title) {
-        const now = new Date();
-        const start = now.toISOString().split('.')[0];
-        const end = new Date(now.getTime() + 60 * 60 * 1000).toISOString().split('.')[0];
-        
-        this.agendaService.addEvent({
-          title: '[Rápido] ' + title,
-          start: start,
-          end: end,
-          backgroundColor: '#8b5cf6'
-        });
-        this.goto('/admin/agenda');
-      }
-    }, 100);
-  }
+  createQuickEvent(){this.goto('/admin/agenda/novo');}
 
   filterCommands() {
     const q = this.searchQuery.toLowerCase();
-    this.flatFilteredCommands = this.commands.filter(c => 
+    this.flatFilteredCommands = this.commands.filter(c =>
       c.name.toLowerCase().includes(q) || c.category.toLowerCase().includes(q)
     );
-    
+
     this.groupedCommands = {};
     for (const cmd of this.flatFilteredCommands) {
       if (!this.groupedCommands[cmd.category]) {
@@ -227,7 +208,7 @@ export class CommandPaletteComponent implements AfterViewInit {
       this.groupedCommands[cmd.category].push(cmd);
     }
     this.filteredCategories = Object.keys(this.groupedCommands);
-    
+
     this.selectedIndex = 0; // reset selection
   }
 
@@ -241,7 +222,7 @@ export class CommandPaletteComponent implements AfterViewInit {
 
   handleKeydown(event: KeyboardEvent) {
     if (!this.isOpen) return;
-    
+
     const max = this.flatFilteredCommands.length - 1;
     if (max < 0) return;
 
@@ -263,7 +244,7 @@ export class CommandPaletteComponent implements AfterViewInit {
   }
 
   scrollToSelected() {
-    // Basic DOM scroll manipulation can be done, but for simplicity we skip it 
+    // Basic DOM scroll manipulation can be done, but for simplicity we skip it
     // unless the list grows extremely long.
     const activeEl = document.querySelector('.command-item.active');
     if (activeEl) {

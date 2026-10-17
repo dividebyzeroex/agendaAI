@@ -1,4 +1,6 @@
-import { Injectable } from '@angular/core';
+import { SupabaseService } from './supabase.service';
+import { EstabelecimentoService } from './estabelecimento.service';
+import { Injectable, inject } from '@angular/core';
 
 export interface SmsPayload {
   to: string;         // telefone do destinatário
@@ -17,19 +19,23 @@ export interface SmsResult {
 
 @Injectable({ providedIn: 'root' })
 export class SmsService {
+  private supabase = inject(SupabaseService).client;
+  private estabelecimento = inject(EstabelecimentoService);
 
   private readonly endpoint = '/api/sms/send';
 
   /**
    * Envia um SMS via Vercel Serverless → Twilio.
-   * Em desenvolvimento sem credenciais, retorna sucesso simulado.
+   * Exige sessão autenticada e provedor configurado.
    */
   async send(payload: SmsPayload): Promise<SmsResult> {
     try {
+      const { data: { session } } = await this.supabase.auth.getSession();
+      if (!session) throw new Error('Sessão necessária.');
       const resp = await fetch(this.endpoint, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ ...payload, estabelecimento_id: this.estabelecimento.estabelecimento$.value?.id }),
       });
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Erro desconhecido');

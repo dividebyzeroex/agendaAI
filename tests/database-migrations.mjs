@@ -1,0 +1,490 @@
+import { btree_gist } from '@electric-sql/pglite/contrib/btree_gist';
+import { PGlite } from '@electric-sql/pglite';
+import { readFile,readdir } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+process.on('uncaughtException',e=>{console.error('DB VALIDATION FAILED:',e.stack);process.exit(1)});
+const snapshot=JSON.parse(await readFile(new URL('./schema-fixture.json',import.meta.url),'utf8'));
+const db=new PGlite({extensions:{btree_gist}});
+const qid=x=>'"'+x.replaceAll('"','""')+'"';
+await db.exec(`create role anon; create role authenticated; create role service_role bypassrls; create role supabase_admin superuser;
+create schema auth; create schema extensions; create schema vault;
+create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,phone text,phone_confirmed_at timestamptz,raw_user_meta_data jsonb default '{}',created_at timestamptz default now(),last_sign_in_at timestamptz,banned_until timestamptz);
+create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+create function auth.email() returns text language sql stable as $$select nullif(current_setting('request.jwt.claim.email',true),'')$$;
+create function auth.role() returns text language sql stable as $$select current_user::text$$;
+create function auth.jwt() returns jsonb language sql stable as $$select jsonb_build_object('sub',auth.uid(),'email',auth.email())$$;
+grant usage on schema auth to anon,authenticated,service_role;
+create function public.uuid_generate_v4() returns uuid language sql as $$select gen_random_uuid()$$;
+create table vault.decrypted_secrets(name text,decrypted_secret text);`);
+const enums=new Map();for(const e of snapshot.enums||[]){if(!enums.has(e.name))enums.set(e.name,[]);enums.get(e.name).push(e.value);}
+for(const [name,values]of enums)await db.exec(`create type ${qid(name)} as enum (${values.map(v=>"'"+v.replaceAll("'","''")+"'").join(',')})`);
+const tables=new Map();for(const c of snapshot.columns){if(!tables.has(c.table))tables.set(c.table,[]);tables.get(c.table).push(c);}
+for(const [name,cols]of tables){await db.exec(`create table public.${qid(name)} (${cols.map(c=>`${qid(c.name)} ${c.type}${c.default?' default '+c.default:''}${c.name==='id'?' primary key':''}`).join(',')}); alter table public.${qid(name)} enable row level security; grant all on public.${qid(name)} to anon,authenticated,service_role;`);}
+// Load observed function definitions, resolving SQL-function dependency order.
+let pending=[...snapshot.functions];
+for(let pass=0;pending.length&&pass<5;pass++){
+ const next=[];for(const fn of pending){try{await db.exec(fn);}catch(e){next.push(fn);if(pass===4)throw new Error(fn.slice(0,140)+'\n'+e.message);}}pending=next;
+}
+for(const p of snapshot.policies){if(!tables.has(p.table))continue; await db.exec(`create policy ${qid(p.name)} on public.${qid(p.table)} for ${p.cmd} to ${p.roles.map(qid).join(',')}${p.qual?' using ('+p.qual+')':''}${p.check?' with check ('+p.check+')':''}`);}
+const owner='10000000-0000-4000-8000-000000000001',other='10000000-0000-4000-8000-000000000002',tenant='20000000-0000-4000-8000-000000000001';
+await db.query(`insert into auth.users(id,email,email_confirmed_at) values($1,'joao.almeida_msbrasil@outlook.com',now()),($2,'other@example.test',now())`,[owner,other]);
+for(const f of (await readdir(new URL('../supabase/migrations/',import.meta.url))).sort()){
+ if(!f.endsWith('.sql'))continue;
+ const migration=await readFile(new URL('../supabase/migrations/'+f,import.meta.url),'utf8');
+ try{await db.exec(migration);}catch(e){console.error('Migration context',f,e.position,e.internalPosition,e.internalQuery,e.where);throw e;}
+ console.log('APPLIED LOCALLY',f);
+}
+await db.query(`insert into public.estabelecimento(id,user_id,nome,slug) values($1,$2,'Test Business','test-business')`,[tenant,owner]);
+const trial=await db.query(`select round(extract(epoch from trial_ends_at-now())/86400) as days from estabelecimento where id=$1`,[tenant]);
+assert.equal(Number(trial.rows[0].days),30);
+async function asRole(role,id,sql,params=[]){await db.exec(`set role ${role}; select set_config('request.jwt.claim.sub','${id||''}',false);`);try{return await db.query(sql,params);}finally{await db.exec('reset role');}}
+await assert.rejects(()=>asRole('anon','',`select public.get_platform_metrics()`));
+await assert.rejects(()=>asRole('authenticated',other,`select public.get_platform_metrics()`));
+const metrics=await asRole('authenticated',owner,`select public.get_platform_metrics() as data`);
+assert.equal(metrics.rows[0].data.totalTenants,1);assert.equal(metrics.rows[0].data.totalMrr,0);
+await assert.rejects(()=>asRole('authenticated',owner,`update public.estabelecimento set plano_expires_at=now()+interval '1 year' where id=$1`,[tenant]));
+await assert.rejects(()=>asRole('authenticated',other,`select public.get_user_profile_safe($1)`,[owner]));
+await assert.rejects(()=>asRole('anon','',`select * from public.profissional_otps`));
+const pub=await asRole('anon','',`select user_id,stripe_customer_id,trial_ends_at from public.get_public_estabelecimento_by_slug('test-business')`);
+assert.equal(pub.rows[0].user_id,null);assert.equal(pub.rows[0].stripe_customer_id,null);assert.equal(pub.rows[0].trial_ends_at,null);
+assert.equal((await asRole('authenticated',other,`select * from public.commercial_prospects`)).rows.length,0);
+const lock1=await asRole('service_role','',`select public.commercial_acquire_lock() as lock`);
+const lock2=await asRole('service_role','',`select public.commercial_acquire_lock() as lock`);
+assert.equal(lock1.rows[0].lock,true);assert.equal(lock2.rows[0].lock,false);
+// The exclusion constraint serializes competing reservations at the database layer.
+await db.query(`insert into agenda_events(id,estabelecimento_id,start,"end",status) values(gen_random_uuid(),$1,now()+interval '1 day',now()+interval '1 day 1 hour','confirmado')`,[tenant]);
+await assert.rejects(()=>db.query(`insert into agenda_events(id,estabelecimento_id,start,"end",status) values(gen_random_uuid(),$1,now()+interval '1 day 30 minutes',now()+interval '1 day 2 hours','confirmado')`,[tenant]));
+for(let i=0;i<5;i++)assert.equal((await asRole('service_role','',`select consume_public_booking_limit('test-hash') as allowed`)).rows[0].allowed,true);
+assert.equal((await asRole('service_role','',`select consume_public_booking_limit('test-hash') as allowed`)).rows[0].allowed,false);
+await assert.rejects(()=>asRole('authenticated',owner,`update estabelecimento set stripe_livemode=true where id=$1`,[tenant]));
+await db.query(`update estabelecimento set stripe_subscription_status='active',stripe_mrr_cents=9700,plano_expires_at=now()+interval '1 month',stripe_livemode=false where id=$1`,[tenant]);
+assert.equal((await asRole('authenticated',owner,`select get_platform_metrics() as data`)).rows[0].data.totalMrr,0);
+await db.query(`update estabelecimento set stripe_livemode=true where id=$1`,[tenant]);
+assert.equal((await asRole('authenticated',owner,`select get_platform_metrics() as data`)).rows[0].data.totalMrr,97);
+await db.query(`update estabelecimento set plano_expires_at=null where id=$1`,[tenant]);
+for(let i=0;i<5;i++)await db.query(`insert into profissionais(id,estabelecimento_id,nome,ativo) values(gen_random_uuid(),$1,'Professional',true)`,[tenant]);
+await assert.rejects(()=>db.query(`insert into profissionais(id,estabelecimento_id,nome,ativo) values(gen_random_uuid(),$1,'Excess',true)`,[tenant]));
+const pendingOwner='10000000-0000-4000-8000-000000000003';
+await db.query(`insert into auth.users(id,email) values($1,'joao.almeida.msbrasil@gmail.com')`,[pendingOwner]);
+assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[pendingOwner])).rows[0].n,0);
+await db.query(`update auth.users set email_confirmed_at=now() where id=$1`,[pendingOwner]);
+assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[pendingOwner])).rows[0].n,1);
+const paiolOwner='10000000-0000-4000-8000-000000000004';
+await db.query(`insert into auth.users(id,email) values($1,'paiol4@gmail.com')`,[paiolOwner]);
+assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[paiolOwner])).rows[0].n,0);
+await db.query(`update auth.users set email_confirmed_at=now() where id=$1`,[paiolOwner]);
+assert.equal((await asRole('authenticated',paiolOwner,`select is_platform_owner() as allowed`)).rows[0].allowed,true);
+assert.equal((await asRole('authenticated',paiolOwner,`select get_platform_metrics() as data`)).rows[0].data.prospects,0);
+const hours=Array.from({length:7},(_,day)=>({dia_semana:day,dia_nome:'Dia '+day,abre:'09:00',fecha:'18:00',ativo:day>0}));
+const setup=[tenant,JSON.stringify({nome:'Test Business',cidade:'São Paulo'}),JSON.stringify([{titulo:'Corte',preco:50,duracao_min:30,emoji:'✂️'}]),JSON.stringify(hours)];
+await assert.rejects(()=>asRole('authenticated',other,`select configure_client_setup($1,$2,$3,$4)`,setup));
+await asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,setup);
+await asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,setup);
+assert.equal((await db.query(`select count(*)::int n from servicos where estabelecimento_id=$1 and titulo='Corte'`,[tenant])).rows[0].n,1);
+assert.equal((await db.query(`select count(*)::int n from horarios_funcionamento where estabelecimento_id=$1`,[tenant])).rows[0].n,7);
+const invalid=hours.map(h=>({...h}));invalid[2].fecha='08:00';
+await assert.rejects(()=>asRole('authenticated',owner,`select configure_client_setup($1,$2,$3,$4)`,[tenant,JSON.stringify({nome:'Must Roll Back'}),setup[2],JSON.stringify(invalid)]));
+assert.equal((await db.query(`select nome from estabelecimento where id=$1`,[tenant])).rows[0].nome,'Test Business');
+assert.equal((await db.query(`select count(*)::int n from horarios_funcionamento where estabelecimento_id=$1`,[tenant])).rows[0].n,7);
+await db.query(`update estabelecimento set trial_ends_at=now()-interval '1 day' where id=$1`,[tenant]);
+assert.equal((await asRole('authenticated',owner,`select * from get_meus_estabelecimentos()`)).rows.length,0);
+assert.equal((await asRole('authenticated',owner,`select id from estabelecimento where id=$1`,[tenant])).rows.length,1);
+const ticket = await asRole('authenticated',other,`insert into support_messages(category,body,page_path) values('falha','Não consegui salvar meu serviço','/admin/configuracoes') returning id`);
+const ticketId=ticket.rows[0].id;
+assert.equal((await asRole('authenticated',other,`select * from support_messages where id=$1`,[ticketId])).rows.length,1);
+assert.equal((await asRole('authenticated',pendingOwner,`select * from support_messages where id=$1`,[ticketId])).rows.length,1);
+await assert.rejects(()=>asRole('anon','',`select * from support_messages`));
+await assert.rejects(()=>asRole('authenticated',other,`insert into support_messages(category,body,user_id) values('duvida','Mensagem com autor forjado',$1)`,[owner]));
+assert.equal((await asRole('authenticated',other,`update support_messages set owner_reply='Resposta forjada' where id=$1 returning id`,[ticketId])).rows.length,0);
+await asRole('authenticated',paiolOwner,`update support_messages set owner_reply='Vamos investigar',status='respondido',replied_at=now() where id=$1`,[ticketId]);
+assert.equal((await asRole('authenticated',other,`select owner_reply from support_messages where id=$1`,[ticketId])).rows[0].owner_reply,'Vamos investigar');
+const isolated='10000000-0000-4000-8000-000000000005';
+await db.query(`insert into auth.users(id,email) values($1,'isolated@example.com')`,[isolated]);
+assert.equal((await asRole('authenticated',isolated,`select * from support_messages`)).rows.length,0);
+await asRole('authenticated',other,`insert into app_error_events(page_path,error_code) values('/admin/agenda','runtime_error')`);
+assert.equal((await asRole('authenticated',other,`select * from app_error_events`)).rows.length,0);
+assert.equal((await asRole('authenticated',paiolOwner,`select * from app_error_events`)).rows.length,1);
+await assert.rejects(()=>asRole('anon','',`insert into app_error_events(page_path,error_code) values('/login','runtime_error')`));
+await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code,user_id) values('/admin','runtime_error',$1)`,[owner]));
+await assert.rejects(()=>asRole('authenticated',other,`insert into app_error_events(page_path,error_code) values('/admin?token=secret','runtime_error')`));
+await assert.rejects(()=>asRole('authenticated',other,`select owner_control_snapshot()`));
+await db.query(`insert into owner_payment_tests(id,user_id) values('cs_live_owner_fixture',$1)`,[paiolOwner]);
+assert.equal((await asRole('authenticated',paiolOwner,`select id from owner_payment_tests`)).rows.length,1);
+assert.equal((await asRole('authenticated',other,`select id from owner_payment_tests`)).rows.length,0);
+await assert.rejects(()=>asRole('authenticated',paiolOwner,`update owner_payment_tests set status='paid'`));
+await assert.rejects(()=>asRole('anon','',`select id from owner_payment_tests`));
+
+// Owner intelligence must not expose auth data to a tenant or anonymous browser.
+await assert.rejects(()=>asRole('anon','',`select owner_business_snapshot(30)`));
+await assert.rejects(()=>asRole('authenticated',other,`select owner_business_snapshot(30)`));
+const ownerData=(await asRole('authenticated',owner,`select owner_business_snapshot(30) as data`)).rows[0].data;
+assert.equal(ownerData.totals.internal,1);assert.equal(ownerData.totals.customers,0);
+assert.equal(ownerData.users.some(u=>u.email==='other@example.test'),true);
+await assert.rejects(()=>asRole('authenticated',owner,`select owner_business_snapshot(999)`));
+await assert.rejects(()=>asRole('authenticated',other,`select platform_is_protected_user($1)`,[owner]));
+const pilot='40000000-0000-4000-8000-000000000001';
+await db.query(`insert into estabelecimento(id,user_id,nome,slug,segmento) values($1,$2,'Pilot','pilot-queue','petshop')`,[pilot,other]);
+const invalidSetup=[{titulo:'Banho',preco:-1,duracao_min:45}];
+await assert.rejects(()=>asRole('authenticated',other,`select tenant_quick_start($1,'Equipe',$2::jsonb,ARRAY[1,2,3,4,5],'09:00','18:00')`,[pilot,JSON.stringify(invalidSetup)]));
+assert.equal((await db.query(`select count(*)::int as count from profissionais where estabelecimento_id=$1`,[pilot])).rows[0].count,0);
+await db.query(`insert into horarios_funcionamento(estabelecimento_id,dia_semana,dia_nome,abre,fecha,ativo) values($1,1,'Segunda','00:00','00:00',false)`,[pilot]);
+const services=[{titulo:'Banho',preco:60,duracao_min:45}];
+await assert.rejects(()=>asRole('authenticated',owner,`select tenant_quick_start($1,'Equipe',$2::jsonb,ARRAY[1],'09:00','18:00')`,[pilot,JSON.stringify(services)]));
+await asRole('authenticated',other,`select tenant_quick_start($1,'Equipe',$2::jsonb,ARRAY[1,2,3,4,5],'09:00','18:00')`,[pilot,JSON.stringify(services)]);
+assert.equal((await asRole('authenticated',other,`select tenant_activation_summary($1) as data`,[pilot])).rows[0].data.schedule_ready,true);
+await assert.rejects(()=>asRole('authenticated',other,`select tenant_quick_start($1,'Equipe',$2::jsonb,ARRAY[1],'09:00','18:00')`,[pilot,JSON.stringify(services)]));
+const clients=[{nome:'Tutor',telefone:'11999998888',email:'tutor@example.test'}];
+let imported=await asRole('authenticated',other,`select import_clients_csv($1,$2::jsonb) as data`,[pilot,JSON.stringify(clients)]);
+assert.equal(imported.rows[0].data.inserted,1);
+imported=await asRole('authenticated',other,`select import_clients_csv($1,$2::jsonb) as data`,[pilot,JSON.stringify(clients)]);
+assert.equal(imported.rows[0].data.skipped,1);
+await assert.rejects(()=>asRole('authenticated',owner,`select import_clients_csv($1,$2::jsonb)`,[pilot,JSON.stringify(clients)]));
+await assert.rejects(()=>asRole('authenticated',other,`select import_clients_csv($1,$2::jsonb)`,[pilot,JSON.stringify([{nome:'Valid',email:'valid@example.test'},{nome:'Invalid',email:'bad'}]) ]));
+assert.equal((await db.query(`select count(*)::int as count from clientes where estabelecimento_id=$1`,[pilot])).rows[0].count,1);
+await asRole('authenticated',other,`select record_app_activity($1,'/admin/agenda?secret=redacted')`,[pilot]);
+assert.equal((await db.query(`select page_path from private.app_activity where user_id=$1`,[other])).rows[0].page_path,'/admin/agenda');
+await assert.rejects(()=>asRole('authenticated',owner,`select record_app_activity($1,'/admin')`,[pilot]));
+const updatedOwner=(await asRole('authenticated',owner,`select owner_business_snapshot(30) as data`)).rows[0].data;
+assert.equal(updatedOwner.totals.customers,1);assert.equal(updatedOwner.totals.ready,1);assert.equal(updatedOwner.totals.active_7d,1);
+
+console.log('START operational assertions');
+// Complete operational flow: repeat-safe reservations, transactional money/stock and tenant isolation.
+const proId=(await db.query(`select id from profissionais where estabelecimento_id=$1 limit 1`,[pilot])).rows[0].id;
+const svcId=(await db.query(`select id from servicos where estabelecimento_id=$1 limit 1`,[pilot])).rows[0].id;
+const clientId=(await db.query(`select id from clientes where estabelecimento_id=$1 limit 1`,[pilot])).rows[0].id;
+await db.query(`update profissional_servicos set taxa_comissao=50,tipo_comissao='percentual' where profissional_id=$1 and servico_id=$2`,[proId,svcId]);
+const booking={estabelecimento_id:pilot,title:'Teste operacional',start:'2099-10-15T12:00:00Z',end:'2099-10-15T12:45:00Z',status:'confirmado',profissional_id:proId,servico_id:svcId,cliente_id:clientId};
+const seriesKey='70000000-0000-4000-8000-000000000001';
+console.log('CHECK series');
+const series=(await asRole('authenticated',other,`select create_agenda_series($1,3,7,$2) as data`,[booking,seriesKey])).rows[0].data;
+assert.equal(series.length,3);
+assert.deepEqual((await asRole('authenticated',other,`select create_agenda_series($1,3,7,$2) as data`,[booking,seriesKey])).rows[0].data.map(x=>x.id),series.map(x=>x.id));
+// First occurrence is free, second conflicts: the first must roll back too.
+await assert.rejects(()=>asRole('authenticated',other,`select create_agenda_series($1,2,7,gen_random_uuid())`,[{...booking,start:'2099-10-08T12:00:00Z',end:'2099-10-08T12:45:00Z'}]));
+assert.equal((await db.query(`select count(*)::int n from agenda_events where estabelecimento_id=$1`,[pilot])).rows[0].n,3);
+console.log('CHECK cash session');
+const session=(await asRole('authenticated',other,`select open_cash_atomic($1,100,'Operador') as data`,[pilot])).rows[0].data;
+assert.equal((await asRole('authenticated',other,`select open_cash_atomic($1,100,'Operador') as data`,[pilot])).rows[0].data.id,session.id);
+const product=(await db.query(`insert into produtos(estabelecimento_id,nome,preco,estoque,ativo) values($1,'Pomada',20,2,true) returning id`,[pilot])).rows[0].id;
+const pay={estabelecimentoId:pilot,eventId:series[0].id,clienteId:clientId,clienteNome:'Tutor',profissional:'Equipe',servicoPrincipal:{titulo:'Banho',preco:60},servicosExtras:[],produtos:[{id:product,preco:20,quantidade:3}],formaPagamento:'dinheiro',valorRecebido:200,sessaoId:session.id};
+const payKey='80000000-0000-4000-8000-000000000001';
+await assert.rejects(()=>asRole('authenticated',other,`select checkout_atomic($1,$2)`,[pay,payKey]));
+assert.equal((await db.query(`select count(*)::int n from caixa_itens where estabelecimento_id=$1`,[pilot])).rows[0].n,0);
+assert.equal((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque,2);
+pay.produtos[0].quantidade=1;
+console.log('CHECK checkout');
+const paid=(await asRole('authenticated',other,`select checkout_atomic($1,$2) as data`,[pay,payKey])).rows[0].data;
+assert.equal(Number(paid.valor_total),80);assert.equal(paid.status_caixa,'pago');assert.ok(paid.pago_em);
+assert.equal((await asRole('authenticated',other,`select checkout_atomic($1,$2) as data`,[pay,payKey])).rows[0].data.id,paid.id);
+assert.equal((await asRole('authenticated',other,`select checkout_atomic($1,gen_random_uuid()) as data`,[pay])).rows[0].data.id,paid.id);
+assert.equal((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque,1);
+assert.equal(Number((await db.query(`select sum(valor_comissao) total from comissoes where evento_id=$1`,[series[0].id])).rows[0].total),30);
+assert.equal((await db.query(`select count(*)::int n from caixa_movimentacoes where sessao_id=$1`,[session.id])).rows[0].n,1);
+await assert.rejects(()=>asRole('authenticated',owner,`select checkout_atomic($1,gen_random_uuid())`,[pay]));
+const closed=(await asRole('authenticated',other,`select close_cash_atomic($1,180) as data`,[session.id])).rows[0].data;
+assert.equal(Number(closed.saldo_final_calculado),180);
+await assert.rejects(()=>asRole('authenticated',other,`insert into caixa_movimentacoes(sessao_id,tipo,valor,forma_pagamento) values($1,'suprimento',10,'dinheiro')`,[session.id]));
+assert.equal((await asRole('authenticated',other,`select tenant_operational_progress($1) as data`,[pilot])).rows[0].data.first_received,true);
+await asRole('authenticated',other,`insert into appointment_messaging_settings(estabelecimento_id,enabled) values($1,true)`,[pilot]);
+await asRole('authenticated',other,`select update_event_safe($1,$2)`,[series[1].id,{start:'2099-10-22T13:00:00Z',end:'2099-10-22T13:45:00Z'}]);
+assert.equal((await db.query(`select count(*)::int n from appointment_messages where event_id=$1 and status='queued'`,[series[1].id])).rows[0].n,2);
+await asRole('authenticated',other,`select update_event_safe($1,$2)`,[series[1].id,{status:'cancelado'}]);
+assert.equal((await db.query(`select count(*)::int n from appointment_messages where event_id=$1 and status='queued'`,[series[1].id])).rows[0].n,1);
+assert.equal((await asRole('authenticated',owner,`select * from appointment_messages where estabelecimento_id=$1`,[pilot])).rows.length,0);
+await assert.rejects(()=>asRole('authenticated',other,`select appointment_message_context($1)`,[series[1].id]));
+
+const newSession=(await asRole('authenticated',other,`select open_cash_atomic($1,0,'Operador') as data`,[pilot])).rows[0].data;
+const movement=(await db.query(`select id from caixa_movimentacoes where caixa_item_id=$1 and tipo='venda'`,[paid.id])).rows[0].id;
+const reversed=(await asRole('authenticated',other,`select reverse_cash_atomic($1,$2) as id`,[movement,newSession.id])).rows[0].id;
+assert.equal((await asRole('authenticated',other,`select reverse_cash_atomic($1,$2) as id`,[movement,newSession.id])).rows[0].id,reversed);
+assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,[paid.id])).rows[0].status_caixa,'cancelado');
+assert.equal((await db.query(`select count(*)::int n from caixa_movimentacoes where reversal_of=$1`,[movement])).rows[0].n,1);
+console.log('PASS: atomic series rollback/retry, checkout rollback/retry, stock, commission, drawer closure, queue supersession and isolation.');
+console.log('PASS: local migration compatibility, 30-day trial, owner authorization, private fields, anonymous denial, billing tamper prevention, CRM isolation, worker lock.');
+// Connect reservations stay unpaid until the provider confirms the exact amount/account.
+await db.query(`insert into connect_accounts(estabelecimento_id,account_id,enabled,charges_enabled,payouts_enabled,terms_version) values($1,'acct_test',true,true,true,'connect-2026-10-16-r1')`,[pilot]);
+const onlinePay={...pay,eventId:series[2].id,produtos:[{id:product,preco:20,quantidade:1}],formaPagamento:'cartao_credito',sessaoId:newSession.id,online:true};
+const onlineKey='90000000-0000-4000-8000-000000000001';
+const online=(await asRole('authenticated',other,`select checkout_atomic($1,$2) as data`,[onlinePay,onlineKey])).rows[0].data;
+assert.equal(online.status_caixa,'pendente');assert.equal(online.pago_em,null);
+await assert.rejects(()=>asRole('authenticated',other,`update caixa_itens set status_caixa='pago' where id=$1`,[online.id]));
+assert.equal((await db.query(`select count(*)::int n from caixa_movimentacoes where caixa_item_id=$1`,[online.id])).rows[0].n,0);
+assert.equal((await db.query(`select count(*)::int n from comissoes where evento_id=$1`,[series[2].id])).rows[0].n,0);
+assert.equal((await asRole('authenticated',other,`select checkout_atomic($1,$2) as data`,[onlinePay,onlineKey])).rows[0].data.id,online.id);
+await assert.rejects(()=>asRole('authenticated',owner,`select register_connect_order($1)`,[online.id]));
+await assert.rejects(()=>asRole('authenticated',other,`select settle_connect_order($1,'acct_test','cs_test','pi_test',8000,100,now())`,[online.id]));
+await assert.rejects(()=>asRole('service_role',null,`select settle_connect_order($1,'acct_wrong','cs_test','pi_test',8000,100,now())`,[online.id]));
+await assert.rejects(()=>asRole('service_role',null,`select settle_connect_order($1,'acct_test','cs_test','pi_test',1,100,now())`,[online.id]));
+await asRole('authenticated',other,`select close_cash_atomic($1,0)`,[newSession.id]);
+for(let i=0;i<2;i++)await asRole('service_role',null,`select settle_connect_order($1,'acct_test','cs_test','pi_test',8000,100,now())`,[online.id]);
+assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,[online.id])).rows[0].status_caixa,'pago');
+assert.equal((await db.query(`select count(*)::int n from comissoes where evento_id=$1`,[series[2].id])).rows[0].n,1);
+assert.equal((await asRole('authenticated',owner,`select * from connect_orders`)).rows.length,0);
+const cancelSession=(await asRole('authenticated',other,`select open_cash_atomic($1,0,'Operador') as data`,[pilot])).rows[0].data;
+await db.query(`update produtos set estoque=2 where id=$1`,[product]);
+const expiring=(await asRole('authenticated',other,`select checkout_atomic($1,gen_random_uuid()) as data`,[{...onlinePay,eventId:'',sessaoId:cancelSession.id}])).rows[0].data;
+await db.query(`update connect_orders set session_id='cs_expire' where id=$1`,[expiring.id]);
+for(let i=0;i<2;i++)await asRole('service_role',null,`select expire_connect_order($1,'acct_test','cs_expire')`,[expiring.id]);
+assert.equal(Number((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque),2);
+assert.equal((await db.query(`select status from connect_orders where id=$1`,[expiring.id])).rows[0].status,'expired');
+console.log('PASS: Connect reservations, exact settlement, tenant denial, idempotent payment after drawer closure, commission once, stock restoration once.');
+
+console.log('START business modules assertions');
+const cmd=async(action,data={},key=null,actor=other,t=pilot)=>(await asRole('authenticated',actor,`select business_operation($1,$2,$3,$4) as data`,[t,action,data,key||crypto.randomUUID()])).rows[0].data;
+await assert.rejects(()=>cmd('bundle-save',{servico_id:svcId,title:'Fake',kind:'package',sessions:4,price:100,validity_days:30},null,owner));
+await assert.rejects(()=>asRole('anon',null,`select business_operation($1,'queue-add','{}',gen_random_uuid())`,[pilot]));
+await assert.rejects(()=>asRole('authenticated',other,`insert into service_bundles(estabelecimento_id,servico_id,title,kind,sessions,price,validity_days) values($1,$2,'Bypass','package',4,100,30)`,[pilot,svcId]));
+const bundle=await cmd('bundle-save',{servico_id:svcId,title:'Quatro banhos',kind:'package',sessions:4,price:200,validity_days:30});
+const sellKey=crypto.randomUUID();
+const pass=await cmd('pass-sell',{bundle_id:bundle.id,cliente_id:clientId,payment_method:'pix'},sellKey);
+assert.equal(pass.status,'active');assert.equal(pass.remaining,4);
+assert.equal((await cmd('pass-sell',{bundle_id:bundle.id,cliente_id:clientId,payment_method:'pix'},sellKey)).id,pass.id);
+assert.equal((await db.query(`select count(*)::int n from caixa_movimentacoes where caixa_item_id=$1`,[pass.receipt_id])).rows[0].n,1);
+const passEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-02T12:00:00Z','2099-11-02T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
+const consumed=await cmd('pass-redeem',{pass_id:pass.id,event_id:passEvent});
+assert.equal((await cmd('pass-redeem',{pass_id:pass.id,event_id:passEvent})).id,consumed.id);
+assert.equal((await db.query(`select remaining from customer_passes where id=$1`,[pass.id])).rows[0].remaining,3);
+assert.equal(Number((await db.query(`select valor_total from caixa_itens where id=$1`,[consumed.receipt_id])).rows[0].valor_total),0);
+assert.equal(Number((await db.query(`select valor_comissao from comissoes where evento_id=$1`,[passEvent])).rows[0].valor_comissao),25);
+await cmd('pass-undo',{id:consumed.id});await cmd('pass-undo',{id:consumed.id});
+assert.equal((await db.query(`select remaining from customer_passes where id=$1`,[pass.id])).rows[0].remaining,4);
+await assert.rejects(()=>cmd('pass-redeem',{pass_id:pass.id,event_id:passEvent}));
+// Online bundles cannot grant sessions until the exact existing Connect settlement succeeds.
+const onlinePass=await cmd('pass-sell',{bundle_id:bundle.id,cliente_id:clientId,payment_method:'online'});
+assert.equal(onlinePass.status,'pending');
+await asRole('service_role',null,`select settle_connect_order($1,'acct_test','cs_bundle','pi_bundle',20000,100,now())`,[onlinePass.receipt_id]);
+assert.equal((await db.query(`select status from customer_passes where id=$1`,[onlinePass.id])).rows[0].status,'active');
+const feedback=await cmd('feedback-link',{event_id:passEvent});
+assert.equal((await cmd('feedback-link',{event_id:passEvent})).token,feedback.token);
+await assert.rejects(()=>asRole('authenticated',other,`select submit_service_feedback($1,5,'Fake')`,[feedback.token]));
+await asRole('service_role',null,`select submit_service_feedback($1,5,'Ótimo atendimento')`,[feedback.token]);
+await asRole('service_role',null,`select submit_service_feedback($1,1,'Tentativa repetida')`,[feedback.token]);
+assert.equal((await db.query(`select rating from service_feedback where token=$1`,[feedback.token])).rows[0].rating,5);
+assert.equal((await asRole('authenticated',owner,`select * from service_feedback`)).rows.length,0);
+const title=await cmd('title-add',{kind:'payable',description:'Aluguel',category:'Ocupação',amount:1000,due_date:'2026-10-20',competence:'2026-10-01'});
+const settleKey=crypto.randomUUID();await cmd('title-settle',{id:title.id,amount:400,payment_method:'pix'},settleKey);await cmd('title-settle',{id:title.id,amount:400,payment_method:'pix'},settleKey);
+assert.equal(Number((await db.query(`select settled from financial_titles where id=$1`,[title.id])).rows[0].settled),400);
+await assert.rejects(()=>cmd('title-settle',{id:title.id,amount:601,payment_method:'pix'}));await assert.rejects(()=>cmd('title-cancel',{id:title.id}));
+await cmd('stock-config',{id:product,minimum_stock:5,unit_cost:10});
+const stockKey=crypto.randomUUID();const beforeStock=Number((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque);
+await cmd('stock-move',{produto_id:product,quantity:2,unit_cost:20,reason:'Compra de fornecedor'},stockKey);await cmd('stock-move',{produto_id:product,quantity:2,unit_cost:20,reason:'Compra de fornecedor'},stockKey);
+assert.equal(Number((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque),beforeStock+2);
+await assert.rejects(()=>cmd('stock-move',{produto_id:product,quantity:-100,reason:'Falha'}));
+await cmd('supply-save',{produto_id:product,servico_id:svcId,quantity:1});await cmd('supply-consume',{event_id:passEvent});await cmd('supply-consume',{event_id:passEvent});
+assert.equal(Number((await db.query(`select estoque from produtos where id=$1`,[product])).rows[0].estoque),beforeStock+1);
+const pet=await cmd('pet-add',{cliente_id:clientId,name:'Rex',species:'Cachorro'});
+const template=await cmd('template-add',{title:'Cuidados do pet',questions:['Quais cuidados?']});
+await assert.rejects(()=>cmd('intake-add',{cliente_id:clientId,pet_id:pet.id,template_id:template.id,answers:['Nenhum'],consent:false}));
+await cmd('intake-add',{cliente_id:clientId,pet_id:pet.id,template_id:template.id,answers:['Shampoo específico'],consent:true});
+assert.equal((await asRole('authenticated',owner,`select * from client_intakes`)).rows.length,0);
+const campaign=await cmd('campaign-add',{title:'Volte ao banho',channel:'email',segment:'all',message:'Agende o próximo banho',due_at:new Date().toISOString()});
+await cmd('campaign-prepare',{id:campaign.id});assert.equal((await db.query(`select count(*)::int n from campaign_recipients where campaign_id=$1`,[campaign.id])).rows[0].n,0);
+await cmd('contact-preference',{cliente_id:clientId,channel:'email',consent:true,evidence:'Solicitação presencial do tutor'});await cmd('campaign-prepare',{id:campaign.id});
+assert.equal((await db.query(`select count(*)::int n from campaign_recipients where campaign_id=$1`,[campaign.id])).rows[0].n,1);
+await cmd('contact-preference',{cliente_id:clientId,channel:'email',consent:false,evidence:'Tutor revogou autorização'});
+assert.equal((await db.query(`select status from campaign_recipients where campaign_id=$1`,[campaign.id])).rows[0].status,'suppressed');
+// Queue assignment is serialized, professional availability checked, and retries return the same event.
+await db.query(`update horarios_funcionamento set abre='00:00',fecha='23:59',ativo=true where estabelecimento_id=$1`,[pilot]);
+await db.query(`update profissional_disponibilidades set hora_inicio='00:00',hora_fim='23:59',intervalo_inicio=null,intervalo_fim=null,ativo=true where estabelecimento_id=$1`,[pilot]);
+
+ // Walk-in queue tests must be independent of the CI run's weekday (Sat/Sun
+ // are not configured by the weekday-only quick-start fixture).
+ const localDow=Number((await db.query(
+   "select extract(dow from now() at time zone 'America/Sao_Paulo')::int as dow"
+ )).rows[0].dow);
+ await db.query(`insert into horarios_funcionamento(
+   estabelecimento_id,dia_semana,dia_nome,abre,fecha,ativo
+ ) select $1,$2,'Dia do teste','00:00','23:59',true
+   where not exists(select 1 from horarios_funcionamento
+     where estabelecimento_id=$1 and dia_semana=$2)`,[pilot,localDow]);
+ await db.query(`insert into profissional_disponibilidades(
+   estabelecimento_id,profissional_id,dia_semana,dia_nome,hora_inicio,hora_fim,ativo
+ ) select $1,$2,$3,'Dia do teste','00:00','23:59',true
+   where not exists(select 1 from profissional_disponibilidades
+     where estabelecimento_id=$1 and profissional_id=$2 and dia_semana=$3)`,[pilot,proId,localDow]);
+
+await cmd('rotation',{professional_id:proId,active:true});
+const qkey=crypto.randomUUID(),queued=await cmd('queue-add',{cliente_id:clientId,servico_id:svcId},qkey);
+assert.equal((await cmd('queue-add',{cliente_id:clientId,servico_id:svcId},qkey)).id,queued.id);
+const called=await cmd('queue-call',{id:queued.id});assert.equal(called.status,'assigned');assert.ok(called.event_id);
+assert.equal((await cmd('queue-call',{id:queued.id})).event_id,called.event_id);
+const queued2=await cmd('queue-add',{cliente_id:clientId,servico_id:svcId});
+await assert.rejects(()=>cmd('queue-call',{id:queued2.id}));
+await cmd('queue-cancel',{id:queued2.id});
+await cmd('settings',{approval_required:true,headline:'Cuidamos do seu pet',gallery:['https://example.test/foto.jpg']});
+const page=(await asRole('anon',null,`select business_public_page($1) as data`,[pilot])).rows[0].data;assert.equal(page.approval_required,true);assert.equal(page.headline,'Cuidamos do seu pet');
+const freshPassEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-03T12:00:00Z','2099-11-03T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
+await asRole('service_role',null,`select prepare_pass_refund($1)`,[onlinePass.receipt_id]);
+assert.equal((await db.query(`select status from customer_passes where id=$1`,[onlinePass.id])).rows[0].status,'refund_pending');
+await assert.rejects(()=>cmd('pass-redeem',{pass_id:onlinePass.id,event_id:freshPassEvent}),/Pacote sem saldo ou vencido/);
+const usedPass=await cmd('pass-redeem',{pass_id:pass.id,event_id:freshPassEvent});
+await assert.rejects(()=>asRole('service_role',null,`select prepare_pass_refund($1)`,[pass.receipt_id]),/Estorne as sessões/);
+const passMovement=(await db.query(`select id from caixa_movimentacoes where caixa_item_id=$1 and tipo='venda'`,[pass.receipt_id])).rows[0].id;
+await assert.rejects(()=>asRole('authenticated',other,`select reverse_cash_atomic($1,$2)`,[passMovement,cancelSession.id]),/Estorne as sessões/);
+await cmd('pass-undo',{id:usedPass.id});
+console.log('PASS: business module authorization, queue assignment/retry/conflict, feedback once, prepaid sessions and commission without duplicate revenue, online activation, financial partial settlements, inventory idempotency, forms/consent/privacy and campaign suppression.');
+// Campaign counts use all recipients and retain owner/tenant isolation.
+await db.query(`update client_campaigns set status='completed' where id=$1`,[campaign.id]);
+await db.query(`update client_campaigns set status='paused' where id=$1`,[campaign.id]);
+await assert.rejects(()=>db.query(`update client_campaigns set status='unknown' where id=$1`,[campaign.id]));
+const progress=(await asRole('authenticated',other,`select * from campaign_progress($1,$2::uuid[])`,[pilot,[campaign.id]])).rows[0];
+assert.equal(Number(progress.total),1);assert.equal(Number(progress.suppressed),1);assert.equal(Number(progress.sent),0);
+await assert.rejects(()=>asRole('anon',null,`select * from campaign_progress($1,$2::uuid[])`,[pilot,[campaign.id]]));
+await assert.rejects(()=>asRole('authenticated',null,`select * from campaign_progress($1,$2::uuid[])`,[pilot,[campaign.id]]));
+await assert.rejects(()=>asRole('authenticated',owner,`select * from campaign_progress($1,$2::uuid[])`,[pilot,[campaign.id]]));
+await db.query(`update estabelecimento set trial_ends_at=now()+interval '1 day' where id=$1`,[tenant]);
+assert.equal((await asRole('authenticated',owner,`select * from campaign_progress($1,$2::uuid[])`,[tenant,[campaign.id]])).rows.length,0);
+await assert.rejects(()=>asRole('authenticated',other,`select * from campaign_progress($1,$2::uuid[])`,[pilot,Array(501).fill(campaign.id)]));
+await db.query(`with new_clients as (insert into clientes(estabelecimento_id,nome,email) select $1,'Campaign fixture '||n,'fixture-'||n||'@example.test' from generate_series(1,510) n returning id) insert into campaign_recipients(estabelecimento_id,campaign_id,cliente_id,status) select $1,$2,id,'sent' from new_clients`,[pilot,campaign.id]);
+const fullProgress=(await asRole('authenticated',other,`select * from campaign_progress($1,$2::uuid[])`,[pilot,[campaign.id]])).rows[0];
+assert.equal(Number(fullProgress.total),511);assert.equal(Number(fullProgress.sent),510);
+assert.equal(Number(fullProgress.pending)+Number(fullProgress.sending)+Number(fullProgress.sent)+Number(fullProgress.failed)+Number(fullProgress.suppressed),511);
+console.log('PASS: campaign lifecycle, aggregate counts beyond 500 recipients, authenticated owner-only execution and cross-tenant isolation.');
+await (await import('./growth-database.mjs')).verifyGrowth({db,asRole,owner,other,tenant,pilot,proId,svcId,clientId,product,cancelSession,pay,cmd});
+await (await import('./portal-database.mjs')).verifyPortal({db,asRole,owner,other,pilot,proId,svcId,clientId,cmd});
+
+console.log('START multi-service financial integration');
+const multiPro=(await db.query(`insert into profissionais(estabelecimento_id,nome,ativo,comissao_padrao)
+  values($1,'Manicure',true,13) returning id`,[pilot])).rows[0].id;
+const multiSvc=(await db.query(`insert into servicos(estabelecimento_id,titulo,preco,duracao_min,ativo)
+  values($1,'Manicure',40,30,true) returning id`,[pilot])).rows[0].id;
+const multiStart=(await db.query(`select ((date_trunc('day',now() at time zone 'America/Sao_Paulo')
+  +interval '3 days 14 hours') at time zone 'America/Sao_Paulo') as start`)).rows[0].start;
+const slotsFor=(deltaDays=0)=>{
+  const start=new Date(new Date(multiStart).getTime()+deltaDays*86400000);
+  return [
+    {servico_id:svcId,profissional_id:proId,start:start.toISOString(),
+      end:new Date(start.getTime()+45*60000).toISOString(),status:'confirmado',title:'Corte',profissional_nome:'Pro 1'},
+    {servico_id:multiSvc,profissional_id:multiPro,start:start.toISOString(),
+      end:new Date(start.getTime()+30*60000).toISOString(),status:'confirmado',title:'Manicure',profissional_nome:'Pro 2'}
+  ];
+};
+const createMulti=async(items,key)=>(await asRole('authenticated',other,
+  `select * from create_multi_service_booking($1,$2,$3::jsonb,$4)`,
+  [pilot,clientId,JSON.stringify(items),key])).rows;
+const bookingKey=crypto.randomUUID();
+const group=await createMulti(slotsFor(),bookingKey);
+assert.equal(group.length,2);
+const groupAgain=await createMulti(slotsFor(),bookingKey);
+assert.deepEqual(group.map(x=>x.id),groupAgain.map(x=>x.id));
+const root=group.find(e=>!e.metadata?.parent_event_id);
+const child=group.find(e=>e.metadata?.parent_event_id);
+assert.ok(root&&child);
+assert.equal(child.metadata.parent_event_id,root.id);
+await assert.rejects(()=>createMulti(slotsFor(),crypto.randomUUID()));
+await assert.rejects(()=>asRole('authenticated',owner,
+  `select * from create_multi_service_booking($1,$2,$3::jsonb,$4)`,
+  [pilot,clientId,JSON.stringify(slotsFor(4)),crypto.randomUUID()]));
+const groupPay={
+  estabelecimentoId:pilot,eventId:root.id,clienteId:clientId,clienteNome:'Tutor',
+  servicoPrincipal:{titulo:'Banho',preco:60},
+  servicosExtras:[{eventId:child.id,preco:40}],
+  produtos:[],formaPagamento:'pix',profissional:'Pro 1',
+  sessaoId:cancelSession.id
+};
+const groupReceipt=(await asRole('authenticated',other,
+  `select checkout_atomic($1,$2) as data`,
+  [groupPay,crypto.randomUUID()])).rows[0].data;
+assert.equal(Number(groupReceipt.valor_total),100);
+assert.equal(groupReceipt.servicos.length,2);
+const groupCommissions=(await db.query(`select profissional_id,servico_id,valor_comissao
+  from comissoes where evento_id in ($1,$2)`,[root.id,child.id])).rows;
+assert.equal(groupCommissions.length,2);
+assert.equal(Number(groupCommissions.find(c=>c.profissional_id===proId).valor_comissao),30);
+assert.equal(Number(groupCommissions.find(c=>c.profissional_id===multiPro).valor_comissao),5.2);
+await assert.rejects(()=>asRole('authenticated',other,
+  `select add_attendance_service($1,$2,$3,$4,$5,'sequencial','Novo','Pro',gen_random_uuid())`,
+  [pilot,root.id,multiSvc,multiPro,new Date(multiStart)]));
+const onlineMulti=await createMulti(slotsFor(1),crypto.randomUUID());
+const onlineRoot=onlineMulti.find(e=>!e.metadata?.parent_event_id);
+const onlineChild=onlineMulti.find(e=>e.metadata?.parent_event_id);
+const onlinePayload={...groupPay,eventId:onlineRoot.id,
+  servicosExtras:[{eventId:onlineChild.id,preco:40}],online:true,formaPagamento:'cartao_credito'};
+const onlineReceipt=(await asRole('authenticated',other,
+  `select checkout_atomic($1,$2) as data`,
+  [onlinePayload,crypto.randomUUID()])).rows[0].data;
+assert.equal(onlineReceipt.status_caixa,'pendente');
+const frozen=(await db.query(`select commission from connect_orders where id=$1`,[onlineReceipt.id])).rows[0].commission;
+assert.equal(frozen.length,2);
+assert.equal(Number(frozen[0].amount),30);
+assert.equal(Number(frozen[1].amount),5.2);
+for(let i=0;i<2;i++)await asRole('service_role',null,
+  `select settle_connect_order($1,'acct_test','cs_multi','pi_multi',10000,100,now())`,[onlineReceipt.id]);
+assert.equal((await db.query(`select count(*)::int n from comissoes
+  where evento_id in ($1,$2)`,[onlineRoot.id,onlineChild.id])).rows[0].n,2);
+assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,[onlineReceipt.id])).rows[0].status_caixa,'pago');
+console.log('PASS: grouped booking, parallel staff, tenant isolation, one receipt, two distinct commissions, frozen Stripe commission snapshot and settlement idempotence.');
+
+ // Reversal of one grouped cash sale must reverse ALL pending commissions.
+ const multiMovement=(await db.query(`select id from caixa_movimentacoes
+   where caixa_item_id=$1 and tipo='venda'`,[groupReceipt.id])).rows[0].id;
+ await db.query(`update comissoes set status='pago' where evento_id=$1`,[child.id]);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2)`,
+   [multiMovement,cancelSession.id]),/comissão paga/);
+ await db.query(`update comissoes set status='pendente' where evento_id=$1`,[child.id]);
+ const reversedMulti=(await asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2) as id`,
+   [multiMovement,cancelSession.id])).rows[0].id;
+ assert.equal((await asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2) as id`,
+   [multiMovement,cancelSession.id])).rows[0].id,reversedMulti);
+ assert.deepEqual((await db.query(`select status from comissoes
+   where evento_id in ($1,$2) order by evento_id`,[root.id,child.id])).rows.map(x=>x.status),
+   ['estornado','estornado']);
+ assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,
+   [groupReceipt.id])).rows[0].status_caixa,'cancelado');
+
+ // On-site add-ons reserve an actual professional slot. Cancellation of the
+ // parent appointment must free all linked slots, not only the primary one.
+ const changingGroup=await createMulti(slotsFor(3),crypto.randomUUID());
+ const changingRoot=changingGroup.find(e=>!e.metadata?.parent_event_id);
+ const latestEnd=Math.max(...changingGroup.map(e=>Date.parse(e.end)));
+ const nextStart=new Date(latestEnd+300000);
+ const addKey=crypto.randomUUID();
+ const addArgs=[pilot,changingRoot.id,multiSvc,multiPro,nextStart.toISOString(),
+   'sequencial','Sobrancelha','Ana',addKey];
+ const addedId=(await asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id as id`,
+   addArgs)).rows[0].id;
+ assert.equal((await asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id as id`,
+   addArgs)).rows[0].id,addedId);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id`,
+   [...addArgs.slice(0,-1),crypto.randomUUID()]));
+ await asRole('authenticated',other,`select remove_attendance_service($1,$2,$3)`,
+   [pilot,changingRoot.id,addedId]);
+ assert.equal((await db.query(`select count(*)::int n from agenda_events
+   where metadata->>'parent_event_id'=$1 and status<>'cancelado'`,
+   [changingRoot.id])).rows[0].n,1);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select update_event_safe($1,$2)`,
+   [changingRoot.id,{start:new Date(Date.parse(changingRoot.start)+3600000).toISOString()}]));
+ await asRole('authenticated',other,`select update_event_safe($1,$2)`,
+   [changingRoot.id,{status:'cancelado'}]);
+ assert.equal((await db.query(`select count(*)::int n from agenda_events
+   where metadata->>'parent_event_id'=$1 and status<>'cancelado'`,
+   [changingRoot.id])).rows[0].n,0);
+
+ // Stripe expiry must re-open every linked booking instead of just the parent.
+ const expiringGroup=await createMulti(slotsFor(2),crypto.randomUUID());
+ const expRoot=expiringGroup.find(e=>!e.metadata?.parent_event_id);
+ const expChild=expiringGroup.find(e=>e.metadata?.parent_event_id);
+ const expPayload={...onlinePayload,eventId:expRoot.id,
+   servicosExtras:[{eventId:expChild.id,preco:40}]};
+ const expReceipt=(await asRole('authenticated',other,
+   `select checkout_atomic($1,$2) as data`,
+   [expPayload,crypto.randomUUID()])).rows[0].data;
+ await db.query(`update connect_orders set session_id='cs_group_expired' where id=$1`,[expReceipt.id]);
+ for(let i=0;i<2;i++)await asRole('service_role',null,
+   `select expire_connect_order($1,'acct_test','cs_group_expired')`,[expReceipt.id]);
+ const reopened=(await db.query(`select cobranca_enviada from agenda_events
+   where id in ($1,$2) order by id`,[expRoot.id,expChild.id])).rows;
+ assert.deepEqual(reopened.map(x=>x.cobranca_enviada),[false,false]);
+ assert.equal((await db.query(`select status from connect_orders where id=$1`,
+   [expReceipt.id])).rows[0].status,'expired');
+ console.log('PASS: grouped reversal touches both commission rows, repeated reversal is idempotent, expiry restores all linked booking flags.');
+
+
+await db.close();

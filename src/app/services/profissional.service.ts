@@ -2,11 +2,15 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { SmsService } from './sms.service';
+import { SecurityService } from './security.service';
 
 export interface ServicoExtra {
   titulo: string;
   preco: number;
   emoji?: string;
+  eventId?: string;
+  servicoId?: string;
+  profissionalId?: string;
 }
 
 export interface CaixaItem {
@@ -15,16 +19,24 @@ export interface CaixaItem {
   cliente_nome: string;
   servicos: ServicoExtra[];
   valor_total: number;
-  status_caixa?: 'pendente' | 'pago' | 'cancelado';
+  status_caixa: string;
   forma_pagamento?: string;
+  payment_provider?: string | null;
   profissional?: string;
   created_at?: string;
+  pago_em?: string;
+  token_publico?: string;
+  desconto?: number;
+  produtos?: any[]; // adicionado para comanda digital
+  comanda_fisica?: string;
+  email_cliente?: string;
 }
 
 @Injectable({ providedIn: 'root' })
 export class ProfissionalService {
   private supabase = inject(SupabaseService).client;
   private smsService = inject(SmsService);
+  public security = inject(SecurityService);
 
   // Agenda do dia em tempo real
   agendaHoje$ = new BehaviorSubject<any[]>([]);
@@ -63,7 +75,18 @@ export class ProfissionalService {
         return;
       }
       
-      this.agendaHoje$.next(data || []);
+      const rawData = data || [];
+      const decryptedData = await Promise.all(rawData.map(async (e: any) => {
+        if (e.title) e.title = await this.security.decryptData(e.title);
+        if (e.clientes) {
+          if (e.clientes.nome) e.clientes.nome = await this.security.decryptData(e.clientes.nome);
+          if (e.clientes.telefone) e.clientes.telefone = await this.security.decryptData(e.clientes.telefone);
+        }
+        if (e.profissional_nome) e.profissional_nome = await this.security.decryptData(e.profissional_nome);
+        return e;
+      }));
+
+      this.agendaHoje$.next(decryptedData);
     } catch (err) {
       console.error('[ProSvc] Erro crítico na agenda:', err);
       this.agendaHoje$.next([]);
@@ -94,41 +117,24 @@ export class ProfissionalService {
     clienteNome: string;
     servicoPrincipal: ServicoExtra;
     servicosExtras: ServicoExtra[];
+    produtos: { id: string; nome: string; preco: number; quantidade: number }[];
     profissional: string;
+    comandaFisica?: string;
+    emailCliente?: string;
+    formaPagamento?: string;
+    fidelidadeDesconto?: number;
+    clienteId?: string;
+    profissionalId?: string;
+    servicoId?: string;
+    estabelecimentoId?: string;
+    sessaoId?: string;
+    online?: boolean;
+    checkoutKey: string;
+    valorRecebido?: number|null;
   }): Promise<CaixaItem> {
-    const todosServicos = [params.servicoPrincipal, ...params.servicosExtras];
-    const valorTotal    = todosServicos.reduce((sum, s) => sum + s.preco, 0);
-
-    // 1. Atualiza o evento como finalizado
-    await this.supabase
-      .from('agenda_events')
-      .update({
-        status: 'finalizado',
-        servicos_extras: params.servicosExtras,
-        valor_total: valorTotal,
-        cobranca_enviada: true,
-        cobranca_enviada_at: new Date().toISOString(),
-        profissional_nome: params.profissional,
-      })
-      .eq('id', params.eventId);
-
-    // 2. Cria o item de caixa
-    const { data, error } = await this.supabase
-      .from('caixa_itens')
-      .insert([{
-        agenda_event_id: params.eventId,
-        cliente_nome:    params.clienteNome,
-        servicos:        todosServicos,
-        valor_total:     valorTotal,
-        profissional:    params.profissional,
-        status_caixa:    'pendente',
-      }])
-      .select()
-      .single();
-
-    if (error) throw error;
-
-    await this.fetchCaixaPendente();
+    const {data,error}=await this.supabase.rpc('checkout_atomic',{p_data:params,p_key:params.checkoutKey});
+    if(error)throw new Error(error.message);
+    if(!data?.id)throw new Error('Não foi possível confirmar o recebimento. Tente novamente com a mesma comanda.');
     return data;
   }
 

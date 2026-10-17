@@ -1,0 +1,43 @@
+<div class="observability-container">
+  <div class="header">
+    <h2>Log de IA & Observabilidade</h2>
+    <p>Monitoramento global de latência, tokens e operações de Inteligência Artificial.</p>
+  </div>
+
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <span class="label">Average Latency (LLM)</span>
+      <span class="value">{{ metrics.latency }}<small>ms</small></span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Success Rate</span>
+      <span class="value success">{{ metrics.successRate }}<small>%</small></span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Tokens Consumed (Today)</span>
+      <span class="value">{{ metrics.tokensUsed | number }}</span>
+    </div>
+    <div class="metric-card">
+      <span class="label">Errors (Today)</span>
+      <span class="value error">{{ metrics.errorsToday }}</span>
+    </div>
+  </div>
+
+  <div class="terminal-container">
+    <div class="terminal-header">
+      <div class="dots">
+        <span></span><span></span><span></span>
+      </div>
+      <span class="title">agenda-ai-core-production-logs</span>
+    </div>
+    <div class="terminal-body">
+      <div class="log-line" *ngFor="let log of logs" [ngClass]="log.status">
+        <span class="time">[{{ log.time | date:'HH:mm:ss.SSS' }}]</span>
+        <span class="status-badge" [ngClass]="log.status">{{ log.status | uppercase }}</span>
+        <span class="event">{{ log.event }}</span>
+        <span class="tenant">@ {{ log.tenant }}</span>
+        <span class="latency" *ngIf="log.status === 'success'">+{{ log.latency }}ms</span>
+      </div>
+    </div>
+  </div>
+</div>

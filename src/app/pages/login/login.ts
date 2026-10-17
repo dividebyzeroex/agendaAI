@@ -4,13 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Card } from 'primeng/card';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
-import { ProfissionaisService } from '../../services/profissionais.service';
-import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 
-type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclusao';
+type OnboardingStep = 'overview' | 'conclusao';
 
 @Component({
   selector: 'app-login',
@@ -21,6 +19,9 @@ type OnboardingStep = 'overview' | 'operacao' | 'identidade' | 'link' | 'conclus
 })
 export class Login implements OnInit {
   isSignupMode = false;
+  termsAccepted = false;
+  marketingConsent = false;
+  private route = inject(ActivatedRoute);
   email = '';
   isLoading = false;
   errorMessage = '';
@@ -30,44 +31,26 @@ export class Login implements OnInit {
 
   private router = inject(Router);
   private authService = inject(AuthService);
-  private profService = inject(ProfissionaisService);
   private cdr = inject(ChangeDetectorRef);
 
   // Estados Camaleão
   step: 'email' | 'auth' = 'email';
-  authType: 'email' | 'phone' | 'password' = 'email';
+  authType: 'email' | 'phone' | 'password' = 'password';
   password = '';
 
   // Estados Onboarding Integrado (Elite Gatekeeper)
   isDoingOnboarding = false;
   onStep: OnboardingStep = 'overview';
-  flipAngle = 0;
   isSaving = false;
 
   form: any = {
     nome: '',
-    cnpj: '',
-    segmento: '',
-    volume_clientes: '',
-    endereco_completo: '',
-    cidade: '',
-    telefone: '',
     email: '',
-    cor_primaria: '#6366f1',
     slug: ''
   };
 
-  segmentOptions = SEGMENTO_OPTIONS;
-
-  volumeOptions = [
-    { label: 'Começando', value: 'iniciante', desc: 'Até 50 / mês' },
-    { label: 'Crescendo', value: 'intermediario', desc: '51 a 200 / mês' },
-    { label: 'Alto Volume', value: 'avanzado', desc: '200+ / mês' }
-  ];
-
-  suggestedColors = ['#6366f1', '#a142f4', '#10b981', '#f43f5e', '#facc15', '#0f172a'];
-  
   async ngOnInit() {
+    this.isSignupMode = this.route.snapshot.queryParamMap.get('trial') === '30';
     this.isLoading = true;
     try {
       const hasSession = await this.authService.checkSession();
@@ -83,18 +66,30 @@ export class Login implements OnInit {
   }
 
   async submitEmail() {
+    if (this.isLoading) return;
     this.errorMessage = '';
     this.successMessage = '';
     this.isLoading = true;
 
-    if (!this.email) {
-      this.errorMessage = 'Por favor, insira o seu e-mail corporativo.';
+    this.email = this.email.trim().toLowerCase();
+    this.validateEmail();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.email)) {
+      this.errorMessage = 'Informe um e-mail válido.';
       this.isLoading = false;
       return;
     }
 
     try {
       if (this.isSignupMode) {
+         if (!this.termsAccepted) throw new Error('Leia e aceite as condições do teste para continuar.');
+         localStorage.setItem('ag_terms_accepted', 'true');
+         localStorage.setItem('ag_marketing_consent', String(this.marketingConsent));
+         if (this.authType === 'password' && (!this.password || this.password.length < 8)) {
+           this.errorMessage = 'Sua senha deve ter no mínimo 8 caracteres.';
+           this.isLoading = false;
+           this.cdr.detectChanges();
+           return;
+         }
          this.isDoingOnboarding = true;
          this.onStep = 'overview';
          this.form.email = this.email;
@@ -105,19 +100,13 @@ export class Login implements OnInit {
 
       // LOGIN CAMALEÃO: Passo 1 - Identificar Preferência
       if (this.step === 'email') {
-        const { data, error } = await this.profService.getAuthPreference(this.email);
-        if (error) {
-           // Se não achar, assume o padrão de link mágico (pode ser novo)
-           this.authType = 'email';
-        } else {
-           this.authType = (data as any) || 'email';
-        }
+        this.authType = 'password';
         this.step = 'auth';
         this.isLoading = false;
         this.cdr.detectChanges();
         return;
       }
-      
+
       // LOGIN CAMALEÃO: Passo 2 - Autenticar de fato
       if (this.authType === 'password') {
         if (!this.password) {
@@ -132,7 +121,7 @@ export class Login implements OnInit {
         this.isOtpSent = true;
         this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
       }
-      
+
     } catch (error: any) {
       this.errorMessage = error.message || 'Houve um erro na autenticação.';
     } finally {
@@ -147,9 +136,9 @@ export class Login implements OnInit {
   }
 
   // --- Lógica do Wizard Interno ao Card ---
-  
+
   getStepIndex(): number {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
+    const steps: OnboardingStep[] = ['overview', 'conclusao'];
     return steps.indexOf(this.onStep);
   }
 
@@ -160,30 +149,25 @@ export class Login implements OnInit {
   }
 
   nextStep() {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link', 'conclusao'];
-    const idx = this.getStepIndex();
-    if (idx < steps.length - 1) {
-      if (this.onStep === 'link') {
-        this.finalizarOnboarding();
-      } else {
-        this.onStep = steps[idx + 1];
-        this.flipAngle -= 180;
-        this.cdr.detectChanges();
-      }
+    if (this.onStep === 'overview') {
+      this.finalizarOnboarding();
     }
   }
 
   backStep() {
-    const steps: OnboardingStep[] = ['overview', 'operacao', 'identidade', 'link'];
-    const idx = this.getStepIndex();
-    if (idx > 0) {
-      this.onStep = steps[idx - 1];
-      this.flipAngle += 180;
-      this.cdr.detectChanges();
-    }
+    this.isDoingOnboarding = false;
+    this.errorMessage = '';
   }
 
   async finalizarOnboarding() {
+    if (this.isLoading) return;
+    this.form.nome = this.form.nome.trim();
+    this.form.slug = EstabelecimentoPublicoService.slugify(this.form.slug);
+    if (!this.form.nome || !this.form.slug) {
+      this.errorMessage = 'Informe o nome e o link do estabelecimento.';
+      return;
+    }
+    this.errorMessage = '';
     this.isLoading = true;
     this.onStep = 'conclusao';
     this.cdr.detectChanges();
@@ -193,15 +177,22 @@ export class Login implements OnInit {
         this.form.email = this.email;
       }
       localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-      await this.authService.signInWithOtp(this.form.email);
-      await new Promise(r => setTimeout(r, 1500));
+
+      if (this.authType === 'password') {
+        const signup = await this.authService.signUpWithPassword(this.form.email, this.password);
+        if (signup.session) await this.authService.redirectAfterLogin();
+        else this.successMessage = 'Abra o link de confirmação para continuar. Se já possui cadastro, volte ao início e entre com sua senha.';
+      } else {
+        await this.authService.signInWithOtp(this.form.email);
+        this.successMessage = 'Abra o link de acesso para continuar o cadastro e ativar seu teste.';
+      }
+
       this.isLoading = false;
       this.cdr.detectChanges();
     } catch (err: any) {
       this.errorMessage = err.message || 'Houve um problema ao processar seu cadastro.';
       this.isLoading = false;
-      this.onStep = 'link';
-      this.flipAngle += 180;
+      this.onStep = 'overview';
       this.cdr.detectChanges();
     }
   }
@@ -217,15 +208,29 @@ export class Login implements OnInit {
     }
   }
 
+  returnToLogin() {
+    this.isDoingOnboarding = false;
+    this.isSignupMode = false;
+    this.isOtpSent = false;
+    this.step = 'email';
+    this.onStep = 'overview';
+    this.errorMessage = '';
+    this.successMessage = '';
+  }
+
   toggleMode() {
     this.isSignupMode = !this.isSignupMode;
+    this.step = 'email';
+    this.isOtpSent = false;
+    this.authType = 'password';
+    this.successMessage = '';
     this.errorMessage = '';
     this.cdr.detectChanges();
   }
 
   resetSteps() {
     this.step = 'email';
-    this.authType = 'email';
+    this.authType = 'password';
     this.password = '';
     this.cdr.detectChanges();
   }

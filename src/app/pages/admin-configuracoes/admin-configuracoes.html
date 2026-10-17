@@ -1,8 +1,8 @@
-<div class="ag-page">
+<div class="ag-page customer-page">
   <div class="page-header">
     <div>
-      <h2>Configurações <span class="gradient-text">do Negócio</span></h2>
-      <p>Gerencie os dados do estabelecimento, serviços e horários de atendimento — tudo salvo no Supabase.</p>
+      <h2>Configurações</h2>
+      <p>Ajuste seu negócio quando precisar.</p>
     </div>
     <div class="saved-toast" *ngIf="savedMsg">
       <i class="pi pi-check-circle"></i> {{ savedMsg }}
@@ -20,71 +20,14 @@
     <button class="tab-btn" [class.active]="activeTab === 'horarios'" (click)="setTab('horarios')">
       <i class="pi pi-clock"></i> Horários
     </button>
+    <button class="tab-btn" [class.active]="activeTab === 'fidelidade'" (click)="setTab('fidelidade')">
+      <i class="pi pi-star"></i> Fidelidade
+    </button>
   </div>
 
   <!-- TAB: Estabelecimento -->
   <div class="tab-content" *ngIf="activeTab === 'negocio'">
     <div class="bento-grid">
-      <!-- 🔗 Card do Link Público -->
-      <div class="bento-card config-card link-card" *ngIf="estabelecimento.nome">
-        <div class="link-card-header">
-          <div class="link-icon">🔗</div>
-          <div>
-            <h3>Seu Link de Agendamento</h3>
-            <p>Compartilhe com seus clientes para que eles agendem sem precisar de login.</p>
-          </div>
-        </div>
-        <div class="link-box">
-          <span class="link-url">{{ publicLink }}</span>
-          <button class="btn-copy" (click)="copiarLink()" [class.copied]="linkCopiado">
-            <i class="pi" [class.pi-copy]="!linkCopiado" [class.pi-check]="linkCopiado"></i>
-            {{ linkCopiado ? 'Copiado!' : 'Copiar' }}
-          </button>
-        </div>
-        <div class="link-actions">
-          <a [href]="publicLink" target="_blank" class="btn-preview">
-            <i class="pi pi-external-link"></i> Abrir portal
-          </a>
-          <span class="link-tip">Compartilhe no WhatsApp, Instagram bio ou onde preferir.</span>
-        </div>
-      </div>
-
-      <!-- 📱 Card do Portal do Profissional -->
-      <div class="bento-card config-card link-card pro-link-card" *ngIf="estabelecimento.nome">
-        <div class="link-card-header">
-          <div class="link-icon">📱</div>
-          <div>
-            <h3>Portal do Profissional</h3>
-            <p>Agenda mobile para sua equipe — confirmar clientes, adicionar serviços e enviar para o caixa.</p>
-          </div>
-        </div>
-        <div class="link-box">
-          <span class="link-url">{{ proLink }}</span>
-          <button class="btn-copy pro" (click)="copiarProLink()" [class.copied]="proLinkCopiado">
-            <i class="pi" [class.pi-copy]="!proLinkCopiado" [class.pi-check]="proLinkCopiado"></i>
-            {{ proLinkCopiado ? 'Copiado!' : 'Copiar' }}
-          </button>
-        </div>
-        <div class="link-actions">
-          <a [href]="proLink" target="_blank" class="btn-preview pro">
-            <i class="pi pi-external-link"></i> Abrir portal
-          </a>
-          <span class="link-tip">Compartilhe apenas com sua equipe de profissionais.</span>
-        </div>
-      </div>
-
-      <!-- 💳 Card Planos e Assinaturas -->
-      <div class="bento-card config-card plan-card">
-         <div class="link-card-header">
-           <div class="link-icon">💳</div>
-           <div>
-             <h3>Planos e Assinaturas</h3>
-             <p>Gerencie seu plano, adicione créditos de SMS e veja faturas.</p>
-           </div>
-         </div>
-         <a routerLink="/admin/billing" class="btn-primary" style="margin-top: 1.5rem; display: block; text-align: center; text-decoration: none; padding: 12px; border-radius: 12px;">Acessar Portal de Pagamento</a>
-      </div>
-
       <!-- Dados do Negócio (Ocupa toda a largura da grid) -->
       <div class="bento-card bento-wide config-card">
         <h3>Dados do Negócio</h3>
@@ -113,6 +56,7 @@
           {{ isSaving ? 'Salvando...' : 'Salvar Dados' }}
         </button>
       </div>
+      <details class="disclosure config-sharing"><summary>Links de agendamento, equipe e assinatura</summary><section><h3>Seu link de agendamento</h3><p>Os clientes podem reservar sem criar conta.</p><div class="link-box"><span class="link-url">{{publicLink}}</span><button class="btn-copy" (click)="copiarLink()">{{linkCopiado?'Copiado':'Copiar'}}</button></div><a [href]="publicLink" target="_blank" rel="noopener" class="text-action">Conferir página pública →</a></section><section><h3>Acesso da equipe</h3><div class="link-box"><span class="link-url">{{proLink}}</span><button class="btn-copy" (click)="copiarProLink()">{{proLinkCopiado?'Copiado':'Copiar'}}</button></div><a [href]="proLink" class="text-action">Abrir agenda profissional →</a></section><a routerLink="/admin/billing" class="text-action">Plano, assinatura e faturas →</a></details>
     </div>
   </div>
 
@@ -192,7 +136,7 @@
   <!-- TAB: Horários -->
   <div class="tab-content" *ngIf="activeTab === 'horarios'">
     <div class="config-card">
-      <h3>Grade de Atendimento Semanal</h3>
+      <h3>Horários de funcionamento</h3>
       <div class="horarios-list">
         <div class="horario-row" *ngFor="let h of horarios" [class.fechado]="!h.ativo">
           <div class="dia-toggle">
@@ -213,6 +157,40 @@
           </div>
           <span class="fechado-label" *ngIf="!h.ativo">Fechado</span>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Fidelidade -->
+  <div class="tab-content" *ngIf="activeTab === 'fidelidade'">
+    <div class="config-card">
+      <h3>Programa de Fidelidade</h3>
+      <p style="color: var(--text-muted); margin-bottom: 2rem;">Recompense seus clientes fiéis com um desconto especial após um certo número de visitas.</p>
+
+      <div class="bento-card bento-wide config-card" style="margin-top: 0;" *ngIf="estabelecimento.config_fidelidade">
+        <div class="dia-toggle" style="margin-bottom: 2rem;">
+          <div class="toggle-pill" [class.on]="estabelecimento.config_fidelidade.ativo" (click)="estabelecimento.config_fidelidade.ativo = !estabelecimento.config_fidelidade.ativo; salvarEstabelecimento()">
+            <div class="knob"></div>
+          </div>
+          <span class="dia-nome">Programa de Fidelidade Ativo</span>
+        </div>
+
+        <div class="form-grid" *ngIf="estabelecimento.config_fidelidade.ativo">
+          <div class="field">
+            <label>Visitas Necessárias (Meta)</label>
+            <input type="number" [(ngModel)]="estabelecimento.config_fidelidade.visitas_meta" class="ag-input" min="1" />
+          </div>
+          <div class="field">
+            <label>Desconto (%) nos Serviços</label>
+            <input type="number" [(ngModel)]="estabelecimento.config_fidelidade.desconto_percentual" class="ag-input" min="0" max="100" />
+          </div>
+        </div>
+
+        <button class="btn-save" [disabled]="isSaving" (click)="salvarEstabelecimento()" *ngIf="estabelecimento.config_fidelidade.ativo" style="margin-top: 2rem;">
+          <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
+          <i class="pi pi-check" *ngIf="!isSaving"></i>
+          {{ isSaving ? 'Salvando...' : 'Salvar Regras' }}
+        </button>
       </div>
     </div>
   </div>

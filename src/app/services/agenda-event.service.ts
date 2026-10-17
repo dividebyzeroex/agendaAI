@@ -1,9 +1,11 @@
 import { Injectable, inject, NgZone } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { SecurityService } from './security.service';
+import { ProfessionalIdentityService } from './professional-identity.service';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface AgendaEvent {
   id: string;
@@ -24,6 +26,8 @@ export interface AgendaEvent {
   servicos_extras?: any[];
   valor_total?: number;
   cobranca_enviada?: boolean;
+  comanda_fisica?: string;
+  metadata?: any;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -33,16 +37,24 @@ export class AgendaEventService {
   private notifService = inject(NotificationService);
   private estService = inject(EstabelecimentoService);
   private security = inject(SecurityService);
+  private identity = inject(ProfessionalIdentityService);
 
+  readonly workflowEvents$ = new Subject<{ trigger: string; payload: AgendaEvent }>();
   private eventsSubject = new BehaviorSubject<AgendaEvent[]>([]);
   events$ = this.eventsSubject.asObservable();
+  get currentEvents(): AgendaEvent[] { return this.eventsSubject.value; }
 
+  readonly error$ = new BehaviorSubject<string>('');
+  reload(){return this.fetchEvents();}
+
+  private loadVersion=0;
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
-      if (id) this.fetchEvents();
+      ++this.loadVersion;this.eventsSubject.next([]);
+      if (id) this.fetchEvents();else this.isLoadingSubject.next(false);
     });
     this.subscribeRealtime();
   }
@@ -51,23 +63,40 @@ export class AgendaEventService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) return;
 
+    const version=++this.loadVersion;
     this.isLoadingSubject.next(true);
+    this.error$.next('');
     try {
       const { data, error } = await this.supabase
         .rpc('get_agenda_events_by_estab', { p_estab_id: estId });
-      
-      if (!error) {
-        const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) => 
-          this.security.decryptObject(e, ['title', 'observacoes'])
-        ));
 
+      if(error)throw error;
+      if (!error) {
+        const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) =>
+          this.security.decryptObject(e, ['title', 'observacoes', 'profissional_nome'])
+        ));
+        // Earlier event RPCs persist the professional UUID but leave the display
+        // name blank. Resolve from the professional roster without ever changing
+        // the immutable UUID used to calculate commissions.
+        const missing = decrypted.filter(e=>!!e.profissional_id && !e.profissional_nome?.trim());
+        if(missing.length) {
+          try {
+            const names = await this.identity.names(estId, missing.map(e=>e.profissional_id!));
+            for(const event of missing)
+              event.profissional_nome = names.get(event.profissional_id!) || 'Profissional cadastrado';
+          } catch {
+            for(const event of missing) event.profissional_nome = 'Profissional cadastrado';
+          }
+        }
         this.ngZone.run(() => {
-          this.eventsSubject.next(decrypted || []);
+          if(version===this.loadVersion)this.eventsSubject.next(decrypted || []);
         });
       }
+    } catch {
+      if(version===this.loadVersion)this.ngZone.run(()=>this.error$.next('Não foi possível carregar os agendamentos. Tente novamente.'));
     } finally {
       this.ngZone.run(() => {
-        this.isLoadingSubject.next(false);
+        if(version===this.loadVersion)this.isLoadingSubject.next(false);
       });
     }
   }
@@ -88,7 +117,7 @@ export class AgendaEventService {
     if (eventType === 'INSERT') {
       const decryptedTitle = await this.security.decryptData(newRec.title);
       const msg = `Cliente ${decryptedTitle} agendado para ${this.formatTime(newRec.start)}.`;
-      
+
       this.ngZone.run(() => {
         this.notifService.showToast({
           type: 'SUCCESS',
@@ -170,44 +199,69 @@ export class AgendaEventService {
     const estId = (this.estService as any)['activeIdSubject'].value;
     if (!estId) throw new Error('Contexto de estabelecimento não encontrado.');
 
-    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes']);
+    const encrypted = await this.security.encryptObject(event, ['title', 'observacoes', 'profissional_nome']);
 
     const { data: encryptedData, error } = await this.supabase
-      .rpc('create_agenda_event_safe', { 
-        p_data: { ...encrypted, estabelecimento_id: estId } 
+      .rpc('create_agenda_event_safe', {
+        p_data: { ...encrypted, estabelecimento_id: estId }
       })
       .maybeSingle<AgendaEvent>();
-    
-    if (error) throw error;
-    
-    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes']);
+
+    if (error) throw new Error(parseSupabaseError(error));
+
+    const decrypted = await this.security.decryptObject(encryptedData as AgendaEvent, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next([...this.getEvents(), decrypted]);
     });
+    this.workflowEvents$.next({ trigger: 'ON_EVENT_CREATED', payload: decrypted });
     return decrypted;
   }
 
-  async updateEvent(id: string, changes: Partial<AgendaEvent>): Promise<void> {
-    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes']);
+  async addSeries(event:Omit<AgendaEvent,'id'>,count:number,days:number,key:string):Promise<AgendaEvent[]> {
+    const estId=this.estService.estabelecimento$.value?.id;
+    if(!estId)throw new Error('Estabelecimento não encontrado.');
+    const encrypted=await this.security.encryptObject(event,['title','observacoes','profissional_nome']);
+    const {data,error}=await this.supabase.rpc('create_agenda_series',{p_data:{...encrypted,estabelecimento_id:estId},p_count:count,p_days:days,p_key:key});
+    if(error){
+      // Keep ordinary bookings available while the additive database migration is pending.
+      // Never retry network/permission errors: their outcome may be uncertain.
+      if(error.code==='PGRST202'){
+        if(count===1)return [await this.addEvent(event)];
+        throw new Error('A recorrência aguarda a atualização do banco. Escolha uma visita para salvar este agendamento.');
+      }
+      throw new Error(parseSupabaseError(error));
+    }
+    const rows=await Promise.all((data as AgendaEvent[]).map(e=>this.security.decryptObject(e,['title','observacoes','profissional_nome'])));
+    this.ngZone.run(()=>this.eventsSubject.next([...new Map([...this.currentEvents,...rows].map(e=>[e.id,e])).values()]));
+    return rows;
+  }
 
-    const { error } = await this.supabase
+  async updateEvent(id: string, changes: Partial<AgendaEvent>): Promise<void> {
+    const encrypted = await this.security.encryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
+
+    const { data:updated,error } = await this.supabase
       .rpc('update_event_safe', { p_id: id, p_changes: encrypted });
-    
-    if (error) throw error;
-    
-    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes']);
+
+    if (error) throw new Error(parseSupabaseError(error));
+    if(!Array.isArray(updated)||!updated.length)throw new Error('O atendimento não foi atualizado. Atualize a agenda e tente novamente.');
+
+    const decryptedChanges = await this.security.decryptObject(changes, ['title', 'observacoes', 'profissional_nome']);
 
     this.ngZone.run(() => {
       this.eventsSubject.next(
         this.getEvents().map(e => (e.id === id ? { ...e, ...decryptedChanges } : e))
       );
     });
+    if (changes.status === 'cancelado') {
+      const event = this.getEvents().find(e => e.id === id);
+      if (event) this.workflowEvents$.next({ trigger: 'ON_EVENT_CANCELED', payload: event });
+    }
   }
 
   async removeEvent(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('delete_event_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     this.ngZone.run(() => {
       this.eventsSubject.next(this.getEvents().filter(e => e.id !== id));
     });

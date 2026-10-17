@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,12 @@ declare var confetti: any;
   styleUrl: './admin-billing.css'
 })
 export class AdminBilling implements OnInit {
+  formatAmount(value: number | undefined): string {
+    if (value == null) return '—';
+    return new Intl.NumberFormat('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(value);
+  }
+
+  private cdr = inject(ChangeDetectorRef);
   private billing = inject(BillingService);
   private tracker = inject(CostTrackerService);
   public  estabService = inject(EstabelecimentoService);
@@ -38,6 +44,9 @@ export class AdminBilling implements OnInit {
   isProcessing = false;
   isVerifying = false;
   successMsg = '';
+  subscriptionTermsAccepted = false;
+  checkoutAvailable = false;
+  billingStatusMessage = 'Verificando disponibilidade de contratação…';
   showConfetti = false;
 
   // Multi-cycle Pricing
@@ -53,6 +62,18 @@ export class AdminBilling implements OnInit {
     window.scrollTo(0, 0);
     this.checkPaymentCallback();
     this.billing.refreshInvoices();
+    this.checkBillingAvailability();
+  }
+
+  async checkBillingAvailability() {
+    try {
+      const response = await fetch('/api/billing?action=status', { cache: 'no-store' });
+      if (!response.ok) throw new Error();
+      const status = await response.json();
+      this.checkoutAvailable = status.ready === true && status.mode === 'live';
+      this.billingStatusMessage = this.checkoutAvailable ? '' : 'Seu teste é gratuito. A contratação paga ainda está em validação; nenhum débito será feito.';
+    } catch { this.checkoutAvailable=false; this.billingStatusMessage = 'Contratação temporariamente indisponível. Seu teste não gera cobrança automática.'; }
+    finally { this.cdr.markForCheck(); }
   }
 
   get orderSummary() {
@@ -111,7 +132,7 @@ export class AdminBilling implements OnInit {
           const result = await this.billing.verifySession(sessionId);
           if (result.status === 'success') {
             setTimeout(() => this.celebrate(), 500);
-            this.successMsg = `Plano ${result.planId.toUpperCase()} ativado com sucesso! Sua infraestrutura agora é Premium.`;
+            this.successMsg = 'Pagamento confirmado. Sua assinatura está ativa.';
             window.history.replaceState({}, document.title, window.location.pathname);
             setTimeout(() => this.successMsg = '', 15000);
           } else {
@@ -121,12 +142,13 @@ export class AdminBilling implements OnInit {
           console.error('Error verifying Stripe session:', e);
           // 403 Forbidden is common if RPC permissions are missing
           if (e.message?.includes('403') || e.status === 403) {
-            this.successMsg = 'Falha de Permissão (403): Re-execute o script SQL de segurança no Supabase.';
+            this.successMsg = 'Falha de Permissão (403): Entre novamente e tente verificar seu pagamento.';
           } else if (!this.successMsg) {
             this.successMsg = 'Erro ao processar ativação: ' + e.message;
           }
         } finally {
           this.isVerifying = false;
+          this.cdr.markForCheck();
         }
       };
 
@@ -135,6 +157,8 @@ export class AdminBilling implements OnInit {
   }
 
   openUpgrade(plan: BillingPlan) {
+    if (!this.checkoutAvailable) return;
+    this.subscriptionTermsAccepted = false;
     this.selectedPlan = plan;
     this.showConfirmModal = true;
   }
@@ -145,7 +169,7 @@ export class AdminBilling implements OnInit {
   }
 
   async processStripeCheckout() {
-    if (!this.selectedPlan) return;
+    if (!this.selectedPlan || !this.checkoutAvailable || !this.subscriptionTermsAccepted) return;
     const current = this.estabService.estabelecimento$.value;
     if (!current?.id) {
        this.successMsg = 'Erro: Estabelecimento não encontrado. Tente novamente.';
@@ -154,7 +178,7 @@ export class AdminBilling implements OnInit {
 
     this.isProcessing = true;
     try {
-      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id, this.selectedCycle);
+      const checkoutUrl = await this.billing.processStripeCheckout(this.selectedPlan.id, this.selectedCycle, this.subscriptionTermsAccepted);
       
       if (checkoutUrl) {
         window.location.href = checkoutUrl;
@@ -163,9 +187,8 @@ export class AdminBilling implements OnInit {
       }
     } catch (e: any) {
        this.successMsg = 'Erro ao iniciar pagamento: ' + e.message;
-       setTimeout(() => this.successMsg = '', 4000);
        this.isProcessing = false;
-       this.showConfirmModal = false;
+       this.cdr.markForCheck();
     }
   }
 
@@ -187,6 +210,7 @@ export class AdminBilling implements OnInit {
       setTimeout(() => this.successMsg = '', 4000);
     } finally {
       this.isProcessing = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -197,7 +221,8 @@ export class AdminBilling implements OnInit {
   }
 
   manageCycle() {
-    this.successMsg = 'Redirecionando para o portal de gerenciamento de faturamento...';
+    document.getElementById('invoice-history')?.scrollIntoView({ behavior: 'smooth' });
+    this.successMsg = 'Consulte suas faturas no histórico abaixo.';
     setTimeout(() => this.successMsg = '', 3000);
   }
 }

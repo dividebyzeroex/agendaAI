@@ -1,18 +1,10 @@
 import { inject } from '@angular/core';
 import { Router, CanActivateFn } from '@angular/router';
-import { AuthService } from '../services/auth.service';
-import { map, take } from 'rxjs';
-
-export const platformOwnerGuard: CanActivateFn = async (route, state) => {
-  const authService = inject(AuthService);
-  const router = inject(Router);
-
-  await authService.checkSession();
-  const profile = authService.userProfileValue;
-
-  if (profile?.role === 'superadmin' || profile?.email === 'joao.almeida_msbrasil@outlook.com') {
-    return true;
-  }
-  
-  return router.parseUrl('/login');
+import { SupabaseService } from '../services/supabase.service';
+export const platformOwnerGuard: CanActivateFn = async () => {
+  const client=inject(SupabaseService).client; const router=inject(Router);
+  const {data:{user}}=await client.auth.getUser();
+  if(!user)return router.parseUrl('/login');
+  const {data,error}=await client.rpc('is_platform_owner');
+  return !error && data===true ? true : router.parseUrl('/login');
 };

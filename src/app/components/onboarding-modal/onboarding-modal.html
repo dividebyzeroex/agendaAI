@@ -3,6 +3,7 @@
 
   <div class="ob-modal" role="dialog" aria-modal="true">
 
+    <p role="alert" *ngIf="errorMessage" style="position:relative;z-index:10002;background:white;color:#a52d32;padding:14px">{{errorMessage}}</p>
     <!-- Progress Bar -->
     <div class="ob-progress-track" *ngIf="step !== 'conclusao'">
       <div class="ob-progress-fill" [style.width]="progress + '%'"></div>

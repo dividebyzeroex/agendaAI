@@ -7,9 +7,9 @@ import { NotificationService, ToastMessage } from '../../services/notification.s
   standalone: true,
   imports: [CommonModule],
   template: `
-    <div class="toast-container">
-      <div *ngFor="let toast of (notifService.toasts$ | async); trackBy: trackById" 
-           class="toast-card" 
+    <div class="toast-container" role="status" aria-live="polite">
+      <div *ngFor="let toast of ((notifService.toasts$ | async) || [] | slice:-1); trackBy: trackById"
+           class="toast-card"
            [class]="toast.type.toLowerCase()">
         <div class="toast-icon">
           <i [class]="getIcon(toast)"></i>
@@ -18,7 +18,7 @@ import { NotificationService, ToastMessage } from '../../services/notification.s
           <div class="toast-title">{{ toast.title }}</div>
           <div class="toast-message">{{ toast.message }}</div>
         </div>
-        <button class="toast-close" (click)="notifService.removeToast(toast.id)">
+        <button aria-label="Dispensar aviso" class="toast-close" (click)="notifService.removeToast(toast.id)">
           <i class="pi pi-times"></i>
         </button>
         <div class="toast-progress"></div>
@@ -51,7 +51,7 @@ import { NotificationService, ToastMessage } from '../../services/notification.s
       border: 1px solid rgba(0, 0, 0, 0.05);
       position: relative;
       overflow: hidden;
-      
+
       /* Slide In Animation */
       animation: slideIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) forwards,
                  slideOut 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) 6.5s forwards;
@@ -100,7 +100,7 @@ import { NotificationService, ToastMessage } from '../../services/notification.s
     }
     .toast-card.success .toast-progress { background: #34a853; }
     .toast-card.info .toast-progress    { background: #1a73e8; }
-    
+
     .toast-progress {
       animation: progress 7s linear forwards;
     }
@@ -109,6 +109,7 @@ import { NotificationService, ToastMessage } from '../../services/notification.s
       from { width: 100%; }
       to { width: 0%; }
     }
+    .toast-container{bottom:24px;right:24px;max-width:calc(100vw - 32px)}.toast-card{width:300px;max-width:100%;border-radius:9px;box-shadow:0 6px 20px #17203318;animation:none;padding:13px;gap:10px}.toast-icon{width:28px;height:28px;font-size:15px;border-radius:7px}.toast-title{font-size:13px;font-weight:600}.toast-message{font-size:12px}.toast-progress{display:none}.toast-close{min-width:28px;min-height:28px}@media(max-width:900px){.toast-container{bottom:calc(90px + env(safe-area-inset-bottom));right:16px;left:16px;align-items:center}.toast-card{width:100%;max-width:460px}}
   `]
 })
 export class ToastContainerComponent {

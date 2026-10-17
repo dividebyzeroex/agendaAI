@@ -14,6 +14,7 @@ export interface Cliente {
   observacoes?: string;
   ultima_visita?: string;
   faltas?: number;
+  metadata?: any;
   created_at?: string;
 }
 
@@ -24,11 +25,15 @@ export class ClienteService {
   private estService = inject(EstabelecimentoService);
   private security = inject(SecurityService);
 
+  loading$ = new BehaviorSubject(false);
+  error$ = new BehaviorSubject('');
+  private loadVersion = 0;
   clientes$ = new BehaviorSubject<Cliente[]>([]);
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
-      if (id) this.fetchClientes();
+      if (id) void this.fetchClientes();
+      else { this.loadVersion++; this.clientes$.next([]); this.loading$.next(false); this.error$.next(''); }
     });
     this.subscribeRealtime();
   }
@@ -44,19 +49,20 @@ export class ClienteService {
   }
 
   async fetchClientes() {
-    const currentId = (this.estService as any)['activeIdSubject'].value; 
-    
+    const currentId = (this.estService as any)['activeIdSubject'].value;
     if (!currentId) return;
-
-    const { data, error } = await this.supabase
-      .rpc('get_clientes_by_estab', { p_estab_id: currentId });
-    
-    if (!error) {
-      const decrypted = await Promise.all((data as Cliente[] || []).map((c: Cliente) => 
-        this.security.decryptObject(c, ['nome', 'telefone', 'email', 'observacoes'])
-      ));
-
-      this.ngZone.run(() => this.clientes$.next(decrypted || []));
+    const version = ++this.loadVersion;
+    this.loading$.next(true);
+    this.error$.next('');
+    try {
+      const {data,error} = await this.supabase.rpc('get_clientes_by_estab', {p_estab_id:currentId});
+      if (error) throw error;
+      const decrypted = await Promise.all((data as Cliente[] || []).map(c => this.security.decryptObject(c, ['nome','telefone','email','observacoes'])));
+      if (version === this.loadVersion) this.ngZone.run(() => this.clientes$.next(decrypted));
+    } catch {
+      if (version === this.loadVersion) this.error$.next('Não foi possível carregar os clientes. Verifique sua conexão e tente novamente.');
+    } finally {
+      if (version === this.loadVersion) this.loading$.next(false);
     }
   }
 
@@ -74,8 +80,8 @@ export class ClienteService {
       delete sanitized.nascimento;
     }
 
-    // Criptografia PII (Zero-Knowledge)
-    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
+    // Contact fields are protected by tenant RLS and required for verified invitations.
+    const encrypted = { ...sanitized };
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('create_cliente_safe', { 
@@ -100,7 +106,7 @@ export class ClienteService {
       delete sanitized.nascimento;
     }
 
-    const encrypted = await this.security.encryptObject(sanitized, ['nome', 'telefone', 'email', 'observacoes']);
+    const encrypted = { ...sanitized };
 
     const { data: encryptedData, error } = await this.supabase
       .rpc('update_cliente_safe', { p_id: id, p_changes: encrypted })
@@ -132,5 +138,47 @@ export class ClienteService {
       return existing;
     }
     return this.addCliente({ nome, telefone, ultima_visita: new Date().toISOString().split('T')[0] });
+  }
+
+  // ─── Fidelidade e Aniversários ─────────────────────────────────────────────
+
+  async getAniversariantesDoMes(): Promise<Cliente[]> {
+    const currentId = (this.estService as any)['activeIdSubject'].value; 
+    if (!currentId) return [];
+
+    const { data, error } = await this.supabase
+      .rpc('get_aniversariantes_do_mes', { p_estab_id: currentId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao buscar aniversariantes:', error);
+      return [];
+    }
+
+    const decrypted = await Promise.all((data as Cliente[] || []).map((c: Cliente) => 
+      this.security.decryptObject(c, ['nome', 'telefone', 'email', 'observacoes'])
+    ));
+    return decrypted;
+  }
+
+  async getVisitasFidelidadePendentes(clienteId: string): Promise<number> {
+    const { data, error } = await this.supabase
+      .rpc('get_visitas_fidelidade_pendentes', { p_cliente_id: clienteId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao buscar visitas pendentes:', error);
+      return 0;
+    }
+    return data as number;
+  }
+
+  async resgatarFidelidadeCliente(clienteId: string): Promise<boolean> {
+    const { data, error } = await this.supabase
+      .rpc('resgatar_fidelidade_cliente', { p_cliente_id: clienteId });
+    
+    if (error) {
+      console.error('[ClienteService] Erro ao resgatar fidelidade:', error);
+      return false;
+    }
+    return data as boolean;
   }
 }

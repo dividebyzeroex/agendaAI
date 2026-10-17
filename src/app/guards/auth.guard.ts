@@ -8,9 +8,11 @@ export const authGuard: CanActivateFn = async (route, state) => {
 
   // Aguarda a resolução do URL hash pelo Supabase antes de julgar o bloqueio
   const hasSession = await authService.checkSession();
-  
+
   if (hasSession) {
     const profile = authService.userProfileValue;
+    if (profile?.role === 'superadmin') return true;
+    if (profile?.role === 'new') return state.url.startsWith('/onboarding') ? true : router.parseUrl('/onboarding');
     const isPrimeiroAcesso = profile?.primeiro_acesso || false;
     const onboardingPendente = !profile?.onboarding_concluido;
 

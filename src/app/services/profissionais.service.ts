@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { AuthService } from './auth.service';
 import { SecurityService } from './security.service';
+import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface Profissional {
   id?: string;
@@ -50,6 +51,8 @@ export interface ProfissionalServico {
   profissional_id?: string;
   servico_id: string;
   valor_proprio?: number;
+  taxa_comissao?: number | null; // NULL inherits professional's comissao_padrao; 0 is explicit 0%
+  tipo_comissao?: 'percentual' | 'fixo';
   servicos?: { titulo: string; emoji: string; preco: number };
 }
 
@@ -174,15 +177,15 @@ export class ProfissionaisService {
     // Mantém o role se vier no form (para RBAC)
     const role = payload.role || 'barbeiro';
 
-    // Criptografia Zero-Knowledge
-    const encrypted = await this.security.encryptObject(payload, ['nome', 'bio', 'email', 'telefone', 'instagram', 'linkedin']);
+    // Public profile and verified invitation fields remain usable by the booking flow.
+    const encrypted = { ...payload };
 
     const { data: created, error } = await this.supabase
       .rpc('create_profissional_safe', { 
         p_data: { ...encrypted, estabelecimento_id: estId } 
       })
       .maybeSingle<Profissional>();
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
 
     const disps = DIAS_SEMANA.map(d => ({ ...d, profissional_id: created?.id, estabelecimento_id: estId }));
     await this.supabase.rpc('save_disponibilidades_safe', { 
@@ -216,7 +219,7 @@ export class ProfissionaisService {
     if (Object.keys(controlFields).length > 0) {
       const { error: ctrlErr } = await this.supabase
         .rpc('update_profissional_controles', { p_id: id, p_changes: controlFields });
-      if (ctrlErr) throw ctrlErr;
+      if (ctrlErr) throw new Error(parseSupabaseError(ctrlErr));
     }
 
     // 2. Campos Sensíveis (PII) -> Criptografia + RPC Safe
@@ -224,10 +227,10 @@ export class ProfissionaisService {
     const hasPii = Object.keys(payload).some(k => piiFields.includes(k));
 
     if (hasPii) {
-      const encrypted = await this.security.encryptObject(payload, piiFields);
+      const encrypted = { ...payload };
       const { error } = await this.supabase
         .rpc('update_profissional_safe', { p_id: id, p_changes: encrypted });
-      if (error) throw error;
+      if (error) throw new Error(parseSupabaseError(error));
     }
 
     await this.fetchAll();
@@ -253,7 +256,7 @@ export class ProfissionaisService {
       p_prof_id: profissionalId, 
       p_rows: rows 
     });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     await this.fetchAll();
   }
 
@@ -271,6 +274,28 @@ export class ProfissionaisService {
     await this.fetchAll();
   }
 
+  /** Configure a service-level commission exception, or NULL to inherit the professional default. */
+  async salvarComissaoServico(profissionalId: string, servicoId: string,
+    tipo: 'padrao' | 'percentual' | 'fixo', valor: number | null): Promise<void> {
+    const estabId = this.estService.estabelecimento$.value?.id;
+    if (!estabId || !profissionalId || !servicoId) throw new Error('Profissional e serviço não identificados.');
+    if (tipo !== 'padrao' && (!Number.isFinite(valor) || valor === null || valor < 0 ||
+      (tipo === 'percentual' && valor > 100) || (tipo === 'fixo' && valor > 100000)))
+      throw new Error('Informe uma comissão válida: de 0 a 100% ou valor fixo positivo.');
+    const rate = tipo === 'padrao' ? null : valor;
+    const { data, error } = await this.supabase
+      .from('profissional_servicos')
+      .update({ taxa_comissao:rate, tipo_comissao:tipo === 'fixo' ? 'fixo' : 'percentual' })
+      .eq('estabelecimento_id',estabId)
+      .eq('profissional_id',profissionalId)
+      .eq('servico_id',servicoId)
+      .select('id')
+      .maybeSingle();
+    if (error) throw new Error(parseSupabaseError(error));
+    if (!data) throw new Error('Não foi possível atualizar a regra. Confirme sua permissão no estabelecimento.');
+    await this.fetchAll();
+  }
+
   async removerServico(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('remover_profissional_servico', { p_id: id });
     if (error) throw error;
@@ -283,7 +308,7 @@ export class ProfissionaisService {
 
   async deletarProfissional(id: string): Promise<void> {
     const { error } = await this.supabase.rpc('delete_profissional_safe', { p_id: id });
-    if (error) throw error;
+    if (error) throw new Error(parseSupabaseError(error));
     await this.fetchAll();
   }
 

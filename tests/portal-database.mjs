@@ -1,0 +1,40 @@
+import assert from 'node:assert/strict';
+export async function verifyPortal({db,asRole,owner,other,pilot,proId,svcId,clientId,cmd}){
+ const get=async(q,a=[]) => (await db.query(q,a)).rows[0];
+ const svc=async(name,a=[]) => (await asRole('service_role',null,`select ${name}(${a.map((_,i)=>'$'+(i+1)).join(',')}) data`,a)).rows[0]?.data;
+ await db.query(`update estabelecimento set active=true,trial_ends_at=now()+interval '90 days' where id=$1`,[pilot]);
+ await assert.rejects(()=>asRole('authenticated',owner,`select portal_link($1,$2,false)`,[pilot,clientId]));
+ await assert.rejects(()=>asRole('anon',null,`select portal_link($1,$2,false)`,[pilot,clientId]));
+ const link=(await asRole('authenticated',other,`select portal_link($1,$2,false) data`,[pilot,clientId])).rows[0].data;
+ assert.ok(link.token);assert.equal((await asRole('authenticated',other,`select portal_link($1,$2,false) data`,[pilot,clientId])).rows[0].data.token,link.token);
+ await assert.rejects(()=>asRole('authenticated',other,`select portal_snapshot($1)`,[link.token]));
+ const offer=await cmd('bundle-save',{servico_id:svcId,title:'Portal package fixture',kind:'package',sessions:1,price:90,validity_days:730});
+ const pass=(await get(`insert into customer_passes(estabelecimento_id,cliente_id,bundle_id,servico_id,title,kind,sessions,remaining,price,validity_days,status,expires_at,request_key) values($1,$2,$3,$4,'Portal session','package',1,1,90,730,'active',now()+interval '730 days',gen_random_uuid()) returning *`,[pilot,clientId,offer.id,svcId]));
+ const start=new Date(Date.now()+7*86400000),end=new Date(start.getTime()+45*60000),data={estabelecimento_id:pilot,servico_id:svcId,profissional_id:proId,start:start.toISOString(),end:end.toISOString(),metadata:{}};
+ const key=crypto.randomUUID(),booked=await svc('portal_reserve',[link.token,JSON.stringify(data),key,pass.id,null]);
+ assert.ok(booked.prepaid);assert.equal((await svc('portal_reserve',[link.token,JSON.stringify(data),key,pass.id,null])).event.id,booked.event.id);
+ await assert.rejects(()=>svc('portal_reserve',[link.token,JSON.stringify({...data,start:new Date(start.getTime()+7200000).toISOString(),end:new Date(end.getTime()+7200000).toISOString()}),crypto.randomUUID(),pass.id,null]),/Saldo indisponível/);
+ const snapshot=await svc('portal_snapshot',[link.token]);assert.equal(snapshot.passes.find(p=>p.id===pass.id).reserved,1);assert.ok(snapshot.appointments.some(a=>a.id===booked.event.id));
+ await assert.rejects(()=>db.query(`update customer_passes set remaining=0 where id=$1`,[pass.id]),/sessões reservadas/);
+ await assert.rejects(()=>db.query(`insert into caixa_itens(estabelecimento_id,cliente_id,agenda_event_id,valor_total,status_caixa) values($1,$2,$3,90,'aberto')`,[pilot,clientId,booked.event.id]),/sessão reservada/);
+ const moved={...data,start:new Date(start.getTime()+3600000).toISOString(),end:new Date(end.getTime()+3600000).toISOString()};
+ await svc('portal_reserve',[link.token,JSON.stringify(moved),crypto.randomUUID(),pass.id,booked.event.id]);assert.equal((await get(`select count(*) n from pass_reservations where pass_id=$1`,[pass.id])).n,1);
+ const otherEvent=(await get(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,start,"end",status) values($1,$2,$3,now()+interval '20 days',now()+interval '20 days 45 minutes','confirmado') returning id`,[pilot,(await get(`insert into clientes(estabelecimento_id,nome) values($1,'Other portal customer') returning id`,[pilot])).id,svcId])).id;
+ await assert.rejects(()=>svc('portal_cancel',[link.token,otherEvent]));
+ assert.equal((await svc('portal_cancel',[link.token,booked.event.id])).cancelled,true);assert.equal((await get(`select count(*) n from pass_reservations where pass_id=$1`,[pass.id])).n,0);
+ const again=await svc('portal_reserve',[link.token,JSON.stringify({...data,start:new Date(start.getTime()+10800000).toISOString(),end:new Date(end.getTime()+10800000).toISOString()}),crypto.randomUUID(),pass.id,null]);
+ await db.query(`update agenda_events set status='concluido' where id=$1`,[again.event.id]);
+ const redemption=await cmd('pass-redeem',{pass_id:pass.id,event_id:again.event.id});assert.ok(redemption.id);assert.equal((await get(`select remaining from customer_passes where id=$1`,[pass.id])).remaining,0);assert.equal((await get(`select count(*) n from pass_reservations where event_id=$1`,[again.event.id])).n,0);
+ await asRole('authenticated',other,`select portal_link($1,$2,true)`,[pilot,clientId]);assert.equal(await svc('portal_identity',[link.token]),null);await assert.rejects(()=>svc('portal_snapshot',[link.token]));
+ const revoked=(await asRole('authenticated',other,`select portal_link($1,$2,false) data`,[pilot,clientId])).rows[0].data;assert.notEqual(revoked.token,link.token);await db.query(`update customer_portal_links set expires_at=now()-interval '1 second' where token=$1`,[revoked.token]);assert.equal(await svc('portal_identity',[revoked.token]),null);
+ for(const t of ['customer_portal_links','portal_requests','pass_reservations','tenant_integrations','whatsapp_deliveries','fiscal_documents']){const r=await get(`select relrowsecurity rls,has_table_privilege('anon',oid,'select') anon,has_table_privilege('authenticated',oid,'insert') ins from pg_class where oid=$1::regclass`,['public.'+t]);assert.equal(r.rls,true);assert.equal(r.anon,false);assert.equal(r.ins,false);}
+ await assert.rejects(()=>asRole('authenticated',other,`select integration_secret($1,null)`,[pilot]));
+ await db.query(`insert into tenant_integrations(estabelecimento_id,whatsapp_enabled,whatsapp_phone_id,whatsapp_template) values($1,true,'123456789','fixture')`,[pilot]);
+ await db.query(`insert into client_contact_preferences(estabelecimento_id,cliente_id,channel,consent,evidence) values($1,$2,'whatsapp',true,'Fixture optin') on conflict(estabelecimento_id,cliente_id,channel) do update set consent=true`,[pilot,clientId]);
+ await db.query(`update clientes set telefone='(11) 99999-1234' where id=$1`,[clientId]);await svc('whatsapp_unsubscribe',[pilot,'5511999991234']);assert.equal((await get(`select consent from client_contact_preferences where estabelecimento_id=$1 and cliente_id=$2 and channel='whatsapp'`,[pilot,clientId])).consent,false);
+ await svc('whatsapp_status',['123456789','wamid.early','read']);
+ await db.query(`insert into whatsapp_deliveries(estabelecimento_id,event_id,cliente_id,kind,event_version,status,provider_id) values($1,$2,$3,'change','status fixture','sent','wamid.early')`,[pilot,otherEvent,clientId]);
+ await svc('whatsapp_status',['123456789','wamid.early','sent']);assert.equal((await get(`select status from whatsapp_deliveries where provider_id='wamid.early'`)).status,'read');
+ await svc('whatsapp_status',['123456789','wamid.early','failed']);assert.equal((await get(`select status from whatsapp_deliveries where provider_id='wamid.early'`)).status,'read');
+ console.log('PASS: private expiring/revocable portal, customer isolation, last session hold/retry/remap/cancel/redemption, no duplicate POS charge, RLS and WhatsApp opt-out.');
+}

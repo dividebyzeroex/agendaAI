@@ -1,0 +1,20 @@
+<section class="payment-test" aria-labelledby="test-title">
+ <div class="test-header"><div><span class="badge">Exclusivo Owner · produção</span><h3 id="test-title">Teste de pagamento de R$1</h3></div><button type="button" (click)="refresh()" [disabled]="busy">Atualizar resultados</button></div>
+ <p>Faça uma cobrança única de <strong>R$1,00</strong> pelo checkout Stripe para verificar o pagamento real e a chegada do webhook à aplicação.</p>
+ <p class="details">Sem assinatura, renovação ou reembolso automático. Há cobrança real e podem incidir tarifas Stripe. Este teste fica separado dos clientes, da receita de assinaturas e do MRR.</p>
+ <p role="status" *ngIf="cancelled">Checkout cancelado. Consulte o histórico para verificar o estado da tentativa.</p>
+ <p role="alert" class="error" *ngIf="error">{{error}}</p>
+ <p role="status" *ngIf="!ready && !busy">Teste indisponível: a configuração Stripe precisa estar pronta em modo live.</p>
+ <button type="button" class="primary" *ngIf="!confirming" (click)="confirming=true" [disabled]="busy || !ready">Iniciar teste de R$1</button>
+ <div class="confirmation" *ngIf="confirming"><p>Ao continuar, você abrirá o checkout para pagar <strong>R$1,00 de verdade</strong> com seu cartão. O pagamento só ocorre quando você confirmar no Stripe.</p><button type="button" class="primary" (click)="pay()" [disabled]="busy || !ready">{{busy ? 'Abrindo checkout…' : 'Confirmar e abrir checkout de R$1'}}</button><button type="button" (click)="confirming=false" [disabled]="busy">Voltar</button></div>
+ <h4>Histórico dos seus testes</h4><p *ngIf="!tests.length && !busy">Nenhum teste registrado.</p>
+ <article class="test-row" *ngFor="let test of tests">
+ <div><strong>{{test.created_at | date:'dd/MM/yyyy HH:mm'}}</strong><small>{{test.id}}</small>
+ <p>Pagamento: <strong>{{test.status==='paid' ? 'Confirmado pelo Stripe · R$1,00' : test.status==='expired' ? 'Checkout expirado' : 'Ainda não confirmado'}}</strong></p>
+ <p>Webhook assinado: <strong>{{test.webhook_at ? 'Recebido e registrado' : 'Aguardando confirmação na aplicação'}}</strong><span *ngIf="test.webhook_at"> · {{test.webhook_at | date:'dd/MM/yyyy HH:mm:ss'}}</span></p>
+ <p class="success" *ngIf="test.status==='paid' && test.webhook_at">Teste completo: pagamento real e webhook confirmados.</p>
+ <p class="details" *ngIf="test.status==='paid' && !test.webhook_at">O Stripe confirmou o pagamento. O webhook ainda não foi registrado; atualize e, se persistir, confira a entrega no Stripe.</p>
+ </div><button type="button" (click)="check(test)" [disabled]="busy">Verificar no Stripe</button>
+ </article>
+ <p class="details">Este teste valida uma cobrança avulsa. A contratação e renovação de assinaturas continuam sendo fluxos próprios.</p>
+</section>

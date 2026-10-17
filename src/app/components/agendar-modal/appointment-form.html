@@ -1,0 +1,180 @@
+<div class="customer-page">
+  <a class="back-link" routerLink="/admin/agenda" [queryParams]="{ dia: day }"
+    ><i class="pi pi-arrow-left" aria-hidden="true"></i>Voltar à agenda</a
+  >
+  <header class="page-heading">
+    <div>
+      <h1>Novo agendamento</h1>
+      <p>Quem vem, o que vai fazer e quando.</p>
+    </div>
+  </header>
+  <form class="form-layout" (ngSubmit)="confirmar()">
+    <p *ngIf="loadingCatalog" role="status">Carregando serviços e equipe…</p>
+    <p class="feedback error" *ngIf="catalogError" role="alert">
+      {{ catalogError }}
+      <button type="button" class="text-action" (click)="loadCatalog()">Tentar novamente</button>
+    </p>
+    <section class="form-section">
+      <div class="field">
+        <label for="appointment-client">Cliente</label>
+        <div *ngIf="!form.clienteNome" class="client-search">
+          <input
+            id="appointment-client"
+            name="search"
+            [(ngModel)]="clienteQuery"
+            (ngModelChange)="showMatches = true"
+            (focus)="showMatches = true"
+            placeholder="Buscar por nome ou telefone"
+            autocomplete="off"
+            (keydown.escape)="showMatches = false"
+          />
+          <div class="client-matches" *ngIf="showMatches">
+            <button type="button" *ngFor="let c of matches" (click)="selectCliente(c)">
+              <strong>{{ c.nome }}</strong
+              ><small>{{ c.telefone || 'Sem telefone' }}</small></button
+            ><button
+              type="button"
+              class="create-client"
+              *ngIf="clienteQuery.trim()"
+              (click)="usarNovoCliente()"
+            >
+              + Usar “{{ clienteQuery.trim() }}” como novo cliente
+            </button>
+            <p class="helper" *ngIf="!matches.length && !clienteQuery.trim()">
+              Digite um nome para cadastrar sem sair do agendamento.
+            </p>
+          </div>
+        </div>
+        <div *ngIf="form.clienteNome" class="selected-client">
+          <div>
+            <strong>{{ form.clienteNome }}</strong
+            ><span class="helper">{{
+              isNovoCliente
+                ? 'Novo cliente; será salvo junto com o agendamento'
+                : form.clienteTelefone
+            }}</span>
+          </div>
+          <button type="button" class="text-action" (click)="clearCliente()">Trocar</button>
+        </div>
+      </div>
+      <label class="field" *ngIf="isNovoCliente"
+        >Telefone <span class="helper">Opcional no cadastro pelo balcão</span
+        ><input
+          name="phone"
+          type="tel"
+          [(ngModel)]="form.clienteTelefone"
+          autocomplete="tel"
+          placeholder="(11) 99999-9999"
+      /></label>
+    </section>
+    <section class="form-section">
+      <div class="field-row">
+        <label class="field"
+          >Serviço<select name="service" [(ngModel)]="form.servicoId" required>
+            <option value="">Escolher serviço</option>
+            <option *ngFor="let s of servicos" [value]="s.id">
+              {{ s.titulo }} · {{ s.preco | currency: 'BRL' }} · {{ s.duracao_min }} min
+            </option>
+          </select></label
+        ><label class="field"
+          >Profissional<select name="professional" [(ngModel)]="form.profissionalId" required>
+            <option value="">Escolher profissional</option>
+            <option *ngFor="let p of profissionais" [value]="p.id">{{ p.nome }}</option>
+          </select></label
+        >
+      </div>
+      <section class="multi-booking-selector" aria-labelledby="multi-booking-title">
+        <div class="multi-booking-heading">
+          <div>
+            <strong id="multi-booking-title">Mais serviços no mesmo atendimento</strong>
+            <p class="helper">Agende atividades paralelas com equipes distintas ou serviços em sequência para um profissional.</p>
+          </div>
+          <button type="button" class="multi-add-button" (click)="addExtraService()"
+            [disabled]="extraServices.length>=7">
+            <i class="pi pi-plus" aria-hidden="true"></i> Adicionar serviço
+          </button>
+        </div>
+        <div class="multi-booking-entry" *ngFor="let extra of extraServices;let i=index">
+          <div class="multi-entry-title">
+            <strong>Serviço {{i+2}}</strong>
+            <button type="button" (click)="removeExtraService(i)" aria-label="Remover serviço"
+              class="multi-remove-button"><i class="pi pi-times" aria-hidden="true"></i></button>
+          </div>
+          <div class="multi-entry-fields">
+            <label>Serviço
+              <select [name]="'extra-service-'+i" [(ngModel)]="extra.servicoId" required>
+                <option value="">Escolher serviço</option>
+                <option *ngFor="let s of servicos" [value]="s.id">{{s.titulo}} · {{s.preco|currency:'BRL'}} · {{s.duracao_min}} min</option>
+              </select>
+            </label>
+            <label>Profissional
+              <select [name]="'extra-professional-'+i" [(ngModel)]="extra.profissionalId" required>
+                <option value="">Escolher profissional</option>
+                <option *ngFor="let p of profissionais" [value]="p.id">{{p.nome}}</option>
+              </select>
+            </label>
+            <label>Execução
+              <select [name]="'extra-mode-'+i" [(ngModel)]="extra.mode" required>
+                <option value="sequencial">Após o último serviço</option>
+                <option value="paralelo">Ao mesmo tempo que o primeiro</option>
+              </select>
+            </label>
+          </div>
+          <p class="multi-booking-time" *ngIf="multiPreview[i+1] as slot">
+            <i class="pi pi-clock" aria-hidden="true"></i>
+            {{slot.start|date:'HH:mm'}}–{{slot.end|date:'HH:mm'}} · {{slot.mode==='paralelo'?'Paralelo':'Sequencial'}}
+          </p>
+        </div>
+        <div class="multi-booking-summary" *ngIf="extraServices.length">
+          <strong>{{allServiceChoices.length}} serviços · {{groupPrice|currency:'BRL'}}</strong>
+          <span>Uma única comanda · comissões separadas por profissional e serviço</span>
+          <p class="helper">A mesma pessoa não pode estar ocupada em dois serviços simultaneamente. Atendimentos com múltiplos serviços não são recorrentes.</p>
+        </div>
+      </section>
+      <p
+        class="helper"
+        *ngIf="!loadingCatalog && !catalogError && (!servicos.length || !profissionais.length)"
+      >
+        Falta preparar serviços ou equipe.
+        <a routerLink="/admin/primeiros-passos">Preparar agenda</a>
+      </p>
+      <div class="field-row">
+        <label class="field">Dia<input name="day" type="date" [(ngModel)]="day" required /></label
+        ><label class="field"
+          >Horário<input name="time" type="time" [(ngModel)]="time" required
+        /></label>
+      </div>
+      <p class="helper" *ngIf="service && window">
+        Duração de {{ service.duracao_min }} minutos. Término às {{ endTime }}.
+      </p>
+    </section>
+    <details class="disclosure" *ngIf="supportsRecurrence"><summary>Repetir este horário</summary><div class="field-row"><label class="field">Quantidade de visitas, incluindo esta<input name="repeatCount" type="number" min="1" max="12" [(ngModel)]="repeatCount"></label><label class="field">Intervalo<select name="repeatDays" [(ngModel)]="repeatDays"><option [ngValue]="7">Toda semana</option><option [ngValue]="14">A cada 2 semanas</option><option [ngValue]="28">A cada 4 semanas</option></select></label></div><p class="helper">Até 12 visitas. Se um horário estiver ocupado, nenhuma visita desta tentativa será criada. Reservas repetidas não geram cobrança automática.</p></details>
+    <details class="disclosure">
+      <summary>Observações e confirmação</summary>
+      <label class="field"
+        >Status<select name="status" [(ngModel)]="form.status">
+          <option value="confirmado">Confirmado</option>
+          <option value="pendente">Pendente</option>
+        </select></label
+      ><label class="field"
+        >Observações privadas<textarea
+          name="notes"
+          [(ngModel)]="form.observacoes"
+          rows="3"
+          placeholder="Algo que a equipe precisa saber"
+        ></textarea>
+      </label>
+    </details>
+    <p class="feedback error" *ngIf="erro" role="alert">{{ erro }}</p>
+    <div class="form-footer">
+      <a class="text-action" routerLink="/admin/agenda" [queryParams]="{ dia: day }">Cancelar</a
+      ><button
+        class="action"
+        type="submit"
+        [disabled]="saving || saved || loadingCatalog || !!catalogError"
+      >
+        {{ saving ? 'Salvando…' : saved ? 'Agendamento salvo' : 'Salvar agendamento' }}
+      </button>
+    </div>
+  </form>
+</div>
