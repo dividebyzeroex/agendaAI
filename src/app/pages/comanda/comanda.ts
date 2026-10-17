@@ -128,6 +128,8 @@ export class ComandaComponent implements OnInit {
       }
       this.caixaItem = data;
       this.produtos = data.produtos || [];
+      if (typeof data.estabelecimento?.nome === 'string' && data.estabelecimento.nome.trim())
+        this.nomeEstabelecimento.set(data.estabelecimento.nome.trim());
       void this.conferirPagamento();
     } catch {
       this.error.set(
