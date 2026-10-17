@@ -48,6 +48,41 @@ export class AdminProfissionais implements OnInit {
   // Serviço a adicionar
   servicoIdSelecionado = '';
   valorProprio: number | null = null;
+  commissionDrafts: Record<string,{mode:'padrao'|'percentual'|'fixo'; rate:number}> = {};
+  private resetCommissionDrafts(): void {
+    this.commissionDrafts = {};
+    for (const item of this.profAtual?.servicos || []) {
+      if (!item.id) continue;
+      this.commissionDrafts[item.id] = {
+        mode:item.taxa_comissao == null ? 'padrao' : item.tipo_comissao === 'fixo' ? 'fixo' : 'percentual',
+        rate:Number(item.taxa_comissao ?? this.profAtual?.comissao_padrao ?? 0),
+      };
+    }
+  }
+  setCommissionMode(id: string, mode: 'padrao'|'percentual'|'fixo'): void {
+    const current = this.commissionDrafts[id];
+    if (!current) return;
+    this.commissionDrafts[id] = {
+      mode,
+      rate:mode==='padrao' ? Number(this.profAtual.comissao_padrao ?? 0) :
+        current.mode==='padrao' ? Number(this.profAtual.comissao_padrao ?? 0) : current.rate
+    };
+  }
+  async saveServiceCommission(item: {id?:string;servico_id:string}): Promise<void> {
+    if (!this.profAtual?.id || !item.id) return;
+    const draft = this.commissionDrafts[item.id];
+    if (!draft) return;
+    this.isSaving=true;this.erro='';
+    try {
+      await this.svc.salvarComissaoServico(this.profAtual.id,item.servico_id,
+        draft.mode,draft.mode==='padrao' ? null : Number(draft.rate));
+      const updated = this.svc.profissionais$.value.find(p => p.id === this.profAtual.id);
+      if(updated) this.profAtual={...updated};
+      this.resetCommissionDrafts();
+      this.showSuccess('Regra de comissão atualizada.');
+    } catch(e:any) { this.erro=e.message || 'Não foi possível salvar a comissão.'; }
+    finally {this.isSaving=false;this.cdr.detectChanges();}
+  }
 
   // Filtro
   filtro = '';
@@ -97,6 +132,7 @@ export class AdminProfissionais implements OnInit {
     this.isNovo   = true;
     this.panelTab = 'dados';
     this.erro     = '';
+    this.commissionDrafts = {};
     this.profAtual = {
       nome: '', cargo: '', especialidade: '', bio: '', telefone: '', email: '',
       comissao_padrao: 0, instagram: '', linkedin: '',
@@ -117,6 +153,7 @@ export class AdminProfissionais implements OnInit {
     this.panelTab = 'dados';
     this.erro     = '';
     this.profAtual = { ...p };
+    this.resetCommissionDrafts();
     // Clona disponibilidades, preenche dias ausentes
     const diasExistentes = p.disponibilidades.map(d => d.dia_semana);
     const padrao = this.svc.getDisponibilidadesPadrao();
@@ -134,6 +171,10 @@ export class AdminProfissionais implements OnInit {
   // ─── Salvar dados básicos ──────────────────────────────────
 
   async salvarDados() {
+    if (!Number.isFinite(Number(this.profAtual.comissao_padrao)) ||
+      Number(this.profAtual.comissao_padrao) < 0 || Number(this.profAtual.comissao_padrao) > 100) {
+      this.erro='Informe uma comissão padrão entre 0% e 100%.';return;
+    }
     if (!this.profAtual.nome.trim()) { this.erro = 'O nome é obrigatório.'; return; }
     this.isSaving = true; this.erro = '';
     try {
@@ -219,6 +260,7 @@ export class AdminProfissionais implements OnInit {
       // Recarrega o profissional atual
       const atualizado = this.svc.profissionais$.value.find(p => p.id === this.profAtual.id);
       if (atualizado) this.profAtual = { ...atualizado };
+      this.resetCommissionDrafts();
       this.servicoIdSelecionado = '';
       this.valorProprio = null;
       this.showSuccess('Serviço adicionado!');
@@ -230,6 +272,7 @@ export class AdminProfissionais implements OnInit {
     await this.svc.removerServico(id);
     const atualizado = this.svc.profissionais$.value.find(p => p.id === this.profAtual.id);
     if (atualizado) this.profAtual = { ...atualizado };
+    this.resetCommissionDrafts();
   }
 
   // ─── Ações da lista ────────────────────────────────────────
@@ -297,6 +340,10 @@ export class AdminProfissionais implements OnInit {
         // O botão aqui atua apenas como navegação para o próximo passo.
         this.panelTab = 'financeiro';
       } else if (this.panelTab === 'financeiro') {
+        const value=Number(this.profAtual.comissao_padrao);
+        if (!Number.isFinite(value) || value<0 || value>100) {
+          this.erro='Informe uma comissão padrão entre 0% e 100%.';return;
+        }
         await this.svc.atualizarProfissional(this.profAtual.id!, this.profAtual);
         this.showSuccess('Dados financeiros salvos!');
         setTimeout(() => this.fecharPainel(), 1000);

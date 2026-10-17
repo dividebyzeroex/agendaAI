@@ -386,14 +386,26 @@ export async function reconcileConnect(stripe: Stripe, db: SupabaseClient, o: an
     const receipt = await checked(
       db.from('caixa_itens').select('agenda_event_id').eq('id', o.id).single(),
     );
-    if (receipt.agenda_event_id)
+    if (receipt.agenda_event_id) {
+      // A refunded grouped charge must reverse all pending staff commissions,
+      // not just the root service. Paid commissions require separate reconciliation.
+      const related = await checked(
+        db.from('agenda_events').select('id')
+          .eq('estabelecimento_id', o.estabelecimento_id)
+          .contains('metadata', { parent_event_id: receipt.agenda_event_id }),
+      );
+      const eventIds = [
+        receipt.agenda_event_id,
+        ...(related || []).map((event: { id: string }) => event.id),
+      ];
       await checked(
-        db
-          .from('comissoes')
-          .update({ status: 'cancelado' })
-          .eq('evento_id', receipt.agenda_event_id)
+        db.from('comissoes')
+          .update({ status: 'estornado', cancelled_at: new Date().toISOString() })
+          .eq('estabelecimento_id', o.estabelecimento_id)
+          .in('evento_id', eventIds)
           .eq('status', 'pendente'),
       );
+    }
   }
   return { ...o, status: 'paid', payment_intent_id: pi.id, ...patch };
 }
@@ -524,7 +536,7 @@ async function orderByToken(db: SupabaseClient, token: unknown) {
   const receipt = await checked(
     db
       .from('caixa_itens')
-      .select('id,token_publico,status_caixa,forma_pagamento,pago_em')
+      .select('id,token_publico,status_caixa,forma_pagamento,pago_em,profissional')
       .eq('token_publico', token)
       .maybeSingle(),
   );
@@ -574,6 +586,7 @@ export async function connectHandler(
         paymentMethod: receipt.forma_pagamento,
         paidAt: receipt.pago_em,
         source: 'merchant_recorded',
+        professional: receipt.profissional || null,
       });
     }
     const current = await reconcileConnect(stripe, db, order);
@@ -598,6 +611,7 @@ export async function connectHandler(
         reservationStatus,
         paymentMethod: 'stripe_connect',
         paidAt: current.status === 'paid' ? current.paid_at : null,
+        professional: receipt.profissional || null,
       });
     }
     if (order.purpose === 'club')

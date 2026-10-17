@@ -1,0 +1,38 @@
+name: Multiservice — API, Database and Angular
+on:
+  pull_request:
+    branches:
+      - feat/pay-express-customer-display
+      - develop
+    paths:
+      - 'src/app/core/multi-service.ts'
+      - 'src/app/services/multi-service.service.ts'
+      - 'src/app/pages/admin-caixa/**'
+      - 'src/app/components/agendar-modal/**'
+      - 'src/app/services/profissional.service.ts'
+      - 'supabase/migrations/**'
+      - 'tests/multi-service.test.ts'
+      - 'tests/customer-flow.test.ts'
+      - '.github/workflows/multiservice.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  multiservice:
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: API and multi-service regression tests
+        run: npm run test:api
+      - name: Database migrations and tenant isolation
+        run: npm run test:db
+      - name: Backend typecheck
+        run: npm run typecheck:api
+      - name: Angular production build
+        run: npm run build

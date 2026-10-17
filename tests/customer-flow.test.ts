@@ -18,6 +18,8 @@ import { EstabelecimentoService } from '../src/app/services/estabelecimento.serv
 import { EstabelecimentoPublicoService } from '../src/app/services/estabelecimento-publico.service';
 import { AgendaEventService } from '../src/app/services/agenda-event.service';
 import { ProfissionalService } from '../src/app/services/profissional.service';
+import { ProfessionalIdentityService } from '../src/app/services/professional-identity.service';
+import { MultiServiceService } from '../src/app/services/multi-service.service';
 import { ProdutosService } from '../src/app/services/produtos.service';
 import { SecurityService } from '../src/app/services/security.service';
 import { AuthService } from '../src/app/services/auth.service';
@@ -110,6 +112,8 @@ beforeEach(async () => {
       { provide: EstabelecimentoService, useValue: est },
       { provide: AgendaEventService, useValue: agenda },
       { provide: ProfissionalService, useValue: pro },
+      { provide: ProfessionalIdentityService, useValue: {names: vi.fn().mockResolvedValue(new Map([['pro', 'João']])), requiredName: vi.fn().mockResolvedValue('João')} },
+      { provide: MultiServiceService, useValue: {createBooking:vi.fn().mockResolvedValue([]),loadChildren:vi.fn().mockResolvedValue([]),priceOf:vi.fn().mockResolvedValue(50),addService:vi.fn().mockResolvedValue(undefined),removeService:vi.fn().mockResolvedValue(undefined)} },
       { provide: SecurityService, useValue: { decryptData: async (s: string) => s } },
       { provide: AuthService, useValue: auth },
       { provide: SupabaseService, useValue: { client: db } },
@@ -394,4 +398,111 @@ it('does not claim a card payment was received when the staff has not confirmed 
   expect(c.checkoutComplete).toBe(false);
   expect(pro.finalizarEEnviarCaixa).not.toHaveBeenCalled();
   expect(c.message).toContain('Confirme que o pagamento foi recebido');
+});
+
+it('uses the assigned professional ID to resolve the name and preserve commission attribution', async () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.sessaoAtual = { id: 'session' };
+  c.clientesLista = [customer];
+  c.clienteSelecionadoId = 'client';
+  c.servicoPrincipal = service;
+  c.eventoSelecionado = {
+    id:'event', cliente_id:'client', servico_id:'service', profissional_id:'pro',
+    profissional_nome:'', title:'Ana',start:new Date().toISOString(),end:new Date().toISOString()
+  } as any;
+  c.formaPagamento = 'pix';
+  c.manualPaymentConfirmed = true;
+  vi.spyOn(c, 'fetchMovimentacoes').mockResolvedValue(undefined);
+  await c.finalizarEGerarComanda(false);
+  expect(pro.finalizarEEnviarCaixa).toHaveBeenCalledWith(expect.objectContaining({
+    eventId:'event', profissionalId:'pro',profissional:'João',servicoId:'service'
+  }));
+});
+
+it('adds products through a keyboard barcode scanner and updates totals instantly', () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.produtosCatalogo = [{
+    id:'product',nome:'Pomada',preco:25,estoque:3,ativo:true,codigo_barras:'7891234567890'
+  }];
+  c.showVendaAvulsaModal = true;
+  c.productBarcode='7891234567890';
+  c.addProductByBarcode();
+  expect(c.comandaProdutos).toHaveLength(1);
+  expect(c.getValorTotalCheckout()).toBe(25);
+  expect(c.productBarcode).toBe('');
+  c.productBarcode='7891234567890';
+  c.addProductByBarcode();
+  expect(c.comandaProdutos[0].quantidade).toBe(2);
+  expect(c.getValorTotalCheckout()).toBe(50);
+  c.diminuirQtd(0);
+  expect(c.getValorTotalCheckout()).toBe(25);
+});
+
+it('updates the paired customer display by selecting a client, without scanning a digital receipt', async () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.sessaoAtual = {id:'session'};
+  c.clientesLista = [customer];
+  c.iniciarVendaAvulsa();
+  expect((c as any).getDisplaySnapshot().phase).toBe('idle');
+  c.clienteSelecionadoId = 'client';
+  await c.onClienteChange();
+  expect((c as any).getDisplaySnapshot().phase).toBe('draft');
+  expect((c as any).getDisplaySnapshot().receiptToken).toBe('');
+  expect((c as any).getDisplaySnapshot().paymentUrl).toBe('');
+  c.produtosCatalogo = [{id:'pomade',nome:'Pomada',preco:120,estoque:10,ativo:true,codigo_barras:'789123'}];
+  c.prodSelecionadoId='pomade';
+  c.addProdutoNaComanda();
+  expect((c as any).getDisplaySnapshot().total).toBe(120);
+  expect((c as any).getDisplaySnapshot().items).toEqual([{title:'Pomada',unitPrice:120,quantity:1}]);
+  c.comandaFisica='FIS-014';
+  expect((c as any).getDisplaySnapshot().phase).toBe('draft');
+  c.cancelarCheckout();
+  expect((c as any).getDisplaySnapshot().phase).toBe('idle');
+});
+
+it('creates parallel multi-service booking atomically instead of multiple unlinked appointments', async()=>{
+  const fixture=TestBed.createComponent(AgendarModalComponent);
+  fixture.detectChanges();
+  await vi.waitFor(()=>expect(fixture.componentInstance.loadingCatalog).toBe(false));
+  const c=fixture.componentInstance;
+  c.selectCliente(customer);
+  c.servicos.push({id:'nails',titulo:'Manicure',preco:50,duracao_min:45,ativo:true} as any);
+  c.profissionais.push({id:'ana',nome:'Ana'});
+  c.day='2026-10-20';c.time='14:00';
+  c.addExtraService();
+  c.extraServices[0]={servicoId:'nails',profissionalId:'ana',mode:'paralelo'};
+  expect(c.multiPreview).toHaveLength(2);
+  await c.confirmar();
+  const multi=TestBed.inject(MultiServiceService);
+  expect(multi.createBooking).toHaveBeenCalledWith('client','Ana',expect.any(String),
+    expect.arrayContaining([expect.objectContaining({servicoId:'nails',profissionalId:'ana',mode:'paralelo'})]),
+    expect.any(Array),'confirmado',expect.any(String));
+  expect(agenda.addSeries).not.toHaveBeenCalled();
+  fixture.destroy();
+});
+
+it('includes every scheduled service and assigned professional in one cashier transaction', async()=>{
+  const c=TestBed.runInInjectionContext(()=>new AdminCaixa());
+  c.sessaoAtual={id:'session'};
+  c.clientesLista=[customer];c.clienteSelecionadoId='client';
+  c.servicoPrincipal=service;
+  c.eventoSelecionado={
+    id:'event',cliente_id:'client',profissional_id:'pro',servico_id:'service',
+    start:'2026-10-20T17:00:00Z',end:'2026-10-20T17:45:00Z',title:'Ana',
+    status:'concluido'
+  } as any;
+  c.extraServices=[{id:'nail-event',servico_id:'nails',profissional_id:'ana',
+    title:'Manicure',name:'Ana',price:50,start:'2026-10-20T17:00:00Z',
+    end:'2026-10-20T17:45:00Z',isExtra:true}];
+  c.formaPagamento='pix';c.manualPaymentConfirmed=true;
+  expect(c.getValorTotalCheckout()).toBe(90);
+  vi.spyOn(c,'fetchMovimentacoes').mockResolvedValue(undefined);
+  await c.finalizarEGerarComanda(false);
+  expect(pro.finalizarEEnviarCaixa).toHaveBeenCalledWith(
+    expect.objectContaining({
+      eventId:'event',servicosExtras:[expect.objectContaining({
+        eventId:'nail-event',profissionalId:'ana',servicoId:'nails',preco:50
+      })]
+    })
+  );
 });

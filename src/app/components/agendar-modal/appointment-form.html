@@ -83,6 +83,54 @@
           </select></label
         >
       </div>
+      <section class="multi-booking-selector" aria-labelledby="multi-booking-title">
+        <div class="multi-booking-heading">
+          <div>
+            <strong id="multi-booking-title">Mais serviços no mesmo atendimento</strong>
+            <p class="helper">Agende atividades paralelas com equipes distintas ou serviços em sequência para um profissional.</p>
+          </div>
+          <button type="button" class="multi-add-button" (click)="addExtraService()"
+            [disabled]="extraServices.length>=7">
+            <i class="pi pi-plus" aria-hidden="true"></i> Adicionar serviço
+          </button>
+        </div>
+        <div class="multi-booking-entry" *ngFor="let extra of extraServices;let i=index">
+          <div class="multi-entry-title">
+            <strong>Serviço {{i+2}}</strong>
+            <button type="button" (click)="removeExtraService(i)" aria-label="Remover serviço"
+              class="multi-remove-button"><i class="pi pi-times" aria-hidden="true"></i></button>
+          </div>
+          <div class="multi-entry-fields">
+            <label>Serviço
+              <select [name]="'extra-service-'+i" [(ngModel)]="extra.servicoId" required>
+                <option value="">Escolher serviço</option>
+                <option *ngFor="let s of servicos" [value]="s.id">{{s.titulo}} · {{s.preco|currency:'BRL'}} · {{s.duracao_min}} min</option>
+              </select>
+            </label>
+            <label>Profissional
+              <select [name]="'extra-professional-'+i" [(ngModel)]="extra.profissionalId" required>
+                <option value="">Escolher profissional</option>
+                <option *ngFor="let p of profissionais" [value]="p.id">{{p.nome}}</option>
+              </select>
+            </label>
+            <label>Execução
+              <select [name]="'extra-mode-'+i" [(ngModel)]="extra.mode" required>
+                <option value="sequencial">Após o último serviço</option>
+                <option value="paralelo">Ao mesmo tempo que o primeiro</option>
+              </select>
+            </label>
+          </div>
+          <p class="multi-booking-time" *ngIf="multiPreview[i+1] as slot">
+            <i class="pi pi-clock" aria-hidden="true"></i>
+            {{slot.start|date:'HH:mm'}}–{{slot.end|date:'HH:mm'}} · {{slot.mode==='paralelo'?'Paralelo':'Sequencial'}}
+          </p>
+        </div>
+        <div class="multi-booking-summary" *ngIf="extraServices.length">
+          <strong>{{allServiceChoices.length}} serviços · {{groupPrice|currency:'BRL'}}</strong>
+          <span>Uma única comanda · comissões separadas por profissional e serviço</span>
+          <p class="helper">A mesma pessoa não pode estar ocupada em dois serviços simultaneamente. Atendimentos com múltiplos serviços não são recorrentes.</p>
+        </div>
+      </section>
       <p
         class="helper"
         *ngIf="!loadingCatalog && !catalogError && (!servicos.length || !profissionais.length)"
@@ -100,7 +148,7 @@
         Duração de {{ service.duracao_min }} minutos. Término às {{ endTime }}.
       </p>
     </section>
-    <details class="disclosure"><summary>Repetir este horário</summary><div class="field-row"><label class="field">Quantidade de visitas, incluindo esta<input name="repeatCount" type="number" min="1" max="12" [(ngModel)]="repeatCount"></label><label class="field">Intervalo<select name="repeatDays" [(ngModel)]="repeatDays"><option [ngValue]="7">Toda semana</option><option [ngValue]="14">A cada 2 semanas</option><option [ngValue]="28">A cada 4 semanas</option></select></label></div><p class="helper">Até 12 visitas. Se um horário estiver ocupado, nenhuma visita desta tentativa será criada. Reservas repetidas não geram cobrança automática.</p></details>
+    <details class="disclosure" *ngIf="supportsRecurrence"><summary>Repetir este horário</summary><div class="field-row"><label class="field">Quantidade de visitas, incluindo esta<input name="repeatCount" type="number" min="1" max="12" [(ngModel)]="repeatCount"></label><label class="field">Intervalo<select name="repeatDays" [(ngModel)]="repeatDays"><option [ngValue]="7">Toda semana</option><option [ngValue]="14">A cada 2 semanas</option><option [ngValue]="28">A cada 4 semanas</option></select></label></div><p class="helper">Até 12 visitas. Se um horário estiver ocupado, nenhuma visita desta tentativa será criada. Reservas repetidas não geram cobrança automática.</p></details>
     <details class="disclosure">
       <summary>Observações e confirmação</summary>
       <label class="field"

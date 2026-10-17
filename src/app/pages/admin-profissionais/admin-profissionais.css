@@ -433,3 +433,19 @@ textarea {
 /* Team setup is a regular work area rather than a floating editor. */
 .ag-page{padding:0}.main-layout,.main-layout.panel-open{display:block;grid-template-columns:1fr}.edit-panel-glass{position:static!important;inset:auto!important;transform:none!important;max-width:860px!important;width:100%!important;height:auto!important;max-height:none!important;margin:0 auto;border:1px solid var(--glass-border);border-radius:12px;box-shadow:none!important;background:var(--surface-color,#fff);z-index:auto!important}.panel-body-ent{max-height:none!important;overflow:visible!important}.panel-header-ent{box-shadow:none;background:none}.prof-grid-elite{display:flex;flex-direction:column;gap:0}.prof-card-ent{border:0;border-bottom:1px solid var(--glass-border);border-radius:0;padding:20px;box-shadow:none;animation:none;transform:none!important;display:grid;grid-template-columns:140px 1fr 1fr auto;align-items:center;gap:18px;background:var(--surface-color,#fff)}.card-glass-reveal,.avatar-aura,.card-metrics-ent{display:none}.card-top-ent,.card-main-ent,.card-actions-ent{margin:0;padding:0;border:0}.avatar-circle{width:40px;height:40px}.expertise-tags-ent{margin:0}.card-main-ent{gap:12px}.prof-card-ent h4{font-size:15px}.page-header h2{font-size:28px;font-weight:650}.prof-card-ent .card-actions-ent{align-self:center}.panel-stepper{box-shadow:none}.step-btn{font-size:13px}@media(max-width:900px){.prof-card-ent{grid-template-columns:1fr auto;padding:16px}.card-top-ent,.expertise-tags-ent{display:none}.edit-panel-glass{margin:0!important;border-radius:10px}.panel-header-ent{padding:20px 16px}.panel-stepper{padding:12px 8px}.step-num,.step-line{display:none}.step-btn{padding:10px 8px}.panel-body-ent{padding:20px 16px!important}}
 .profile-extras{padding-top:20px;border-top:1px solid var(--glass-border)}.profile-extras summary{cursor:pointer;font-size:14px;color:var(--primary-color)}.profile-extras .form-section-ent{background:none;box-shadow:none}.customer-page .prof-card-ent{cursor:pointer}
+
+
+/* Service commission inheritance: explicit 0% remains distinguishable from a missing override. */
+.exp-card-premium { flex-wrap: wrap; }
+.exp-commission-config { flex: 0 0 100%; border-top:1px solid var(--glass-border); padding-top:12px; display:grid; gap:9px; min-width:0; }
+.exp-commission-config label { color:var(--text-main); font-size:.78rem; font-weight:750; }
+.exp-commission-controls { display:flex; align-items:center; flex-wrap:wrap; gap:8px; }
+.exp-commission-controls select { flex:1; min-width:160px; padding:10px 12px; border-radius:10px; border:1px solid var(--glass-border); color:var(--text-main); background:var(--input-bg,white); font:inherit; font-size:.78rem; }
+.exp-commission-rate { display:flex; align-items:center; gap:6px; border:1px solid var(--glass-border); border-radius:10px; padding:3px 10px; background:var(--input-bg,white); }
+.exp-commission-rate>span { color:var(--primary-color); font-weight:800; font-size:.75rem; }
+.exp-commission-rate>input { border:0; outline:0; min-height:32px; max-width:100px; color:var(--text-main); font:inherit; background:transparent; }
+.exp-commission-save { background:var(--primary-color); color:white; border:0; border-radius:10px; padding:10px 15px; font-size:.78rem; font-weight:720; min-height:41px; cursor:pointer; }
+.exp-commission-save:disabled { opacity:.55; cursor:wait; }
+.exp-commission-config small { font-size:.71rem; line-height:1.55; color:var(--text-muted); }
+.exp-commission-config :is(button,input,select):focus-visible { outline:3px solid var(--primary-color); outline-offset:2px; }
+@media(max-width:600px){ .exp-commission-controls select,.exp-commission-rate,.exp-commission-save { flex:1 1 100%; max-width:none; } .exp-commission-rate>input { flex:1;max-width:unset; } }

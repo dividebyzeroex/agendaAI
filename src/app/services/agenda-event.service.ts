@@ -4,6 +4,7 @@ import { SupabaseService } from './supabase.service';
 import { NotificationService } from './notification.service';
 import { EstabelecimentoService } from './estabelecimento.service';
 import { SecurityService } from './security.service';
+import { ProfessionalIdentityService } from './professional-identity.service';
 import { parseSupabaseError } from '../core/helpers/error-parser';
 
 export interface AgendaEvent {
@@ -36,6 +37,7 @@ export class AgendaEventService {
   private notifService = inject(NotificationService);
   private estService = inject(EstabelecimentoService);
   private security = inject(SecurityService);
+  private identity = inject(ProfessionalIdentityService);
 
   readonly workflowEvents$ = new Subject<{ trigger: string; payload: AgendaEvent }>();
   private eventsSubject = new BehaviorSubject<AgendaEvent[]>([]);
@@ -73,7 +75,19 @@ export class AgendaEventService {
         const decrypted = await Promise.all((data as AgendaEvent[] || []).map((e: AgendaEvent) =>
           this.security.decryptObject(e, ['title', 'observacoes', 'profissional_nome'])
         ));
-
+        // Earlier event RPCs persist the professional UUID but leave the display
+        // name blank. Resolve from the professional roster without ever changing
+        // the immutable UUID used to calculate commissions.
+        const missing = decrypted.filter(e=>!!e.profissional_id && !e.profissional_nome?.trim());
+        if(missing.length) {
+          try {
+            const names = await this.identity.names(estId, missing.map(e=>e.profissional_id!));
+            for(const event of missing)
+              event.profissional_nome = names.get(event.profissional_id!) || 'Profissional cadastrado';
+          } catch {
+            for(const event of missing) event.profissional_nome = 'Profissional cadastrado';
+          }
+        }
         this.ngZone.run(() => {
           if(version===this.loadVersion)this.eventsSubject.next(decrypted || []);
         });

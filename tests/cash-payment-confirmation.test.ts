@@ -24,7 +24,8 @@ function publicReceiptDb(status='pago'){
     token_publico:'650e8400-e29b-41d4-a716-446655440000',
     status_caixa:status,
     forma_pagamento:'cartao_credito',
-    pago_em:'2026-10-17T19:13:27.000Z'
+    pago_em:'2026-10-17T19:13:27.000Z',
+    profissional:'João'
   };
   const db:any={from:(table:string)=>({
     select(){return this;},
@@ -47,7 +48,7 @@ describe('Public receipt distinguishes staff-entered payment from Stripe settlem
       res,publicReceiptDb() as any,{} as any);
     expect(res.json).toHaveBeenCalledWith({
       online:false,status:'pago',paymentMethod:'cartao_credito',
-      paidAt:'2026-10-17T19:13:27.000Z',source:'merchant_recorded'});
+      paidAt:'2026-10-17T19:13:27.000Z',source:'merchant_recorded',professional:'João'});
     expect(res.setHeader).toHaveBeenCalledWith('Cache-Control','no-store');
   });
   it('rejects a checkout for a receipt recorded as already paid externally',async()=>{

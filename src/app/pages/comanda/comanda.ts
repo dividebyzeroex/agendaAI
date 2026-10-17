@@ -80,6 +80,8 @@ export class ComandaComponent implements OnInit {
       this.onlineStatus.set(d.online ? d.status : '');
       this.recordedMethod.set(d.paymentMethod || '');
       this.paidAt.set(d.paidAt || null);
+      if (this.caixaItem && typeof d.professional === 'string' && d.professional.trim())
+        this.caixaItem = {...this.caixaItem,profissional:d.professional.trim()};
       this.receiptWarning.set('');
       this.reservationStatus.set(d.reservationStatus || '');
       this.paymentPurpose.set(d.purpose || '');

@@ -8,6 +8,8 @@ import { EstabelecimentoService, Servico } from '../../services/estabelecimento.
 import { AgendaEventService } from '../../services/agenda-event.service';
 import { ProfissionalService } from '../../services/profissional.service';
 import { SecurityService } from '../../services/security.service';
+import { MultiServiceService } from '../../services/multi-service.service';
+import { ServiceChoice, buildServiceSlots } from '../../core/multi-service';
 import { agendaDay } from '../../utils/agenda-day';
 import { appointmentTime, appointmentWindow } from '../../utils/appointment-window';
 @Component({
@@ -23,6 +25,7 @@ export class AgendarModalComponent implements OnInit {
   private agenda = inject(AgendaEventService);
   private pros = inject(ProfissionalService);
   private security = inject(SecurityService);
+  private multi = inject(MultiServiceService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
@@ -37,6 +40,30 @@ export class AgendarModalComponent implements OnInit {
     status: 'confirmado' as 'confirmado' | 'pendente',
   };
   repeatCount=1;repeatDays=14;private requestKey=crypto.randomUUID();private repeatApplied=false;
+  extraServices: ServiceChoice[] = [];
+  addExtraService(): void {
+    if (this.extraServices.length>=7) return;
+    this.extraServices=[...this.extraServices,{servicoId:'',profissionalId:this.form.profissionalId,mode:'sequencial'}];
+  }
+  removeExtraService(index:number): void {
+    this.extraServices=this.extraServices.filter((_,i)=>i!==index);
+  }
+  get allServiceChoices():ServiceChoice[] {
+    return [{servicoId:this.form.servicoId,profissionalId:this.form.profissionalId,mode:'sequencial'},...this.extraServices];
+  }
+  get multiPreview() {
+    if (!this.window) return [];
+    try {return buildServiceSlots(this.window.start,this.allServiceChoices,
+      this.servicos.map(s=>({id:s.id!,duracao_min:s.duracao_min || 30})));}
+    catch{return [];}
+  }
+  get groupPrice():number {
+    return this.allServiceChoices.reduce((total,c)=>{
+      const service=this.servicos.find(s=>s.id===c.servicoId);
+      return total+Number(service?.preco||0);
+    },0);
+  }
+  get supportsRecurrence():boolean{return this.extraServices.length===0;}
   day = agendaDay(new Date());
   time = '09:00';
   clienteQuery = '';
@@ -142,7 +169,9 @@ export class AgendarModalComponent implements OnInit {
     this.showMatches = true;
   }
   isFormValido() {
-    return Number.isInteger(Number(this.repeatCount)) && Number(this.repeatCount)>=1 && Number(this.repeatCount)<=12 && !!(
+    return Number.isInteger(Number(this.repeatCount)) && Number(this.repeatCount)>=1 && Number(this.repeatCount)<=12 &&
+      (this.extraServices.length===0 || this.repeatCount===1) &&
+      this.multiPreview.length===this.allServiceChoices.length && !!(
       this.form.clienteNome.trim() &&
       this.service &&
       this.profissionais.some((p) => p.id === this.form.profissionalId) &&
@@ -159,13 +188,12 @@ export class AgendarModalComponent implements OnInit {
     this.erro = '';
     try {
       const window = this.window!;
-      const conflict = this.agenda.currentEvents.some(
-        (e) =>
-          e.profissional_id === this.form.profissionalId &&
-          !['cancelado', 'noshow'].includes(e.status || '') &&
-          Date.parse(e.start) < Date.parse(window.end) &&
-          Date.parse(e.end) > Date.parse(window.start),
-      );
+      const slots=this.multiPreview;
+      if(slots.length!==this.allServiceChoices.length) throw Error('Confira profissionais, horários e serviços simultâneos.');
+      const conflict=this.agenda.currentEvents.some(e=>
+        !['cancelado','noshow'].includes(e.status||'') && slots.some(slot=>
+          e.profissional_id===slot.profissionalId &&
+          Date.parse(e.start)<Date.parse(slot.end) && Date.parse(e.end)>Date.parse(slot.start)));
       if (conflict)
         throw new Error(
           'Este profissional já tem um atendimento nesse horário. Escolha outro horário.',
@@ -179,7 +207,11 @@ export class AgendarModalComponent implements OnInit {
         this.isNovoCliente = false;
       }
       const pro = this.profissionais.find((p) => p.id === this.form.profissionalId);
-      await this.agenda.addSeries({
+      if (this.extraServices.length) {
+        if(this.repeatCount!==1) throw Error('Atendimentos com vários serviços ainda não podem ser recorrentes.');
+        await this.multi.createBooking(this.form.clienteId!,this.form.clienteNome.trim(),
+          window.start,this.allServiceChoices,this.profissionais,this.form.status,this.requestKey);
+      } else await this.agenda.addSeries({
         title: `${this.service?.emoji || '📅'} ${this.form.clienteNome.trim()} — ${this.service?.titulo}`,
         start: window.start,
         end: window.end,

@@ -65,6 +65,12 @@ export const routes: Routes = [
     path: 'comanda/:token',
     loadComponent: () => import('./pages/comanda/comanda').then((m) => m.ComandaComponent),
   },
+  // Display público, somente leitura, pareado a uma sessão de caixa por URL-fragment criptográfico.
+  {
+    path: 'visor-caixa',
+    loadComponent: () =>
+      import('./pages/checkout-display/checkout-display').then((m) => m.CheckoutDisplay),
+  },
 
   {
     path: 'admin',
