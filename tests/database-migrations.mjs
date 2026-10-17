@@ -240,7 +240,7 @@ const pass=await cmd('pass-sell',{bundle_id:bundle.id,cliente_id:clientId,paymen
 assert.equal(pass.status,'active');assert.equal(pass.remaining,4);
 assert.equal((await cmd('pass-sell',{bundle_id:bundle.id,cliente_id:clientId,payment_method:'pix'},sellKey)).id,pass.id);
 assert.equal((await db.query(`select count(*)::int n from caixa_movimentacoes where caixa_item_id=$1`,[pass.receipt_id])).rows[0].n,1);
-const passEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-01T12:00:00Z','2099-11-01T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
+const passEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-02T12:00:00Z','2099-11-02T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
 const consumed=await cmd('pass-redeem',{pass_id:pass.id,event_id:passEvent});
 assert.equal((await cmd('pass-redeem',{pass_id:pass.id,event_id:passEvent})).id,consumed.id);
 assert.equal((await db.query(`select remaining from customer_passes where id=$1`,[pass.id])).rows[0].remaining,3);
@@ -286,6 +286,23 @@ assert.equal((await db.query(`select status from campaign_recipients where campa
 // Queue assignment is serialized, professional availability checked, and retries return the same event.
 await db.query(`update horarios_funcionamento set abre='00:00',fecha='23:59',ativo=true where estabelecimento_id=$1`,[pilot]);
 await db.query(`update profissional_disponibilidades set hora_inicio='00:00',hora_fim='23:59',intervalo_inicio=null,intervalo_fim=null,ativo=true where estabelecimento_id=$1`,[pilot]);
+
+ // Walk-in queue tests must be independent of the CI run's weekday (Sat/Sun
+ // are not configured by the weekday-only quick-start fixture).
+ const localDow=Number((await db.query(
+   "select extract(dow from now() at time zone 'America/Sao_Paulo')::int as dow"
+ )).rows[0].dow);
+ await db.query(`insert into horarios_funcionamento(
+   estabelecimento_id,dia_semana,dia_nome,abre,fecha,ativo
+ ) select $1,$2,'Dia do teste','00:00','23:59',true
+   where not exists(select 1 from horarios_funcionamento
+     where estabelecimento_id=$1 and dia_semana=$2)`,[pilot,localDow]);
+ await db.query(`insert into profissional_disponibilidades(
+   estabelecimento_id,profissional_id,dia_semana,dia_nome,hora_inicio,hora_fim,ativo
+ ) select $1,$2,$3,'Dia do teste','00:00','23:59',true
+   where not exists(select 1 from profissional_disponibilidades
+     where estabelecimento_id=$1 and profissional_id=$2 and dia_semana=$3)`,[pilot,proId,localDow]);
+
 await cmd('rotation',{professional_id:proId,active:true});
 const qkey=crypto.randomUUID(),queued=await cmd('queue-add',{cliente_id:clientId,servico_id:svcId},qkey);
 assert.equal((await cmd('queue-add',{cliente_id:clientId,servico_id:svcId},qkey)).id,queued.id);
@@ -296,7 +313,7 @@ await assert.rejects(()=>cmd('queue-call',{id:queued2.id}));
 await cmd('queue-cancel',{id:queued2.id});
 await cmd('settings',{approval_required:true,headline:'Cuidamos do seu pet',gallery:['https://example.test/foto.jpg']});
 const page=(await asRole('anon',null,`select business_public_page($1) as data`,[pilot])).rows[0].data;assert.equal(page.approval_required,true);assert.equal(page.headline,'Cuidamos do seu pet');
-const freshPassEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-02T12:00:00Z','2099-11-02T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
+const freshPassEvent=(await db.query(`insert into agenda_events(estabelecimento_id,cliente_id,servico_id,profissional_id,start,"end",status) values($1,$2,$3,$4,'2099-11-03T12:00:00Z','2099-11-03T12:45:00Z','concluido') returning id`,[pilot,clientId,svcId,proId])).rows[0].id;
 await asRole('service_role',null,`select prepare_pass_refund($1)`,[onlinePass.receipt_id]);
 assert.equal((await db.query(`select status from customer_passes where id=$1`,[onlinePass.id])).rows[0].status,'refund_pending');
 await assert.rejects(()=>cmd('pass-redeem',{pass_id:onlinePass.id,event_id:freshPassEvent}),/Pacote sem saldo ou vencido/);
@@ -325,4 +342,149 @@ assert.equal(Number(fullProgress.pending)+Number(fullProgress.sending)+Number(fu
 console.log('PASS: campaign lifecycle, aggregate counts beyond 500 recipients, authenticated owner-only execution and cross-tenant isolation.');
 await (await import('./growth-database.mjs')).verifyGrowth({db,asRole,owner,other,tenant,pilot,proId,svcId,clientId,product,cancelSession,pay,cmd});
 await (await import('./portal-database.mjs')).verifyPortal({db,asRole,owner,other,pilot,proId,svcId,clientId,cmd});
+
+console.log('START multi-service financial integration');
+const multiPro=(await db.query(`insert into profissionais(estabelecimento_id,nome,ativo,comissao_padrao)
+  values($1,'Manicure',true,13) returning id`,[pilot])).rows[0].id;
+const multiSvc=(await db.query(`insert into servicos(estabelecimento_id,titulo,preco,duracao_min,ativo)
+  values($1,'Manicure',40,30,true) returning id`,[pilot])).rows[0].id;
+const multiStart=(await db.query(`select ((date_trunc('day',now() at time zone 'America/Sao_Paulo')
+  +interval '3 days 14 hours') at time zone 'America/Sao_Paulo') as start`)).rows[0].start;
+const slotsFor=(deltaDays=0)=>{
+  const start=new Date(new Date(multiStart).getTime()+deltaDays*86400000);
+  return [
+    {servico_id:svcId,profissional_id:proId,start:start.toISOString(),
+      end:new Date(start.getTime()+45*60000).toISOString(),status:'confirmado',title:'Corte',profissional_nome:'Pro 1'},
+    {servico_id:multiSvc,profissional_id:multiPro,start:start.toISOString(),
+      end:new Date(start.getTime()+30*60000).toISOString(),status:'confirmado',title:'Manicure',profissional_nome:'Pro 2'}
+  ];
+};
+const createMulti=async(items,key)=>(await asRole('authenticated',other,
+  `select * from create_multi_service_booking($1,$2,$3::jsonb,$4)`,
+  [pilot,clientId,JSON.stringify(items),key])).rows;
+const bookingKey=crypto.randomUUID();
+const group=await createMulti(slotsFor(),bookingKey);
+assert.equal(group.length,2);
+const groupAgain=await createMulti(slotsFor(),bookingKey);
+assert.deepEqual(group.map(x=>x.id),groupAgain.map(x=>x.id));
+const root=group.find(e=>!e.metadata?.parent_event_id);
+const child=group.find(e=>e.metadata?.parent_event_id);
+assert.ok(root&&child);
+assert.equal(child.metadata.parent_event_id,root.id);
+await assert.rejects(()=>createMulti(slotsFor(),crypto.randomUUID()));
+await assert.rejects(()=>asRole('authenticated',owner,
+  `select * from create_multi_service_booking($1,$2,$3::jsonb,$4)`,
+  [pilot,clientId,JSON.stringify(slotsFor(4)),crypto.randomUUID()]));
+const groupPay={
+  estabelecimentoId:pilot,eventId:root.id,clienteId:clientId,clienteNome:'Tutor',
+  servicoPrincipal:{titulo:'Banho',preco:60},
+  servicosExtras:[{eventId:child.id,preco:40}],
+  produtos:[],formaPagamento:'pix',profissional:'Pro 1',
+  sessaoId:cancelSession.id
+};
+const groupReceipt=(await asRole('authenticated',other,
+  `select checkout_atomic($1,$2) as data`,
+  [groupPay,crypto.randomUUID()])).rows[0].data;
+assert.equal(Number(groupReceipt.valor_total),100);
+assert.equal(groupReceipt.servicos.length,2);
+const groupCommissions=(await db.query(`select profissional_id,servico_id,valor_comissao
+  from comissoes where evento_id in ($1,$2)`,[root.id,child.id])).rows;
+assert.equal(groupCommissions.length,2);
+assert.equal(Number(groupCommissions.find(c=>c.profissional_id===proId).valor_comissao),30);
+assert.equal(Number(groupCommissions.find(c=>c.profissional_id===multiPro).valor_comissao),5.2);
+await assert.rejects(()=>asRole('authenticated',other,
+  `select add_attendance_service($1,$2,$3,$4,$5,'sequencial','Novo','Pro',gen_random_uuid())`,
+  [pilot,root.id,multiSvc,multiPro,new Date(multiStart)]));
+const onlineMulti=await createMulti(slotsFor(1),crypto.randomUUID());
+const onlineRoot=onlineMulti.find(e=>!e.metadata?.parent_event_id);
+const onlineChild=onlineMulti.find(e=>e.metadata?.parent_event_id);
+const onlinePayload={...groupPay,eventId:onlineRoot.id,
+  servicosExtras:[{eventId:onlineChild.id,preco:40}],online:true,formaPagamento:'cartao_credito'};
+const onlineReceipt=(await asRole('authenticated',other,
+  `select checkout_atomic($1,$2) as data`,
+  [onlinePayload,crypto.randomUUID()])).rows[0].data;
+assert.equal(onlineReceipt.status_caixa,'pendente');
+const frozen=(await db.query(`select commission from connect_orders where id=$1`,[onlineReceipt.id])).rows[0].commission;
+assert.equal(frozen.length,2);
+assert.equal(Number(frozen[0].amount),30);
+assert.equal(Number(frozen[1].amount),5.2);
+for(let i=0;i<2;i++)await asRole('service_role',null,
+  `select settle_connect_order($1,'acct_test','cs_multi','pi_multi',10000,100,now())`,[onlineReceipt.id]);
+assert.equal((await db.query(`select count(*)::int n from comissoes
+  where evento_id in ($1,$2)`,[onlineRoot.id,onlineChild.id])).rows[0].n,2);
+assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,[onlineReceipt.id])).rows[0].status_caixa,'pago');
+console.log('PASS: grouped booking, parallel staff, tenant isolation, one receipt, two distinct commissions, frozen Stripe commission snapshot and settlement idempotence.');
+
+ // Reversal of one grouped cash sale must reverse ALL pending commissions.
+ const multiMovement=(await db.query(`select id from caixa_movimentacoes
+   where caixa_item_id=$1 and tipo='venda'`,[groupReceipt.id])).rows[0].id;
+ await db.query(`update comissoes set status='pago' where evento_id=$1`,[child.id]);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2)`,
+   [multiMovement,cancelSession.id]),/comissão paga/);
+ await db.query(`update comissoes set status='pendente' where evento_id=$1`,[child.id]);
+ const reversedMulti=(await asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2) as id`,
+   [multiMovement,cancelSession.id])).rows[0].id;
+ assert.equal((await asRole('authenticated',other,
+   `select reverse_cash_atomic($1,$2) as id`,
+   [multiMovement,cancelSession.id])).rows[0].id,reversedMulti);
+ assert.deepEqual((await db.query(`select status from comissoes
+   where evento_id in ($1,$2) order by evento_id`,[root.id,child.id])).rows.map(x=>x.status),
+   ['estornado','estornado']);
+ assert.equal((await db.query(`select status_caixa from caixa_itens where id=$1`,
+   [groupReceipt.id])).rows[0].status_caixa,'cancelado');
+
+ // On-site add-ons reserve an actual professional slot. Cancellation of the
+ // parent appointment must free all linked slots, not only the primary one.
+ const changingGroup=await createMulti(slotsFor(3),crypto.randomUUID());
+ const changingRoot=changingGroup.find(e=>!e.metadata?.parent_event_id);
+ const latestEnd=Math.max(...changingGroup.map(e=>Date.parse(e.end)));
+ const nextStart=new Date(latestEnd+300000);
+ const addKey=crypto.randomUUID();
+ const addArgs=[pilot,changingRoot.id,multiSvc,multiPro,nextStart.toISOString(),
+   'sequencial','Sobrancelha','Ana',addKey];
+ const addedId=(await asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id as id`,
+   addArgs)).rows[0].id;
+ assert.equal((await asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id as id`,
+   addArgs)).rows[0].id,addedId);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select (add_attendance_service($1,$2,$3,$4,$5,$6,$7,$8,$9)).id`,
+   [...addArgs.slice(0,-1),crypto.randomUUID()]));
+ await asRole('authenticated',other,`select remove_attendance_service($1,$2,$3)`,
+   [pilot,changingRoot.id,addedId]);
+ assert.equal((await db.query(`select count(*)::int n from agenda_events
+   where metadata->>'parent_event_id'=$1 and status<>'cancelado'`,
+   [changingRoot.id])).rows[0].n,1);
+ await assert.rejects(()=>asRole('authenticated',other,
+   `select update_event_safe($1,$2)`,
+   [changingRoot.id,{start:new Date(Date.parse(changingRoot.start)+3600000).toISOString()}]));
+ await asRole('authenticated',other,`select update_event_safe($1,$2)`,
+   [changingRoot.id,{status:'cancelado'}]);
+ assert.equal((await db.query(`select count(*)::int n from agenda_events
+   where metadata->>'parent_event_id'=$1 and status<>'cancelado'`,
+   [changingRoot.id])).rows[0].n,0);
+
+ // Stripe expiry must re-open every linked booking instead of just the parent.
+ const expiringGroup=await createMulti(slotsFor(2),crypto.randomUUID());
+ const expRoot=expiringGroup.find(e=>!e.metadata?.parent_event_id);
+ const expChild=expiringGroup.find(e=>e.metadata?.parent_event_id);
+ const expPayload={...onlinePayload,eventId:expRoot.id,
+   servicosExtras:[{eventId:expChild.id,preco:40}]};
+ const expReceipt=(await asRole('authenticated',other,
+   `select checkout_atomic($1,$2) as data`,
+   [expPayload,crypto.randomUUID()])).rows[0].data;
+ await db.query(`update connect_orders set session_id='cs_group_expired' where id=$1`,[expReceipt.id]);
+ for(let i=0;i<2;i++)await asRole('service_role',null,
+   `select expire_connect_order($1,'acct_test','cs_group_expired')`,[expReceipt.id]);
+ const reopened=(await db.query(`select cobranca_enviada from agenda_events
+   where id in ($1,$2) order by id`,[expRoot.id,expChild.id])).rows;
+ assert.deepEqual(reopened.map(x=>x.cobranca_enviada),[false,false]);
+ assert.equal((await db.query(`select status from connect_orders where id=$1`,
+   [expReceipt.id])).rows[0].status,'expired');
+ console.log('PASS: grouped reversal touches both commission rows, repeated reversal is idempotent, expiry restores all linked booking flags.');
+
+
 await db.close();

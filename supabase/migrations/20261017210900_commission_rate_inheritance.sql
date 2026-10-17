@@ -107,7 +107,7 @@ begin
  perform public.register_connect_order(c.id);
  end if;
  return to_jsonb(c);
-end $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION public.register_connect_order(p_id uuid)
@@ -132,7 +132,7 @@ declare c public.caixa_itens; a public.agenda_events; r public.profissional_serv
  comm:=jsonb_build_object('pro',a.profissional_id,'sid',a.servico_id,'base',base,'rate',effective_rate,'type',effective_type,'amount',amount);
  end if;
  insert into public.connect_orders(id,estabelecimento_id,account_id,amount_cents,fee_cents,commission) values(c.id,c.estabelecimento_id,linked.account_id,round(c.valor_total*100),linked.fee_cents,comm) on conflict(id) do nothing;
-end $function$
+end; $function$;
 
 
 CREATE OR REPLACE FUNCTION private.business_operation(t uuid, action text, d jsonb, k uuid)
@@ -323,7 +323,7 @@ begin
  end if;
  if result is null then raise exception 'Registro indisponível'; end if;
  return result;
-end $function$
+end; $function$;
 
 
 -- Adjust only JP's two OPEN, unpaid commissions that were captured at 0% by the legacy default.

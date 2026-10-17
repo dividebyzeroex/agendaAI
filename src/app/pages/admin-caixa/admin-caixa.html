@@ -357,6 +357,59 @@
                <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
              </div>
 
+
+             <section class="cash-multiservice" *ngIf="eventoSelecionado" aria-labelledby="cash-multi-heading">
+               <div class="cash-multi-heading">
+                 <div><h4 id="cash-multi-heading">Serviços deste atendimento</h4>
+                   <p>Uma comanda · comissões separadas por profissional e serviço</p>
+                 </div>
+                 <span class="cash-multi-count">{{extraServices.length+1}} serviço(s)</span>
+               </div>
+               <div class="cash-multi-row" *ngFor="let item of extraServices">
+                 <div><strong>{{item.title}}</strong>
+                   <small>{{item.name}} · {{item.start|date:'HH:mm'}}–{{item.end|date:'HH:mm'}}</small>
+                 </div>
+                 <b>{{item.price|currency:'BRL'}}</b>
+                 <button type="button" class="cash-multi-remove" [disabled]="extraServiceBusy || checkoutComplete"
+                   (click)="removeExtraServiceFromAttendance(item)" [attr.aria-label]="'Remover '+item.title">
+                   <i class="pi pi-times-circle" aria-hidden="true"></i>
+                 </button>
+               </div>
+               <details class="cash-multi-add" [open]="extraServices.length===0">
+                 <summary><i class="pi pi-plus-circle" aria-hidden="true"></i> Acrescentar serviço durante o atendimento</summary>
+                 <div class="cash-multi-controls">
+                   <label>Serviço
+                     <select class="ag-select" [(ngModel)]="extraServiceId">
+                       <option value="">Selecione um serviço</option>
+                       <option *ngFor="let s of availableExtraServices" [value]="s.id">
+                         {{s.titulo}} · {{s.preco|currency:'BRL'}} · {{s.duracao_min}} min
+                       </option>
+                     </select>
+                   </label>
+                   <label>Profissional
+                     <select class="ag-select" [(ngModel)]="extraProfessionalId">
+                       <option value="">Escolher profissional</option>
+                       <option *ngFor="let p of staffForServices" [value]="p.id">{{p.nome}}</option>
+                     </select>
+                   </label>
+                   <label>Execução
+                     <select class="ag-select" [(ngModel)]="extraMode">
+                       <option value="sequencial">Após os serviços existentes</option>
+                       <option value="paralelo">Em paralelo com outro profissional</option>
+                     </select>
+                   </label>
+                 </div>
+                 <p>O sistema confere a agenda e reserva o horário do responsável antes de incluir o item.</p>
+                 <button type="button" class="cash-multi-save" (click)="addExtraServiceToAttendance()"
+                   [disabled]="extraServiceBusy || !extraServiceId || !extraProfessionalId || checkoutComplete || !depositVerified">
+                   {{extraServiceBusy ? 'Verificando horário…':'Adicionar à comanda'}}
+                 </button>
+               </details>
+               <p *ngIf="extraServicesError" role="alert" class="feedback error">{{extraServicesError}}</p>
+               <div *ngIf="extraServices.length" class="cash-multi-subtotal">
+                 <span>Serviços extras</span><strong>{{groupedServiceTotal|currency:'BRL'}}</strong>
+               </div>
+             </section>
              <div class="fidelidade-card" *ngIf="visitasMeta > 0 && eventoSelecionado && eventoSelecionado.cliente_id">
                <div class="fid-head">
                  <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
@@ -469,7 +522,7 @@
              <span>Total a Receber</span>
              <div style="display: flex; flex-direction: column; align-items: flex-end;">
                <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
-                 R$ {{ (servicoPrincipal?.preco || 0) + (comandaProdutos.length > 0 ? getValorTotalCheckout() - (servicoPrincipal?.preco || 0) + getDescontoFidelidade() : 0) | number:'1.2-2' }}
+                 R$ {{ getValorTotalCheckout()+getDescontoFidelidade() | number:'1.2-2' }}
                </strong>
                <strong style="color: var(--primary-color);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
              </div>
