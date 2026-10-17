@@ -1,9 +1,12 @@
 import { SupabaseService } from '../../services/supabase.service';
 import { boundedFetch } from '../../core/helpers/bounded-fetch';
 import { canSubmitCashPayment, requiresReceivedPaymentConfirmation } from '../../core/helpers/cash-payment-confirmation';
-import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild, HostListener } from '@angular/core';
+import { Component, inject, OnInit, OnDestroy, DoCheck, ChangeDetectorRef, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { interval } from 'rxjs';
 import { PayQrComponent } from '../../components/pay-qr/pay-qr';
+import { PayDisplayService } from '../../services/pay-display.service';
+import { ProfessionalIdentityService } from '../../services/professional-identity.service';
+import { DisplaySnapshot, DisplayItem, createDisplaySecret, displayUrl } from '../../core/pay-display-protocol';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -24,7 +27,7 @@ import { AuthService } from '../../services/auth.service';
   templateUrl: './admin-caixa.html',
   styleUrls: ['./admin-caixa.css'],
 })
-export class AdminCaixa implements OnInit {
+export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
   private agendaService = inject(AgendaEventService);
   private prodService = inject(ProdutosService);
   private estService = inject(EstabelecimentoService);
@@ -41,6 +44,199 @@ export class AdminCaixa implements OnInit {
   private requestedId = this.route.snapshot.queryParamMap.get('atendimento');
   private requestedHandled = false;
   private connectDb = inject(SupabaseService).client;
+  readonly payDisplay = inject(PayDisplayService);
+  private professionalIdentity = inject(ProfessionalIdentityService);
+  displayPairingUrl = '';
+  displayPairingError = '';
+  displayPairingBusy = false;
+  comandaScanValue = '';
+  comandaScanBusy = false;
+  productBarcode = '';
+  private displayLastSignature = '';
+  private displayLastIssuedAt = 0;
+  private scannedItems: DisplayItem[] = [];
+
+  /** Starts a customer-facing presentation; the cash register remains the only editor. */
+  openCustomerDisplay(): void {
+    if (!this.sessaoAtual || !this.estService.estabelecimento$.value?.id) {
+      this.notify('Abra o caixa antes de parear o display.',true);
+      return;
+    }
+    const secret = this.payDisplay.pairingSecret || createDisplaySecret();
+    const url = displayUrl(window.location.origin,secret);
+    this.displayPairingUrl = url;
+    this.displayPairingError = '';
+    // Must be initiated synchronously inside the click gesture (popup blockers).
+    window.open(url,'_blank','noopener,noreferrer');
+    void this.payDisplay.host(secret).then(()=>{
+      this.displayLastSignature = '';
+      this.syncCustomerDisplay();
+      this.cdr.markForCheck();
+    }).catch(()=>{
+      this.displayPairingError = 'Não foi possível conectar o display. Verifique o acesso ao Supabase e tente novamente.';
+      this.cdr.markForCheck();
+    });
+  }
+  async copyDisplayPairingUrl(): Promise<void> {
+    if (!this.displayPairingUrl) return;
+    try {
+      await navigator.clipboard.writeText(this.displayPairingUrl);
+      this.notify('Link privado de pareamento copiado.');
+    } catch {
+      this.notify('Não foi possível copiar o pareamento.',true);
+    }
+  }
+  async disconnectCustomerDisplay(): Promise<void> {
+    await this.payDisplay.stopHost();
+    this.displayPairingUrl = '';
+    this.displayLastSignature = '';
+    this.scannedItems = [];
+    this.comandaScanValue = '';
+    this.cdr.markForCheck();
+  }
+  private currentDisplayItems(): DisplayItem[] {
+    if (this.payQrToken) return this.scannedItems.slice(0,30);
+    const list: DisplayItem[] = [];
+    if (this.servicoPrincipal?.titulo && Number(this.servicoPrincipal.preco) >= 0)
+      list.push({title:String(this.servicoPrincipal.titulo).slice(0,90),
+        unitPrice:Number(this.servicoPrincipal.preco),quantity:1});
+    for (const entry of this.comandaProdutos.slice(0,29)) {
+      if (entry.quantidade > 0 && entry.produto?.nome)
+        list.push({title:String(entry.produto.nome).slice(0,90),
+          quantity:Math.trunc(entry.quantidade),unitPrice:Number(entry.produto.preco)||0});
+    }
+    return list;
+  }
+  private getDisplaySnapshot(): DisplaySnapshot {
+    const est = this.estService.estabelecimento$.value;
+    // Only show a basket after the cashier selected an actual customer.
+    // No customer QR, digital receipt or barcode is needed for pairing.
+    const hasDraft = !!this.sessaoAtual && !!this.clienteSelecionadoId &&
+      !!(this.eventoSelecionado || this.showVendaAvulsaModal);
+    const scanned = !!this.payQrToken;
+    const phase = scanned ? 'awaiting' :
+      !hasDraft ? 'idle' :
+      !this.checkoutComplete ? 'draft' :
+      this.onlinePending ? 'awaiting' :
+      this.formaPagamento === 'online' ? 'idle' : 'recorded';
+    const token = scanned ? this.payQrToken : this.comandaToken;
+    const discount = scanned ? 0 : Math.max(0,Number(this.getDescontoFidelidade())||0);
+    const prepaid = scanned ? 0 : Math.max(0,Number(this.prepaidAmount)||0);
+    const rawTotal = scanned ? this.payQrAmount : hasDraft ? this.getValorTotalCheckout() : 0;
+    const total = Number(Math.max(0,rawTotal).toFixed(2));
+    const url = phase === 'awaiting' && token ? this.getExpressPayUrl(token) : '';
+    const logo = String(est?.logo_url || '');
+    return {
+      version:1,phase,establishment:String(est?.nome || 'Estabelecimento').slice(0,90),
+      logoUrl:/^https:\/\//.test(logo) ? logo.slice(0,500) : '',
+      items:phase==='idle'?[]:this.currentDisplayItems(),
+      discount:phase==='idle'?0:discount,
+      prepaid:phase==='idle'?0:prepaid,
+      total,receiptToken:phase==='awaiting'?token:'',
+      paymentUrl:url,issuedAt:this.displayLastIssuedAt,revision:0
+    };
+  }
+  /** DoCheck catches quantity, loyalty and product edits without fragile DOM listeners. */
+  ngDoCheck(): void { this.syncCustomerDisplay(); }
+  private syncCustomerDisplay(): void {
+    if (!this.payDisplay.activeHost || !this.sessaoAtual) return;
+    const preview = this.getDisplaySnapshot();
+    const signature = JSON.stringify({...preview,issuedAt:0,revision:0});
+    if (signature === this.displayLastSignature) return;
+    this.displayLastSignature = signature;
+    this.displayLastIssuedAt = Date.now();
+    void this.payDisplay.publish({...preview,issuedAt:this.displayLastIssuedAt});
+  }
+  ngOnDestroy(): void { void this.payDisplay.stopHost(); }
+
+  /**
+   * USB/Bluetooth scanners work as keyboards: paste/scan a public comanda QR,
+   * verify tenant ownership and pending Connect payment before presenting it.
+   */
+  async readCustomerComanda(): Promise<void> {
+    if (this.comandaScanBusy || !this.sessaoAtual) return;
+    const tenant = this.estService.estabelecimento$.value?.id;
+    const scanned = this.comandaScanValue.trim();
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    let token = scanned;
+    let physical = '';
+    if (!uuid.test(token)) {
+      try {
+        const parsed = new URL(scanned);
+        if (parsed.origin !== window.location.origin) throw Error('invalid');
+        const prefix = parsed.pathname.startsWith('/comanda/') ? '/comanda/'
+          : parsed.pathname.startsWith('/admin/agenda/atendimento/') ? '/admin/agenda/atendimento/' : '';
+        if (!prefix) throw Error('invalid');
+        token = parsed.pathname.slice(prefix.length);
+      } catch {
+        // A physical order number is optional and only becomes searchable
+        // after it has been associated with a checkout receipt.
+        physical = scanned;
+        token = '';
+      }
+    }
+    if (physical && !/^[A-Za-z0-9][A-Za-z0-9 _./-]{0,63}$/.test(physical)) {
+      this.notify('Informe um número de comanda física válido, ID de atendimento ou URL do recibo.',true);
+      return;
+    }
+    if (!physical && !uuid.test(token)) {
+      this.notify('Código de comanda inválido.',true);
+      return;
+    }
+    this.comandaScanBusy = true;
+    try {
+      if (physical) {
+        const {data:matches,error:physicalError} = await this.connectDb.from('caixa_itens')
+          .select('token_publico').eq('estabelecimento_id',tenant)
+          .eq('comanda_fisica',physical).eq('status_caixa','pendente')
+          .eq('payment_provider','stripe_connect')
+          .order('created_at',{ascending:false}).limit(2);
+        if (physicalError) throw physicalError;
+        if (!matches?.length) throw Error('A comanda física ainda não possui cobrança online pendente. Selecione o cliente normalmente e lance os itens no caixa.');
+        if (matches.length > 1) throw Error('Há mais de uma cobrança pendente com este código físico. Selecione a cobrança específica na lista de pendentes.');
+        token = matches[0].token_publico || '';
+        if (!uuid.test(token)) throw Error('A comanda física não tem um recibo digital válido.');
+      }
+      // A physical QR / appointment UUID is a draft; the cashier selects the
+      // completed appointment and continues editing before taking payment.
+      const event = this.eventosPendentes.find(e => e.id === token);
+      if (event) {
+        this.comandaScanValue = '';
+        await this.selecionarEvento(event);
+        return;
+      }
+      const {data,error} = await this.connectDb.from('caixa_itens')
+        .select('id,token_publico,cliente_nome,valor_total,status_caixa,payment_provider')
+        .eq('estabelecimento_id',tenant).eq('token_publico',token).maybeSingle();
+      if (error) throw error;
+      if (!data || data.status_caixa !== 'pendente' || data.payment_provider !== 'stripe_connect')
+        throw Error('Comanda não encontrada ou pagamento não está pendente na Stripe deste estabelecimento. Para uma comanda ainda não emitida, leia o código do atendimento concluído.');
+      const {data:order,error:orderError} = await this.connectDb.from('connect_orders')
+        .select('id,status,purpose').eq('id',data.id).eq('estabelecimento_id',tenant).maybeSingle();
+      if (orderError || !order || order.status !== 'pending' || order.purpose !== 'checkout')
+        throw Error('A comanda já foi paga, expirada ou não está disponível para cobrar.');
+      const {data:details} = await this.connectDb.rpc('get_comanda_digital',{p_token:token});
+      const items:DisplayItem[] = [];
+      for (const line of (Array.isArray(details?.servicos)?details.servicos:[])) {
+        if (line.titulo && Number.isFinite(Number(line.preco)))
+          items.push({title:String(line.titulo),quantity:1,unitPrice:Number(line.preco)});
+      }
+      for (const line of (Array.isArray(details?.produtos)?details.produtos:[])) {
+        if (line.nome && Number.isFinite(Number(line.valor_unitario)) && Number(line.quantidade)>0)
+          items.push({title:String(line.nome),quantity:Number(line.quantidade),unitPrice:Number(line.valor_unitario)});
+      }
+      this.scannedItems = items.slice(0,30);
+      this.comandaScanValue = '';
+      await this.openPendingQr({token,customer:data.cliente_nome||'Cliente',
+        amount:Number(data.valor_total)||0});
+      this.syncCustomerDisplay();
+    } catch(e:any) {
+      this.notify(e?.message || 'Não foi possível ler esta comanda.',true);
+    } finally {
+      this.comandaScanBusy = false;
+      this.cdr.markForCheck();
+    }
+  }
   onlineEnabled = false;
   onlinePending = false;
   expressCheckoutUrl = '';
@@ -147,6 +343,27 @@ export class AdminCaixa implements OnInit {
     this.payQrLabel = item.customer;
     this.payQrAmount = item.amount;
     this.cdr.markForCheck();
+    // Preview the original finalized line items on a scanned/reopened comanda.
+    // This does not edit the order or create any duplicate sale.
+    if (!this.scannedItems.length) {
+      try {
+        const {data:details} = await this.connectDb.rpc('get_comanda_digital',{p_token:token});
+        if (this.payQrToken === token) {
+          const items:DisplayItem[] = [];
+          for (const line of (Array.isArray(details?.servicos)?details.servicos:[])) {
+            if (line.titulo && Number.isFinite(Number(line.preco)))
+              items.push({title:String(line.titulo),quantity:1,unitPrice:Number(line.preco)});
+          }
+          for (const line of (Array.isArray(details?.produtos)?details.produtos:[])) {
+            if (line.nome && Number(line.quantidade)>0 && Number.isFinite(Number(line.valor_unitario)))
+              items.push({title:String(line.nome),quantity:Math.trunc(Number(line.quantidade)),
+                unitPrice:Number(line.valor_unitario)});
+          }
+          this.scannedItems = items.slice(0,30);
+          this.cdr.markForCheck();
+        }
+      } catch { /* The total and QR remain available if receipt items cannot be retrieved. */ }
+    }
     // An existing Stripe checkout session is reused, not duplicated.
     if (!this.onlineEnabled) return;
     try {
@@ -162,6 +379,7 @@ export class AdminCaixa implements OnInit {
     } finally { this.cdr.markForCheck(); }
   }
   closePendingQr() {
+    this.scannedItems = [];
     this.payQrToken = '';
     this.payQrUrl = '';
     this.payQrLabel = '';
@@ -341,6 +559,7 @@ export class AdminCaixa implements OnInit {
       this.overviewError = '';
       this.sessaoAtual = null;
       this.pendingOnline = [];
+      if (this.displayPairingUrl) void this.disconnectCustomerDisplay();
       this.closePendingQr();
       this.eventosPendentes = [];
       this.requestedHandled = false;
@@ -357,6 +576,9 @@ export class AdminCaixa implements OnInit {
       .subscribe(() => void this.openRequested());
 
     // Non-blocking payment observation. Stops automatically when the cashier page is destroyed.
+    interval(8000).pipe(takeUntilDestroyed(this.destroy)).subscribe(() => {
+      if (this.payDisplay.activeHost) void this.payDisplay.heartbeat();
+    });
     interval(16000).pipe(takeUntilDestroyed(this.destroy)).subscribe(() => {
       if (document.visibilityState !== 'visible' || !this.sessaoAtual) return;
       void this.loadPendingCharges();
@@ -495,6 +717,7 @@ export class AdminCaixa implements OnInit {
       this.notify('Caixa fechado. O relatório está disponível para impressão.');
       this.lastClosure = { data, movimentacoes: [...this.movimentacoes] };
       this.sessaoAtual = null;
+      if (this.displayPairingUrl) void this.disconnectCustomerDisplay();
       this.showFechamentoModal = false;
       this.saldoInformado = null;
     } catch (e: any) {
@@ -630,6 +853,10 @@ export class AdminCaixa implements OnInit {
         let arr2 = dataTrue || [];
         const combined = [...arr1, ...arr2];
 
+        const professionalIds = combined.map(e=>e.profissional_id).filter(Boolean);
+        let professionalNames = new Map<string,string>();
+        try { professionalNames = await this.professionalIdentity.names(establishmentId,professionalIds); }
+        catch { /* Continue loading bookings; cashier will validate before settlement. */ }
         this.eventosPendentes = await Promise.all(
           combined.map(async (e: any) => {
             const security = (this.profService as any).security;
@@ -641,6 +868,8 @@ export class AdminCaixa implements OnInit {
             }
             if (e.profissional_nome)
               e.profissional_nome = await security.decryptData(e.profissional_nome);
+            if (e.profissional_id && !e.profissional_nome?.trim())
+              e.profissional_nome = professionalNames.get(e.profissional_id) || 'Profissional cadastrado';
             return e;
           }),
         );
@@ -738,6 +967,7 @@ export class AdminCaixa implements OnInit {
       }
     }
 
+    this.syncCustomerDisplay();
     this.cdr.detectChanges();
   }
 
@@ -745,6 +975,7 @@ export class AdminCaixa implements OnInit {
     this.eventoSelecionado = null;
     this.showVendaAvulsaModal = false;
     this.resetCheckoutState();
+    this.syncCustomerDisplay();
   }
 
   resetCheckoutState() {
@@ -752,6 +983,7 @@ export class AdminCaixa implements OnInit {
     this.depositVerified = true;
     this.comandaProdutos = [];
     this.prodSelecionadoId = '';
+    this.productBarcode = '';
     this.comandaToken = '';
     this.expressCheckoutUrl = '';
     this.checkoutComplete = false;
@@ -780,9 +1012,13 @@ export class AdminCaixa implements OnInit {
     this.eventoSelecionado = null;
     this.resetCheckoutState();
     this.showVendaAvulsaModal = true;
+    this.syncCustomerDisplay();
   }
 
   async onClienteChange() {
+    // Customer selection is the primary trigger for the second screen.
+    // Printed tickets and QR scans are optional, never required.
+    this.syncCustomerDisplay();
     this.aplicarFidelidade = false;
     this.visitasFidelidade = 0;
     this.isAniversariante = false;
@@ -808,7 +1044,27 @@ export class AdminCaixa implements OnInit {
       );
     }
 
+    this.syncCustomerDisplay();
     this.cdr.detectChanges();
+  }
+
+  /** USB/Bluetooth barcode readers type the EAN into this focused input. */
+  addProductByBarcode(): void {
+    const barcode = this.productBarcode.trim();
+    if (!barcode) return;
+    this.productBarcode = '';
+    const product = this.produtosCatalogo.find(p => p.codigo_barras === barcode);
+    if (!product) {
+      this.notify('Código não encontrado no catálogo ativo ou produto sem estoque.',true);
+      return;
+    }
+    const current = this.comandaProdutos.find(cp => cp.produto.id === product.id);
+    if (current && current.quantidade >= product.estoque) {
+      this.notify('Estoque disponível já incluído na comanda.',true);
+      return;
+    }
+    this.prodSelecionadoId = product.id || '';
+    this.addProdutoNaComanda();
   }
 
   addProdutoNaComanda() {
@@ -823,6 +1079,7 @@ export class AdminCaixa implements OnInit {
       this.comandaProdutos.push({ produto: prod, quantidade: 1 });
     }
     this.prodSelecionadoId = '';
+    this.syncCustomerDisplay();
   }
 
   diminuirQtd(index: number) {
@@ -830,6 +1087,7 @@ export class AdminCaixa implements OnInit {
     if (this.comandaProdutos[index].quantidade <= 0) {
       this.comandaProdutos.splice(index, 1);
     }
+    this.syncCustomerDisplay();
   }
 
   getValorTotalCheckout(): number {
@@ -888,6 +1146,11 @@ export class AdminCaixa implements OnInit {
         profissionalNome = this.eventoSelecionado.profissional_nome || 'Profissional';
         profissionalId = this.eventoSelecionado.profissional_id;
         servicoId = this.eventoSelecionado.servico_id;
+        // Never infer commission ownership from a cosmetic free-text name.
+        // Resolve the professional selected on the actual agenda appointment.
+        profissionalNome = await this.professionalIdentity.requiredName(
+          String(this.estService.estabelecimento$.value?.id || ''),profissionalId || '');
+        this.eventoSelecionado.profissional_nome = profissionalNome;
       }
 
       if (this.clienteSelecionadoId) {
@@ -1000,6 +1263,7 @@ export class AdminCaixa implements OnInit {
     this.eventoSelecionado = null;
     this.showVendaAvulsaModal = false;
     this.resetCheckoutState();
+    this.syncCustomerDisplay();
   }
 
   // --- IMPRESSÃO TÉRMICA (80mm) ---

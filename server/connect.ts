@@ -524,7 +524,7 @@ async function orderByToken(db: SupabaseClient, token: unknown) {
   const receipt = await checked(
     db
       .from('caixa_itens')
-      .select('id,token_publico,status_caixa,forma_pagamento,pago_em')
+      .select('id,token_publico,status_caixa,forma_pagamento,pago_em,profissional')
       .eq('token_publico', token)
       .maybeSingle(),
   );
@@ -574,6 +574,7 @@ export async function connectHandler(
         paymentMethod: receipt.forma_pagamento,
         paidAt: receipt.pago_em,
         source: 'merchant_recorded',
+        professional: receipt.profissional || null,
       });
     }
     const current = await reconcileConnect(stripe, db, order);
@@ -598,6 +599,7 @@ export async function connectHandler(
         reservationStatus,
         paymentMethod: 'stripe_connect',
         paidAt: current.status === 'paid' ? current.paid_at : null,
+        professional: receipt.profissional || null,
       });
     }
     if (order.purpose === 'club')

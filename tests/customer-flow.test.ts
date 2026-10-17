@@ -18,6 +18,7 @@ import { EstabelecimentoService } from '../src/app/services/estabelecimento.serv
 import { EstabelecimentoPublicoService } from '../src/app/services/estabelecimento-publico.service';
 import { AgendaEventService } from '../src/app/services/agenda-event.service';
 import { ProfissionalService } from '../src/app/services/profissional.service';
+import { ProfessionalIdentityService } from '../src/app/services/professional-identity.service';
 import { ProdutosService } from '../src/app/services/produtos.service';
 import { SecurityService } from '../src/app/services/security.service';
 import { AuthService } from '../src/app/services/auth.service';
@@ -110,6 +111,7 @@ beforeEach(async () => {
       { provide: EstabelecimentoService, useValue: est },
       { provide: AgendaEventService, useValue: agenda },
       { provide: ProfissionalService, useValue: pro },
+      { provide: ProfessionalIdentityService, useValue: {names: vi.fn().mockResolvedValue(new Map([['pro', 'João']])), requiredName: vi.fn().mockResolvedValue('João')} },
       { provide: SecurityService, useValue: { decryptData: async (s: string) => s } },
       { provide: AuthService, useValue: auth },
       { provide: SupabaseService, useValue: { client: db } },
@@ -394,4 +396,64 @@ it('does not claim a card payment was received when the staff has not confirmed 
   expect(c.checkoutComplete).toBe(false);
   expect(pro.finalizarEEnviarCaixa).not.toHaveBeenCalled();
   expect(c.message).toContain('Confirme que o pagamento foi recebido');
+});
+
+it('uses the assigned professional ID to resolve the name and preserve commission attribution', async () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.sessaoAtual = { id: 'session' };
+  c.clientesLista = [customer];
+  c.clienteSelecionadoId = 'client';
+  c.servicoPrincipal = service;
+  c.eventoSelecionado = {
+    id:'event', cliente_id:'client', servico_id:'service', profissional_id:'pro',
+    profissional_nome:'', title:'Ana',start:new Date().toISOString(),end:new Date().toISOString()
+  } as any;
+  c.formaPagamento = 'pix';
+  c.manualPaymentConfirmed = true;
+  vi.spyOn(c, 'fetchMovimentacoes').mockResolvedValue(undefined);
+  await c.finalizarEGerarComanda(false);
+  expect(pro.finalizarEEnviarCaixa).toHaveBeenCalledWith(expect.objectContaining({
+    eventId:'event', profissionalId:'pro',profissional:'João',servicoId:'service'
+  }));
+});
+
+it('adds products through a keyboard barcode scanner and updates totals instantly', () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.produtosCatalogo = [{
+    id:'product',nome:'Pomada',preco:25,estoque:3,ativo:true,codigo_barras:'7891234567890'
+  }];
+  c.showVendaAvulsaModal = true;
+  c.productBarcode='7891234567890';
+  c.addProductByBarcode();
+  expect(c.comandaProdutos).toHaveLength(1);
+  expect(c.getValorTotalCheckout()).toBe(25);
+  expect(c.productBarcode).toBe('');
+  c.productBarcode='7891234567890';
+  c.addProductByBarcode();
+  expect(c.comandaProdutos[0].quantidade).toBe(2);
+  expect(c.getValorTotalCheckout()).toBe(50);
+  c.diminuirQtd(0);
+  expect(c.getValorTotalCheckout()).toBe(25);
+});
+
+it('updates the paired customer display by selecting a client, without scanning a digital receipt', async () => {
+  const c = TestBed.runInInjectionContext(() => new AdminCaixa());
+  c.sessaoAtual = {id:'session'};
+  c.clientesLista = [customer];
+  c.iniciarVendaAvulsa();
+  expect((c as any).getDisplaySnapshot().phase).toBe('idle');
+  c.clienteSelecionadoId = 'client';
+  await c.onClienteChange();
+  expect((c as any).getDisplaySnapshot().phase).toBe('draft');
+  expect((c as any).getDisplaySnapshot().receiptToken).toBe('');
+  expect((c as any).getDisplaySnapshot().paymentUrl).toBe('');
+  c.produtosCatalogo = [{id:'pomade',nome:'Pomada',preco:120,estoque:10,ativo:true,codigo_barras:'789123'}];
+  c.prodSelecionadoId='pomade';
+  c.addProdutoNaComanda();
+  expect((c as any).getDisplaySnapshot().total).toBe(120);
+  expect((c as any).getDisplaySnapshot().items).toEqual([{title:'Pomada',unitPrice:120,quantity:1}]);
+  c.comandaFisica='FIS-014';
+  expect((c as any).getDisplaySnapshot().phase).toBe('draft');
+  c.cancelarCheckout();
+  expect((c as any).getDisplaySnapshot().phase).toBe('idle');
 });

@@ -395,6 +395,29 @@
                  </div>
               </div>
               <button class="exp-remove-btn" (click)="removerServico(sv.id)"><i class="pi pi-trash"></i></button>
+              <div class="exp-commission-config" *ngIf="sv.id">
+                <label [for]="'commission-mode-' + sv.id">Comissão para este serviço</label>
+                <div class="exp-commission-controls">
+                  <select [id]="'commission-mode-' + sv.id"
+                    [ngModel]="commissionDrafts[sv.id]?.mode || 'padrao'"
+                    (ngModelChange)="setCommissionMode(sv.id, $event)" [disabled]="isSaving">
+                    <option value="padrao">Herdar {{profAtual.comissao_padrao || 0}}% do profissional</option>
+                    <option value="percentual">Percentual específico</option>
+                    <option value="fixo">Valor fixo (R$)</option>
+                  </select>
+                  <div class="exp-commission-rate" *ngIf="commissionDrafts[sv.id]?.mode !== 'padrao'">
+                    <span>{{commissionDrafts[sv.id]?.mode === 'fixo' ? 'R$' : '%'}}</span>
+                    <input type="number" [min]="0"
+                      [max]="commissionDrafts[sv.id]?.mode === 'fixo' ? 100000 : 100"
+                      step="0.01" [(ngModel)]="commissionDrafts[sv.id].rate"
+                      [attr.aria-label]="'Valor da comissão específica de ' + (sv.servicos?.titulo || 'serviço')" />
+                  </div>
+                  <button type="button" class="exp-commission-save" (click)="saveServiceCommission(sv)"
+                    [disabled]="isSaving">Salvar regra</button>
+                </div>
+                <small>Sem regra específica: aplica os {{profAtual.comissao_padrao || 0}}% do profissional.
+                  Uma regra específica de 0% é permitida e não será confundida com o padrão.</small>
+              </div>
            </div>
         </div>
       </div>
@@ -411,10 +434,10 @@
            <div class="fin-field-premium">
               <label>Comissão Operacional</label>
               <div class="fin-input-group">
-                 <input type="number" [(ngModel)]="profAtual.comissao_padrao" />
+                 <input type="number" min="0" max="100" step="0.01" [(ngModel)]="profAtual.comissao_padrao" />
                  <span class="suffix">%</span>
               </div>
-              <p class="field-hint">Percentual base aplicado sobre o valor de cada serviço realizado.</p>
+              <p class="field-hint">Aplicado automaticamente a todos os serviços sem regra específica. Salve aqui; em Serviços, configure exceções como valor fixo ou percentual próprio.</p>
            </div>
 
            <div class="fin-field-premium">
