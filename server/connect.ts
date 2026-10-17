@@ -524,7 +524,7 @@ async function orderByToken(db: SupabaseClient, token: unknown) {
   const receipt = await checked(
     db
       .from('caixa_itens')
-      .select('id,token_publico,status_caixa')
+      .select('id,token_publico,status_caixa,forma_pagamento,pago_em')
       .eq('token_publico', token)
       .maybeSingle(),
   );
@@ -564,7 +564,18 @@ export async function connectHandler(
       db,
       req.method === 'GET' ? req.query['token'] : req.body?.token,
     );
-    if (!order) return res.status(200).json({ online: false });
+    if (!order) {
+      if (action === 'connect-pay')
+        throw new BillingError(409, 'Este recebimento foi registrado fora do AgendaAI. Solicite ao estabelecimento a correção antes de pagar pelo link.');
+      res.setHeader('Cache-Control', 'no-store');
+      return res.status(200).json({
+        online: false,
+        status: receipt.status_caixa,
+        paymentMethod: receipt.forma_pagamento,
+        paidAt: receipt.pago_em,
+        source: 'merchant_recorded',
+      });
+    }
     const current = await reconcileConnect(stripe, db, order);
     if (action === 'connect-receipt') {
       let reservationStatus: string | null = null;
@@ -579,11 +590,14 @@ export async function connectHandler(
           reservationStatus = event.status;
         }
       }
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
         online: true,
         status: current.refund_pending_cents > 0 ? 'refund_pending' : current.status,
         purpose: order.purpose,
         reservationStatus,
+        paymentMethod: 'stripe_connect',
+        paidAt: current.status === 'paid' ? current.paid_at : null,
       });
     }
     if (order.purpose === 'club')

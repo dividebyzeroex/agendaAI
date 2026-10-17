@@ -1,5 +1,6 @@
 import { SupabaseService } from '../../services/supabase.service';
 import { boundedFetch } from '../../core/helpers/bounded-fetch';
+import { canSubmitCashPayment, requiresReceivedPaymentConfirmation } from '../../core/helpers/cash-payment-confirmation';
 import { Component, inject, OnInit, ChangeDetectorRef, ElementRef, ViewChild, HostListener } from '@angular/core';
 import { interval } from 'rxjs';
 import { PayQrComponent } from '../../components/pay-qr/pay-qr';
@@ -308,6 +309,16 @@ export class AdminCaixa implements OnInit {
   comandaFisica = '';
   emailCliente = '';
   formaPagamento: string = '';
+  manualPaymentConfirmed = false;
+  readonly canSubmitCashPayment = canSubmitCashPayment;
+  requiresManualConfirmation(): boolean {
+    return requiresReceivedPaymentConfirmation(this.formaPagamento);
+  }
+  onPaymentMethodChanged(method: string): void {
+    this.formaPagamento = method;
+    this.manualPaymentConfirmed = false;
+    this.valorRecebido = null;
+  }
   valorRecebido: number | null = null;
   clienteSelecionadoId: string = '';
   clientesLista: any[] = [];
@@ -750,6 +761,7 @@ export class AdminCaixa implements OnInit {
     this.comandaFisica = '';
     this.emailCliente = '';
     this.formaPagamento = '';
+    this.manualPaymentConfirmed = false;
     this.valorRecebido = null;
     this.clienteSelecionadoId = '';
     this.aplicarFidelidade = false;
@@ -851,6 +863,10 @@ export class AdminCaixa implements OnInit {
       this.notify('Confira cliente, caixa aberto e forma de pagamento.', true);
       return;
     }
+    if (!canSubmitCashPayment(this.formaPagamento, this.manualPaymentConfirmed)) {
+      this.notify('Confirme que o pagamento foi recebido antes de registrar. Para cobrar o cliente, selecione AgendaAI Pay Express.', true);
+      return;
+    }
     if (
       this.getValorTotalCheckout() <= 0 ||
       (this.formaPagamento === 'dinheiro' &&
@@ -910,6 +926,17 @@ export class AdminCaixa implements OnInit {
         valorRecebido: this.valorRecebido,
       });
 
+      // checkout_atomic may return an existing receipt for an appointment already settled.
+      // Never present an earlier manual receipt as a new, unpaid Stripe checkout.
+      if (this.formaPagamento === 'online' && caixaItem.status_caixa !== 'pendente') {
+        throw Error('Este atendimento já possui um pagamento registrado ou concluído. Confira a comanda antes de criar outra cobrança.');
+      }
+      if (this.formaPagamento !== 'online' &&
+          (caixaItem.status_caixa === 'pendente' ||
+           caixaItem.payment_provider === 'stripe_connect' ||
+           caixaItem.forma_pagamento !== this.formaPagamento)) {
+        throw Error('A comanda já existe com outra modalidade de recebimento. Confira a cobrança original antes de continuar.');
+      }
       this.onlinePending = caixaItem.status_caixa === 'pendente';
       this.checkoutComplete = true;
       this.comandaToken = caixaItem.token_publico || '';
@@ -941,7 +968,7 @@ export class AdminCaixa implements OnInit {
       this.notify(
         this.onlinePending
           ? 'Cobrança criada. Compartilhe a comanda para o cliente pagar. O recebimento será confirmado pela Stripe.'
-          : 'Recebimento de ' +
+          : 'Recebimento confirmado pelo atendente: ' +
               Number(caixaItem.valor_total).toLocaleString('pt-BR', {
                 style: 'currency',
                 currency: 'BRL',

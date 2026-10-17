@@ -18,6 +18,7 @@ export interface CaixaItem {
   valor_total: number;
   status_caixa: string;
   forma_pagamento?: string;
+  payment_provider?: string | null;
   profissional?: string;
   created_at?: string;
   pago_em?: string;

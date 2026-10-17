@@ -496,3 +496,13 @@
 @media(prefers-reduced-motion:reduce) {
   .express-btn {transition:none;}
 }
+
+/* Explicit distinction between online charges and offline, already-received money. */
+.cash-payment-route-hint {display:flex;gap:9px;align-items:flex-start;margin:10px 0 0;color:#6a557f;font-size:.81rem;line-height:1.55;}
+.cash-payment-route-hint .pi {color:#8155c0;margin-top:4px;}
+.cash-payment-route-hint a {color:#6940a4;font-weight:700;text-decoration:underline;}
+.cash-received-confirmation {display:flex;align-items:flex-start;gap:12px;cursor:pointer;background:#fff9ed;color:#5a4320;border:1px solid #ebd3a1;border-radius:12px;padding:15px;margin:14px 0;font-size:.81rem;line-height:1.6;}
+.cash-received-confirmation input {width:20px;height:20px;flex:0 0 20px;accent-color:#8050b9;margin:3px 0 0;}
+.cash-received-confirmation strong {display:block;margin-bottom:4px;}
+.cash-received-confirmation b {color:#805223;}
+@media(max-width:560px){.cash-received-confirmation{padding:13px;}}
