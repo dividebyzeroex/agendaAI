@@ -5,12 +5,13 @@
     <div class="header-inner">
       <div class="brand" (click)="scrollTo('hero')">
         <span class="brand-symbol">▲</span>
-        <span class="brand-text">AgendaAi</span>
+        <span class="brand-text">AgendaAI</span>
       </div>
 
       <nav class="nav-links desktop-only">
         <a (click)="scrollTo('como-funciona')">Como funciona</a>
         <a (click)="scrollTo('segmentos')">Segmentos</a>
+        <a (click)="scrollTo('novidades')">Soluções</a>
         <a (click)="scrollTo('recursos')">Recursos</a>
         <a (click)="scrollTo('precos')">Preços</a>
         <a (click)="scrollTo('faq')">Dúvidas</a>
@@ -30,6 +31,7 @@
   <div class="mobile-nav" [class.open]="isMobileMenuOpen">
     <div class="mobile-links">
       <a (click)="scrollTo('como-funciona')">Como funciona</a>
+      <a (click)="scrollTo('novidades')">Soluções</a>
       <a (click)="scrollTo('segmentos')">Segmentos</a>
       <a (click)="scrollTo('recursos')">Recursos</a>
       <a (click)="scrollTo('precos')">Preços</a>
@@ -46,33 +48,20 @@
     <!-- ═══════════════ HERO ═══════════════ -->
     <section class="hero-section" id="hero">
       <div class="hero-content">
-        <div class="section-tag">
-          Agenda para barbearias, beleza e pet shops
-        </div>
-
-        <h1 class="hero-title">
-          Menos tempo organizando horários. Mais atenção a cada cliente.
-        </h1>
-
-        <p class="hero-subtitle">
-          Comece com um profissional, importe seus clientes de uma planilha e compartilhe seu link de reservas. Teste uma rotina real por 30 dias, sem cartão e sem precisar migrar tudo de uma vez.
-        </p>
-
+        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> Gestão para barbearias, salões e estética</div>
+        <h1 class="hero-title">Da primeira reserva ao próximo cliente. <span>Seu negócio mais bem cuidado.</span></h1>
+        <p class="hero-subtitle">Agenda online, equipe, caixa e relacionamento em um só lugar. Comece pelo essencial e conheça recursos de pagamentos, fidelização e gestão conforme as necessidades do seu negócio.</p>
         <div class="hero-cta-group">
-          <button class="btn-primary btn-lg" (click)="goToLogin()">
-            Começar teste de 30 dias
-          </button>
-          <button class="btn-outline btn-lg" (click)="goToDemo()">
-            Ver demonstração interativa
-          </button>
+          <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+          <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração</button>
         </div>
-
-        <div class="hero-metrics-row">
-          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na sua operação</span></div>
+        <p class="hero-cta-note">Sem cartão de crédito. Sem cobrança automática. Sem compromisso de contratar.</p>
+        <div class="hero-metrics-row" aria-label="Vantagens do teste">
+          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na prática</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">Sem cartão</span><span class="m-lbl">Sem cobrança automática no teste</span></div>
+          <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Plano Essencial, depois do teste</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">Seu controle</span><span class="m-lbl">Agenda, clientes e equipe reunidos</span></div>
+          <div class="metric-item"><span class="m-val">Uma plataforma</span><span class="m-lbl">Agenda, clientes e operação</span></div>
         </div>
       </div>
 
@@ -82,7 +71,7 @@
           <!-- App Header -->
           <div class="app-chrome">
             <div class="chrome-title">
-              <span class="chrome-crumb">AgendaAi</span>
+              <span class="chrome-crumb">AgendaAI</span>
               <span class="chrome-sep">/</span>
               <span class="chrome-active">Demonstração ilustrativa • Dados fictícios</span>
             </div>
@@ -99,8 +88,8 @@
             <div class="app-agenda-panel">
               <div class="agenda-controls">
                 <div class="agenda-date">
-                  <strong>Hoje, 16 Out</strong>
-                  <span>8 agendamentos previstos</span>
+                  <strong>Terça-feira · exemplo</strong>
+                  <span>Agenda de demonstração</span>
                 </div>
                 <div class="agenda-view-tabs">
                   <span class="tab active">Dia</span>
@@ -174,7 +163,7 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Fluxo Operacional</span>
-          <h2>Como o AgendaAi atua no dia a dia da sua empresa</h2>
+          <h2>Como o AgendaAI atua no dia a dia da sua empresa</h2>
           <p>Configure seus serviços, organize sua equipe e compartilhe sua agenda com os clientes.</p>
         </div>
 
@@ -197,6 +186,22 @@
             <p>Consulte o status de cada agendamento e mantenha os registros atualizados. Acompanhe os atendimentos e os lançamentos do caixa.</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- JOURNEY OF THE CUSTOMER AND THE BUSINESS -->
+    <section class="evolution-section" id="novidades" aria-labelledby="evolution-title">
+      <div class="container">
+        <div class="evolution-heading">
+          <div><span class="evolution-label">Além da agenda</span><h2 id="evolution-title">Seu cliente agenda. Você acompanha tudo o que vem depois.</h2></div>
+          <p>O AgendaAI evoluiu para conectar atendimento, recebimento e relacionamento. Ative recursos adicionais conforme o seu plano e as integrações disponíveis.</p>
+        </div>
+        <div class="evolution-steps">
+          <article class="evolution-step"><span class="evolution-index">01 / RESERVAR</span><div class="evolution-icon"><i class="pi pi-calendar-plus" aria-hidden="true"></i></div><h3>O horário fica com você</h3><p>Reservas pelo link público, profissionais disponíveis, encaixes e fila de atendimento organizados.</p><span class="evolution-keyword">Agenda + recepção</span></article>
+          <article class="evolution-step"><span class="evolution-index">02 / ATENDER &amp; RECEBER</span><div class="evolution-icon"><i class="pi pi-wallet" aria-hidden="true"></i></div><h3>Da comanda ao recebimento</h3><p>Serviços, produtos, repasses e caixa. Recebimentos online e sinal disponíveis quando configurados.</p><span class="evolution-keyword">Operação + financeiro</span></article>
+          <article class="evolution-step"><span class="evolution-index">03 / FAZER VOLTAR</span><div class="evolution-icon"><i class="pi pi-heart" aria-hidden="true"></i></div><h3>Um relacionamento que continua</h3><p>Histórico, retorno do cliente, pacotes, clubes e campanhas para os canais autorizados.</p><span class="evolution-keyword">Fidelização + recorrência</span></article>
+        </div>
+        <div class="evolution-bottom"><span>Sem trocar a sua rotina de uma vez. Comece com uma agenda e amplie quando fizer sentido.</span><button type="button" (click)="goToDemo()">Ver como funciona <i class="pi pi-arrow-right" aria-hidden="true"></i></button></div>
       </div>
     </section>
 
@@ -258,52 +263,17 @@
       </div>
     </section>
 
-    <!-- ═══════════════ CORE CAPABILITIES ═══════════════ -->
-    <section class="section-block" id="recursos">
+    <!-- PRODUCT CAPABILITIES -->
+    <section class="section-block capabilities-section" id="recursos">
       <div class="container">
-        <div class="section-intro">
-          <span class="section-tag">Recursos da Plataforma</span>
-          <h2>Estrutura completa para a gestão diária do seu negócio</h2>
-          <p>Tudo o que sua recepção e gerência precisam em uma única tela, simples e rápida.</p>
+        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Do primeiro horário ao fechamento do mês, encontre o que precisa sem espalhar o controle por vários aplicativos.</p></div>
+        <div class="capabilities-grid">
+          <article class="capability-card" *ngFor="let item of capabilities">
+            <div class="capability-top"><span class="capability-icon"><i class="pi" [ngClass]="item.icon" aria-hidden="true"></i></span><span class="capability-category">{{item.category}}</span></div>
+            <h3>{{item.name}}</h3><p>{{item.description}}</p><span *ngIf="item.note" class="capability-note">{{item.note}}</span>
+          </article>
         </div>
-
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="f-num">01</div>
-            <h3>Link de agendamento público</h3>
-            <p>Seu cliente escolhe serviço, profissional e horário pelo link. O painel centraliza os atendimentos da equipe.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="f-num">02</div>
-            <h3>Histórico de atendimentos</h3>
-            <p>Acompanhe os agendamentos e atualize os status no painel. Envios externos não estão incluídos na oferta de lançamento.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="f-num">03</div>
-            <h3>Comandas & Comissões</h3>
-            <p>Lançamento ágil de serviços e produtos consumidos. O sistema calcula automaticamente o repasse de comissões para cada profissional da equipe no final do dia ou do mês.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="f-num">04</div>
-            <h3>Acesso e privacidade</h3>
-            <p>Gerencie o acesso da sua equipe e consulte as condições de tratamento de dados. Informações sensíveis exigem avaliação e configuração adequadas antes do uso.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="f-num">05</div>
-            <h3>Acesso Multi-Dispositivo</h3>
-            <p>Acesse pelo navegador no computador, tablet ou celular. Não exige instalação de servidores locais ou manutenção técnica complexa.</p>
-          </div>
-
-          <div class="feature-card">
-            <div class="f-num">06</div>
-            <h3>Controle Manual Sempre Disponível</h3>
-            <p>Sua equipe acompanha a agenda e pode criar agendamentos manuais para clientes que ligarem ou comparecerem presencialmente.</p>
-          </div>
-        </div>
+        <div class="availability-note"><i class="pi pi-info-circle" aria-hidden="true"></i><p>Os recursos essenciais estão descritos no plano abaixo. Funções avançadas, envio de mensagens, pagamentos e integrações podem depender da configuração, do plano ou de custos do provedor. Compartilhar o link pelo WhatsApp não significa ter um chatbot automático.</p></div>
       </div>
     </section>
 
@@ -312,16 +282,16 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Planos & Investimento</span>
-          <h2>Teste primeiro. Escolha seu plano depois.</h2>
-          <p>30 dias grátis, sem cartão e sem cobrança automática. A assinatura exige sua confirmação. Integrações e consumo de serviços externos podem ter custos próprios.</p>
+          <h2>Um começo simples. Um caminho para crescer.</h2>
+          <p>Faça seu primeiro agendamento real durante o teste. Depois, escolha se deseja continuar. O Essencial reúne as ferramentas para começar; módulos avançados e integrações têm condições próprias.</p>
 
         </div>
         <div class="pricing-grid" style="grid-template-columns:minmax(0,520px);justify-content:center">
           <div class="pricing-tier featured">
-            <div class="featured-badge">Oferta de lançamento</div>
+            <div class="featured-badge">Comece por aqui</div>
             <div class="tier-head"><span class="tier-name">AgendaAI Essencial</span>
               <div class="tier-cost"><span class="currency">R$</span><span class="val">97</span><span class="cycle">/mês após contratação</span></div>
-              <p class="tier-description">Para salões e barbearias independentes que querem organizar agenda, clientes e equipe.</p>
+              <p class="tier-description">Para profissionais e equipes que querem uma rotina organizada sem trocar todos os processos de uma vez.</p>
             </div>
             <ul class="tier-checklist">
               <li><i class="pi pi-check"></i> Agenda e link público de agendamento</li>
@@ -331,14 +301,14 @@
               <li><i class="pi pi-check"></i> Atendimento por e-mail comercial</li>
             </ul>
             <button class="btn-primary w-full" (click)="goToLogin()">Começar meus 30 dias grátis</button>
-            <p>Sem cartão. Sem cobrança automática. Robôs de WhatsApp e consumo de SMS não estão incluídos.</p>
+            <p class="pricing-disclaimer">30 dias grátis, sem cartão ou cobrança automática. Mensageria, serviços de pagamento e recursos avançados dependem de integração e condições específicas; chatbot de WhatsApp não está incluído.</p>
           </div>
         </div>
       </div>
     </section>
 
     <section class="section-block border-top" id="piloto"><div class="container" style="max-width:650px">
-      <h2>Quer organizar a agenda do seu salão?</h2><p>Registre seu interesse no piloto de 30 dias, sem cartão e sem cobrança automática. Este formulário não cria uma conta nem autoriza ofertas por e-mail.</p>
+      <h2>Quer ver como funciona no seu negócio?</h2><p>Registre seu interesse no piloto de 30 dias, sem cartão e sem cobrança automática. Este formulário não cria uma conta nem autoriza ofertas por e-mail.</p>
       <form (ngSubmit)="requestPilot()" class="pilot-form">
         <label for="pilot-business">Nome do salão ou barbearia</label><input id="pilot-business" name="business" [(ngModel)]="pilot.business_name" required minlength="2" maxlength="160" autocomplete="organization" />
         <label for="pilot-email">E-mail de contato</label><input id="pilot-email" name="email" [(ngModel)]="pilot.email" type="email" required maxlength="254" autocomplete="email" />
@@ -354,7 +324,7 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Esclarecimento de Dúvidas</span>
-          <h2>Perguntas frequentes sobre a implementação</h2>
+          <h2>O que você precisa saber antes de começar</h2>
         </div>
 
         <div class="faq-container">
@@ -375,8 +345,8 @@
     <section class="cta-banner-section">
       <div class="container">
         <div class="cta-box">
-          <h2>Pronto para organizar seus atendimentos?</h2>
-          <p>Crie sua conta, cadastre seus serviços e avalie o AgendaAi na rotina real do seu negócio por 30 dias.</p>
+          <h2>Comece pela agenda. Descubra o que mais o seu negócio pode fazer.</h2>
+          <p>Configure os serviços, teste o link de reservas e conheça os recursos de gestão durante 30 dias. Você decide depois se vale a pena continuar.</p>
           <div class="cta-actions">
             <button class="btn-primary btn-lg" (click)="goToLogin()">
               Criar conta gratuita agora
@@ -396,10 +366,10 @@
         <div class="footer-brand-col">
           <div class="brand">
             <span class="brand-symbol">▲</span>
-            <span class="brand-text">AgendaAi</span>
+            <span class="brand-text">AgendaAI</span>
           </div>
           <p class="footer-tagline">
-            Gestão de agenda, clientes e equipe para salões e barbearias.
+            Agendamento, atendimento e gestão para barbearias, salões e estética.
           </p>
         </div>
 
@@ -427,7 +397,7 @@
       </div>
 
       <div class="footer-bottom">
-        <span>&copy; 2026 AgendaAi. Todos os direitos reservados.</span>
+        <span>&copy; 2026 AgendaAI. Todos os direitos reservados.</span>
         <div class="footer-legal">
           <a href="/termos#privacidade">Privacidade</a>
           <a href="/termos">Condições do teste e assinatura</a>
