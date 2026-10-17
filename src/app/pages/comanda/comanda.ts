@@ -1,5 +1,6 @@
 import { Component, OnInit, DestroyRef, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { interval } from 'rxjs';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { boundedFetch } from '../../core/helpers/bounded-fetch';
@@ -29,14 +30,19 @@ export class ComandaComponent implements OnInit {
   reservationStatus = signal('');
   paymentPurpose = signal('');
   paymentBusy = signal(false);
+  checkingPayment = signal(false);
   paymentError = signal('');
   async conferirPagamento() {
+    if (!this.token || this.checkingPayment()) return;
+    const token = this.token;
+    this.checkingPayment.set(true);
     try {
       const r = await boundedFetch(
         '/api/billing?action=connect-receipt&token=' + encodeURIComponent(this.token),
       );
-      if (!r.ok) return;
+      if (!r.ok || this.token !== token) return;
       const d = await r.json();
+      if (this.token !== token) return;
       this.onlineStatus.set(d.online ? d.status : '');
       this.reservationStatus.set(d.reservationStatus || '');
       this.paymentPurpose.set(d.purpose || '');
@@ -44,10 +50,12 @@ export class ComandaComponent implements OnInit {
         this.caixaItem = { ...this.caixaItem, status_caixa: 'pago' };
     } catch {
       /* The receipt remains available when the payment provider is unreachable. */
+    } finally {
+      this.checkingPayment.set(false);
     }
   }
   async pagar() {
-    if (this.paymentBusy()) return;
+    if (this.paymentBusy() || this.onlineStatus() !== 'pending') return;
     this.paymentBusy.set(true);
     this.paymentError.set('');
     try {
@@ -74,6 +82,11 @@ export class ComandaComponent implements OnInit {
 
   async ngOnInit() {
     this.token = this.route.snapshot.paramMap.get('token') || '';
+    // Watch only while the current customer still has an outstanding Stripe order.
+    interval(12000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (document.visibilityState === 'visible' && this.onlineStatus() === 'pending'
+          && !this.paymentBusy() && !this.loading()) void this.conferirPagamento();
+    });
     this.estService.estabelecimento$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((est) => {
       if (est?.nome) this.nomeEstabelecimento.set(est.nome);
     });
