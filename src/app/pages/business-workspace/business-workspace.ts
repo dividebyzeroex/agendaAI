@@ -8,6 +8,7 @@ import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { SecurityService } from '../../services/security.service';
 import { BusinessService } from '../../services/business.service';
+import { workspaceOrderColumn } from '../../core/helpers/workspace-table-order';
 const config: Record<string, { title: string; description: string; tables: string[] }> = {
   fila: {
     title: 'Fila de espera',
@@ -162,7 +163,7 @@ export class BusinessWorkspace implements OnInit {
             table === 'service_supplies' ||
             table === 'client_contact_preferences'
               ? q
-              : q.order('created_at', { ascending: false });
+              : q.order(workspaceOrderColumn(table), { ascending: false });
           const { data, error, count } = await q.limit(500).abortSignal(signal);
           if (error && ['42P01', 'PGRST205'].includes(error.code))
             throw Error(
@@ -173,6 +174,20 @@ export class BusinessWorkspace implements OnInit {
         }),
       );
       for (const r of tables) if (r.status === 'rejected') throw r.reason;
+      // The ledger needs only tenant-scoped titles and settlements. Do not block
+      // financial balances on unrelated customer, catalog or agenda RPCs.
+      if (this.module === 'financeiro') {
+        this.data = {};
+        let truncated = false;
+        for (const r of tables) if (r.status === 'fulfilled') {
+          this.data[r.value.table] = r.value.rows;
+          truncated ||= (r.value.count || 0) > 500;
+        }
+        if (truncated)
+          this.notice = 'Mostrando os 500 registros mais recentes de cada lista. Os totais exibidos abrangem somente os registros carregados.';
+        this.loaded = true;
+        return;
+      }
       const campaigns = tables.find(
         (r) => r.status === 'fulfilled' && r.value.table === 'client_campaigns',
       );

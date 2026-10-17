@@ -1,0 +1,32 @@
+name: Financeiro — regressão de carregamento
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/app/pages/business-workspace/**'
+      - 'src/app/core/helpers/workspace-table-order.ts'
+      - 'tests/workspace-finance.test.ts'
+      - '.github/workflows/financeiro.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  finance-check:
+    name: Verify finance ledger and Angular build
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Unit and integration regression tests
+        run: npm run test:api
+      - name: Database migration integration tests
+        run: npm run test:db
+      - name: API typecheck
+        run: npm run typecheck:api
+      - name: Angular production build
+        run: npm run build
