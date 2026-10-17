@@ -415,10 +415,32 @@ export async function ensureSession(stripe: Stripe, db: SupabaseClient, order: a
     if (Date.now() - epoch > (order.purpose === 'deposit' ? 4 * 60000 : 23 * 3600000))
       throw new BillingError(409, 'Peça ao estabelecimento para revisar esta cobrança.');
     const url = club ? `${origin()}/clube/${club.token}` : `${origin()}/comanda/${token}`;
+    const integration = !club
+      ? await checked(
+          db
+            .from('tenant_integrations')
+            .select('pix_enabled')
+            .eq('estabelecimento_id', order.estabelecimento_id)
+            .maybeSingle(),
+        )
+      : null;
+    let pixReady = false;
+    if (!club && integration?.pix_enabled) {
+      try {
+        const account = await stripe.accounts.retrieve(
+          order.account_id,
+          {},
+          { timeout: 8000, maxNetworkRetries: 0 },
+        );
+        pixReady = account.charges_enabled && account.capabilities?.pix_payments === 'active';
+      } catch {
+        /* Keep card available if Pix eligibility cannot be verified. */
+      }
+    }
     session = await stripe.checkout.sessions.create(
       {
         mode: 'payment',
-        payment_method_types: ['card'],
+        payment_method_types: pixReady ? ['card', 'pix'] : ['card'],
         ...(club
           ? club.customer_id
             ? { customer: club.customer_id }
@@ -543,14 +565,12 @@ export async function connectHandler(
           reservationStatus = event.status;
         }
       }
-      return res
-        .status(200)
-        .json({
-          online: true,
-          status: current.refund_pending_cents > 0 ? 'refund_pending' : current.status,
-          purpose: order.purpose,
-          reservationStatus,
-        });
+      return res.status(200).json({
+        online: true,
+        status: current.refund_pending_cents > 0 ? 'refund_pending' : current.status,
+        purpose: order.purpose,
+        reservationStatus,
+      });
     }
     if (order.purpose === 'club')
       throw new BillingError(

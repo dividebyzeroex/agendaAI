@@ -7,6 +7,11 @@ import { roleGuard } from './guards/role.guard';
 import { platformOwnerGuard } from './guards/platform-owner.guard';
 
 export const routes: Routes = [
+  {
+    path: 'minha-area/:token',
+    loadComponent: () =>
+      import('./pages/customer-portal/customer-portal').then((m) => m.CustomerPortal),
+  },
   { path: '', component: Landing, pathMatch: 'full' },
   {
     path: 'demonstracao',
@@ -91,6 +96,15 @@ export const routes: Routes = [
           import('./pages/business-workspace/business-workspace').then((m) => m.BusinessWorkspace),
         canActivate: [roleGuard],
         data: { module: 'fila', roles: ['dono', 'recepcionista', 'financeiro'] },
+      },
+      {
+        path: 'integracoes',
+        loadComponent: () =>
+          import('./pages/integration-workspace/integration-workspace').then(
+            (m) => m.IntegrationWorkspace,
+          ),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
       },
       {
         path: 'clube',

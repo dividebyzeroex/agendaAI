@@ -1,11 +1,13 @@
 import { billingClients, BillingError } from '../server/billing.js';
 import { assertCollectionAccount, depositReservationResponse } from '../server/growth-payments.js';
+import { customerPortal } from '../server/customer-portal.js';
 import { businessPublic } from '../server/business-public.js';
 import { createHmac } from 'node:crypto';
 import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { adminClient, isUuid } from '../server/security.js';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (String(req.query?.['action'] || '').startsWith('portal-')) return customerPortal(req, res);
   if (req.query?.['action']) return businessPublic(req, res);
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,7 +18,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const supabase = adminClient();
-    const {
+    let {
       estabelecimento_id,
       servico_id,
       profissional_id,
@@ -29,6 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       cliente_metadata,
     } = req.body || {};
 
+    const usingPortal = isUuid(req.body?.portal_token);
     const bookingMetadata: Record<string, string> = {};
     if (event_metadata && typeof event_metadata === 'object' && !Array.isArray(event_metadata)) {
       for (const key of [
@@ -51,8 +54,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       !servico_id ||
       !start ||
       !end ||
-      !cliente_nome ||
-      !cliente_telefone
+      (!usingPortal && (!cliente_nome || !cliente_telefone))
     ) {
       return res.status(400).json({ error: 'Campos obrigatórios ausentes.' });
     }
@@ -61,11 +63,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       !isUuid(estabelecimento_id) ||
       !isUuid(servico_id) ||
       (profissional_id && !isUuid(profissional_id)) ||
-      typeof cliente_nome !== 'string' ||
-      cliente_nome.trim().length < 2 ||
-      cliente_nome.length > 120 ||
-      typeof cliente_telefone !== 'string' ||
-      !/^\+?[\d\s()\-]{10,20}$/.test(cliente_telefone)
+      (!usingPortal &&
+        (typeof cliente_nome !== 'string' ||
+          cliente_nome.trim().length < 2 ||
+          cliente_nome.length > 120 ||
+          typeof cliente_telefone !== 'string' ||
+          !/^\+?[\d\s()\-]{10,20}$/.test(cliente_telefone)))
     )
       return res.status(400).json({ error: 'Dados inválidos.' });
     const { data: tenant } = await supabase
@@ -199,7 +202,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let depositStripe: any = null,
       reservationFingerprint = '';
     const reservationKey = req.body?.reservation_key;
-    if (preferences?.deposit_percent > 0) {
+    const portalToken = req.body?.portal_token;
+    let portalIdentity: any = null;
+    if (portalToken) {
+      if (!isUuid(portalToken) || !isUuid(reservationKey))
+        return res.status(400).json({ error: 'Link ou tentativa inválida.' });
+      const { data: identity, error: identityError } = await supabase.rpc('portal_identity', {
+        p_token: portalToken,
+      });
+      if (identityError || !identity || identity.tenant !== estabelecimento_id)
+        return res.status(403).json({ error: 'Link inválido ou expirado.' });
+      portalIdentity = identity;
+      cliente_nome = identity.name;
+      cliente_telefone = identity.phone || '';
+    }
+    if (
+      portalIdentity &&
+      ((req.body?.pass_id && !isUuid(req.body.pass_id)) ||
+        (req.body?.portal_event && !isUuid(req.body.portal_event)))
+    )
+      return res.status(400).json({ error: 'Reserva inválida.' });
+    const portalCommand =
+      portalIdentity &&
+      (!!req.body?.pass_id || !!req.body?.portal_event || !preferences?.deposit_percent);
+    if (!portalCommand && preferences?.deposit_percent > 0) {
       if (!isUuid(reservationKey))
         return res.status(400).json({ error: 'Atualize a página para reservar com sinal.' });
       reservationFingerprint = createHmac('sha256', secret)
@@ -213,6 +239,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             cliente_nome.trim(),
             cliente_telefone,
             bookingMetadata,
+            ...(portalIdentity ? [portalIdentity.customer] : []),
           ]),
         )
         .digest('hex');
@@ -276,6 +303,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await assertCollectionAccount(depositStripe, supabase, estabelecimento_id);
       }
     }
+    if (portalCommand) {
+      const { data: prior, error: priorError } = await supabase
+        .from('portal_requests')
+        .select('event_id')
+        .eq('estabelecimento_id', estabelecimento_id)
+        .eq('request_key', reservationKey)
+        .maybeSingle();
+      if (priorError)
+        return res.status(503).json({ error: 'Não foi possível conferir a reserva anterior.' });
+      if (prior) {
+        const { data, error } = await supabase.rpc('portal_reserve', {
+          p_token: portalToken,
+          p_key: reservationKey,
+          p_pass: req.body?.pass_id || null,
+          p_event: req.body?.portal_event || null,
+          p_data: {
+            estabelecimento_id,
+            servico_id,
+            profissional_id: profissional_id || null,
+            start: new Date(start).toISOString(),
+            end: new Date(end).toISOString(),
+            metadata: bookingMetadata,
+          },
+        });
+        if (error)
+          return res
+            .status(409)
+            .json({ error: 'A tentativa corresponde a outra reserva. Confira seus horários.' });
+        return res.status(200).json(data);
+      }
+    }
     let conflict = supabase
       .from('agenda_events')
       .select('id')
@@ -285,18 +343,48 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .gt('end', start);
     if (profissional_id)
       conflict = conflict.or(`profissional_id.eq.${profissional_id},profissional_id.is.null`);
+    if (portalIdentity && isUuid(req.body?.portal_event))
+      conflict = conflict.neq('id', req.body.portal_event);
     const { data: conflicts, error: conflictError } = await conflict.limit(1);
     if (conflictError)
       return res.status(503).json({ error: 'Não foi possível verificar a disponibilidade.' });
     if (conflicts?.length) return res.status(409).json({ error: 'Horário indisponível.' });
 
+    if (portalCommand) {
+      if (
+        (req.body?.pass_id && !isUuid(req.body.pass_id)) ||
+        (req.body?.portal_event && !isUuid(req.body.portal_event))
+      )
+        return res.status(400).json({ error: 'Reserva inválida.' });
+      const { data, error } = await supabase.rpc('portal_reserve', {
+        p_token: portalToken,
+        p_key: reservationKey,
+        p_pass: req.body?.pass_id || null,
+        p_event: req.body?.portal_event || null,
+        p_data: {
+          estabelecimento_id,
+          servico_id,
+          profissional_id: profissional_id || null,
+          start: new Date(start).toISOString(),
+          end: new Date(end).toISOString(),
+          metadata: bookingMetadata,
+        },
+      });
+      if (error)
+        return res
+          .status(['23505', '23P01'].includes(error.code) ? 409 : 400)
+          .json({ error: error.message || 'Não foi possível reservar.' });
+      return res.status(201).json(data);
+    }
     // 1. Upsert cliente by phone (find or create)
-    const { data: existingClientes } = await supabase
-      .from('clientes')
-      .select('id')
-      .eq('estabelecimento_id', estabelecimento_id)
-      .eq('telefone', cliente_telefone)
-      .limit(1);
+    const { data: existingClientes } = portalIdentity
+      ? { data: [{ id: portalIdentity.customer }] }
+      : await supabase
+          .from('clientes')
+          .select('id')
+          .eq('estabelecimento_id', estabelecimento_id)
+          .eq('telefone', cliente_telefone)
+          .limit(1);
 
     let clienteId: string;
 

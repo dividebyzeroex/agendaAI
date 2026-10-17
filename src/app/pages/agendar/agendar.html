@@ -81,6 +81,10 @@
       </div>
     </header>
 
+    <p *ngIf="portalData" class="portal-note">
+      Reserva para {{ portalData.name }} · acesso privado
+    </p>
+    <p *ngIf="portalError" class="portal-note portal-error" role="alert">{{ portalError }}</p>
     <!-- PROGRESS BAR -->
     <div class="ag-progress" *ngIf="step !== 'step0'">
       <div class="p-fill" [style.width.%]="progressValue"></div>
@@ -312,6 +316,10 @@
         <p class="empty-slots" *ngIf="slots.length && !slotsLoading && !hasAvailableSlots">
           Nenhum horário livre neste dia. Tente outra data ou profissional.
         </p>
+        <p class="feedback" *ngIf="quote?.prepaid">
+          Uma sessão do seu pacote será reservada para este horário. Não há novo sinal pelo serviço
+          incluído.
+        </p>
         <!-- CTA -->
         <button
           class="btn-primary"
@@ -361,44 +369,49 @@
           </div>
           <div class="summary-divider"></div>
           <div class="summary-row total">
-            <span>Valor</span>
-            <strong>R$ {{ formatPrice(quote?.price ?? selectedService?.preco ?? 0) }}</strong>
+            <span>{{ quote?.prepaid ? 'Serviço incluído' : 'Valor' }}</span>
+            <strong>{{
+              quote?.prepaid
+                ? '1 sessão'
+                : 'R$ ' + formatPrice(quote?.price ?? selectedService?.preco ?? 0)
+            }}</strong>
           </div>
         </details>
 
         <!-- Client Info -->
         <div class="client-form">
-          <div class="form-header">
-            <i class="pi pi-user"></i>
-            Seus dados para contato
-          </div>
-          <p class="form-subtitle">Sem cadastro de conta. Informe seu nome e telefone.</p>
+          <ng-container *ngIf="!portalData"
+            ><div class="form-header">
+              <i class="pi pi-user"></i>
+              Seus dados para contato
+            </div>
+            <p class="form-subtitle">Sem cadastro de conta. Informe seu nome e telefone.</p>
 
-          <div class="field">
-            <label for="custName">Nome</label>
-            <input
-              id="custName"
-              type="text"
-              [(ngModel)]="custName"
-              placeholder="Como devemos te chamar?"
-              autocomplete="name"
-            />
-          </div>
+            <div class="field">
+              <label for="custName">Nome</label>
+              <input
+                id="custName"
+                type="text"
+                [(ngModel)]="custName"
+                placeholder="Como devemos te chamar?"
+                autocomplete="name"
+              />
+            </div>
 
-          <div class="field">
-            <label for="custPhone">WhatsApp / Telefone</label>
-            <input
-              id="custPhone"
-              type="tel"
-              inputmode="tel"
-              [ngModel]="custPhone"
-              (input)="formatPhone($event)"
-              placeholder="(00) 00000-0000"
-              autocomplete="tel"
-              maxlength="16"
-            />
-          </div>
-
+            <div class="field">
+              <label for="custPhone">WhatsApp / Telefone</label>
+              <input
+                id="custPhone"
+                type="tel"
+                inputmode="tel"
+                [ngModel]="custPhone"
+                (input)="formatPhone($event)"
+                placeholder="(00) 00000-0000"
+                autocomplete="tel"
+                maxlength="16"
+              />
+            </div>
+          </ng-container>
           <ng-container *ngIf="config.id === 'petshop'">
             <div class="summary-divider"></div>
             <div class="form-header">Sobre o pet</div>
@@ -494,10 +507,14 @@
             estabelecimento.
           </p>
         </div>
+        <p class="feedback" *ngIf="quote?.prepaid">
+          Uma sessão do seu pacote será reservada para este horário. Não há novo sinal pelo serviço
+          incluído.
+        </p>
         <!-- CTA -->
         <button class="btn-primary btn-confirm" [disabled]="isSaving" (click)="finalize()">
-          <i class="pi pi-check-circle" *ngIf="!isSaving"></i>
-          <i class="pi pi-spin pi-spinner" *ngIf="isSaving"></i>
+          <i class="pi pi-check-circle" aria-hidden="true" *ngIf="!isSaving"></i>
+          <i class="pi pi-spin pi-spinner" aria-hidden="true" *ngIf="isSaving"></i>
           {{
             isSaving
               ? 'Reservando...'

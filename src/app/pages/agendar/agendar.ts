@@ -30,6 +30,36 @@ type BookingStep = 'marketplace' | 'step0' | 'step1' | 'step_pro' | 'step2' | 's
 export class Agendar implements OnInit {
   private route = inject(ActivatedRoute);
   private publicDb = inject(SupabaseService).client;
+  portalToken = this.route.snapshot.queryParamMap.get('portal') || '';
+  portalEvent = this.route.snapshot.queryParamMap.get('event') || '';
+  portalPass = this.route.snapshot.queryParamMap.get('pass') || '';
+  portalData: any = null;
+  portalError = '';
+  async loadPortal() {
+    if (!this.portalToken) return;
+    try {
+      const r = await fetch('/api/public-booking?action=portal-info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: this.portalToken }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const d = await r.json();
+      if (!r.ok || d.tenant !== this.estab?.id)
+        throw Error(d.error || 'Link inválido para este estabelecimento.');
+      this.portalData = d;
+      this.custName = d.name || '';
+      this.custPhone = d.phone || '';
+      if (this.portalEvent) {
+        const a = d.appointments.find((x: any) => x.id === this.portalEvent);
+        if (!a) throw Error('Horário indisponível para remarcar.');
+      }
+    } catch (e) {
+      this.portalError = e instanceof Error ? e.message : 'Portal indisponível.';
+    } finally {
+      this.cdr.markForCheck();
+    }
+  }
   publicPage: any = null;
   bookingPending = false;
   quote: any = null;
@@ -39,6 +69,7 @@ export class Agendar implements OnInit {
     if (!this.estab?.id) return;
     const { data } = await this.publicDb.rpc('business_public_page', { p_tenant: this.estab.id });
     this.publicPage = data;
+    await this.loadPortal();
     this.cdr.markForCheck();
   }
   private pubService = inject(EstabelecimentoPublicoService);
@@ -134,6 +165,10 @@ export class Agendar implements OnInit {
   }
 
   get filteredServices() {
+    if (this.portalEvent && this.portalData) {
+      const a = this.portalData.appointments.find((x: any) => x.id === this.portalEvent);
+      return this.services.filter((s) => s.id === a?.service_id);
+    }
     if (this.categoriaAtiva === 'Todos') return this.services;
     return this.services.filter((s) => (s as any).categoria === this.categoriaAtiva);
   }
@@ -448,7 +483,7 @@ export class Agendar implements OnInit {
     this.quoteLoading = true;
     this.errorMsg = '';
     try {
-      const { data, error } = await this.publicDb
+      let { data, error } = await this.publicDb
         .rpc('quote_booking', {
           p_tenant: this.estab!.id,
           p_service: this.selectedService!.id,
@@ -456,6 +491,32 @@ export class Agendar implements OnInit {
         })
         .abortSignal(AbortSignal.timeout(15000));
       if (error || !data) throw Error('Não foi possível conferir o valor. Tente novamente.');
+      if (this.portalData) {
+        const eligible = this.portalData.passes.filter(
+          (p: any) =>
+            p.service_id === this.selectedService!.id &&
+            p.remaining > p.reserved &&
+            Date.parse(p.expires_at) >
+              Date.parse(this.selectedDate + 'T' + this.selectedTime + ':00-03:00'),
+        );
+        if (!this.portalPass && eligible.length) this.portalPass = eligible[0].id;
+        if (
+          this.portalPass &&
+          !eligible.some((p: any) => p.id === this.portalPass) &&
+          !this.portalEvent
+        )
+          throw Error(
+            'A sessão escolhida não cobre este serviço ou data. Volte à sua área e escolha outro pacote.',
+          );
+        if (this.portalEvent) {
+          const a = this.portalData.appointments.find((x: any) => x.id === this.portalEvent);
+          if (a?.service_id !== this.selectedService!.id)
+            throw Error('Mantenha o mesmo serviço para remarcar.');
+        }
+        if (this.portalPass) {
+          data = { ...data, deposit: 0, deposit_amount: 0, deposit_percent: 0, prepaid: true };
+        }
+      }
       this.quote = data;
       await this.goToStep('step3', 'Preparando resumo...');
     } catch (e) {
@@ -482,6 +543,10 @@ export class Agendar implements OnInit {
   }
 
   async finalize() {
+    if (this.portalToken && !this.portalData) {
+      this.errorMsg = this.portalError || 'Aguarde a verificação do seu acesso.';
+      return;
+    }
     const nameClean = this.custName.trim();
     const phoneClean = this.custPhone.replace(/\D/g, '');
 
@@ -489,7 +554,7 @@ export class Agendar implements OnInit {
       this.errorMsg = 'Informe seu nome com pelo menos duas letras.';
       return;
     }
-    if (phoneClean.length < 10) {
+    if (!this.portalData && phoneClean.length < 10) {
       this.errorMsg = 'Informe um telefone válido com DDD.';
       return;
     }
@@ -561,6 +626,13 @@ export class Agendar implements OnInit {
           title: eventTitle,
           event_metadata: eventMeta,
           reservation_key: this.reservationAttempt.key,
+          ...(this.portalToken
+            ? {
+                portal_token: this.portalToken,
+                portal_event: this.portalEvent || null,
+                pass_id: this.portalPass || null,
+              }
+            : {}),
         }),
       });
 
@@ -572,6 +644,10 @@ export class Agendar implements OnInit {
 
       if (result.deposit_token) {
         window.location.assign('/comanda/' + encodeURIComponent(result.deposit_token));
+        return;
+      }
+      if (this.portalToken) {
+        window.location.assign('/minha-area/' + encodeURIComponent(this.portalToken));
         return;
       }
       this.bookingPending = result.event?.status === 'pendente';

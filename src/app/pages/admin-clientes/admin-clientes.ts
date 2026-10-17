@@ -1,3 +1,5 @@
+import { SupabaseService } from '../../services/supabase.service';
+import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { Component, inject, OnInit, ChangeDetectorRef, DestroyRef } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
@@ -13,30 +15,83 @@ import { NovoClienteModalComponent } from '../../components/novo-cliente-modal/n
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink, ClientImport],
   templateUrl: './admin-clientes.html',
-  styleUrls: ['./admin-clientes.css']
+  styleUrls: ['./admin-clientes.css'],
 })
 export class AdminClientes implements OnInit {
+  private db = inject(SupabaseService).client;
+  private tenant = inject(EstabelecimentoService);
+  portalUrl = '';
+  portalName = '';
+  portalError = '';
+  portalBusy = false;
+  async portal(cliente: Cliente, revoke = false) {
+    if (this.portalBusy) return;
+    this.portalBusy = true;
+    this.portalError = '';
+    this.portalUrl = '';
+    this.portalName = cliente.nome;
+    try {
+      const { data, error } = await this.db
+        .rpc('portal_link', {
+          p_tenant: this.tenant.estabelecimento$.value?.id,
+          p_customer: cliente.id,
+          p_revoke: revoke,
+        })
+        .abortSignal(AbortSignal.timeout(15000));
+      if (error)
+        throw Error('Não foi possível gerar o acesso. Apenas o dono pode administrar o portal.');
+      this.portalUrl = revoke ? '' : location.origin + '/minha-area/' + data.token;
+      this.portalError = revoke ? 'Acessos anteriores revogados.' : '';
+    } catch (e) {
+      this.portalError = e instanceof Error ? e.message : 'Tente novamente.';
+    } finally {
+      this.portalBusy = false;
+      this.cdr.markForCheck();
+    }
+  }
+  async copyPortal() {
+    try {
+      await navigator.clipboard.writeText(this.portalUrl);
+      this.portalError = 'Link copiado. Envie somente ao cliente correspondente.';
+    } catch {
+      this.portalError = 'Selecione o link e copie para enviar ao cliente.';
+    }
+    this.cdr.markForCheck();
+  }
   public clienteService = inject(ClienteService);
-  private smsService     = inject(SmsService);
-  private cdr            = inject(ChangeDetectorRef);
+  private smsService = inject(SmsService);
+  private cdr = inject(ChangeDetectorRef);
 
   private destroyRef = inject(DestroyRef);
-  importOpen=inject(ActivatedRoute).snapshot.queryParamMap.has('importar');
+  importOpen = inject(ActivatedRoute).snapshot.queryParamMap.has('importar');
   clientes: Cliente[] = [];
   filteredClientes: Cliente[] = [];
   searchQuery = '';
-  isLoading   = true;
+  isLoading = true;
 
   // Modais
   showNovoClienteModal = false;
   selectedCliente: Cliente | undefined;
-  smsModal: { open: boolean; cliente: Cliente | null; mensagem: string; sending: boolean; result: string } = {
-    open: false, cliente: null, mensagem: '', sending: false, result: ''
+  smsModal: {
+    open: boolean;
+    cliente: Cliente | null;
+    mensagem: string;
+    sending: boolean;
+    result: string;
+  } = {
+    open: false,
+    cliente: null,
+    mensagem: '',
+    sending: false,
+    result: '',
   };
 
   ngOnInit() {
-    this.clienteService.loading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(v => { this.isLoading = v; this.cdr.markForCheck(); });
-    this.clienteService.clientes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(data => {
+    this.clienteService.loading$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((v) => {
+      this.isLoading = v;
+      this.cdr.markForCheck();
+    });
+    this.clienteService.clientes$.pipe(takeUntilDestroyed(this.destroyRef)).subscribe((data) => {
       this.clientes = data;
       this.applyFilter();
 
@@ -47,7 +102,9 @@ export class AdminClientes implements OnInit {
   applyFilter() {
     const q = this.searchQuery.toLowerCase();
 
-    this.filteredClientes=this.clientes.filter(c=>!q||`${c.nome} ${c.telefone||''} ${c.email||''}`.toLowerCase().includes(q));
+    this.filteredClientes = this.clientes.filter(
+      (c) => !q || `${c.nome} ${c.telefone || ''} ${c.email || ''}`.toLowerCase().includes(q),
+    );
   }
 
   // --- Novo Cliente Modal ---
@@ -75,18 +132,36 @@ export class AdminClientes implements OnInit {
       cliente,
       mensagem: `Olá, ${cliente.nome}! `,
       sending: false,
-      result: ''
+      result: '',
     };
   }
 
-  closeSmsModal() { this.smsModal.open = false; }
+  closeSmsModal() {
+    this.smsModal.open = false;
+  }
 
   async enviarSms() {
-    if (this.smsModal.sending || !this.smsModal.cliente?.telefone || !this.smsModal.mensagem.trim()) return;
+    if (this.smsModal.sending || !this.smsModal.cliente?.telefone || !this.smsModal.mensagem.trim())
+      return;
     this.smsModal.sending = true;
-    this.smsModal.result  = '';
+    this.smsModal.result = '';
 
-    try{const result=await this.smsService.enviarManual(this.smsModal.cliente.telefone,this.smsModal.mensagem);this.smsModal.result=result.success?(result.simulated?'Envio simulado. Nenhum SMS foi enviado.':'Mensagem enviada.'):`Não foi possível enviar: ${result.error||'tente novamente'}`;}catch{this.smsModal.result='Não foi possível enviar. Tente novamente.';}finally{this.smsModal.sending=false;this.cdr.markForCheck();}
+    try {
+      const result = await this.smsService.enviarManual(
+        this.smsModal.cliente.telefone,
+        this.smsModal.mensagem,
+      );
+      this.smsModal.result = result.success
+        ? result.simulated
+          ? 'Envio simulado. Nenhum SMS foi enviado.'
+          : 'Mensagem enviada.'
+        : `Não foi possível enviar: ${result.error || 'tente novamente'}`;
+    } catch {
+      this.smsModal.result = 'Não foi possível enviar. Tente novamente.';
+    } finally {
+      this.smsModal.sending = false;
+      this.cdr.markForCheck();
+    }
   }
 
   async enviarLembreteCliente(cliente: Cliente) {
@@ -95,7 +170,7 @@ export class AdminClientes implements OnInit {
       cliente.telefone,
       cliente.nome,
       'seu próximo agendamento',
-      ''
+      '',
     );
   }
 }

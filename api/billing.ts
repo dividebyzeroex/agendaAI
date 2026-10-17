@@ -1,3 +1,4 @@
+import { integrationsHandler } from '../server/integrations.js';
 import { adminClient } from '../server/security.js';
 import { clubHandler } from '../server/growth-payments.js';
 import { connectHandler, connectFailure, connectDiagnostics } from '../server/connect.js';
@@ -19,6 +20,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const action = req.query['action'];
+    if (
+      typeof action === 'string' &&
+      (action.startsWith('integration-') || action.startsWith('fiscal-'))
+    )
+      return integrationsHandler(req, res);
     if (action === 'status' && req.method === 'GET')
       return res.status(200).json(await operationalBillingReadiness());
     if (typeof action === 'string' && action.startsWith('club-')) {

@@ -1,3 +1,5 @@
+import { maintainFiscal } from './integrations.js';
+import { runWhatsApp } from './whatsapp.js';
 import { adminClient } from './security.js';
 import { campaignReady, runCustomerCampaigns } from './business-campaigns.js';
 import { maintainDepositHolds, maintainClubPayments, runClubRenewals } from './growth-payments.js';
@@ -7,6 +9,8 @@ export async function runGrowthWorker(
     campaigns?: () => Promise<any>;
     clubs?: () => Promise<any>;
     holds?: () => Promise<any>;
+    fiscal?: () => Promise<any>;
+    whatsapp?: () => Promise<any>;
     clubPayments?: () => Promise<any>;
   } = {},
 ) {
@@ -22,8 +26,10 @@ export async function runGrowthWorker(
     deps.clubs ? deps.clubs() : runClubRenewals(),
     deps.holds ? deps.holds() : maintainDepositHolds(),
     deps.clubPayments ? deps.clubPayments() : maintainClubPayments(),
+    deps.whatsapp ? deps.whatsapp() : runWhatsApp(db),
+    deps.fiscal ? deps.fiscal() : maintainFiscal(db),
   ]);
-  const names = ['campaigns', 'clubs', 'holds', 'clubPayments'];
+  const names = ['campaigns', 'clubs', 'holds', 'clubPayments', 'whatsapp', 'fiscal'];
   return {
     ok: results.every((r) => r.status === 'fulfilled'),
     ...Object.fromEntries(

@@ -1,0 +1,92 @@
+<main>
+  <p class="eyebrow">SUA ÁREA</p>
+  <h1>{{ data()?.business || 'Seus atendimentos' }}</h1>
+  <p *ngIf="loading()" role="status">Conferindo seus horários…</p>
+  <p class="error" *ngIf="error()" role="alert">
+    {{ error() }} <button (click)="load()" [disabled]="loading()">Tentar novamente</button>
+  </p>
+  <p class="notice" *ngIf="notice()" role="status">{{ notice() }}</p>
+  <ng-container *ngIf="data() as d"
+    ><p>Olá, {{ d.name }}. Seu próximo cuidado começa aqui.</p>
+    <a class="action" [routerLink]="['/agendar', d.slug]" [queryParams]="{ portal: token }"
+      >Agendar um horário</a
+    >
+    <section>
+      <h2>Seus horários</h2>
+      <p class="hint" *ngIf="d.appointments.length >= 100">
+        Mostrando até 100 horários recentes e futuros.
+      </p>
+      <p *ngIf="!d.appointments.length">Você ainda não tem horários por aqui.</p>
+      <article *ngFor="let a of d.appointments">
+        <div>
+          <strong>{{ a.service || 'Atendimento' }}</strong>
+          <p>{{ a.start | date: 'dd/MM/yyyy · HH:mm' : '-0300' }} · {{ a.professional }}</p>
+          <span class="status">{{ a.status }}</span>
+          <p *ngIf="a.cancel_requested_at">Cancelamento solicitado ao estabelecimento.</p>
+        </div>
+        <div class="actions" *ngIf="canChange(a) && !a.cancel_requested_at">
+          <a
+            *ngIf="!a.deposit_paid"
+            [routerLink]="['/agendar', d.slug]"
+            [queryParams]="{ portal: token, event: a.id }"
+            >Remarcar</a
+          ><button (click)="confirm.set(a.id)">
+            {{ a.deposit_paid ? 'Solicitar cancelamento' : 'Cancelar' }}
+          </button>
+        </div>
+        <div class="confirm" *ngIf="confirm() === a.id">
+          <p>
+            {{
+              a.deposit_paid
+                ? 'O estabelecimento será avisado para revisar o sinal. O horário permanece reservado até a conclusão.'
+                : 'Deseja liberar este horário?'
+            }}
+          </p>
+          <button (click)="cancel(a.id)" [disabled]="busy()">
+            {{ busy() ? 'Processando…' : 'Confirmar cancelamento' }}</button
+          ><button (click)="confirm.set('')" [disabled]="busy()">Manter horário</button>
+        </div>
+      </article>
+      <p class="hint">
+        Remarcação e cancelamento online até 2 horas antes. Reservas com sinal precisam da revisão
+        do estabelecimento.
+      </p>
+    </section>
+    <section>
+      <h2>Suas sessões</h2>
+      <p *ngIf="!d.passes.length">Pacotes e ciclos pagos aparecerão aqui.</p>
+      <article *ngFor="let p of d.passes">
+        <div>
+          <strong>{{ p.title }}</strong>
+          <p>{{ p.remaining - p.reserved }} disponíveis · {{ p.reserved }} reservadas</p>
+          <small>Válidas até {{ p.expires_at | date: 'dd/MM/yyyy' }}</small>
+        </div>
+        <a
+          *ngIf="p.remaining > p.reserved"
+          [routerLink]="['/agendar', d.slug]"
+          [queryParams]="{ portal: token, pass: p.id }"
+          >Usar sessão</a
+        >
+      </article>
+      <article *ngFor="let c of d.clubs">
+        <strong>{{ c.title }}</strong
+        ><a [routerLink]="['/clube', c.token]">Gerenciar renovação</a>
+      </article>
+    </section>
+    <section>
+      <h2>Pagamentos</h2>
+      <p class="hint">Últimas 30 cobranças.</p>
+      <p *ngIf="!d.payments.length">Nenhuma cobrança disponível.</p>
+      <article *ngFor="let p of d.payments">
+        <div>
+          <strong>{{ p.valor_total | currency: 'BRL' }}</strong>
+          <p>{{ p.status_caixa }}</p>
+        </div>
+        <a [routerLink]="['/comanda', p.token]">Ver comanda</a>
+      </article>
+    </section>
+    <p class="hint">
+      Este link é privado e tem validade limitada. Não compartilhe com outras pessoas.
+    </p></ng-container
+  >
+</main>

@@ -324,4 +324,5 @@ assert.equal(Number(fullProgress.total),511);assert.equal(Number(fullProgress.se
 assert.equal(Number(fullProgress.pending)+Number(fullProgress.sending)+Number(fullProgress.sent)+Number(fullProgress.failed)+Number(fullProgress.suppressed),511);
 console.log('PASS: campaign lifecycle, aggregate counts beyond 500 recipients, authenticated owner-only execution and cross-tenant isolation.');
 await (await import('./growth-database.mjs')).verifyGrowth({db,asRole,owner,other,tenant,pilot,proId,svcId,clientId,product,cancelSession,pay,cmd});
+await (await import('./portal-database.mjs')).verifyPortal({db,asRole,owner,other,pilot,proId,svcId,clientId,cmd});
 await db.close();

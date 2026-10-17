@@ -248,3 +248,32 @@ Esta revisão implementa o escopo aprovado de sinal, clube recorrente, DRE/proje
 A troca de unidade também usa o cadastro profissional da unidade ativa, além da permissão. Ajuste adicional aplicado e testado em `20261016170752_unit_context_profile.sql`, sem usar o primeiro cadastro vinculado como contexto das demais unidades.
 
 O cancelamento de próximas renovações funciona independentemente da disponibilidade da Stripe. Quando a consulta do provedor falha, o link do clube mantém os dados registrados e sinaliza que a atualização financeira está em conferência, sem impedir o cancelamento.
+
+## Portal, saldo e integrações — 16/10/2026
+
+| Frente | Entrega | Ativação / limite operacional |
+| --- | --- | --- |
+| Portal privado | Clientes → opções → Área do cliente; link de até 30 dias, revogável; horários, sessões, pagamentos e clube | Compartilhar somente com o cliente. Sem cadastro adicional. Até 100 horários e 30 cobranças recentes. |
+| Reserva com pacote/clube | Acesso pelo portal; prova por token, reserva atômica da sessão, sem novo sinal; remarcação mantém a sessão; cancelamento libera saldo | Mesmo serviço, saldo e validade até o atendimento; resgate efetivo pela equipe ao concluir. A venda comum não pode cobrar novamente uma sessão reservada. |
+| WhatsApp Cloud API | Confirmação, véspera, alteração, fila com claim único, callback assinado e estados enviado/entregue/lido; SAIR revoga consentimento | Credenciais Meta, modelo aprovado em pt_BR e autorização do canal. Timeout incerto não gera reenvio automático. |
+| Pix Connect | Novos checkouts avulsos/sinais oferecem cartão e Pix quando a conta está habilitada; QR/copia e cola hospedados pela Stripe | Validação real de `pix_payments=active` no Connect. Clube BR segue cartão; sem Pix recorrente neste módulo. Mesma conciliação, webhook e taxa fixa de R$ 1. |
+| Fiscal Focus NFe | NFS-e municipal e NFC-e: perfil do emitente, tributação de produto, rascunho/revisão, envio explícito, consulta periódica, PDF/XML quando autorizados | Conta/contrato Focus, token por ambiente, certificado/credenciamento e homologação com contador. Não configura automaticamente prefeituras/SEFAZ. |
+
+### Navegação e operação
+
+- **Gerenciar → Integrações e notas fiscais**, `/admin/integracoes`, fora do primeiro acesso. Quatro abas: WhatsApp, Pix, Notas fiscais, Configurar emissor.
+- WhatsApp: preencher ID do número, token permanente e nome do modelo. O modelo aprovado usa quatro campos no corpo: cliente, estabelecimento, data/hora e situação. Plataforma configura `WHATSAPP_APP_SECRET`, `WHATSAPP_VERIFY_TOKEN` e opcional `WHATSAPP_GRAPH_VERSION` (padrão `v23.0`). Callback HTTPS `/api/webhook?channel=whatsapp`; assinar o campo `messages` da conta WhatsApp Business na Meta. `INTEGRATION_ENCRYPTION_KEY` foi provisionada como segredo em produção/preview; nunca rotacionar sem recriptografar os tokens armazenados.
+- WhatsApp só drena destinatários com consentimento vigente, conta SaaS ativa e configuração habilitada. Callbacks que chegam antes da resposta do envio são preservados; um callback atrasado não rebaixa uma leitura para envio. As filas e consultas são executadas pelo worker existente de cinco minutos; nenhum endpoint serverless novo.
+- Pix: exige conta Connect vinculada e ativa, além de liberação de Pix pela Stripe. Não promete acesso universal. Checkouts já existentes preservam suas opções; se a elegibilidade não puder ser confirmada, o cartão continua disponível.
+- Fiscal inicia em homologação. NFS-e municipal para vendas avulsas de serviços sem produtos/sinal/pacote; municípios que exigem NFS-e Nacional não estão cobertos por este adaptador. NFC-e inicial para vendas somente de produtos em dinheiro/Pix, sem desconto, com códigos fiscais preenchidos pelo contador. Cartões com dados de adquirência, vendas mistas, antecipações, pacotes, regime especial e notas nacionais precisam de expansão/homologação específica. Não há emissão automática por padrão.
+- Data de emissão é atualizada ao enviar; rascunho pode ser conferido antes. Documento mantém seu ambiente original. Envio usa referência UUID estável, claim único e resultado incerto fica em revisão, sem emitir outra nota. Rejeição definitiva admite corrigir o rascunho; emissão autorizada não é sobrescrita. Não existe cancelamento fiscal automático neste lote; tratar com o emissor/contador.
+- Portal: cancelamento/remarcação até duas horas antes. Reserva com sinal gera pedido de revisão visível no atendimento; o horário não é liberado antes do tratamento do sinal. Link comprova identidade do cliente; telefone digitado isoladamente nunca libera créditos. URLs privadas são excluídas do Speed Insights e referrers externos.
+
+### Validação
+
+- 193 testes de aplicação/APIs, build Angular e tipagem; migrações/cenários PostgreSQL com isolamento entre clientes, última sessão, repetição/remarcação/cancelamento/resgate, bloqueio de cobrança duplicada, revogação/expiração e opt-out/callback fora de ordem.
+- Browser simulado em 390/1440 px: agendamento pré-pago pelo portal sem formulário de contato/sinal e quatro abas sem rolagem horizontal, confirmação de cancelamento, configuração Pix e campos fiscais. Nenhuma mensagem, pagamento ou nota real emitida por testes.
+- Migração `20261016173537_customer_portal_integrations.sql` aplicada no Supabase; seis tabelas públicas com RLS, nenhuma leitura anônima/escrita direta pelo navegador. Credenciais cifradas e callbacks ficam em tabelas privadas, sem políticas/grants para navegador (aviso INFO intencional nos advisors).
+- Homologação real Meta/Stripe Pix/Focus depende das credenciais e cadastros de cada estabelecimento e permanece pendente; integrações novas começam desativadas.
+
+Fontes primárias consultadas: [Stripe Pix](https://docs.stripe.com/payments/pix), [Meta Cloud API](https://www.postman.com/meta/whatsapp-business-platform/documentation/wlk6lh4/whatsapp-cloud-api), [Focus NFS-e](https://doc.focusnfe.com.br/reference/emitir_nfse), [Focus NFC-e](https://doc.focusnfe.com.br/reference/emitir_nfce).
