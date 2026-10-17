@@ -3,24 +3,24 @@
   <!-- ═══════════════ HEADER & NAV ═══════════════ -->
   <header class="site-header" [class.scrolled]="isScrolled">
     <div class="header-inner">
-      <div class="brand" (click)="scrollTo('hero')">
+      <a href="#hero" class="brand" (click)="scrollTo('hero')" aria-label="AgendaAI, voltar ao início">
         <span class="brand-symbol">▲</span>
         <span class="brand-text">AgendaAI</span>
-      </div>
+      </a>
 
       <nav class="nav-links desktop-only">
-        <a (click)="scrollTo('como-funciona')">Como funciona</a>
-        <a (click)="scrollTo('segmentos')">Segmentos</a>
-        <a (click)="scrollTo('novidades')">Soluções</a>
-        <a (click)="scrollTo('recursos')">Recursos</a>
-        <a (click)="scrollTo('precos')">Preços</a>
-        <a (click)="scrollTo('faq')">Dúvidas</a>
+        <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
+        <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
+        <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
+        <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
+        <a href="#precos" (click)="scrollTo('precos')">Preços</a>
+        <a href="#faq" (click)="scrollTo('faq')">Dúvidas</a>
       </nav>
 
       <div class="header-actions">
         <button class="btn-link desktop-only" (click)="signIn()">Entrar</button>
         <button class="btn-primary" (click)="goToLogin()">Criar conta grátis</button>
-        <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Menu">
+        <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Abrir ou fechar menu" [attr.aria-expanded]="isMobileMenuOpen" aria-controls="landing-mobile-nav">
           <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
         </button>
       </div>
@@ -28,14 +28,14 @@
   </header>
 
   <!-- Mobile Menu Drawer -->
-  <div class="mobile-nav" [class.open]="isMobileMenuOpen">
+  <div class="mobile-nav" id="landing-mobile-nav" [class.open]="isMobileMenuOpen" [attr.aria-hidden]="!isMobileMenuOpen">
     <div class="mobile-links">
-      <a (click)="scrollTo('como-funciona')">Como funciona</a>
-      <a (click)="scrollTo('novidades')">Soluções</a>
-      <a (click)="scrollTo('segmentos')">Segmentos</a>
-      <a (click)="scrollTo('recursos')">Recursos</a>
-      <a (click)="scrollTo('precos')">Preços</a>
-      <a (click)="scrollTo('faq')">Dúvidas frequentes</a>
+      <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
+      <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
+      <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
+      <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
+      <a href="#precos" (click)="scrollTo('precos')">Preços</a>
+      <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
     </div>
     <div class="mobile-actions">
       <button class="btn-primary w-full" (click)="goToLogin(); toggleMobileMenu()">Criar conta grátis</button>
@@ -375,23 +375,23 @@
 
         <div class="footer-nav-col">
           <strong>Navegação</strong>
-          <a (click)="scrollTo('como-funciona')">Como funciona</a>
-          <a (click)="scrollTo('segmentos')">Segmentos atendidos</a>
-          <a (click)="scrollTo('recursos')">Recursos da plataforma</a>
-          <a (click)="scrollTo('precos')">Tabela de preços</a>
-          <a (click)="scrollTo('faq')">Dúvidas frequentes</a>
+          <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
+          <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos atendidos</a>
+          <a href="#recursos" (click)="scrollTo('recursos')">Recursos da plataforma</a>
+          <a href="#precos" (click)="scrollTo('precos')">Tabela de preços</a>
+          <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
         </div>
 
         <div class="footer-nav-col">
           <strong>Segmentos</strong>
-          <a (click)="selectSegment('barbearia'); scrollTo('segmentos')">Barbearias & Salões</a>
-          <a (click)="selectSegment('estetica'); scrollTo('segmentos')">Estética & Spa</a>
+          <a href="#segmentos" (click)="selectSegment('barbearia'); scrollTo('segmentos')">Barbearias & Salões</a>
+          <a href="#segmentos" (click)="selectSegment('estetica'); scrollTo('segmentos')">Estética & Spa</a>
         </div>
 
         <div class="footer-nav-col">
           <strong>Acesso</strong>
-          <a (click)="signIn()">Entrar no sistema</a>
-          <a (click)="goToLogin()">Cadastro de nova empresa</a>
+          <a href="/login" (click)="signIn(); $event.preventDefault()">Entrar no sistema</a>
+          <a href="/login?trial=30" (click)="goToLogin(); $event.preventDefault()">Cadastro de nova empresa</a>
           <a href="/termos#privacidade">Dados e privacidade</a>
         </div>
       </div>
