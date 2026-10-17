@@ -13,7 +13,39 @@
   <p class="helper" *ngIf="overview">Recebimentos registrados no caixa; não representam conciliação bancária. <button class="text-action" (click)="loadOverview()">Atualizar</button></p>
   <p class="feedback error" *ngIf="overviewError" role="alert">{{overviewError}} <button class="text-action" (click)="loadOverview()">Tentar novamente</button></p>
   <details class="disclosure" *ngIf="overview?.commissions?.length"><summary>Comissões geradas hoje</summary><p *ngFor="let c of overview.commissions">{{c.nome}} · {{c.amount|currency:'BRL'}}</p><p class="helper">Comissão sobre o serviço após desconto de fidelidade, conforme regra do profissional. Retiradas incluem despesas e outras saídas; não são cálculo de lucro.</p></details>
-  <p class="feedback" [class.error]="messageError" *ngIf="message" [attr.role]="messageError?'alert':'status'">{{message}}</p><button class="text-action" *ngIf="lastClosure&&!sessaoAtual" (click)="imprimirFechamento(lastClosure.data,lastClosure.movimentacoes)">Imprimir relatório do último fechamento</button>
+  <p class="feedback" [class.error]="messageError" *ngIf="message" [attr.role]="messageError?'alert':'status'">{{message}}</p>
+  <!-- Express: pending charges remain accessible while the reception handles another client. -->
+  <section class="express-queue" *ngIf="sessaoAtual && (onlineEnabled || pendingOnline.length || pendingOnlineError)" aria-labelledby="express-queue-title">
+    <div class="express-queue-header">
+      <div class="express-queue-title">
+        <span class="express-queue-icon"><i class="pi pi-qrcode" aria-hidden="true"></i></span>
+        <div><h3 id="express-queue-title">AgendaAI Pay Express</h3>
+          <p>Compartilhe o QR e continue atendendo. A baixa ocorre após confirmação da Stripe.</p>
+        </div>
+      </div>
+      <button type="button" class="express-btn express-quiet" (click)="loadPendingCharges()" [disabled]="pendingOnlineLoading">
+        <i class="pi" [ngClass]="pendingOnlineLoading ? 'pi-spin pi-spinner' : 'pi-refresh'" aria-hidden="true"></i>
+        Atualizar
+      </button>
+    </div>
+    <p class="express-empty" *ngIf="!pendingOnlineLoading && !pendingOnline.length && !pendingOnlineError">Nenhuma cobrança online pendente entre as últimas verificadas.</p>
+    <p class="feedback error" *ngIf="pendingOnlineError" role="alert">{{pendingOnlineError}}</p>
+    <div class="express-queue-list" *ngIf="pendingOnline.length">
+      <article class="express-pending-item" *ngFor="let item of pendingOnline">
+        <div class="express-pending-info">
+          <strong>{{item.customer}}</strong>
+          <span>{{item.createdAt | date:'dd/MM HH:mm'}} · <em>Pendente</em></span>
+        </div>
+        <b class="express-pending-amount">{{item.amount | currency:'BRL'}}</b>
+        <button type="button" class="express-btn express-outline" (click)="openPendingQr(item)">
+          <i class="pi pi-qrcode" aria-hidden="true"></i> Mostrar QR
+        </button>
+        <a class="express-btn express-quiet" [href]="getPayUrl(item.token)" target="_blank" rel="noopener noreferrer">Comanda <i class="pi pi-external-link" aria-hidden="true"></i></a>
+      </article>
+    </div>
+    <p class="express-disclaimer" *ngIf="pendingOnline.length === 25">Exibindo até 25 cobranças recentes. Consulte Recebimentos para o histórico completo.</p>
+  </section>
+<button class="text-action" *ngIf="lastClosure&&!sessaoAtual" (click)="imprimirFechamento(lastClosure.data,lastClosure.movimentacoes)">Imprimir relatório do último fechamento</button>
   <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 400px;">
     <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
   </div>
@@ -207,20 +239,41 @@
 
         <!-- SUCESSO -->
         <div class="checkout-success" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && checkoutComplete">
-          <div class="success-icon"><i class="pi pi-check-circle"></i></div>
-          <h3>{{onlinePending?'Aguardando pagamento':'Venda registrada!'}}</h3>
-          <p>{{onlinePending?'Compartilhe o link da comanda. O cliente paga no checkout Stripe.':'Comanda gerada e caixa atualizado.'}}</p>
+          <div class="success-icon" [class.express-waiting]="onlinePending">
+            <i class="pi" [ngClass]="onlinePending ? 'pi-qrcode' : 'pi-check-circle'" aria-hidden="true"></i>
+          </div>
+          <h3>{{onlinePending?'Cobrança pronta para o cliente':'Pagamento confirmado!'}}</h3>
+          <p>{{onlinePending?'Mostre o QR Code. O cliente abre a comanda e paga no próprio celular — sem instalar nada.':'Comanda gerada e caixa atualizado.'}}</p>
+
+          <div *ngIf="onlinePending && comandaToken" class="express-checkout">
+            <p class="express-checkout-tag">AGENDAAI PAY EXPRESS</p>
+            <strong class="express-checkout-total">{{getValorTotalCheckout() | currency:'BRL'}}</strong>
+            <app-pay-qr [value]="getComandaUrl()" [size]="218"></app-pay-qr>
+            <p class="express-instruction">Escaneie para abrir a comanda e pagar pelo checkout seguro da Stripe.</p>
+            <div class="express-checkout-actions">
+              <button type="button" class="express-btn express-outline" (click)="copyPayLink(comandaToken)">
+                <i class="pi pi-copy" aria-hidden="true"></i> Copiar link
+              </button>
+              <button type="button" class="express-btn express-outline" (click)="sharePayLink(comandaToken)">
+                <i class="pi pi-share-alt" aria-hidden="true"></i> Compartilhar
+              </button>
+            </div>
+            <button type="button" class="express-btn express-quiet" (click)="reviewActivePayment()" [disabled]="activePaymentChecking">
+              <i class="pi pi-refresh" aria-hidden="true"></i> {{ activePaymentChecking ? 'Conferindo…' : 'Conferir pagamento' }}
+            </button>
+            <p class="express-checkout-hint"><i class="pi pi-clock" aria-hidden="true"></i> A cobrança fica na lista de pendentes. O atendente pode liberar o balcão agora.</p>
+          </div>
 
           <button *ngIf="!onlinePending" class="btn-ghost" style="margin-top: 16px; width: 100%; border-color: var(--primary-color); color: var(--primary-color);" (click)="imprimirComprovante({cliente_nome: eventoSelecionado?.title, profissional: eventoSelecionado?.profissional_nome}, getValorTotalCheckout(), showVendaAvulsaModal)">
             <i class="pi pi-print"></i> Imprimir recibo
           </button>
 
-          <div class="comanda-link-box" *ngIf="comandaToken">
-            <p>{{onlinePending?'Link para pagamento:':'Recibo digital:'}}</p>
-            <a [href]="getComandaUrl()" target="_blank" class="comanda-url">Acessar Comanda Digital</a>
+          <div class="comanda-link-box" *ngIf="comandaToken && !onlinePending">
+            <p>Recibo digital</p>
+            <a [href]="getComandaUrl()" target="_blank" rel="noopener noreferrer" class="comanda-url">Acessar Comanda Digital</a>
           </div>
 
-          <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">Nova Venda / Voltar</button>
+          <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">{{onlinePending?'Liberar balcão · Próximo atendimento':'Nova venda / Voltar'}}</button>
         </div>
 
         <!-- CHECKOUT ATIVO -->
@@ -340,4 +393,22 @@
     </div>
   </ng-container>
 
+  <div class="express-dialog-backdrop" *ngIf="payQrToken" (click)="closePendingQr()">
+    <section class="express-dialog" role="dialog" aria-modal="true" aria-labelledby="express-dialog-title"
+      (click)="$event.stopPropagation()">
+      <button type="button" class="express-dialog-close" aria-label="Fechar QR Code" (click)="closePendingQr()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+      <span class="express-dialog-kicker">PAGAMENTO PENDENTE</span>
+      <h2 id="express-dialog-title">{{payQrLabel}}</h2>
+      <strong class="express-dialog-amount">{{payQrAmount | currency:'BRL'}}</strong>
+      <app-pay-qr [value]="getPayUrl(payQrToken)" [size]="230"></app-pay-qr>
+      <p>Cliente escaneia, confere a comanda e escolhe como pagar no checkout Stripe.</p>
+      <div class="express-checkout-actions">
+        <button type="button" class="express-btn express-outline" (click)="copyPayLink(payQrToken)"><i class="pi pi-copy" aria-hidden="true"></i> Copiar link</button>
+        <button type="button" class="express-btn express-outline" (click)="sharePayLink(payQrToken)"><i class="pi pi-share-alt" aria-hidden="true"></i> Compartilhar</button>
+      </div>
+      <button type="button" class="express-btn express-primary" (click)="closePendingQr()">Continuar atendimento</button>
+    </section>
+  </div>
 </div>
