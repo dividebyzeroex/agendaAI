@@ -242,14 +242,14 @@
           <div class="success-icon" [class.express-waiting]="onlinePending">
             <i class="pi" [ngClass]="onlinePending ? 'pi-qrcode' : 'pi-check-circle'" aria-hidden="true"></i>
           </div>
-          <h3>{{onlinePending?'Cobrança pronta para o cliente':'Pagamento confirmado!'}}</h3>
+          <h3>{{onlinePending?'Cobrança pronta para o cliente':'Venda registrada!'}}</h3>
           <p>{{onlinePending?'Mostre o QR Code. O cliente abre a comanda e paga no próprio celular — sem instalar nada.':'Comanda gerada e caixa atualizado.'}}</p>
 
           <div *ngIf="onlinePending && comandaToken" class="express-checkout">
             <p class="express-checkout-tag">AGENDAAI PAY EXPRESS</p>
             <strong class="express-checkout-total">{{getValorTotalCheckout() | currency:'BRL'}}</strong>
-            <app-pay-qr [value]="getComandaUrl()" [size]="218"></app-pay-qr>
-            <p class="express-instruction">Escaneie para abrir a comanda e pagar pelo checkout seguro da Stripe.</p>
+            <app-pay-qr [value]="getExpressPayUrl(comandaToken)" [size]="218"></app-pay-qr>
+            <p class="express-instruction">{{expressCheckoutUrl ? 'Escaneie e vá direto ao pagamento seguro da Stripe.' : 'Escaneie para abrir a comanda e escolher como pagar.'}}</p>
             <div class="express-checkout-actions">
               <button type="button" class="express-btn express-outline" (click)="copyPayLink(comandaToken)">
                 <i class="pi pi-copy" aria-hidden="true"></i> Copiar link
@@ -402,8 +402,8 @@
       <span class="express-dialog-kicker">PAGAMENTO PENDENTE</span>
       <h2 id="express-dialog-title">{{payQrLabel}}</h2>
       <strong class="express-dialog-amount">{{payQrAmount | currency:'BRL'}}</strong>
-      <app-pay-qr [value]="getPayUrl(payQrToken)" [size]="230"></app-pay-qr>
-      <p>Cliente escaneia, confere a comanda e escolhe como pagar no checkout Stripe.</p>
+      <app-pay-qr [value]="getExpressPayUrl(payQrToken)" [size]="230"></app-pay-qr>
+      <p>{{ payQrUrl.includes('checkout.stripe.com') ? 'Escaneie para abrir o pagamento diretamente na Stripe.' : 'Escaneie para abrir a comanda e iniciar o pagamento.' }}</p>
       <div class="express-checkout-actions">
         <button type="button" class="express-btn express-outline" (click)="copyPayLink(payQrToken)"><i class="pi pi-copy" aria-hidden="true"></i> Copiar link</button>
         <button type="button" class="express-btn express-outline" (click)="sharePayLink(payQrToken)"><i class="pi pi-share-alt" aria-hidden="true"></i> Compartilhar</button>
