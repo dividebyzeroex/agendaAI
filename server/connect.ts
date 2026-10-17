@@ -421,7 +421,7 @@ export async function ensureSession(stripe: Stripe, db: SupabaseClient, order: a
         .eq('estabelecimento_id', order.estabelecimento_id)
         .maybeSingle();
       const candidate = String(data?.email_cliente || '').trim();
-      if (candidate.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(candidate))
+      if (candidate.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(candidate))
         checkoutEmail = candidate;
     }
     // Do not create a second session after Stripe's 24-hour idempotency retention.
