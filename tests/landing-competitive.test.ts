@@ -33,6 +33,15 @@ describe('Página de vendas — modelo de concorrente anônimo',()=>{
    const addons=html.split('id="modulos"')[1].split('id="piloto"')[0];
    for (const name of ['Social Studio Pro','Growth Automations','Retenção Premium','Inteligência Financeira','Multiunidades e Franquias','Concierge Plus']) expect(addons).toContain(name);
    for (const price of ['R$ 79','R$ 49','R$ 39']) expect(addons).toContain(price);
+   // Add-ons are additional charges on top of the R$ 97 base, never standalone plans.
+   expect(addons).toContain('R$ 97/mês do Essencial');
+   for(const total of ['R$ 176/mês','R$ 146/mês','R$ 136/mês']) expect(addons).toContain(total);
+   for(const formula of ['R$ 97 + R$ 79','R$ 97 + R$ 49','R$ 97 + R$ 39']) expect(addons).toContain(formula);
+   expect(addons).toContain('somados aos R$ 97/mês do Essencial');
+   expect(addons).toContain('taxa única sob orçamento');
+   expect(addons).toContain('consumo');
+   expect(ts).toContain('Como funciona a cobrança dos módulos adicionais?');
+
    expect(addons).toContain('Preços em estudo, ainda não disponíveis para contratação.');
    expect(addons).not.toContain('Comprar agora');
    expect(addons).not.toContain('href="http');

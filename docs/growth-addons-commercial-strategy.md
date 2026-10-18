@@ -30,6 +30,8 @@
 | **Multiunidades / Franquias** | Consolidação por rede, benchmarking e permissões | **Sob orçamento** | Custo por unidade; calendários extras no mesmo salão gratuitos |
 | **Concierge Plus** | Migração complexa e treinamento dedicado | **Orçamento único** | Onboarding e suporte básicos inclusos no Core |
 
+**Composição comercial:** preço mensal total = **R$ 97 Essencial + soma dos módulos mensais escolhidos**. Exemplos previstos: Social Studio Pro R$ 176/mês; Growth Automations R$ 146/mês; Retenção Premium R$ 146/mês (mais consumo externo); Inteligência Financeira R$ 136/mês. Multiunidades é adicional sob proposta e Concierge Plus prevê taxa única, não mensalidade extra.
+
 **Estes preços são hipóteses exibidas como prévia na landing, não módulos ativos nem disponíveis para compra.** Não criar SKUs, assinaturas ou CTAs de compra antes de entrega funcional e autorização comercial.
 
 **Nunca cobrar extra** para habilitar funções centrais já comparáveis a concorrentes de gestão de salões: agenda, profissionais essenciais, cadastro de clientes, comissões, checkout/caixa, relatórios base, link público ou segurança.

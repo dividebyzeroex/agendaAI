@@ -22,6 +22,20 @@ describe('Landing: visual consistency with AgendaAI brand',()=>{
     expect(css).toContain('color: var(--brand-violet)');
     expect(css).toContain('font-style: normal');
   });
+  it('keeps additional modules in Space Grotesk and violet without a competing palette',()=>{
+    expect(html).toContain('id="modulos"');
+    expect(css).toContain('.aa-addons-head h2{');
+    expect(css).toContain('font-size:clamp(2rem,3.7vw,3rem)');
+    expect(css).toContain('background:var(--brand-lilac)');
+    expect(css).toContain('color:var(--brand-violet)');
+    expect(css).toContain('.aa-addons-pricing-rule{');
+    expect(css).toContain('background:var(--landing-dark)');
+    expect(css).toContain('.aa-addon-price-prefix{');
+    const addonStyles = css.split('/* Add-ons — same Space Grotesk')[1]?.split('/* ═══ AgendaAI marketing design system')[0];
+    expect(addonStyles).toBeTruthy();
+    expect(addonStyles).not.toMatch(/font-family:\\s*(Georgia|Times)/i);
+    expect(addonStyles).not.toMatch(/#(526ba6|197b53|1d2a42|647ab2)\\b/i);
+  });
   it('preserves dark-section contrast and semantic payment success styling',()=>{
     expect(css).toContain('.pay-editorial-header h2 { color: #fff; }');
     expect(css).toContain('.pay-editorial-header h2 em { color: var(--landing-lilac); }');
