@@ -60,7 +60,7 @@ create index if not exists referral_attributions_pending_idx on private.referral
 
 create table if not exists private.referral_invoice_events (
   stripe_event_id text primary key,
-  stripe_invoice_id text not null,
+  stripe_invoice_id text not null unique,
   referred_estabelecimento_id uuid not null references public.estabelecimento(id),
   amount_paid_cents integer not null,
   received_at timestamptz not null default now()
@@ -83,7 +83,7 @@ begin
  select * into e from public.estabelecimento where id=p_estabelecimento_id for update;
  if not found then raise exception 'Estabelecimento não encontrado'; end if;
  if not e.active then raise exception 'Estabelecimento bloqueado'; end if;
- if e.stripe_subscription_id is not null or e.stripe_subscription_status in ('active','trialing','past_due') then
+ if e.stripe_subscription_id is not null or e.stripe_subscription_status in ('active','trialing','past_due') or e.plano_expires_at>now() then
    raise exception 'Este estabelecimento já possui assinatura Stripe. Não é elegível sem revisão manual';
  end if;
  if exists (select 1 from private.founder_invitations where estabelecimento_id=e.id) then
@@ -113,7 +113,7 @@ begin
  if e.user_id is distinct from auth.uid() then raise exception 'Somente o proprietário pode aceitar' using errcode='42501'; end if;
  if inv.status='active' then return jsonb_build_object('status','active','granted_until',inv.granted_until); end if;
  if inv.status<>'pending' or inv.redeem_by<now() then raise exception 'Convite inválido ou expirado'; end if;
- if not e.active or e.stripe_subscription_id is not null or e.stripe_subscription_status in ('active','trialing','past_due') then
+ if not e.active or e.stripe_subscription_id is not null or e.stripe_subscription_status in ('active','trialing','past_due') or e.plano_expires_at>now() then
    raise exception 'Conta com assinatura existente ou bloqueada: entre em contato com suporte';
  end if;
  deadline := now() + interval '365 days';
@@ -166,7 +166,9 @@ begin
  if e.stripe_subscription_id is not null then raise exception 'Indicação deve anteceder a contratação'; end if;
  select * into link from private.referral_links where code=p_code and active;
  if not found then raise exception 'Código de indicação inválido'; end if;
- if link.estabelecimento_id=e.id then raise exception 'Autoindicação não permitida'; end if;
+ if link.estabelecimento_id=e.id or exists(
+    select 1 from public.estabelecimento referrer where referrer.id=link.estabelecimento_id and referrer.user_id=e.user_id
+  ) then raise exception 'Autoindicação não permitida'; end if;
  if exists(select 1 from private.referral_attributions where referred_estabelecimento_id=e.id) then
    raise exception 'Este estabelecimento já tem uma indicação';
  end if;
@@ -194,7 +196,7 @@ begin
   'founder_until',inv.granted_until,
   'total_indications',(select count(*) from private.referral_attributions where referrer_estabelecimento_id=p_estabelecimento_id),
   'pending_count',(select count(*) from private.referral_attributions where referrer_estabelecimento_id=p_estabelecimento_id and status in ('awaiting_payment','pending_review')),
-  'eligible_balance_cents',(select coalesce(sum(reward_cents),0) from private.referral_attributions where referrer_estabelecimento_id=p_estabelecimento_id and status in ('approved','paid')),
+  'eligible_balance_cents',(select coalesce(sum(reward_cents),0) from private.referral_attributions where referrer_estabelecimento_id=p_estabelecimento_id and status='approved'),
   'referrals',(select coalesce(jsonb_agg(jsonb_build_object(
    'date',a.captured_at,'status',a.status,'reward_cents',a.reward_cents,'paid_at',a.paid_at,
    'review_after',a.review_after) order by a.captured_at desc),'[]'::jsonb)
