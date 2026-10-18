@@ -6,6 +6,18 @@ const PLATFORMS = new Set(['instagram','facebook','linkedin','tiktok','youtube',
 const OBJECT_ID = /^[0-9a-f]{24}$/i;
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 type Scope = 'tenant' | 'owner';
+export function scopedAccounts(input: unknown, profileId: string): any[] {
+  if (!Array.isArray(input)) return [];
+  return input.filter((account) => account && (
+    account.profileId === profileId ||
+    account.profileId?._id === profileId ||
+    account.profile?._id === profileId
+  ));
+}
+export function validSchedule(value: unknown, now: number): boolean {
+  const time = new Date(String(value || '')).getTime();
+  return Number.isFinite(time) && time > now + 120000 && time <= now + 90 * 86400000;
+}
 class IntegrationError extends Error { constructor(public status: number, message: string) { super(message); } }
 
 async function callZernio(path: string, method: 'GET' | 'POST' = 'GET', body?: object, idempotency?: string) {
@@ -113,9 +125,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const profileId = await ensureProfile(db,ctx);
     if (action === 'overview') {
       const accountsResult: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
-      const accounts = (accountsResult.accounts || accountsResult.data?.accounts || [])
-        .filter((a: any) => a.profileId === profileId || a.profile?._id === profileId)
-        .map((a: any) => ({ id:a._id, platform:a.platform, username:a.username, isActive:a.isActive }));
+      const accounts = scopedAccounts(accountsResult.accounts || accountsResult.data?.accounts, profileId)
+        .map((a: any) => ({ id:a._id || a.id, platform:a.platform, username:a.username, isActive:a.isActive }));
       return res.status(200).json({ profileId, accounts });
     }
     if (action === 'connect') {
@@ -136,8 +147,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const requested = Array.isArray(body.accountIds) ? [...new Set(body.accountIds.filter((v: unknown) => typeof v === 'string'))] as string[] : [];
       if (!requested.length || requested.length > 5) throw new IntegrationError(400,'Selecione de uma a cinco contas.');
       const listing: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
-      const accounts: any[] = listing.accounts || listing.data?.accounts || [];
-      const allowed = new Map(accounts.filter(a => a.profileId === profileId).map(a => [a._id,a]));
+      const accounts: any[] = scopedAccounts(listing.accounts || listing.data?.accounts, profileId);
+      const allowed = new Map(accounts.map(a => [a._id || a.id,a]));
       const platforms = requested.map(id => {
         const account = allowed.get(id);
         if (!account || !account.isActive || !PLATFORMS.has(account.platform)) throw new IntegrationError(403,'A conta selecionada não pertence a este perfil ou está desconectada.');
@@ -146,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const payload: Record<string,unknown> = { content, platforms };
       if (action === 'schedule') {
         const scheduledAt = new Date(String(body.scheduledFor || ''));
-        if (!Number.isFinite(scheduledAt.getTime()) || scheduledAt.getTime() <= Date.now()+120000 || scheduledAt.getTime() > Date.now()+90*86400000)
+        if (!validSchedule(body.scheduledFor, Date.now()))
           throw new IntegrationError(400,'Selecione uma data futura válida (até 90 dias).');
         // ISO with timezone offset; Zernio accepts timezone + local scheduledFor.
         const formatter = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo', year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
