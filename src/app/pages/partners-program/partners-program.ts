@@ -19,6 +19,8 @@ export class PartnersProgram implements OnInit {
   establishments:PlatformTenant[]=[];
   selectedTenant=''; invitationLink=''; referralLink='';
   receipt='';
+  founderTermsAccepted=false;
+  referralTermsAccepted=false;
   private get tenantId(){ return this.est.estabelecimento$.value?.id || ''; }
   private async rpc(name:string,args:Record<string,unknown>={}) {
     const {data,error}=await this.db.rpc(name,args);
@@ -64,12 +66,14 @@ export class PartnersProgram implements OnInit {
   }
   acceptInvite(){ return this.action(async()=>{
     if(!this.invitationLink)throw Error('Código inválido.');
+    if(!this.founderTermsAccepted)throw Error('Leia e aceite as condições da licença fundador.');
     const code=this.invitationLink.includes('founder=')?new URL(this.invitationLink).searchParams.get('founder'):this.invitationLink;
-    await this.rpc('partner_accept_founder_invite',{p_code:code,p_accept_terms:true});
+    await this.rpc('partner_accept_founder_invite',{p_code:code,p_accept_terms:this.founderTermsAccepted});
     this.notice='Licença de 365 dias ativada. Nenhuma cobrança automática foi criada.';
   });}
   enroll(){return this.action(async()=>{
-    const d=await this.rpc('partner_ensure_referral_link',{p_estabelecimento_id:this.tenantId,p_accept_terms:true});
+    if(!this.referralTermsAccepted)throw Error('Leia e aceite as regras de indicação.');
+    const d=await this.rpc('partner_ensure_referral_link',{p_estabelecimento_id:this.tenantId,p_accept_terms:this.referralTermsAccepted});
     this.referralLink=new URL('/?ref='+d.code,window.location.origin).toString();
     this.notice='Código de indicação criado.';
   });}
