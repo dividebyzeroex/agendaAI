@@ -1,21 +1,86 @@
-<main class="partners-page"><div class="partners-head"><div><p class="eyebrow">AGENDAAI · PARCERIAS</p><h1>{{owner ? 'Programa de parceiros' : 'Indique o AgendaAI'}}</h1><p>{{owner ? 'Controle dos salões fundadores e das comissões por novos assinantes.' : 'Indique salões e ganhe R$ 50 por novo cliente pagante elegível.'}}</p></div><button class="btn subtle" (click)="refresh()" [disabled]="busy">Atualizar</button></div>
-<p class="alert error" role="alert" *ngIf="error">{{error}}</p><p class="alert ok" role="status" *ngIf="notice">{{notice}}</p>
-<div *ngIf="loading">Carregando informações…</div>
-<ng-container *ngIf="!loading">
- <ng-container *ngIf="owner;else tenant">
-  <div class="partner-grid">
-   <section class="partner-card"><h2>Founders Club</h2><p>Convide salões selecionados para 365 dias de acesso assistido, sem cobrança automática.</p><span class="count">{{data.founders?.length || 0}} / {{data.pilot_capacity || 3}} convites emitidos</span>
-     <label for="founder-tenant">Estabelecimento elegível</label><select id="founder-tenant" [(ngModel)]="selectedTenant"><option value="">Selecione…</option><option *ngFor="let e of establishments" [value]="e.id">{{e.nome}}</option></select>
-     <button class="btn primary" (click)="issueInvite()" [disabled]="busy || !selectedTenant">Criar convite fundador</button>
-     <div class="link-box" *ngIf="invitationLink"><span>{{invitationLink}}</span><button class="btn subtle" (click)="copy(invitationLink)">Copiar</button></div>
-    </section>
-   <section class="partner-card"><h2>Indica+ · Financeiro</h2><p>R$ {{(data.reward_cents || 5000)/100 | number:'1.2-2'}} por indicação convertida. Comissões exigem confirmação de pagamento e período de revisão.</p><p>O Pix é realizado fora do sistema. Registre o comprovante somente após transferir.</p></section>
-  </div>
-  <section class="partner-card"><h2>Salões fundadores</h2><div class="line" *ngFor="let f of data.founders"><span>{{f.nome}}<small>{{f.status}} · {{f.granted_until ? (f.granted_until|date:'dd/MM/yyyy') : 'Aguardando aceite'}}</small></span><button class="btn subtle" (click)="copy(''+f.code)">Copiar código</button></div><p *ngIf="!data.founders?.length">Nenhum convite emitido ainda.</p></section>
-  <section class="partner-card"><h2>Indicações e comissões</h2><div class="line" *ngFor="let c of data.commissions"><span><strong>{{c.referrer}} → {{c.referred}}</strong><small>{{c.status}} · {{c.reward_cents/100|currency:'BRL'}} · Revisão: {{c.review_after ? (c.review_after | date:'dd/MM/yyyy') : 'Aguardando pagamento'}}</small></span><button class="btn subtle" *ngIf="c.status==='pending_review'" title="Confira estornos e disputas na Stripe antes de aprovar." (click)="approve(c.id)" [disabled]="busy">Aprovar</button><button class="btn primary" *ngIf="c.status==='approved'" (click)="recordPayout(c.id)" [disabled]="busy">Registrar Pix</button></div><p *ngIf="!data.commissions?.length">Sem indicações registradas.</p></section>
- </ng-container>
- <ng-template #tenant><div class="partner-grid">
-  <section class="partner-card"><h2>Meu link de indicação</h2><p>Compartilhe seu link com outros donos de salão. A comissão é liberada após o primeiro pagamento elegível e revisão.</p><ng-container *ngIf="referralLink;else enrollment"><div class="link-box"><span>{{referralLink}}</span><button class="btn primary" (click)="copy(referralLink)">Copiar</button></div></ng-container><ng-template #enrollment><p>Adesão gratuita e voluntária. A recompensa proposta é de R$ 50 por assinatura elegível, após o primeiro pagamento real de pelo menos R$ 79, sem estorno, e revisão de 30 dias. Não há pagamento por cadastro ou pelo próprio negócio. Um novo salão pode ter apenas um indicador. O Pix é registrado após aprovação e não é automático.</p><label class="term-accept"><input type="checkbox" [(ngModel)]="referralTermsAccepted" /> Li e aceito as condições do Indica+ (versão outubro/2026).</label><button class="btn primary" (click)="enroll()" [disabled]="busy || !referralTermsAccepted">Gerar meu link de indicação</button></ng-template></section>
-  <section class="partner-card"><h2>Licença Fundadores</h2><p *ngIf="data.founder_status==='active'">Seu acesso fundador está ativo até {{data.founder_until|date:'dd/MM/yyyy'}}.</p><ng-container *ngIf="data.founder_status!=='active'"><p>Recebeu um convite? Aceite aqui para ativar os 365 dias sem cobrança automática.</p><label for="founder-code">Código do convite</label><input id="founder-code" [(ngModel)]="invitationLink" placeholder="Cole o código do convite" /><p>A licença garante 365 dias sem mensalidade, contados do aceite, sem contratação ou renovação automática. A implantação inclui orientação inicial. SMS, integrações e serviços externos sujeitos a cobrança não estão automaticamente incluídos. Ao fim, você poderá optar por contratar um plano. O uso exige respeito às regras de privacidade e proteção dos dados dos clientes.</p><label class="term-accept"><input type="checkbox" [(ngModel)]="founderTermsAccepted" /> Li e aceito as condições do Founders Club (versão outubro/2026).</label><button class="btn primary" (click)="acceptInvite()" [disabled]="busy || !invitationLink || !founderTermsAccepted">Ativar minha licença fundador</button></ng-container></section>
- </div><section class="partner-card"><h2>Minhas indicações</h2><p><strong>{{data.total_indications || 0}}</strong> indicações · <strong>{{data.pending_count || 0}}</strong> aguardando confirmação</p><div class="line" *ngFor="let a of data.referrals"><span>{{a.date | date:'dd/MM/yyyy'}} <small>{{a.status}} · {{a.reward_cents/100|currency:'BRL'}}</small></span></div><p *ngIf="!data.referrals?.length">Ainda não há indicações atribuídas à sua conta.</p></section></ng-template>
-</ng-container></main>
+<main class="partner-page">
+  <header class="page-heading">
+    <div><p class="overline"><i class="pi pi-sparkles" aria-hidden="true"></i> PROGRAMA DE PARCERIAS</p><h1>{{owner ? 'Parceiros e indicações' : 'Indique e ganhe'}}</h1><p>{{owner ? 'Gerencie os estabelecimentos fundadores e acompanhe cada comissão com transparência.' : 'Compartilhe o AgendaAI com outros salões e receba por cada novo cliente pagante.'}}</p></div>
+    <button type="button" class="p-button subtle" (click)="refresh()" [disabled]="busy || loading"><i class="pi pi-refresh"></i> Atualizar</button>
+  </header>
+  <div *ngIf="error" class="message error" role="alert"><i class="pi pi-exclamation-circle"></i><span>{{error}}</span><button type="button" (click)="error=''" aria-label="Fechar aviso">×</button></div>
+  <div *ngIf="notice" class="message success" role="status"><i class="pi pi-check-circle"></i><span>{{notice}}</span><button type="button" (click)="notice=''" aria-label="Fechar aviso">×</button></div>
+  <div *ngIf="loading" class="loading-state"><i class="pi pi-spin pi-spinner"></i> Carregando programa de parceiros…</div>
+  <ng-container *ngIf="!loading">
+    <ng-container *ngIf="owner;else salonView">
+      <section class="metric-grid" aria-label="Indicadores do programa">
+        <article class="metric"><span class="metric-icon"><i class="pi pi-crown"></i></span><div><small>Convites fundadores</small><strong>{{data.founders?.length || 0}}</strong><span>{{remainingFounders}} vagas disponíveis no piloto</span></div></article>
+        <article class="metric"><span class="metric-icon"><i class="pi pi-share-alt"></i></span><div><small>Indicações recebidas</small><strong>{{referralCount}}</strong><span>Registradas no programa</span></div></article>
+        <article class="metric"><span class="metric-icon"><i class="pi pi-wallet"></i></span><div><small>Aguardando pagamento</small><strong>{{approvedValue / 100 | currency:'BRL':'symbol':'1.2-2'}}</strong><span>Comissões aprovadas, Pix manual</span></div></article>
+      </section>
+
+      <div class="owner-grid">
+        <section class="surface-card" aria-labelledby="founder-title">
+          <div class="card-heading"><span class="card-icon"><i class="pi pi-crown"></i></span><div><p class="overline">FOUNDERS CLUB</p><h2 id="founder-title">Convidar salão fundador</h2><p>Licença premium de 365 dias com implantação acompanhada.</p></div></div>
+          <div class="invite-progress"><div><span>Vagas do piloto</span><strong>{{data.founders?.length||0}} / {{data.pilot_capacity||3}}</strong></div><div class="progress-track"><div [style.width.%]="((data.founders?.length||0)/(data.pilot_capacity||3))*100"></div></div></div>
+          <label class="control-label" for="invite-salon">Estabelecimento</label>
+          <select id="invite-salon" class="form-control" [(ngModel)]="selectedTenant"><option value="">Selecione um estabelecimento</option><option *ngFor="let e of establishments" [value]="e.id">{{e.nome}}</option></select>
+          <button type="button" class="p-button primary full" (click)="issueInvite()" [disabled]="busy||!selectedTenant||remainingFounders===0"><i class="pi pi-send"></i> Criar convite exclusivo</button>
+          <div class="copy-panel" *ngIf="invitationLink"><div><small>Link de convite</small><span>{{invitationLink}}</span></div><button type="button" class="p-button subtle" (click)="copy(invitationLink)"><i class="pi pi-copy"></i> Copiar</button></div>
+          <p class="card-note"><i class="pi pi-info-circle"></i> Um convite só é ativado pelo proprietário do salão. Assinaturas existentes não são alteradas.</p>
+        </section>
+        <section class="surface-card" aria-labelledby="reward-title">
+          <div class="card-heading"><span class="card-icon"><i class="pi pi-gift"></i></span><div><p class="overline">INDICA+</p><h2 id="reward-title">Regras de recompensa</h2><p>Recompense apenas clientes efetivamente convertidos.</p></div></div>
+          <div class="reward-highlight"><span>Valor por conversão válida</span><strong>{{(data.reward_cents||5000)/100 | currency:'BRL':'symbol':'1.2-2'}}</strong><small>Recompensa única, não recorrente</small></div>
+          <div class="rule-line"><i class="pi pi-check-circle"></i><span>Primeira assinatura confirmada pela Stripe</span></div>
+          <div class="rule-line"><i class="pi pi-clock"></i><span>Período de revisão de 30 dias</span></div>
+          <div class="rule-line"><i class="pi pi-shield"></i><span>Aprovação manual após verificar estornos</span></div>
+          <div class="rule-line"><i class="pi pi-wallet"></i><span>Pix externo registrado com comprovante</span></div>
+        </section>
+      </div>
+
+      <section class="surface-card table-card">
+        <div class="section-heading"><div><p class="overline">CONTROLE DE ACESSO</p><h2>Salões fundadores</h2><p>Convites e licenças concedidas pelo programa.</p></div><span class="section-total">{{data.founders?.length||0}} registros</span></div>
+        <div class="table-scroll" *ngIf="data.founders?.length;else noFounders"><table><thead><tr><th>Salão</th><th>Situação</th><th>Vigência</th><th>Ação</th></tr></thead><tbody><tr *ngFor="let f of data.founders"><td class="name-cell">{{f.nome}}</td><td><span class="status-tag" [class.active]="f.status==='active'">{{f.status==='active'?'Ativo':f.status==='pending'?'Convite pendente':'Encerrado'}}</span></td><td>{{f.granted_until?(f.granted_until|date:'dd/MM/yyyy'):'Aguardando aceite'}}</td><td><button type="button" class="text-button" (click)="copy(''+f.code)"><i class="pi pi-copy"></i> Copiar código</button></td></tr></tbody></table></div>
+        <ng-template #noFounders><div class="empty-state"><i class="pi pi-users"></i><strong>Nenhum fundador convidado</strong><p>Selecione um estabelecimento acima para criar o primeiro convite.</p></div></ng-template>
+      </section>
+      <section class="surface-card table-card">
+        <div class="section-heading"><div><p class="overline">GESTÃO FINANCEIRA</p><h2>Indicações e comissões</h2><p>Aprovação e confirmação de pagamento com rastreabilidade.</p></div><span class="section-total">{{data.commissions?.length||0}} registros</span></div>
+        <div class="table-scroll" *ngIf="data.commissions?.length;else noCommissions"><table><thead><tr><th>Indicação</th><th>Valor</th><th>Situação</th><th>Próxima ação</th></tr></thead><tbody><tr *ngFor="let c of data.commissions"><td class="name-cell">{{c.referrer}} <span class="arrow">→</span> {{c.referred}}<small>{{c.first_paid_at?(c.first_paid_at|date:'dd/MM/yyyy'):'Sem pagamento confirmado'}}</small></td><td>{{c.reward_cents/100|currency:'BRL'}}</td><td><span class="status-tag" [class.active]="c.status==='paid'">{{c.status==='paid'?'Pago':c.status==='approved'?'Aprovado':c.status==='pending_review'?'Em revisão':c.status==='awaiting_payment'?'Aguardando pagamento':c.status}}</span></td><td><button *ngIf="c.status==='pending_review'" type="button" class="p-button subtle compact" (click)="approve(c.id)" [disabled]="busy" title="Confira eventuais estornos antes de aprovar">Aprovar</button><button *ngIf="c.status==='approved' && payoutFor!==c.id" type="button" class="p-button subtle compact" (click)="payoutFor=c.id;receipt=''" [disabled]="busy">Registrar Pix</button><div class="payout-entry" *ngIf="payoutFor===c.id"><label [attr.for]="'receipt-'+c.id">ID do Pix já realizado</label><input [id]="'receipt-'+c.id" class="form-control" [(ngModel)]="receipt" placeholder="Identificador do comprovante"/><button type="button" class="p-button primary compact" (click)="recordPayout(c.id)" [disabled]="busy||receipt.trim().length<6">Confirmar registro</button><button type="button" class="text-button" (click)="payoutFor='';receipt=''">Cancelar</button></div><span *ngIf="c.status==='paid'">Concluído</span></td></tr></tbody></table></div>
+        <ng-template #noCommissions><div class="empty-state"><i class="pi pi-wallet"></i><strong>Sem comissões registradas</strong><p>As indicações aparecerão após os salões utilizarem os links exclusivos.</p></div></ng-template>
+      </section>
+    </ng-container>
+    <ng-template #salonView>
+      <section class="referral-hero">
+        <div class="hero-copy"><span class="hero-eyebrow"><i class="pi pi-gift"></i> AGENDAAI INDICA+</span><h2>Seu relacionamento vale recompensas.</h2><p>Conhece outro salão que poderia trabalhar melhor com uma agenda digital? Compartilhe o AgendaAI e receba por cada contratação elegível.</p><div class="hero-reward"><strong>R$ 50</strong><span>por novo cliente pagante indicado</span></div></div>
+        <div class="hero-symbol" aria-hidden="true"><i class="pi pi-users"></i><i class="pi pi-arrow-right"></i><i class="pi pi-wallet"></i></div>
+      </section>
+      <section class="metric-grid" aria-label="Seus resultados">
+        <article class="metric"><span class="metric-icon"><i class="pi pi-share-alt"></i></span><div><small>Minhas indicações</small><strong>{{data.total_indications||0}}</strong><span>Salões atribuídos</span></div></article>
+        <article class="metric"><span class="metric-icon"><i class="pi pi-clock"></i></span><div><small>Aguardando confirmação</small><strong>{{data.pending_count||0}}</strong><span>Pagamento ou período de revisão</span></div></article>
+        <article class="metric"><span class="metric-icon"><i class="pi pi-wallet"></i></span><div><small>Aprovado para pagamento</small><strong>{{approvedValue/100|currency:'BRL':'symbol':'1.2-2'}}</strong><span>Transferência via Pix manual</span></div></article>
+      </section>
+      <div class="owner-grid salon-grid">
+        <section class="surface-card">
+          <div class="card-heading"><span class="card-icon"><i class="pi pi-link"></i></span><div><p class="overline">COMPARTILHAR</p><h2>Seu link exclusivo</h2><p>Envie para proprietários de salões, barbearias e espaços de beleza.</p></div></div>
+          <ng-container *ngIf="referralLink;else joinProgram"><div class="copy-panel prominent"><div><small>Link pessoal de indicação</small><span>{{referralLink}}</span></div><button type="button" class="p-button primary" (click)="copy(referralLink)"><i class="pi pi-copy"></i> Copiar</button></div><p class="card-note"><i class="pi pi-shield"></i> Cada contratação é vinculada ao seu código e validada antes de qualquer comissão.</p></ng-container>
+          <ng-template #joinProgram><p class="legal-text">A adesão é gratuita e voluntária. Você recebe R$ 50 após o primeiro pagamento elegível de pelo menos R$ 79, respeitando 30 dias de revisão e a verificação de estornos. Não há pagamento por simples cadastro, autoindicação ou indicação duplicada.</p><label class="checkline"><input type="checkbox" [(ngModel)]="referralTermsAccepted"/><span>Li e aceito as condições do Indica+ (outubro/2026).</span></label><button type="button" class="p-button primary full" (click)="enroll()" [disabled]="busy||!referralTermsAccepted"><i class="pi pi-link"></i> Ativar meu link</button></ng-template>
+        </section>
+        <section class="surface-card">
+          <div class="card-heading"><span class="card-icon"><i class="pi pi-crown"></i></span><div><p class="overline">FOUNDERS CLUB</p><h2>Minha licença fundador</h2><p>Acesso especial para salões convidados.</p></div></div>
+          <div *ngIf="data.founder_status==='active'" class="license-active"><i class="pi pi-check-circle"></i><div><strong>Licença ativa</strong><p>Acesso incluído até {{data.founder_until|date:'dd/MM/yyyy'}}.</p></div></div>
+          <div *ngIf="data.founder_status!=='active'">
+            <label for="founder-code" class="control-label">Código do convite</label><input id="founder-code" class="form-control" [(ngModel)]="invitationLink" placeholder="Cole seu convite"/>
+            <p class="legal-text">São 365 dias gratuitos, contados do aceite, com ajuda inicial para configurar o salão. Não há renovação ou cobrança automática. Serviços externos pagos podem ter custos separados e informados antes da contratação.</p>
+            <label class="checkline"><input type="checkbox" [(ngModel)]="founderTermsAccepted"/><span>Li e aceito as condições do Founders Club (outubro/2026).</span></label>
+            <button type="button" class="p-button primary full" (click)="acceptInvite()" [disabled]="busy||!invitationLink||!founderTermsAccepted"><i class="pi pi-check"></i> Ativar licença de 365 dias</button>
+          </div>
+        </section>
+      </div>
+      <section class="surface-card">
+        <div class="section-heading"><div><p class="overline">COMO FUNCIONA</p><h2>Indicar é simples</h2><p>Três etapas para compartilhar e acompanhar.</p></div></div>
+        <div class="steps"><div><span>01</span><i class="pi pi-link"></i><strong>Compartilhe</strong><p>Envie seu link a um proprietário de salão.</p></div><div><span>02</span><i class="pi pi-check-circle"></i><strong>Ele contrata</strong><p>O salão utiliza o AgendaAI e efetua o primeiro pagamento.</p></div><div><span>03</span><i class="pi pi-wallet"></i><strong>Você recebe</strong><p>Após a revisão, a recompensa pode ser aprovada para Pix.</p></div></div>
+      </section>
+      <section class="surface-card table-card">
+        <div class="section-heading"><div><p class="overline">MEU HISTÓRICO</p><h2>Indicações realizadas</h2><p>Acompanhe suas recompensas e seus status.</p></div></div>
+        <div class="table-scroll" *ngIf="data.referrals?.length;else noReferrals"><table><thead><tr><th>Registrado em</th><th>Situação</th><th>Recompensa</th></tr></thead><tbody><tr *ngFor="let a of data.referrals"><td>{{a.date|date:'dd/MM/yyyy'}}</td><td><span class="status-tag" [class.active]="a.status==='paid'">{{a.status==='paid'?'Pago':a.status==='approved'?'Aprovado':a.status==='pending_review'?'Em revisão':a.status==='awaiting_payment'?'Aguardando pagamento':a.status}}</span></td><td>{{a.reward_cents/100|currency:'BRL'}}</td></tr></tbody></table></div>
+        <ng-template #noReferrals><div class="empty-state"><i class="pi pi-user-plus"></i><strong>Ainda não há indicações</strong><p>Compartilhe seu link acima para começar a construir sua rede de parceiros.</p></div></ng-template>
+      </section>
+    </ng-template>
+  </ng-container>
+</main>
