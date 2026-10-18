@@ -1,7 +1,10 @@
 <div class="social-shell">
   <header class="social-heading">
     <div><p class="eyebrow">AGENDAAI · ZERNIO</p><h1>{{ isOwner ? 'Redes da AgendaAI' : 'Marketing e redes sociais' }}</h1><p>{{ isOwner ? 'Gerencie os perfis oficiais da plataforma sem acessar as contas dos clientes.' : 'Conecte as redes sociais do seu estabelecimento e prepare publicações em um só lugar.' }}</p></div>
-    <button type="button" class="btn subtle" (click)="load()" [disabled]="loading || busy">Atualizar conexões</button>
+    <div class="actions">
+      <button type="button" class="btn subtle" (click)="verifyKey()" [disabled]="busy">Testar chave Zernio</button>
+      <button type="button" class="btn subtle" (click)="load()" [disabled]="loading || busy">Atualizar conexões</button>
+    </div>
   </header>
   <p class="feedback error" role="alert" *ngIf="error">{{error}}</p>
   <p class="feedback success" role="status" *ngIf="notice">{{notice}}</p>
