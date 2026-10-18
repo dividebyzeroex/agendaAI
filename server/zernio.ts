@@ -15,19 +15,21 @@ export function scopedAccounts(input: unknown, profileId: string): any[] {
   ));
 }
 export function validSchedule(value: unknown, now: number): boolean {
-  // Only timestamps with an explicit timezone are accepted. The browser sends
-  // the exact instant from datetime-local as ISO UTC; no wall-clock reparse.
+  // Explicit ISO offset protects same-day dates from implicit UTC conversions.
   const input = String(value || '');
-  if (!/T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(input)) return false;
+  if (!/T.*(?:Z|[+-][0-9]{2}:[0-9]{2})$/i.test(input)) return false;
   const time = Date.parse(input);
-  return Number.isFinite(time) && time > now + 30_000 && time <= now + 90 * 86400000;
+  return Number.isFinite(time) && time > now + 30_000 && time <= now + 90 * 86400_000;
 }
 export function validMediaItems(input: unknown): input is Array<{url: string; type: 'image'|'video'}> {
-  return Array.isArray(input) && input.length <= 10 && input.every((item) =>
-    item && (item.type === 'image' || item.type === 'video')
-    && typeof item.url === 'string'
-    && /^https:\/\/media\\.zernio\\.com\/[A-Za-z0-9_./%-]+(?:\\?[A-Za-z0-9_=&%.-]+)?$/i.test(item.url)
-  );
+  return Array.isArray(input) && input.length <= 10 && input.every((item) => {
+    if (!item || (item.type !== 'image' && item.type !== 'video') || typeof item.url !== 'string') return false;
+    try {
+      const url = new URL(item.url);
+      return url.protocol === 'https:' && url.hostname === 'media.zernio.com'
+        && url.pathname.startsWith('/temp/') && url.pathname.length > 6;
+    } catch { return false; }
+  });
 }
 export function mediaRequired(platforms: Array<{platform: string}>, media: unknown): boolean {
   return platforms.some(p=>['instagram','tiktok','pinterest'].includes(p.platform))
@@ -197,11 +199,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const supported = ['image/jpeg','image/png','video/mp4','video/quicktime'];
       if (!profileId) throw new IntegrationError(409,'Conecte uma rede social antes de enviar mídia.');
       if (!supported.includes(contentType) || filename.length < 3 || filename.length > 160
-        || /[\\/\\\\]/.test(filename) || !Number.isFinite(size) || size <= 0 || size > 300 * 1024 * 1024)
+        || filename.includes('/') || filename.includes(String.fromCharCode(92)) || !Number.isFinite(size) || size <= 0 || size > 300 * 1024 * 1024)
         throw new IntegrationError(400,'Envie JPG, PNG, MP4 ou MOV de até 300 MB.');
       const upload: any = await callZernio('/media/presign','POST',{filename,contentType,size});
-      if (!/^https:\/\//i.test(upload.uploadUrl || '') || !/^https:\/\/media\\.zernio\\.com\//i.test(upload.publicUrl || ''))
-        throw new IntegrationError(502,'O Zernio não retornou um endereço de upload válido.');
+      let trustedUpload = false;
+      try {
+        const putUrl = new URL(String(upload.uploadUrl || ''));
+        trustedUpload = putUrl.protocol === 'https:' && validMediaItems([{url:String(upload.publicUrl || ''), type:contentType.startsWith('image/')?'image':'video'}]);
+      } catch { trustedUpload = false; }
+      if (!trustedUpload) throw new IntegrationError(502,'O Zernio não retornou um endereço de upload válido.');
       return res.status(200).json({ uploadUrl:upload.uploadUrl, publicUrl:upload.publicUrl });
     }
     if (action === 'draft' || action === 'schedule') {
