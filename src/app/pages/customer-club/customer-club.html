@@ -1,0 +1,100 @@
+<main class="club-page">
+  <p class="brand">AgendaAI · Clube de benefícios</p>
+  <p *ngIf="loading()" role="status">Conferindo seu clube…</p>
+  <p class="error" *ngIf="error()" role="alert">{{ error() }}</p>
+  <p *ngIf="notice()" role="status">{{ notice() }}</p>
+  <ng-container *ngIf="club() as c"
+    ><p class="error" *ngIf="c.providerReview">
+      A atualização do pagamento está em conferência. Os dados abaixo são o último registro
+      confirmado. Você pode cancelar os próximos débitos normalmente.
+    </p>
+    <p class="business">{{ c.name }}</p>
+    <h1>{{ c.title }}</h1>
+    <p class="price">{{ c.price | currency: 'BRL' }}<span>/mês</span></p>
+    <p>{{ c.sessions }} sessões a cada ciclo mensal, liberadas após confirmação do pagamento.</p>
+    <dl>
+      <div>
+        <dt>Renovação</dt>
+        <dd>{{ c.renew_enabled ? 'Autorizada' : 'Desativada' }}</dd>
+      </div>
+      <div *ngIf="c.next_due">
+        <dt>Próximo vencimento</dt>
+        <dd>{{ c.next_due | date: 'dd/MM/yyyy' : '+0000' }}</dd>
+      </div>
+      <div>
+        <dt>Situação</dt>
+        <dd>
+          {{
+            c.status === 'active'
+              ? 'Ciclo ativo'
+              : c.status === 'cancelled'
+                ? 'Renovação cancelada'
+                : c.status === 'past_due'
+                  ? 'Pagamento a regularizar'
+                  : 'Aguardando adesão ou pagamento'
+          }}
+        </dd>
+      </div>
+    </dl>
+    <p class="terms">{{ c.terms }}</p>
+    <ng-container *ngIf="c.status !== 'cancelled'"
+      ><label class="check" *ngIf="!c.consent_at"
+        ><input type="checkbox" [(ngModel)]="accepted" />Autorizo o pagamento inicial e os débitos
+        mensais de {{ c.price | currency: 'BRL' }} no cartão informado, até cancelar a renovação. Li
+        as condições acima.</label
+      ><button
+        type="button"
+        class="primary"
+        *ngIf="!c.consent_at"
+        [disabled]="busy() || !accepted"
+        (click)="action('accept')"
+      >
+        {{ busy() ? 'Abrindo pagamento…' : 'Autorizar e pagar pela Stripe' }}</button
+      ><button
+        type="button"
+        class="primary"
+        *ngIf="c.consent_at && (c.receiptStatus === 'pending' || c.receiptStatus === 'expired')"
+        [disabled]="busy()"
+        (click)="action('pay')"
+      >
+        {{ busy() ? 'Conferindo pagamento…' : 'Regularizar pagamento e cartão' }}
+      </button>
+      <p *ngIf="c.receiptStatus === 'paid'">
+        {{
+          c.providerReview
+            ? 'Último pagamento registrado como pago. Aguarde a atualização do provedor.'
+            : 'Pagamento confirmado pela Stripe. Consulte o saldo de sessões com o estabelecimento.'
+        }}
+      </p>
+      <button
+        type="button"
+        class="secondary"
+        *ngIf="c.renew_enabled && !cancelOpen"
+        (click)="cancelOpen = true"
+      >
+        Cancelar próximos débitos
+      </button>
+      <section *ngIf="cancelOpen">
+        <h2>Cancelar renovação</h2>
+        <p>
+          O ciclo já pago continua válido até vencer. Uma cobrança em andamento pode ser concluída.
+          Reembolsos são tratados com o estabelecimento.
+        </p>
+        <label class="check"
+          ><input type="checkbox" [(ngModel)]="cancelConfirmed" />Quero cancelar os próximos
+          débitos.</label
+        ><button type="button" [disabled]="busy() || !cancelConfirmed" (click)="action('cancel')">
+          Confirmar cancelamento</button
+        ><button type="button" (click)="cancelOpen = false">Manter renovação</button>
+      </section></ng-container
+    ><a *ngIf="c.receiptToken" [href]="'/comanda/' + c.receiptToken"
+      >Ver comanda do último ciclo →</a
+    ></ng-container
+  ><button type="button" class="secondary" (click)="load()" [disabled]="loading() || busy()">
+    Atualizar situação
+  </button>
+  <p class="footnote">
+    Dados do cartão são tratados pela Stripe. Guarde este link: ele permite consultar e cancelar sua
+    renovação.
+  </p>
+</main>

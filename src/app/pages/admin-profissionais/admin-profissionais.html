@@ -1,9 +1,9 @@
-<div class="ag-page">
+<div class="ag-page customer-page">
 
   <!-- ── Page header ─────────────────────────── -->
   <div class="page-header">
     <div>
-      <h2>Profissionais <span class="gradient-text">da Equipe</span></h2>
+      <h2>Equipe</h2>
       <p>Gerencie sua equipe, disponibilidades e especializações.</p>
     </div>
     <div class="header-actions">
@@ -12,7 +12,7 @@
       </div>
       <div class="search-box">
         <i class="pi pi-search"></i>
-        <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." />
+        <input type="text" [(ngModel)]="filtro" placeholder="Buscar profissional..." aria-label="Buscar profissional" />
       </div>
       <!-- Botão Novo Profissional -->
       <button class="btn-novo-prof-header" (click)="abrirNovo()">
@@ -23,16 +23,9 @@
   </div>
 
   <!-- ── Banner: Migração SQL pendente ──────── -->
-  <div class="migration-banner" *ngIf="tabelasAusentes">
-    <div class="mig-icon">⚠️</div>
-    <div class="mig-text">
-      <strong>Migração necessária</strong>
-      <span>Execute <code>supabase-profissionais.sql</code> no SQL Editor para ativar este módulo.</span>
-    </div>
-    <a href="https://supabase.com/dashboard/project/vvanjarfwdxtzklogysy/sql/new"
-      target="_blank" class="mig-btn">
-      <i class="pi pi-external-link"></i> Abrir SQL Editor
-    </a>
+  <div class="migration-banner" *ngIf="tabelasAusentes" role="alert">
+    <div class="mig-text"><strong>Não foi possível carregar a equipe</strong>
+    <span>Tente recarregar a página. Se o problema continuar, fale conosco pelo botão de ajuda.</span></div>
   </div>
 
   <!-- ── Conteúdo principal ─────────────────── -->
@@ -40,24 +33,24 @@
 
 
     <!-- Lista de profissionais -->
-    <div class="prof-list-area">
+    <div class="prof-list-area" *ngIf="!panelAberto">
 
       <!-- Elite Loader -->
       <div class="elite-loader-container" *ngIf="isLoading">
         <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary); margin-bottom: 10px;"></div>
-        <div class="loader-text">Sincronizando Profissionais...</div>
+        <div class="loader-text">Carregando equipe…</div>
       </div>
 
       <!-- Refined Empty State -->
       <div class="empty-state-elite" *ngIf="!isLoading && profFiltrados.length === 0">
         <div class="empty-visual">
-          <div class="pulse-ring"></div>
+
           <i class="pi pi-users"></i>
         </div>
-        <h3>Gestão de Talentos</h3>
-        <p>Sua equipe é o coração do negócio. Cadastre profissionais para delegar agendas, automatizar comissões e centralizar a performance.</p>
-        <button class="btn-primary-glow" (click)="abrirNovo()">
-          <i class="pi pi-user-plus"></i> Novo Colaborador
+        <h3>{{ filtro ? 'Nenhum profissional encontrado' : 'Cadastre sua equipe' }}</h3>
+        <p>{{ filtro ? 'Tente outro nome para encontrar o profissional.' : 'Adicione os profissionais e organize os serviços e horários de cada um.' }}</p>
+        <button *ngIf="!filtro" class="btn-primary-glow" (click)="abrirNovo()">
+          <i class="pi pi-user-plus"></i> Novo profissional
         </button>
       </div>
 
@@ -67,9 +60,9 @@
           [style.animation-delay]="(i * 0.1) + 's'"
           [class.opacity-inativo]="!p.ativo"
           (click)="abrirEditar(p)">
-          
+
           <div class="card-glass-reveal"></div>
-          
+
           <div class="card-top-ent">
             <span class="badge-role" [class]="p.role || 'barbeiro'">
               {{ (p.role === 'dono' ? 'Proprietário' : (p.role === 'financeiro' ? 'Financeiro' : (p.role === 'secretaria' ? 'Secretaria' : p.cargo || 'Especialista'))) }}
@@ -88,13 +81,11 @@
               </div>
               <div class="avatar-aura" [style.background]="p.cor_agenda || '#6366f1'"></div>
             </div>
-            
+
             <div class="info-content-ent">
               <h4>{{ p.nome }}</h4>
               <p>{{ p.especialidade || 'Membro da Equipe' }}</p>
-              <div class="mt-2" style="font-family: monospace; font-size: 0.75rem; color: var(--text-muted); background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 3px 6px; border-radius: 6px; display: inline-block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;">
-                 <i class="pi pi-id-card" style="font-size: 0.7rem; margin-right: 4px;"></i>{{ p.id?.substring(0, 13) }}...
-              </div>
+
             </div>
           </div>
 
@@ -126,13 +117,13 @@
             </div>
             <div class="action-buttons-ent">
               <!-- Botão de Convite / Reenvio -->
-              <button class="btn-icon-elite invite" 
+              <button class="btn-icon-elite invite"
                       *ngIf="!p.user_id"
-                      (click)="enviarConvite(p)" 
+                      (click)="enviarConvite(p)"
                       [title]="p.convite_enviado ? 'Reenviar Convite' : 'Enviar Convite'">
                 <i class="pi" [class.pi-send]="!p.convite_enviado" [class.pi-refresh]="p.convite_enviado"></i>
               </button>
-              
+
               <button class="btn-icon-elite" (click)="toggleAtivo(p)" [title]="p.ativo ? 'Pausar' : 'Ativar'">
                 <i class="pi" [class.pi-eye]="p.ativo" [class.pi-eye-slash]="!p.ativo"></i>
               </button>
@@ -151,7 +142,7 @@
 
     <!-- ══ Painel Lateral de Edição/Novo (Premium Glass) ══ -->
     <aside class="edit-panel-glass" *ngIf="panelAberto">
-      
+
       <!-- Cabeçalho Enterprise -->
       <div class="panel-header-ent">
         <div class="header-main">
@@ -162,7 +153,7 @@
           </div>
           <div class="header-text">
              <h3>{{ isNovo ? 'Novo Profissional' : 'Editar Perfil' }}</h3>
-             <p>{{ isNovo ? 'Configuração inicial da conta' : 'Gestão de talentos e performance' }}</p>
+             <p>{{ isNovo ? 'Configuração inicial da conta' : 'Dados e horários de atendimento' }}</p>
           </div>
         </div>
         <button class="close-btn-ent" (click)="fecharPainel()"><i class="pi pi-times"></i></button>
@@ -174,17 +165,17 @@
           <span class="step-num">1</span> <span class="step-label">Perfil</span>
         </button>
         <div class="step-line"></div>
-        <button class="step-btn" [class.active]="panelTab === 'disponibilidade'" 
+        <button class="step-btn" [class.active]="panelTab === 'disponibilidade'"
                 (click)="setTab('disponibilidade')" [disabled]="isNovo">
           <span class="step-num">2</span> <span class="step-label">Agenda</span>
         </button>
         <div class="step-line"></div>
-        <button class="step-btn" [class.active]="panelTab === 'servicos'" 
+        <button class="step-btn" [class.active]="panelTab === 'servicos'"
                 (click)="setTab('servicos')" [disabled]="isNovo">
-          <span class="step-num">3</span> <span class="step-label">Expertise</span>
+          <span class="step-num">3</span> <span class="step-label">Serviços</span>
         </button>
         <div class="step-line"></div>
-        <button class="step-btn" [class.active]="panelTab === 'financeiro'" 
+        <button class="step-btn" [class.active]="panelTab === 'financeiro'"
                 (click)="setTab('financeiro')" [disabled]="isNovo">
           <span class="step-num">4</span> <span class="step-label">Financeiro</span>
         </button>
@@ -192,19 +183,6 @@
 
       <!-- ══ TAB: DADOS ══ -->
       <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'dados'">
-        
-        <!-- Seção: Identidade Visual -->
-        <div class="form-section-ent first">
-          <div class="section-title">Marca & Cor na Agenda</div>
-          <div class="color-picker-grid">
-             <button *ngFor="let c of coresAgenda"
-               class="color-dot" [style.background]="c"
-               [class.active]="profAtual.cor_agenda === c"
-               (click)="profAtual.cor_agenda = c">
-               <i class="pi pi-check" *ngIf="profAtual.cor_agenda === c"></i>
-             </button>
-          </div>
-        </div>
 
         <div class="form-section-ent">
           <div class="section-title">Dados Básicos</div>
@@ -231,17 +209,17 @@
                    <input type="text" [(ngModel)]="profAtual.nome" placeholder="Ex: Carlos Santos" />
                 </div>
              </div>
-             
+
               <div class="field-premium">
                 <label>Cargo / Função</label>
                 <div class="input-wrap">
                    <i class="pi pi-briefcase"></i>
-                   <input type="text" [(ngModel)]="profAtual.cargo" [placeholder]="(segmentoConfig.config$ | async)?.placeholderCargo || 'Ex: Barbeiro Major'" />
+                   <input type="text" [(ngModel)]="profAtual.cargo" [placeholder]="(segmentoConfig.config$ | async)?.placeholderCargo || 'Ex: Barbeiro'" />
                 </div>
              </div>
 
              <div class="field-premium">
-                <label>Nível de Acesso (Role)</label>
+                <label>Permissão de acesso</label>
                 <div class="input-wrap">
                    <i class="pi pi-shield"></i>
                     <select [(ngModel)]="profAtual.role" class="select-premium">
@@ -269,13 +247,13 @@
              </div>
 
               <div class="field-premium full">
-                <label>Preferência de Acesso (Auth)</label>
+                <label>Como acessa a agenda</label>
                 <div class="auth-toggle-group">
                     <button class="auth-btn" [class.active]="profAtual.auth_type === 'email'" (click)="profAtual.auth_type = 'email'">
-                       <i class="pi pi-envelope"></i> Link Mágico
+                       <i class="pi pi-envelope"></i> Link por e-mail
                     </button>
                     <button class="auth-btn" [class.active]="profAtual.auth_type === 'otp'" (click)="profAtual.auth_type = 'otp'">
-                       <i class="pi pi-phone"></i> SMS (OTP)
+                       <i class="pi pi-phone"></i> Código por SMS
                     </button>
                     <button class="auth-btn" [class.active]="profAtual.auth_type === 'senha'" (click)="profAtual.auth_type = 'senha'">
                        <i class="pi pi-lock"></i> Senha
@@ -285,12 +263,25 @@
               </div>
 
               <div class="field-premium full">
-                <label>E-mail Corporativo</label>
+                <label>E-mail para acesso</label>
                 <div class="input-wrap">
                    <i class="pi pi-envelope"></i>
                    <input type="email" [(ngModel)]="profAtual.email" placeholder="carlos@agenda.ai" />
                 </div>
               </div>
+          </div>
+        </div>
+
+        <details class="profile-extras"><summary>Aparência, redes sociais e biografia</summary>        <!-- Seção: Identidade Visual -->
+        <div class="form-section-ent first">
+          <div class="section-title">Marca & Cor na Agenda</div>
+          <div class="color-picker-grid">
+             <button *ngFor="let c of coresAgenda"
+               class="color-dot" [style.background]="c"
+               [class.active]="profAtual.cor_agenda === c"
+               (click)="profAtual.cor_agenda = c">
+               <i class="pi pi-check" *ngIf="profAtual.cor_agenda === c"></i>
+             </button>
           </div>
         </div>
 
@@ -317,10 +308,11 @@
         <div class="form-section-ent">
           <div class="section-title">Biografia Profissional</div>
           <div class="field-premium full">
-            <textarea [(ngModel)]="profAtual.bio" rows="4" 
+            <textarea [(ngModel)]="profAtual.bio" rows="4"
                       placeholder="Descreva a jornada, experiência e diferenciais do profissional..."></textarea>
           </div>
         </div>
+        </details>
       </div>
 
       <!-- ══ TAB: DISPONIBILIDADE ══ -->
@@ -341,7 +333,7 @@
                    <div class="d-knob"></div>
                 </div>
              </div>
-             
+
              <div class="d-hours" *ngIf="d.ativo">
                 <div class="h-row">
                   <div class="h-group">
@@ -369,7 +361,7 @@
       <!-- ══ TAB: SERVIÇOS ══ -->
       <div class="panel-body-ent custom-scroll" *ngIf="panelTab === 'servicos'">
         <div class="tab-intro">
-           <h4>Gestão de Expertises</h4>
+           <h4>Gestão de Serviçoss</h4>
            <p>Vincule os serviços que este profissional está apto a realizar.</p>
         </div>
 
@@ -389,7 +381,7 @@
              </div>
            </div>
            <button class="btn-link-exp" (click)="adicionarServico()" [disabled]="!servicoIdSelecionado">
-             <i class="pi pi-plus"></i> Vincular Expertise
+             <i class="pi pi-plus"></i> Vincular Serviços
            </button>
         </div>
 
@@ -403,6 +395,29 @@
                  </div>
               </div>
               <button class="exp-remove-btn" (click)="removerServico(sv.id)"><i class="pi pi-trash"></i></button>
+              <div class="exp-commission-config" *ngIf="sv.id">
+                <label [for]="'commission-mode-' + sv.id">Comissão para este serviço</label>
+                <div class="exp-commission-controls">
+                  <select [id]="'commission-mode-' + sv.id"
+                    [ngModel]="commissionDrafts[sv.id]?.mode || 'padrao'"
+                    (ngModelChange)="setCommissionMode(sv.id, $event)" [disabled]="isSaving">
+                    <option value="padrao">Herdar {{profAtual.comissao_padrao || 0}}% do profissional</option>
+                    <option value="percentual">Percentual específico</option>
+                    <option value="fixo">Valor fixo (R$)</option>
+                  </select>
+                  <div class="exp-commission-rate" *ngIf="commissionDrafts[sv.id]?.mode !== 'padrao'">
+                    <span>{{commissionDrafts[sv.id]?.mode === 'fixo' ? 'R$' : '%'}}</span>
+                    <input type="number" [min]="0"
+                      [max]="commissionDrafts[sv.id]?.mode === 'fixo' ? 100000 : 100"
+                      step="0.01" [(ngModel)]="commissionDrafts[sv.id].rate"
+                      [attr.aria-label]="'Valor da comissão específica de ' + (sv.servicos?.titulo || 'serviço')" />
+                  </div>
+                  <button type="button" class="exp-commission-save" (click)="saveServiceCommission(sv)"
+                    [disabled]="isSaving">Salvar regra</button>
+                </div>
+                <small>Sem regra específica: aplica os {{profAtual.comissao_padrao || 0}}% do profissional.
+                  Uma regra específica de 0% é permitida e não será confundida com o padrão.</small>
+              </div>
            </div>
         </div>
       </div>
@@ -419,10 +434,10 @@
            <div class="fin-field-premium">
               <label>Comissão Operacional</label>
               <div class="fin-input-group">
-                 <input type="number" [(ngModel)]="profAtual.comissao_padrao" />
+                 <input type="number" min="0" max="100" step="0.01" [(ngModel)]="profAtual.comissao_padrao" />
                  <span class="suffix">%</span>
               </div>
-              <p class="field-hint">Percentual base aplicado sobre o valor de cada serviço realizado.</p>
+              <p class="field-hint">Aplicado automaticamente a todos os serviços sem regra específica. Salve aqui; em Serviços, configure exceções como valor fixo ou percentual próprio.</p>
            </div>
 
            <div class="fin-field-premium">
@@ -439,11 +454,11 @@
       <!-- Rodapé Persistente -->
       <div class="panel-footer-premium">
         <button class="btn-cancel-premium" (click)="fecharPainel()">Cancelar</button>
-        <button class="btn-save-premium" [disabled]="isSaving" 
+        <button class="btn-save-premium" [disabled]="isSaving"
                 (click)="salvarAtual()">
           <span *ngIf="isSaving" class="pi pi-spin pi-spinner" style="margin-right: 8px;"></span>
           <i class="pi pi-check" *ngIf="!isSaving"></i>
-          <span>{{ isNovo && panelTab === 'dados' ? 'Próximo Passo' : (panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar Alterações') }}</span>
+          <span>{{ panelTab === 'financeiro' ? 'Finalizar Cadastro' : 'Salvar & Avançar' }}</span>
         </button>
       </div>
 

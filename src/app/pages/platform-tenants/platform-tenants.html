@@ -1,59 +1,23 @@
 <div class="tenants-container">
-  <div class="header">
-    <h1>Estabelecimentos (Tenants)</h1>
-    <p>Gestão completa de todas as barbearias, clínicas e salões utilizando a AgendaAI.</p>
-  </div>
-
-  <div class="table-card">
-    <p-table [value]="tenants" [loading]="isLoading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-platform">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>ID / Estabelecimento</th>
-          <th>Slug</th>
-          <th>Plano</th>
-          <th>Data de Criação</th>
-          <th>Status</th>
-          <th>Ações</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-t>
-        <tr>
-          <td>
-            <div class="tenant-name-col">
-              <strong>{{ t.nome }}</strong>
-              <span class="tenant-id">#{{ t.id }}</span>
-            </div>
-          </td>
-          <td class="slug-col">/{{ t.slug }}</td>
-          <td>
-            <span class="plan-badge" [ngClass]="t.plano">{{ t.plano | uppercase }}</span>
-          </td>
-          <td>{{ t.created_at | date:'dd/MM/yyyy' }}</td>
-          <td>
-            <p-tag [value]="t.status | uppercase" [severity]="getSeverity(t.status)"></p-tag>
-          </td>
-          <td>
-            <button pButton icon="pi pi-cog" class="p-button-text p-button-sm p-button-secondary" title="Configurar Inquilino"></button>
-            <button pButton icon="pi pi-ban" class="p-button-text p-button-sm p-button-danger" *ngIf="t.status === 'active'" title="Bloquear Conta"></button>
-            <button pButton icon="pi pi-check" class="p-button-text p-button-sm p-button-success" *ngIf="t.status === 'blocked'" title="Desbloquear Conta"></button>
-          </td>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="6" class="text-center p-4">Nenhum estabelecimento encontrado.</td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
-  
-  <div class="error-state" *ngIf="hasError">
-    <i class="pi pi-exclamation-triangle" style="color: #ef4444; font-size: 3rem;"></i>
-    <h2 style="color: #fff;">Configuração Pendente no Banco de Dados</h2>
-    <p>Para exibir a lista de estabelecimentos reais, execute o script SQL abaixo no painel Supabase (SQL Editor).</p>
-    <code style="background: #000; padding: 12px; border-radius: 6px; display: block; color: #10b981; max-width: 600px; text-align: left; font-size: 0.85rem; overflow-x: auto;">
-      -- O arquivo se encontra em: supabase/platform-admin.sql<br/>
-      -- Execute-o para criar a função get_platform_tenants().
-    </code>
-  </div>
+  <div class="header"><div><h1>Estabelecimentos</h1><p>Acompanhe cada estabelecimento, seu plano e o período de teste.</p></div><button class="refresh" (click)="refresh()" [disabled]="isLoading">{{ isLoading ? 'Atualizando…' : 'Atualizar' }}</button></div>
+  <p class="error-state" role="alert" *ngIf="hasError">Não foi possível atualizar a lista de clientes. Tente novamente.</p>
+  <p class="error-state" role="alert" *ngIf="actionError">{{ actionError }}</p><p class="notice" role="status" *ngIf="notice">{{ notice }}</p>
+  <div class="filters"><label>Buscar cliente<input [(ngModel)]="query" placeholder="Nome, e-mail, telefone ou endereço"></label><label>Situação<select [(ngModel)]="status"><option value="">Todos</option><option value="trial">Em teste</option><option value="paid">Pagantes</option><option value="expired">Teste vencido</option><option value="blocked">Bloqueados</option></select></label><span>{{ filteredTenants.length }} de {{ tenants.length }} clientes</span></div>
+  <div class="table-card"><p-table [value]="filteredTenants" [loading]="isLoading" [paginator]="true" [rows]="10" responsiveLayout="scroll" styleClass="p-datatable-platform">
+    <ng-template pTemplate="header"><tr><th>Estabelecimento</th><th>Plano</th><th>Cadastro</th><th>Fim do teste</th><th>Situação</th><th>Uso do produto</th><th>Acesso</th></tr></ng-template>
+    <ng-template pTemplate="body" let-t><tr><td><div class="tenant-name-col"><strong>{{ t.nome }}</strong><span class="tenant-id">/{{ t.slug }} · {{ t.id }}</span></div></td><td><span class="plan-badge">{{ t.plano || 'Não definido' }}</span></td><td>{{ t.created_at | date:'dd/MM/yyyy' }}</td><td>{{ t.trial_ends_at ? (t.trial_ends_at | date:'dd/MM/yyyy') : '—' }}</td><td><span class="status" [class]="'status ' + t.status">{{ statusLabel(t.status) }}</span></td><td><button class="action" (click)="selected=usageFor(t.id)">Ver detalhes · {{usageFor(t.id)?.clients || 0}} clientes</button></td><td><button class="action" (click)="toggleTenant(t)" [disabled]="busyId !== null">{{ busyId === t.id ? 'Salvando…' : t.status === 'blocked' ? 'Desbloquear' : 'Bloquear' }}</button></td></tr></ng-template>
+    <ng-template pTemplate="emptymessage"><tr><td colspan="7">{{ hasError ? 'Lista indisponível no momento.' : 'Nenhum cliente encontrado com estes filtros.' }}</td></tr></ng-template>
+  </p-table></div><p class="footnote">O bloqueio controla o acesso à plataforma. Não altera nem cancela cobranças.</p>
 </div>
+
+<section class="usage-detail" *ngIf="selected as u"><header><div><h2>{{u.nome}} · Uso do produto</h2><p>Dados reais do estabelecimento. Último cadastro registrado: {{u.latest_record_at ? (u.latest_record_at|date:'dd/MM HH:mm':'-0300') : 'Sem atividade registrada'}}.</p></div><button class="action" (click)="selected=null">Fechar</button></header>
+<h3>Contato do responsável</h3>
+<div class="usage-item"><strong>E-mail da conta</strong><a *ngIf="u.email" [href]="'mailto:' + u.email">{{u.email}}</a><span *ngIf="!u.email">Não cadastrado</span><small>{{u.email_verified ? 'E-mail verificado' : 'Sem verificação de e-mail'}}</small></div>
+<div class="usage-item"><strong>Telefone comercial</strong><a *ngIf="u.telefone" [href]="'tel:' + u.telefone">{{u.telefone}}</a><span *ngIf="!u.telefone">Não cadastrado</span></div>
+<div class="usage-item"><strong>Endereço</strong><span>{{u.endereco || 'Não cadastrado'}} · {{u.cidade || 'Cidade não cadastrada'}}</span></div>
+<div class="usage-item"><strong>Último login do responsável</strong><span>{{u.last_sign_in_at ? (u.last_sign_in_at|date:'dd/MM/yyyy HH:mm':'-0300') : 'Não registrado'}}</span><small>O login não representa toda a atividade: uma sessão aberta pode continuar em uso.</small></div>
+<div class="usage-metrics"><article><strong>{{u.clients}}</strong><span>Clientes cadastrados</span></article><article><strong>{{u.services.length}}</strong><span>Serviços · {{activeCount(u.services)}} ativos</span></article><article><strong>{{u.products.length}}</strong><span>Produtos</span></article><article><strong>{{u.staff.length}}</strong><span>Funcionários · {{activeCount(u.staff)}} ativos</span></article><article><strong>{{u.appointments}}</strong><span>Agendamentos · {{u.appointments_7d}} criados em 7 dias</span></article><article><strong>{{u.completed}}</strong><span>Concluídos · {{u.public_bookings}} reservas pelo link</span></article></div>
+<div class="usage-alerts"><p *ngIf="!u.owner_verified">Conta do responsável ainda sem email verificado.</p><p *ngIf="!activeCount(u.services)">Ainda não há serviços ativos.</p><p *ngIf="!activeCount(u.staff)">Ainda não há profissionais ativos.</p><p *ngIf="!u.appointments">Nenhum agendamento registrado. Pode indicar início de configuração; não comprova falha técnica.</p></div>
+<h3>Serviços cadastrados</h3><div class="usage-item" *ngFor="let s of u.services"><strong>{{s.nome}}</strong><span>{{s.preco|currency:'BRL'}} · {{s.duracao}} min · {{s.ativo?'Ativo':'Inativo'}}</span></div><p *ngIf="!u.services.length">Nenhum serviço cadastrado.</p>
+<h3>Produtos cadastrados</h3><div class="usage-item" *ngFor="let p of u.products"><strong>{{p.nome}}</strong><span>{{p.preco|currency:'BRL'}} · Estoque {{p.estoque}} · {{p.ativo?'Ativo':'Inativo'}}</span></div><p *ngIf="!u.products.length">Nenhum produto cadastrado.</p>
+<h3>Equipe e configuração</h3><div class="usage-item" *ngFor="let p of u.staff"><strong>{{p.nome}} · {{p.ativo?'Ativo':'Inativo'}}</strong><span>{{p.role}} · {{p.services}} serviços vinculados · {{p.availability?'Com disponibilidade':'Sem disponibilidade ativa'}}</span><small>Último acesso registrado: {{p.last_access ? (p.last_access|date:'dd/MM HH:mm':'-0300') : 'Não registrado'}}</small></div><p *ngIf="!u.staff.length">Nenhum funcionário cadastrado.</p><p class="footnote">Cadastro e uso são sinais de ativação. Não substituem monitoramento de erros; reserva pelo link considera registros identificados com essa origem.</p></section>

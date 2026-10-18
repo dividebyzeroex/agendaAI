@@ -1,0 +1,20 @@
+import {afterEach,expect,it,vi} from 'vitest';
+import {createCipheriv,randomBytes} from 'node:crypto';
+import {appointmentMessagingReady,reminderPhone,runAppointmentMessages} from '../server/appointment-messaging.js';
+afterEach(()=>vi.unstubAllEnvs());
+function ready(){for(const k of ['TWILIO_ACCOUNT_SID','TWILIO_AUTH_TOKEN','TWILIO_PHONE_FROM'])vi.stubEnv(k,'fixture');vi.stubEnv('APPOINTMENT_SMS_VERIFIED','true');}
+function fixture(rows:any[],context:any={}){
+ const c={phone:'11999999999',business:'Barbearia',start:'2099-10-16T12:00:00Z',end:'2099-10-16T12:30:00Z',status:'confirmado',enabled:true,active:true,access_until:'2099-12-01T00:00:00Z',opt_out:false,...context};
+ const db={rpc:vi.fn(async()=>({data:c})),from:vi.fn(()=>{
+ let change:any=null,selected=false,filters:Array<(r:any)=>boolean>=[],max=100;
+ const execute=()=>{const matching=rows.filter(r=>filters.every(f=>f(r))).slice(0,max);if(change)for(const r of matching)Object.assign(r,change);return {data:selected?matching.map(r=>({...r})):null,error:null};};
+ const q:any={update:(v:any)=>{change=v;return q;},select:()=>{selected=true;return q;},eq:(k:string,v:any)=>{filters.push(r=>r[k]===v);return q;},lt:(k:string,v:any)=>{filters.push(r=>r[k]<v);return q;},lte:(k:string,v:any)=>{filters.push(r=>r[k]<=v);return q;},order:()=>q,limit:(n:number)=>{max=n;return q;},maybeSingle:async()=>{const r=execute();return {...r,data:r.data?.[0]||null};},then:(resolve:any,reject:any)=>Promise.resolve(execute()).then(resolve,reject)};return q;
+ })};return db;
+}
+const row=()=>({id:'one',event_id:'event',estabelecimento_id:'tenant',status:'queued',kind:'reminder',event_start:'2099-10-16T12:00:00Z',event_end:'2099-10-16T12:30:00Z',due_at:'2026-01-01T00:00:00Z'});
+it('never sends without explicit provider verification',async()=>{vi.stubEnv('APPOINTMENT_SMS_VERIFIED','false');const db=fixture([row()]);const send=vi.fn();expect(appointmentMessagingReady()).toBe(false);expect((await runAppointmentMessages({db,send})).sent).toBe(0);expect(db.from).not.toHaveBeenCalled();});
+it('supports existing encrypted contacts without exposing decrypted keys in the queue',()=>{const key=randomBytes(32),iv=randomBytes(12),cipher=createCipheriv('aes-256-gcm',key,iv);const body=Buffer.concat([cipher.update('11999999999'),cipher.final()]);const value=Buffer.concat([iv,body,cipher.getAuthTag()]).toString('base64');expect(reminderPhone(value,key.toString('base64'))).toBe('+5511999999999');expect(()=>reminderPhone(value,randomBytes(32).toString('base64'))).toThrow();expect(()=>reminderPhone('123')).toThrow();});
+it('claims once and never resends an acknowledged message on the next run',async()=>{ready();const rows=[row()],db=fixture(rows),send=vi.fn(async()=>({sid:'provider-id'})),quota=vi.fn(async()=>({allowed:true}));expect((await runAppointmentMessages({db,send,quota})).sent).toBe(1);expect(rows[0]).toMatchObject({status:'sent',provider_id:'provider-id'});await runAppointmentMessages({db,send,quota});expect(send).toHaveBeenCalledTimes(1);});
+it('honors individual opt-out before consuming quota or contacting provider',async()=>{ready();const rows=[row()],db=fixture(rows,{opt_out:true}),send=vi.fn(),quota=vi.fn();expect((await runAppointmentMessages({db,send,quota})).skipped).toBe(1);expect(rows[0].status).toBe('suppressed');expect(send).not.toHaveBeenCalled();expect(quota).not.toHaveBeenCalled();});
+it('does not automatically retry an uncertain provider error',async()=>{ready();const rows=[row()],db=fixture(rows),send=vi.fn(async()=>{throw Error('timeout');}),quota=async()=>({allowed:true});expect((await runAppointmentMessages({db,send,quota})).failed).toBe(1);await runAppointmentMessages({db,send,quota});expect(send).toHaveBeenCalledTimes(1);expect(rows[0].status).toBe('failed');});
+it('sends only one notification for the same event in a run',async()=>{ready();const rows=[row(),{...row(),id:'two',kind:'created'}],db=fixture(rows),send=vi.fn(async()=>({sid:'provider-id'})),quota=async()=>({allowed:true});const r=await runAppointmentMessages({db,send,quota});expect(r).toMatchObject({sent:1,skipped:1});expect(send).toHaveBeenCalledTimes(1);});

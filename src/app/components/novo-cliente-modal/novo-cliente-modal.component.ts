@@ -1,251 +1,97 @@
-import { Component, Output, EventEmitter, inject, Input, OnInit } from '@angular/core';
+import { Component, inject, OnInit, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { ClienteService, Cliente } from '../../services/cliente.service';
-
+import { SegmentoConfigService } from '../../services/segmento-config.service';
 @Component({
   selector: 'app-novo-cliente-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
-  template: `
-  <div class="modal-backdrop" (click)="cancelar()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
- 
-      <!-- Header -->
-      <div class="nc-header">
-        <div class="nc-header-left">
-          <div class="nc-avatar-ring">
-             <div class="nc-avatar">{{ form.nome ? form.nome.charAt(0).toUpperCase() : '👤' }}</div>
-          </div>
-          <div>
-            <strong>{{ isEdit ? 'Editar Cadastro' : 'Novo Cliente' }}</strong>
-            <span>{{ isEdit ? 'Atualização de Informações' : 'Cadastro Inteligente' }}</span>
-          </div>
-        </div>
-        <button class="close-btn" (click)="cancelar()"><i class="pi pi-times"></i></button>
-      </div>
- 
-      <!-- Body -->
-      <div class="nc-body custom-scroll">
-        <div class="nc-section-title">Dados Pessoais</div>
-        
-        <div class="fields-grid">
-          <!-- Nome -->
-          <div class="field-group full">
-            <label>Nome Completo <span class="req">*</span></label>
-            <div class="input-wrap">
-               <i class="pi pi-user"></i>
-               <input type="text" [(ngModel)]="form.nome" placeholder="Ex: João Silva"
-                 class="field-input" autofocus />
-            </div>
-          </div>
-  
-          <!-- Telefone -->
-          <div class="field-group">
-            <label>WhatsApp</label>
-            <div class="input-wrap">
-              <i class="pi pi-whatsapp"></i>
-              <input type="tel" [(ngModel)]="form.telefone"
-                placeholder="(11) 99999-8888" class="field-input" />
-            </div>
-          </div>
-
-          <!-- Nascimento -->
-          <div class="field-group">
-            <label>Nascimento</label>
-            <div class="input-wrap">
-              <i class="pi pi-calendar"></i>
-              <input type="date" [(ngModel)]="form.nascimento" class="field-input" />
-            </div>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label>E-mail</label>
-          <div class="input-wrap">
-            <i class="pi pi-envelope"></i>
-            <input type="email" [(ngModel)]="form.email"
-              placeholder="cliente@email.com" class="field-input" />
-          </div>
-        </div>
-
-        <div class="nc-separator"></div>
-        <div class="nc-section-title">Informações Adicionais</div>
-
-        <div class="field-group">
-          <label>Observações / Notas</label>
-          <textarea [(ngModel)]="form.observacoes" 
-            placeholder="Ex: Alérgico a produtos X, prefere atendimento em local silencioso..."
-            class="field-area" rows="4"></textarea>
-        </div>
- 
-        <!-- Info box -->
-        <div class="info-box-premium" *ngIf="!isEdit">
-          <i class="pi pi-sparkles"></i>
-          <span>O histórico será vinculado ao telefone e você poderá ver estatísticas no Analytics.</span>
-        </div>
- 
-        <!-- Erro -->
-        <div class="error-box" *ngIf="erro">{{ erro }}</div>
-      </div>
- 
-      <!-- Footer -->
-      <div class="nc-footer">
-        <button class="btn-cancel-glass" (click)="cancelar()">Cancelar</button>
-        <button class="btn-save-premium" [disabled]="saving || !form.nome.trim()" (click)="confirmar()">
-          <i class="pi" [class.pi-user-plus]="!saving && !isEdit" [class.pi-check]="!saving && isEdit" [class.pi-spin]="saving" [class.pi-spinner]="saving"></i>
-          {{ saving ? (isEdit ? 'Salvando...' : 'Cadastrando...') : (isEdit ? 'Salvar Alterações' : 'Criar Cliente') }}
-        </button>
-      </div>
-    </div>
-  </div>
-  `,
-  styles: [`
-    .modal-backdrop {
-      position: fixed; inset: 0; background: rgba(15, 23, 42, 0.5);
-      backdrop-filter: blur(12px); z-index: 3000;
-      display: flex; align-items: center; justify-content: center; padding: 1.5rem;
-    }
- 
-    .modal-box {
-      background: rgba(255, 255, 255, 0.95); border-radius: 24px; width: 100%; max-width: 520px;
-      box-shadow: 0 50px 100px -20px rgba(0,0,0,0.25);
-      overflow: hidden; border: 1px solid rgba(255,255,255,0.4);
-      display: flex; flex-direction: column; max-height: 90vh;
-    }
- 
-    /* Header */
-    .nc-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1.5rem 2rem; border-bottom: 1px solid rgba(0,0,0,0.05); background: #ffffff;
-    }
-    .nc-header-left { display: flex; align-items: center; gap: 16px; }
-    .nc-avatar-ring { 
-      padding: 3px; border: 2px solid #1a73e8; border-radius: 50%;
-    }
-    .nc-avatar {
-      width: 44px; height: 44px; border-radius: 50%;
-      background: linear-gradient(135deg, #1a73e8, #a142f4);
-      color: white; display: flex; align-items: center; justify-content: center;
-      font-weight: 800; font-size: 1.2rem;
-    }
-    .nc-header-left strong { display: block; font-size: 1.1rem; color: #1e293b; font-weight: 800; letter-spacing: -0.3px; }
-    .nc-header-left span   { font-size: .85rem; color: #64748b; font-weight: 500; }
-    
-    .close-btn { background: #f1f5f9; border: none; cursor: pointer; color: #64748b; width: 36px; height: 36px; border-radius: 12px; display: flex; align-items: center; justify-content: center; transition: all .2s; }
-    .close-btn:hover { background: #e2e8f0; color: #1e293b; transform: rotate(90deg); }
- 
-    /* Body */
-    .nc-body { padding: 2rem; display: flex; flex-direction: column; gap: 1.2rem; overflow-y: auto; }
-    .nc-section-title { font-size: 0.75rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: -5px; }
-    .nc-separator { height: 1px; background: var(--glass-border); margin: 0.5rem 0; }
- 
-    .fields-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .fields-grid .full { grid-column: span 2; }
- 
-    .field-group { display: flex; flex-direction: column; gap: 7px; }
-    label { font-size: .8rem; font-weight: 700; color: var(--text-muted); }
-    .req { color: #f43f5e; }
- 
-    .input-wrap { position: relative; display: flex; align-items: center; }
-    .input-wrap .pi { position: absolute; left: 14px; color: var(--text-muted); font-size: 0.9rem; }
- 
-    .field-input, .field-area {
-      width: 100%; padding: 12px 14px 12px 40px; border: 2px solid var(--glass-border); border-radius: 12px;
-      font-family: inherit; font-size: 0.95rem; outline: none; transition: all .2s;
-      color: var(--text-main); background: var(--active-bg);
-    }
-    .field-area { padding-left: 14px; resize: none; font-family: inherit; }
-    .field-input:focus, .field-area:focus { border-color: var(--primary-color); background: var(--glass-bg); box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1); }
- 
-    .info-box-premium {
-      display: flex; align-items: center; gap: 10px;
-      background: var(--active-bg); border: 1px solid var(--glass-border); border-radius: 12px;
-      padding: 12px 16px; color: var(--primary-color); font-size: .85rem; font-weight: 500;
-    }
-    .info-box-premium .pi { color: var(--primary-color); font-size: 1rem; }
- 
-    .error-box { padding: 12px 16px; border-radius: 12px; background: #fff1f2; color: #e11d48; font-size: .9rem; font-weight: 600; }
- 
-    /* Footer */
-    .nc-footer { display: flex; gap: 12px; justify-content: flex-end; padding: 1.5rem 2rem; background: var(--active-bg); border-top: 1px solid var(--glass-border); }
-    .btn-cancel-glass { background: var(--glass-bg); border: 1px solid var(--glass-border); color: var(--text-muted); padding: 12px 24px; border-radius: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-cancel-glass:hover { background: var(--active-bg); border-color: var(--text-muted); }
-    .btn-save-premium {
-      display: flex; align-items: center; gap: 8px;
-      background: var(--primary-color); color: white; border: none;
-      padding: 12px 28px; border-radius: 12px; font-weight: 700; font-size: .95rem;
-      cursor: pointer; transition: all .3s;
-    }
-    .btn-save-premium:hover:not(:disabled) { background: #2563eb; box-shadow: 0 10px 25px rgba(37,99,235,0.25); transform: translateY(-1px); }
-    .btn-save-premium:disabled { opacity: .4; cursor: not-allowed; }
- 
-    .custom-scroll::-webkit-scrollbar { width: 5px; }
-    .custom-scroll::-webkit-scrollbar-thumb { background: var(--glass-border); border-radius: 10px; }
-  `]
+  imports: [CommonModule, FormsModule, RouterLink],
+  templateUrl: './client-form.html',
 })
 export class NovoClienteModalComponent implements OnInit {
-  @Input() cliente?: Cliente;
-  @Output() salvo    = new EventEmitter<Cliente>();
-  @Output() cancelado = new EventEmitter<void>();
-
-  private clienteService = inject(ClienteService);
-
-  form = { nome: '', telefone: '', email: '', nascimento: '', observacoes: '' };
+  clients = inject(ClienteService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private destroy = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
+  private segment = inject(SegmentoConfigService);
+  readonly id = this.route.snapshot.paramMap.get('id');
+  cliente: Cliente | undefined;
+  loading = true;
   saving = false;
-  erro   = '';
-  isEdit = false;
-
-  ngOnInit() {
-    if (this.cliente) {
-      this.isEdit = true;
-      this.form = {
-        nome:       this.cliente.nome || '',
-        telefone:   this.cliente.telefone || '',
-        email:      this.cliente.email || '',
-        nascimento: (this.cliente as any).nascimento || '',
-        observacoes: (this.cliente as any).observacoes || ''
-      };
-    }
+  saved = false;
+  erro = '';
+  form = {
+    nome: '',
+    telefone: '',
+    email: '',
+    nascimento: '',
+    observacoes: '',
+    metadata: {} as Record<string, any>,
+  };
+  get isEdit() {
+    return !!this.id;
   }
-
-  async confirmar() {
-    if (!this.form.nome.trim()) return;
-    this.saving = true;
-    this.erro   = '';
-
-    try {
-      // Normalize nascimento: empty string → null, otherwise keep the YYYY-MM-DD string
-      const nascimentoValue = this.form.nascimento?.trim() ? this.form.nascimento.trim() : null;
-
-      if (this.isEdit && this.cliente?.id) {
-        // Modo Edição
-        const atualizado = await this.clienteService.updateCliente(this.cliente.id, {
-          nome:       this.form.nome.trim(),
-          telefone:   this.form.telefone.trim() || undefined,
-          email:      this.form.email.trim()    || undefined,
-          nascimento: nascimentoValue as any,
-          observacoes: this.form.observacoes.trim() || undefined
-        } as any);
-        this.salvo.emit(atualizado);
-      } else {
-        // Modo Novo
-        const novo = await this.clienteService.addCliente({
-          nome:       this.form.nome.trim(),
-          telefone:   this.form.telefone.trim() || undefined,
-          email:      this.form.email.trim()    || undefined,
-          nascimento: nascimentoValue as any,
-          observacoes: this.form.observacoes.trim() || undefined,
-          ultima_visita: new Date().toISOString().split('T')[0],
-        });
-        this.salvo.emit(novo);
+  get isSaude() {
+    return ['clinica_medica', 'clinica_odonto', 'estetica'].includes(this.segment.current.id);
+  }
+  get isPetshop() {
+    return this.segment.current.id === 'petshop';
+  }
+  ngOnInit() {
+    if (!this.id) {
+      this.loading = false;
+      return;
+    }
+    this.clients.loading$.pipe(takeUntilDestroyed(this.destroy)).subscribe((v) => {
+      this.loading = v;
+      this.cdr.markForCheck();
+    });
+    this.clients.clientes$.pipe(takeUntilDestroyed(this.destroy)).subscribe((list) => {
+      const c = list.find((item) => item.id === this.id);
+      if (c && !this.cliente) {
+        this.cliente = c;
+        this.form = {
+          nome: c.nome || '',
+          telefone: c.telefone || '',
+          email: c.email || '',
+          nascimento: c.nascimento || '',
+          observacoes: c.observacoes || '',
+          metadata: structuredClone(c.metadata || {}),
+        };
       }
-    } catch (e: any) {
-      this.erro = e.message || 'Erro ao processar cadastro.';
+      this.cdr.markForCheck();
+    });
+  }
+  async confirmar() {
+    if (this.saving || this.saved || !this.form.nome.trim() || (this.isEdit && !this.cliente))
+      return;
+    this.saving = true;
+    this.erro = '';
+    try {
+      const values = {
+        ...this.form,
+        nome: this.form.nome.trim(),
+        telefone: this.form.telefone.trim() || undefined,
+        email: this.form.email.trim() || undefined,
+        nascimento: this.form.nascimento || null,
+        observacoes: this.form.observacoes.trim() || undefined,
+      };
+      if (values.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email))
+        throw new Error('Confira o e-mail informado.');
+      if (this.id) await this.clients.updateCliente(this.id, values as any);
+      else await this.clients.addCliente(values as any);
+      this.saved = true;
+      await this.router.navigate(['/admin/clientes']);
+    } catch (e) {
+      this.erro =
+        e instanceof Error ? e.message : 'Não foi possível salvar. Seus dados foram mantidos.';
     } finally {
       this.saving = false;
+      if (!this.destroy.destroyed) this.cdr.markForCheck();
     }
   }
-
-  cancelar() { this.cancelado.emit(); }
 }

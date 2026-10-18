@@ -21,15 +21,8 @@ export class OnboardingService {
       .maybeSingle<{ id: string; onboarding_completo: boolean }>();
 
     if (!estab) {
-      // First login: create via RPC (POST) to avoid columns in URL
-      await this.supabase.rpc('create_estabelecimento_safe', {
-        p_data: {
-          nome: 'Meu Negócio',
-          user_id: user.id,
-          onboarding_completo: false
-        }
-      });
-      this.showOnboarding$.next(true);
+      if (error) throw error;
+      return;
     } else if (!estab.onboarding_completo) {
       // Existing record but onboarding not done yet
       this.showOnboarding$.next(true);
@@ -42,15 +35,18 @@ export class OnboardingService {
     if (!user) return;
 
     // Conclui via RPC (POST) para evitar user_id na URL
-    const { data: estab } = await this.supabase
+    const { data: estab, error } = await this.supabase
       .rpc('check_onboarding_status', { p_user_id: user.id })
       .maybeSingle<{ id: string }>();
 
+    if(error)throw error;
+    if(!estab?.id)throw new Error('Estabelecimento não encontrado.');
     if (estab?.id) {
-      await this.supabase.rpc('update_estabelecimento_safe', { 
-        p_id: estab.id, 
-        p_changes: { onboarding_completo: true } 
+      const {error:saveError}=await this.supabase.rpc('update_estabelecimento_safe', {
+        p_id: estab.id,
+        p_changes: { onboarding_completo: true }
       });
+      if(saveError)throw saveError;
     }
 
     this.showOnboarding$.next(false);

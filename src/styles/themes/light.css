@@ -1,25 +1,23 @@
-/* Clean Elite 2.0 — High Contrast & Depth (Sincronizado com Landing Page) */
+/* Light Theme — Clean, Professional */
 .theme-claro {
-  --bg-color: #0b071a; /* Deep purple/blue dark */
-  --text-main: #ffffff; /* White/bright */
-  --text-muted: #94a3b8; /* Light slate */
-  
-  --glass-bg: rgba(11, 7, 26, 0.65);
-  --glass-border: rgba(255, 0, 127, 0.3); /* Neon pink border hint */
+  --bg-color: #f8fafc;
+  --text-main: #0f172a;
+  --text-muted: #64748b;
+
+  --glass-bg: rgba(255, 255, 255, 0.85);
+  --glass-border: rgba(226, 232, 240, 0.8);
   --glass-blur: 20px;
-  
-  --active-bg: rgba(255, 0, 127, 0.15); /* Neon pink tint */
-  
-  --primary-color: #ff007f; /* Neon Pink */
-  --primary-rgb: 255, 0, 127;
-  --accent-color: #00f0ff; /* Neon Cyan */
-  
-  --bg-image: radial-gradient(circle at 10% 20%, rgba(255, 0, 127, 0.25), transparent 45%),
-              radial-gradient(circle at 90% 60%, rgba(0, 240, 255, 0.2), transparent 45%),
-              radial-gradient(circle at 50% 90%, rgba(139, 92, 246, 0.15), transparent 50%);
-              
-  --elite-shadow: 0 4px 20px rgba(255, 0, 127, 0.15);
-  --elite-hover-shadow: 0 8px 30px rgba(0, 240, 255, 0.25), 0 2px 10px rgba(255, 0, 127, 0.2);
-  --text-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
-  --glass-edge: rgba(0, 240, 255, 0.5);
+  --glass-edge: rgba(255, 255, 255, 0.9);
+
+  --active-bg: rgba(99, 102, 241, 0.06);
+  --hover-bg: rgba(99, 102, 241, 0.1);
+
+  --primary-color: #6366f1;
+  --primary-rgb: 99, 102, 241;
+  --accent-color: #8b5cf6;
+
+  --bg-image: none;
+  --elite-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  --elite-hover-shadow: 0 12px 40px rgba(99, 102, 241, 0.1);
+  --text-shadow: none;
 }

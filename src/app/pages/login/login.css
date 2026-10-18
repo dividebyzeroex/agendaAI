@@ -43,50 +43,9 @@
 }
 
 /* ===== SISTEMA 3D PARA FUSÃO UI ===== */
-.on-scene {
-  width: 100%;
-  perspective: 2000px;
-  position: relative;
-}
-
-.on-card-3d {
-  width: 100%;
-  position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.on-face {
-  width: 100%;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-}
-
-.on-front {
-  position: relative;
-}
-
-.on-back {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.on-back {
-  transform: rotateY(180deg);
-}
-
-/* When flipped to back face, swap which face is relative */
-.on-card-3d.flipped .on-front {
-  position: absolute;
-  top: 0;
-  left: 0;
-}
-
-.on-card-3d.flipped .on-back {
-  position: relative;
-}
-
+/* Only the current step is rendered in normal flow, including on Safari. */
+.on-scene, .on-card-3d, .on-face { width: 100%; position: relative; }
+.on-face { box-sizing: border-box; }
 /* Timeline Interna ao Card */
 .on-timeline {
   display: flex;
@@ -672,3 +631,59 @@
   font-size: 1.1rem !important;
   margin-right: 8px !important;
 }
+
+/* Escolha de Senha no Cadastro */
+.signup-method {
+  margin-bottom: 20px;
+}
+.method-toggles {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+.method-btn {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid var(--glass-border);
+  background: var(--active-bg);
+  color: var(--text-muted);
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.method-btn.active {
+  background: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+}
+
+.slug-wrap-login, .slug-wrap { flex-wrap: wrap; }
+.slug-wrap-login input, .slug-wrap input { min-width: 0; max-width: 100%; }
+.email-badge { max-width: 100%; overflow-wrap: anywhere; }
+
+
+/* Self-explanatory, accessible signup password guardrails. */
+.signup-password-hints{margin:10px 0 0;padding:13px 14px;border:1px solid var(--glass-border,rgba(99,102,241,.2));border-radius:14px;background:rgba(99,102,241,.04);text-align:left}
+.signup-password-hints p{margin:0 0 9px;font-size:.78rem;line-height:1.5;color:var(--text-muted,#617086);font-weight:650}
+.signup-password-hints ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 10px}
+.signup-password-hints li{font-size:.76rem;line-height:1.35;display:flex;align-items:center;gap:6px;color:var(--text-muted,#728098)}
+.signup-password-hints li .pi{font-size:.81rem;flex-shrink:0}
+.signup-password-hints li.met{color:#087451;font-weight:700}
+.signup-password-hints li.met .pi{color:#0d9b6c}
+.signup-recovery-actions{margin:13px 0 4px;text-align:center}
+.signup-recovery-actions button{border:none;cursor:pointer;background:transparent;color:var(--primary-color,#6366f1);padding:10px 7px;font-size:.83rem;line-height:1.4;font-weight:730;display:inline-flex;align-items:center;gap:8px}
+.signup-recovery-actions button:hover{text-decoration:underline}
+.signup-recovery-actions button:disabled{opacity:.55;cursor:wait}
+.signup-recovery-caption{margin:2px auto 8px;color:var(--text-muted,#6e7990);font-size:.74rem;line-height:1.5;max-width:275px}
+.signup-draft-help{display:flex;align-items:flex-start;gap:9px;color:var(--text-muted,#65728c);font-size:.77rem;line-height:1.55;margin:14px 0 4px}
+.signup-draft-help .pi{color:var(--primary-color,#6366f1);flex-shrink:0;margin-top:2px}
+.signup-success-continue{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;margin-top:17px;border:0;border-radius:12px;padding:15px 12px;color:#fff;background:var(--primary-color,#6366f1);font-size:.92rem;font-weight:760;cursor:pointer}
+.signup-success-continue:focus-visible,.signup-recovery-actions button:focus-visible{outline:3px solid #a597ff;outline-offset:3px}
+.error-box{font-weight:600;line-height:1.5;text-align:left;overflow-wrap:anywhere;animation:none}
+.error-box .pi{font-size:1rem;flex-shrink:0}
+@media(max-width:410px){.signup-password-hints ul{grid-template-columns:1fr}.signup-password-hints{padding:12px}}

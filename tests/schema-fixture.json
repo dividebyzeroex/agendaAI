@@ -1,0 +1,2530 @@
+{
+  "columns": [
+    {
+      "table": "produtos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "produtos",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "produtos",
+      "name": "nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "produtos",
+      "name": "descricao",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "produtos",
+      "name": "preco",
+      "type": "numeric",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "table": "produtos",
+      "name": "estoque",
+      "type": "integer",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "table": "produtos",
+      "name": "codigo_barras",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "produtos",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "produtos",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "profissionais",
+      "name": "nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissionais",
+      "name": "especialidade",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "bio",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "foto_url",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "telefone",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "email",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "cor_agenda",
+      "type": "text",
+      "default": "'#1a73e8'::text",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "valor_hora",
+      "type": "numeric(10,2)",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "cargo",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "comissao_padrao",
+      "type": "numeric(5,2)",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "data_contratacao",
+      "type": "date",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "instagram",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "linkedin",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "user_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "role",
+      "type": "user_role",
+      "default": "'barbeiro'::user_role",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "auth_type",
+      "type": "text",
+      "default": "'email'::text",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "convite_enviado",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "ultimo_acesso",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "primeiro_acesso",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "onboarding_concluido",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "profissionais",
+      "name": "metadata",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "profissional_otps",
+      "name": "id",
+      "type": "uuid",
+      "default": "uuid_generate_v4()",
+      "notnull": true
+    },
+    {
+      "table": "profissional_otps",
+      "name": "profissional_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissional_otps",
+      "name": "codigo",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissional_otps",
+      "name": "expires_at",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissional_otps",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "servicos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "servicos",
+      "name": "titulo",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "servicos",
+      "name": "descricao",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "servicos",
+      "name": "preco",
+      "type": "numeric(10,2)",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "table": "servicos",
+      "name": "duracao_min",
+      "type": "integer",
+      "default": "30",
+      "notnull": true
+    },
+    {
+      "table": "servicos",
+      "name": "emoji",
+      "type": "text",
+      "default": "'✂️'::text",
+      "notnull": false
+    },
+    {
+      "table": "servicos",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "servicos",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "servicos",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "sys_cargos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "sys_cargos",
+      "name": "segmento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "sys_cargos",
+      "name": "nome_cargo",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "sys_cargos",
+      "name": "role_code",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "sys_cargos",
+      "name": "nivel_acesso",
+      "type": "integer",
+      "default": "3",
+      "notnull": true
+    },
+    {
+      "table": "sys_cargos",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "sys_cargos",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "slug",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "icon",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "marketing_posts",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "image_url",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "marketing_posts",
+      "name": "caption",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "status",
+      "type": "text",
+      "default": "'draft'::text",
+      "notnull": true
+    },
+    {
+      "table": "marketing_posts",
+      "name": "scheduled_for",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "post_type",
+      "type": "text",
+      "default": "'image'::text",
+      "notnull": false
+    },
+    {
+      "table": "marketing_posts",
+      "name": "media_urls",
+      "type": "text[]",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "caixa_item_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "produto_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "quantidade",
+      "type": "integer",
+      "default": "1",
+      "notnull": true
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "valor_unitario",
+      "type": "numeric",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "dia_semana",
+      "type": "integer",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "dia_nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "abre",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "fecha",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "id",
+      "type": "uuid",
+      "default": "uuid_generate_v4()",
+      "notnull": true
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "name",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "role",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "avatar",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "tone",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "active",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "timezone('utc'::text, now())",
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "id",
+      "type": "uuid",
+      "default": "uuid_generate_v4()",
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "customer_phone",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "sender",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "message",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "channel",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "timezone('utc'::text, now())",
+      "notnull": true
+    },
+    {
+      "table": "workflows",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "workflows",
+      "name": "name",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "workflows",
+      "name": "trigger",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "workflows",
+      "name": "action",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "workflows",
+      "name": "active",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "workflows",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "workflows",
+      "name": "message_template",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "workflows",
+      "name": "tag_value",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "estabelecimento",
+      "name": "nome",
+      "type": "text",
+      "default": "'Meu Negócio'::text",
+      "notnull": true
+    },
+    {
+      "table": "estabelecimento",
+      "name": "telefone",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "endereco",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "cidade",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "logo_url",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "onboarding_completo",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "user_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "plano",
+      "type": "text",
+      "default": "'starter'::text",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "trial_ends_at",
+      "type": "timestamp with time zone",
+      "default": "(now() + '7 days'::interval)",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "plano_expires_at",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "cnpj",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "segmento",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "volume_clientes",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "endereco_completo",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "cor_primaria",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "descricao",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "slug",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "stripe_customer_id",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "stripe_subscription_id",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "plano_ativo",
+      "type": "text",
+      "default": "'free'::text",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "zernio_channel_id",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "active",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "config_fidelidade",
+      "type": "jsonb",
+      "default": "'{\"ativo\": false, \"visitas_meta\": 10, \"desconto_percentual\": 15}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "estabelecimento",
+      "name": "metadata",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "fila_espera",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "fila_espera",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "fila_espera",
+      "name": "cliente_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "fila_espera",
+      "name": "servico_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "fila_espera",
+      "name": "data_desejada",
+      "type": "date",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "fila_espera",
+      "name": "status",
+      "type": "text",
+      "default": "'pendente'::text",
+      "notnull": false
+    },
+    {
+      "table": "fila_espera",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "agenda_events",
+      "name": "title",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agenda_events",
+      "name": "start",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agenda_events",
+      "name": "end",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agenda_events",
+      "name": "backgroundColor",
+      "type": "text",
+      "default": "'#1a73e8'::text",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "allDay",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "cliente_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "servico_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "status",
+      "type": "text",
+      "default": "'confirmado'::text",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "observacoes",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "servicos_extras",
+      "type": "jsonb",
+      "default": "'[]'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "valor_total",
+      "type": "numeric",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "cobranca_enviada",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "cobranca_enviada_at",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "profissional_nome",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "profissional_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "status_confirmacao",
+      "type": "text",
+      "default": "'pendente'::text",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "token_confirmacao",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "fidelidade_resgatada",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "agenda_events",
+      "name": "metadata",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "clientes",
+      "name": "nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "clientes",
+      "name": "telefone",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "email",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "ultima_visita",
+      "type": "date",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "faltas",
+      "type": "integer",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "nascimento",
+      "type": "date",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "observacoes",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "clientes",
+      "name": "metadata",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "agent_tasks",
+      "name": "type",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agent_tasks",
+      "name": "payload",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "status",
+      "type": "text",
+      "default": "'pending'::text",
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "agent_owner",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agent_tasks",
+      "name": "error_message",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "usage_quotas",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "usage_quotas",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "usage_quotas",
+      "name": "resource",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "usage_quotas",
+      "name": "month",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "usage_quotas",
+      "name": "count",
+      "type": "integer",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "usage_quotas",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "usage_quotas",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "establishment_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "channel",
+      "type": "character varying(20)",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "status",
+      "type": "character varying(20)",
+      "default": "'inactive'::character varying",
+      "notnull": false
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "config",
+      "type": "jsonb",
+      "default": "'{}'::jsonb",
+      "notnull": false
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "timezone('utc'::text, now())",
+      "notnull": true
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "default": "timezone('utc'::text, now())",
+      "notnull": true
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "from",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "to",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "text",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "read",
+      "type": "boolean",
+      "default": "false",
+      "notnull": false
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "color",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "timestamp",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_itens",
+      "name": "agenda_event_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "cliente_nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_itens",
+      "name": "servicos",
+      "type": "jsonb",
+      "default": "'[]'::jsonb",
+      "notnull": true
+    },
+    {
+      "table": "caixa_itens",
+      "name": "valor_total",
+      "type": "numeric",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "table": "caixa_itens",
+      "name": "status_caixa",
+      "type": "text",
+      "default": "'pendente'::text",
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "forma_pagamento",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "profissional",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "pago_em",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "token_publico",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "desconto",
+      "type": "numeric",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "cliente_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "comanda_fisica",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "email_cliente",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "sessao_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_itens",
+      "name": "origem",
+      "type": "text",
+      "default": "'agenda'::text",
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "profissional_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "servico_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "valor_proprio",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "taxa_comissao",
+      "type": "numeric(5,2)",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "tipo_comissao",
+      "type": "text",
+      "default": "'percentual'::text",
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "profissional_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "dia_semana",
+      "type": "integer",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "dia_nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "ativo",
+      "type": "boolean",
+      "default": "true",
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "hora_inicio",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "hora_fim",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "intervalo_inicio",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "intervalo_fim",
+      "type": "time without time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "user_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "acao",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "detalhes",
+      "type": "jsonb",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "ip_address",
+      "type": "inet",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "logs_seguranca",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "comissoes",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "evento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "profissional_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "servico_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "valor_servico",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "comissoes",
+      "name": "taxa_aplicada",
+      "type": "numeric(5,2)",
+      "default": "0",
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "tipo_comissao",
+      "type": "text",
+      "default": "'percentual'::text",
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "valor_comissao",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "comissoes",
+      "name": "status",
+      "type": "text",
+      "default": "'pendente'::text",
+      "notnull": false
+    },
+    {
+      "table": "comissoes",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": false
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "sessao_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "caixa_item_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "tipo",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "forma_pagamento",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "valor",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "descricao",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "operador_nome",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "id",
+      "type": "uuid",
+      "default": "gen_random_uuid()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "estabelecimento_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "operador_id",
+      "type": "uuid",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "operador_nome",
+      "type": "text",
+      "default": null,
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "data_abertura",
+      "type": "timestamp with time zone",
+      "default": "now()",
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "data_fechamento",
+      "type": "timestamp with time zone",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "saldo_inicial",
+      "type": "numeric(10,2)",
+      "default": "0",
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "saldo_final_informado",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "saldo_final_calculado",
+      "type": "numeric(10,2)",
+      "default": null,
+      "notnull": false
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "status",
+      "type": "text",
+      "default": "'aberto'::text",
+      "notnull": true
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "observacoes",
+      "type": "text",
+      "default": null,
+      "notnull": false
+    }
+  ],
+  "enums": [
+    {
+      "name": "user_role",
+      "value": "dono"
+    },
+    {
+      "name": "user_role",
+      "value": "secretaria"
+    },
+    {
+      "name": "user_role",
+      "value": "financeiro"
+    },
+    {
+      "name": "user_role",
+      "value": "esteticista"
+    },
+    {
+      "name": "user_role",
+      "value": "barbeiro"
+    },
+    {
+      "name": "user_role",
+      "value": "operacional"
+    }
+  ],
+  "functions": [
+    "CREATE OR REPLACE FUNCTION public.get_profissionais_by_estab(p_estab_id uuid)\n RETURNS SETOF profissionais\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.profissionais WHERE estabelecimento_id = p_estab_id AND ativo = true ORDER BY nome;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_profissional_disponibilidades_by_estab(p_estab_id uuid)\n RETURNS SETOF profissional_disponibilidades\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.profissional_disponibilidades WHERE estabelecimento_id = p_estab_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_profissional_servicos_by_estab(p_estab_id uuid)\n RETURNS SETOF profissional_servicos\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.profissional_servicos WHERE estabelecimento_id = p_estab_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_public_estabelecimento_by_slug(p_slug text)\n RETURNS SETOF estabelecimento\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.estabelecimento WHERE slug = p_slug LIMIT 1;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_clientes_by_estab(p_estab_id uuid)\n RETURNS SETOF clientes\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query select * from public.clientes where estabelecimento_id = p_estab_id order by created_at desc;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_servicos_by_estab(p_estab_id uuid)\n RETURNS SETOF servicos\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.servicos WHERE estabelecimento_id = p_estab_id AND ativo = true ORDER BY titulo;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_public_events_by_day(p_estab_id uuid, p_date_start timestamp without time zone, p_date_end timestamp without time zone)\n RETURNS SETOF agenda_events\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.agenda_events \n  WHERE estabelecimento_id = p_estab_id \n    AND start >= p_date_start \n    AND start <= p_date_end;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_profissional_controles(p_id uuid, p_changes jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    UPDATE profissionais \n    SET \n        role = COALESCE((p_changes->>'role')::user_role, role),\n        ativo = COALESCE((p_changes->>'ativo')::boolean, ativo),\n        auth_type = COALESCE((p_changes->>'auth_type'), auth_type),\n        comissao_padrao = COALESCE((p_changes->>'comissao_padrao')::numeric, comissao_padrao),\n        valor_hora = COALESCE((p_changes->>'valor_hora')::numeric, valor_hora),\n        cor_agenda = COALESCE((p_changes->>'cor_agenda'), cor_agenda),\n        especialidade = COALESCE((p_changes->>'especialidade'), especialidade),\n        data_contratacao = COALESCE((p_changes->>'data_contratacao')::date, data_contratacao),\n        foto_url = COALESCE((p_changes->>'foto_url'), foto_url)\n    WHERE id = p_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_meus_estabelecimentos()\n RETURNS SETOF uuid\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    RETURN QUERY \n        SELECT id FROM public.estabelecimento WHERE user_id = auth.uid()\n        UNION\n        SELECT estabelecimento_id FROM public.profissionais WHERE user_id = auth.uid();\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_aniversariantes_do_mes(p_estab_id uuid)\n RETURNS SETOF clientes\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  RETURN QUERY \n  SELECT * FROM public.clientes \n  WHERE estabelecimento_id = p_estab_id \n  AND EXTRACT(MONTH FROM nascimento) = EXTRACT(MONTH FROM CURRENT_DATE)\n  ORDER BY EXTRACT(DAY FROM nascimento) ASC;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_platform_tenants()\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_requester_email text;\n  v_result json;\nBEGIN\n  -- Security check: Ensure only the platform owner can execute this\n  SELECT auth.email() INTO v_requester_email;\n  IF v_requester_email != 'joao.almeida_msbrasil@outlook.com' THEN\n    RAISE EXCEPTION 'Unauthorized: Only the platform owner can access tenants list.';\n  END IF;\n\n  SELECT json_agg(\n    json_build_object(\n      'id', id,\n      'nome', nome,\n      'slug', COALESCE(slug, 'sem-url'),\n      'status', CASE WHEN active THEN 'active' ELSE 'blocked' END,\n      'plano', 'pro', -- mock for now\n      'created_at', created_at\n    ) ORDER BY created_at DESC\n  ) INTO v_result\n  FROM public.estabelecimento;\n\n  RETURN COALESCE(v_result, '[]'::json);\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_visitas_fidelidade_pendentes(p_cliente_id uuid)\n RETURNS integer\n LANGUAGE plpgsql\nAS $function$\nDECLARE\n  v_count integer;\nBEGIN\n  SELECT COUNT(*) INTO v_count \n  FROM public.agenda_events \n  WHERE cliente_id = p_cliente_id \n  AND status = 'concluido' \n  AND fidelidade_resgatada = false;\n  \n  RETURN v_count;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.resgatar_fidelidade_cliente(p_cliente_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  UPDATE public.agenda_events\n  SET fidelidade_resgatada = true\n  WHERE cliente_id = p_cliente_id\n  AND status = 'concluido'\n  AND fidelidade_resgatada = false;\n  \n  RETURN true;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_event_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF agenda_events\n LANGUAGE plpgsql\nAS $function$\nbegin\n  update public.agenda_events \n  set \n    title = coalesce(p_changes->>'title', title),\n    start = coalesce((p_changes->>'start')::timestamptz, start),\n    \"end\" = coalesce((p_changes->>'end')::timestamptz, \"end\"),\n    status = coalesce(p_changes->>'status', status),\n    observacoes = coalesce(p_changes->>'observacoes', observacoes),\n    profissional_id = coalesce((p_changes->>'profissional_id')::uuid, profissional_id),\n    metadata = coalesce(p_changes->'metadata', metadata)\n  where id = p_id;\n  return query select * from public.agenda_events where id = p_id;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.cleanup_agent_mailbox()\n RETURNS void\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n  DELETE FROM public.agent_mailbox\r\n  WHERE \"timestamp\" < now() - INTERVAL '7 days'\r\n    AND read = true;\r\nEND;\r\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_updated_at_column()\n RETURNS trigger\n LANGUAGE plpgsql\nAS $function$\r\nBEGIN\r\n    NEW.updated_at = now();\r\n    RETURN NEW;\r\nEND;\r\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.increment_usage_quota(p_estabelecimento_id uuid, p_resource text, p_month text)\n RETURNS integer\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\nDECLARE\r\n  v_count integer;\r\nBEGIN\r\n  INSERT INTO public.usage_quotas (estabelecimento_id, resource, month, count)\r\n  VALUES (p_estabelecimento_id, p_resource, p_month, 1)\r\n  ON CONFLICT (estabelecimento_id, resource, month)\r\n  DO UPDATE SET\r\n    count      = usage_quotas.count + 1,\r\n    updated_at = now()\r\n  RETURNING count INTO v_count;\r\n  RETURN v_count;\r\nEND;\r\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.upsert_chatbot_robot_safe(p_data jsonb)\n RETURNS jsonb\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_estab_id uuid;\n  v_result jsonb;\nBEGIN\n  v_estab_id := (p_data->>'estabelecimento_id')::uuid;\n  \n  -- Verify ownership\n  IF NOT EXISTS (SELECT 1 FROM estabelecimento WHERE id = v_estab_id AND user_id = auth.uid()) THEN\n    RAISE EXCEPTION 'Não autorizado';\n  END IF;\n\n  IF (p_data->>'id') IS NOT NULL THEN\n    UPDATE chatbot_robots SET\n      name = p_data->>'name',\n      role = p_data->>'role',\n      avatar = p_data->>'avatar',\n      tone = p_data->>'tone',\n      active = (p_data->>'active')::boolean\n    WHERE id = (p_data->>'id')::uuid AND estabelecimento_id = v_estab_id\n    RETURNING to_jsonb(chatbot_robots.*) INTO v_result;\n  ELSE\n    INSERT INTO chatbot_robots (estabelecimento_id, name, role, avatar, tone, active)\n    VALUES (v_estab_id, p_data->>'name', p_data->>'role', p_data->>'avatar', p_data->>'tone', (p_data->>'active')::boolean)\n    RETURNING to_jsonb(chatbot_robots.*) INTO v_result;\n  END IF;\n\n  RETURN v_result;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_chatbot_robots(p_estab_id uuid)\n RETURNS SETOF chatbot_robots\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n  IF NOT EXISTS (SELECT 1 FROM estabelecimento WHERE id = p_estab_id AND user_id = auth.uid()) THEN\n    RAISE EXCEPTION 'Não autorizado';\n  END IF;\n  \n  RETURN QUERY SELECT * FROM chatbot_robots WHERE estabelecimento_id = p_estab_id ORDER BY created_at DESC;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_horarios_by_estab(p_estab_id uuid)\n RETURNS SETOF horarios_funcionamento\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'public'\nAS $function$\nBEGIN\n  RETURN QUERY SELECT * FROM public.horarios_funcionamento WHERE estabelecimento_id = p_estab_id ORDER BY dia_semana;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_agenda_events_by_estab(p_estab_id uuid)\n RETURNS SETOF agenda_events\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    RETURN QUERY\n    SELECT *\n    FROM agenda_events\n    WHERE estabelecimento_id = p_estab_id\n    ORDER BY start ASC;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_or_create_establishment_key(p_establishment_id uuid)\n RETURNS text\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\r\ndeclare\r\n  v_key text;\r\n  v_user_id uuid;\r\nbegin\r\n  select user_id into v_user_id from public.estabelecimento where id = p_establishment_id;\r\n  if v_user_id is null or v_user_id != auth.uid() then\r\n    raise exception 'Acesso negado: Você não tem permissão para gerenciar as chaves deste estabelecimento.';\r\n  end if;\r\n  select decrypted_secret into v_key from vault.decrypted_secrets where name = 'est_key_' || p_establishment_id;\r\n  \r\n  if v_key is null then\r\n    v_key := encode(extensions.gen_random_bytes(32), 'base64');\r\n    -- Usar a função oficial para criar segredos (Resolve erro de permissão _crypto_aead_det_encrypt)\r\n    perform vault.create_secret(v_key, 'est_key_' || p_establishment_id, 'Chave mestra Zero-Knowledge para o estabelecimento ' || p_establishment_id);\r\n  end if;\r\n  return v_key;\r\nend;\r\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_estabelecimento_by_user(p_user_id uuid)\n RETURNS SETOF estabelecimento\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query select * from public.estabelecimento where user_id = p_user_id;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.check_onboarding_status(p_user_id uuid)\n RETURNS TABLE(id uuid, onboarding_completo boolean)\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query \r\n  select e.id, e.onboarding_completo \r\n  from public.estabelecimento e \r\n  where e.user_id = p_user_id \r\n  order by e.created_at desc \r\n  limit 1;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_servicos_by_ids(p_ids uuid[])\n RETURNS SETOF servicos\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query \r\n  select * from public.servicos \r\n  where id = any(p_ids);\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_servico_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF servicos\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update public.servicos \r\n  set \r\n    titulo = coalesce(p_changes->>'titulo', titulo),\r\n    descricao = coalesce(p_changes->>'descricao', descricao),\r\n    preco = coalesce((p_changes->>'preco')::numeric, preco),\r\n    duracao_min = coalesce((p_changes->>'duracao_min')::integer, duracao_min),\r\n    emoji = coalesce(p_changes->>'emoji', emoji),\r\n    ativo = coalesce((p_changes->>'ativo')::boolean, ativo)\r\n  where id = p_id;\r\n  return query select * from public.servicos where id = p_id;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.delete_servico_safe(p_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update public.servicos set ativo = false where id = p_id;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.delete_event_safe(p_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  delete from public.agenda_events where id = p_id;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_profissional_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF profissionais\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update public.profissionais \r\n  set \r\n    nome = coalesce(p_changes->>'nome', nome),\r\n    cargo = coalesce(p_changes->>'cargo', cargo),\r\n    bio = coalesce(p_changes->>'bio', bio),\r\n    email = coalesce(p_changes->>'email', email),\r\n    telefone = coalesce(p_changes->>'telefone', telefone),\r\n    ativo = coalesce((p_changes->>'ativo')::boolean, ativo)\r\n  where id = p_id;\r\n  return query select * from public.profissionais where id = p_id;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.delete_profissional_safe(p_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  delete from public.profissionais where id = p_id;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.save_disponibilidades_safe(p_prof_id uuid, p_rows jsonb)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\nbegin\n  delete from public.profissional_disponibilidades where profissional_id = p_prof_id;\n  insert into public.profissional_disponibilidades (profissional_id, estabelecimento_id, dia_semana, dia_nome, ativo, hora_inicio, hora_fim, intervalo_inicio, intervalo_fim)\n  select \n    p_prof_id, \n    (r->>'estabelecimento_id')::uuid,\n    (r->>'dia_semana')::integer,\n    r->>'dia_nome',\n    (r->>'ativo')::boolean,\n    (r->>'hora_inicio')::time,\n    (r->>'hora_fim')::time,\n    (r->>'intervalo_inicio')::time,\n    (r->>'intervalo_fim')::time\n  from jsonb_array_elements(p_rows) r;\n  return true;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_servico_safe(p_data jsonb)\n RETURNS servicos\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_res public.servicos;\r\nbegin\r\n  insert into public.servicos (estabelecimento_id, titulo, descricao, preco, duracao_min, emoji, ativo)\r\n  values (\r\n    (p_data->>'estabelecimento_id')::uuid,\r\n    p_data->>'titulo',\r\n    p_data->>'descricao',\r\n    (p_data->>'preco')::numeric,\r\n    (p_data->>'duracao_min')::integer,\r\n    p_data->>'emoji',\r\n    coalesce((p_data->>'ativo')::boolean, true)\r\n  ) returning * into v_res;\r\n  return v_res;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_profissional_safe(p_data jsonb)\n RETURNS profissionais\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_res public.profissionais;\r\nbegin\r\n  insert into public.profissionais (estabelecimento_id, nome, cargo, bio, email, telefone, ativo)\r\n  values (\r\n    (p_data->>'estabelecimento_id')::uuid,\r\n    p_data->>'nome',\r\n    p_data->>'cargo',\r\n    p_data->>'bio',\r\n    p_data->>'email',\r\n    p_data->>'telefone',\r\n    coalesce((p_data->>'ativo')::boolean, true)\r\n  ) returning * into v_res;\r\n  return v_res;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.vincular_servico_profissional_safe(p_data jsonb)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  insert into public.profissional_servicos (profissional_id, servico_id, estabelecimento_id, valor_proprio)\r\n  values (\r\n    (p_data->>'profissional_id')::uuid,\r\n    (p_data->>'servico_id')::uuid,\r\n    (p_data->>'estabelecimento_id')::uuid,\r\n    (p_data->>'valor_proprio')::numeric\r\n  )\r\n  on conflict (profissional_id, servico_id)\r\n  do update set valor_proprio = (p_data->>'valor_proprio')::numeric;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_usage_quotas_by_estab(p_estab_id uuid, p_month text)\n RETURNS SETOF usage_quotas\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query select * from public.usage_quotas where estabelecimento_id = p_estab_id and month = p_month;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_chatbot_integrations_by_estab(p_estab_id uuid)\n RETURNS SETOF chatbot_integrations\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query select * from public.chatbot_integrations where establishment_id = p_estab_id;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.upsert_chatbot_integration_safe(p_data jsonb)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  insert into public.chatbot_integrations (establishment_id, channel, status, config, updated_at)\r\n  values (\r\n    (p_data->>'establishment_id')::uuid,\r\n    (p_data->>'channel'),\r\n    (p_data->>'status'),\r\n    (p_data->>'config')::jsonb,\r\n    now()\r\n  )\r\n  on conflict (establishment_id, channel)\r\n  do update set \r\n    status = excluded.status,\r\n    config = excluded.config,\r\n    updated_at = now();\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_agent_mailbox_by_to(p_to text)\n RETURNS SETOF agent_mailbox\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  return query select * from public.agent_mailbox where \"to\" = p_to order by timestamp asc;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_mailbox_message_safe(p_data jsonb)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  insert into public.agent_mailbox (\"from\", \"to\", text, read, timestamp, color)\r\n  values (\r\n    p_data->>'from',\r\n    p_data->>'to',\r\n    p_data->>'text',\r\n    false,\r\n    now(),\r\n    p_data->>'color'\r\n  );\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.mark_mailbox_read_safe(p_id uuid)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update public.agent_mailbox set read = true where id = p_id;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_agent_tasks_safe(p_status text, p_estab_id uuid DEFAULT NULL::uuid)\n RETURNS SETOF agent_tasks\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  if p_estab_id is not null then\r\n    return query select * from public.agent_tasks where status = p_status and (estabelecimento_id = p_estab_id or estabelecimento_id is null) order by created_at asc;\r\n  else\r\n    return query select * from public.agent_tasks where status = p_status order by created_at asc;\r\n  end if;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_agent_task_safe(p_data jsonb)\n RETURNS agent_tasks\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_res public.agent_tasks;\r\nbegin\r\n  insert into public.agent_tasks (type, payload, status, estabelecimento_id, created_at)\r\n  values (\r\n    p_data->>'type',\r\n    (p_data->>'payload')::jsonb,\r\n    'pending',\r\n    (p_data->>'estabelecimento_id')::uuid,\r\n    now()\r\n  ) returning * into v_res;\r\n  return v_res;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.claim_agent_task_atomic(p_id uuid, p_agent_id text)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\ndeclare\r\n  v_count integer;\r\nbegin\r\n  update public.agent_tasks \r\n  set status = 'running', agent_owner = p_agent_id \r\n  where id = p_id and status = 'pending' and agent_owner is null;\r\n  get diagnostics v_count = row_count;\r\n  return v_count > 0;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.complete_agent_task_safe(p_id uuid, p_status text)\n RETURNS boolean\n LANGUAGE plpgsql\nAS $function$\r\nbegin\r\n  update public.agent_tasks \r\n  set status = p_status, completed_at = now() \r\n  where id = p_id;\r\n  return true;\r\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_estabelecimento_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF estabelecimento\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  v_new_slug text;\nbegin\n  -- If slug is provided, use it. If not, and current slug is null, generate from name\n  v_new_slug := p_changes->>'slug';\n  \n  update public.estabelecimento \n  set \n    nome = coalesce(p_changes->>'nome', nome),\n    cnpj = coalesce(p_changes->>'cnpj', cnpj),\n    segmento = coalesce(p_changes->>'segmento', segmento),\n    volume_clientes = coalesce(p_changes->>'volume_clientes', volume_clientes),\n    slug = coalesce(\n      v_new_slug, \n      case when slug is null then lower(trim(regexp_replace(coalesce(p_changes->>'nome', nome), '[^a-zA-Z0-9]+', '-', 'g'))) else slug end\n    ),\n    descricao = coalesce(p_changes->>'descricao', descricao),\n    telefone = coalesce(p_changes->>'telefone', telefone),\n    endereco = coalesce(p_changes->>'endereco', endereco),\n    endereco_completo = coalesce(p_changes->>'endereco_completo', endereco_completo),\n    cidade = coalesce(p_changes->>'cidade', cidade),\n    logo_url = coalesce(p_changes->>'logo_url', logo_url),\n    cor_primaria = coalesce(p_changes->>'cor_primaria', cor_primaria),\n    onboarding_completo = coalesce((p_changes->>'onboarding_completo')::boolean, onboarding_completo)\n  where id = p_id;\n  \n  return query select * from public.estabelecimento where id = p_id;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_horario_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF horarios_funcionamento\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  UPDATE public.horarios_funcionamento \n  SET \n    abre = coalesce((p_changes->>'abre')::time, abre),\n    fecha = coalesce((p_changes->>'fecha')::time, fecha),\n    ativo = coalesce((p_changes->>'ativo')::boolean, ativo)\n  WHERE id = p_id;\n  RETURN QUERY SELECT * FROM public.horarios_funcionamento WHERE id = p_id;\nEND; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.update_cliente_safe(p_id uuid, p_changes jsonb)\n RETURNS SETOF clientes\n LANGUAGE plpgsql\nAS $function$\nbegin\n  update public.clientes \n  set \n    nome = coalesce(p_changes->>'nome', nome),\n    telefone = coalesce(p_changes->>'telefone', telefone),\n    email = coalesce(p_changes->>'email', email),\n    nascimento = coalesce((p_changes->>'nascimento')::date, nascimento),\n    observacoes = coalesce(p_changes->>'observacoes', observacoes),\n    ultima_visita = coalesce((p_changes->>'ultima_visita')::timestamptz, ultima_visita),\n    faltas = coalesce((p_changes->>'faltas')::integer, faltas),\n    metadata = coalesce(p_changes->'metadata', metadata)\n  where id = p_id;\n  return query select * from public.clientes where id = p_id;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_estabelecimento_safe(p_data jsonb)\n RETURNS estabelecimento\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  v_res public.estabelecimento;\n  v_slug text;\nbegin\n  -- Generate slug if not provided or null\n  v_slug := coalesce(p_data->>'slug', '');\n  if v_slug = '' then\n    v_slug := lower(trim(regexp_replace(p_data->>'nome', '[^a-zA-Z0-9]+', '-', 'g')));\n  end if;\n\n  insert into public.estabelecimento (\n    nome, cnpj, segmento, volume_clientes, slug, descricao, telefone, \n    endereco, endereco_completo, cidade, logo_url, cor_primaria, \n    onboarding_completo, user_id\n  )\n  values (\n    p_data->>'nome',\n    p_data->>'cnpj',\n    p_data->>'segmento',\n    p_data->>'volume_clientes',\n    v_slug,\n    p_data->>'descricao',\n    p_data->>'telefone',\n    p_data->>'endereco',\n    p_data->>'endereco_completo',\n    p_data->>'cidade',\n    p_data->>'logo_url',\n    p_data->>'cor_primaria',\n    coalesce((p_data->>'onboarding_completo')::boolean, false),\n    (p_data->>'user_id')::uuid\n  ) returning * into v_res;\n  \n  return v_res;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_agenda_event_safe(p_data jsonb)\n RETURNS agenda_events\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  v_res public.agenda_events;\nbegin\n  insert into public.agenda_events (\n    estabelecimento_id, title, start, \"end\", \"backgroundColor\", \"allDay\", \n    cliente_id, servico_id, profissional_id, status, observacoes, metadata\n  )\n  values (\n    (p_data->>'estabelecimento_id')::uuid,\n    p_data->>'title',\n    (p_data->>'start')::timestamptz,\n    (p_data->>'end')::timestamptz,\n    coalesce(p_data->>'backgroundColor', '#1a73e8'),\n    coalesce((p_data->>'allDay')::boolean, false),\n    (p_data->>'cliente_id')::uuid,\n    (p_data->>'servico_id')::uuid,\n    (p_data->>'profissional_id')::uuid,\n    coalesce(p_data->>'status', 'pendente'),\n    p_data->>'observacoes',\n    coalesce(p_data->'metadata', '{}'::jsonb)\n  ) returning * into v_res;\n  return v_res;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_analytics_consolidado(p_estabelecimento_id uuid, p_inicio timestamp without time zone, p_fim timestamp without time zone)\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n    v_faturamento DECIMAL;\n    v_total_agendamentos INT;\nBEGIN\n    SELECT COALESCE(SUM(valor), 0), COUNT(*)\n    INTO v_faturamento, v_total_agendamentos\n    FROM agenda_events\n    WHERE estabelecimento_id = p_estabelecimento_id\n      AND start_time BETWEEN p_inicio AND p_fim\n      AND status = 'concluido';\n\n    RETURN json_build_object(\n        'faturamento_total', v_faturamento,\n        'agendamentos_totais', v_total_agendamentos\n    );\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.remover_profissional_servico(p_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    DELETE FROM profissional_servicos WHERE id = p_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.set_onboarding_concluido(p_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    UPDATE profissionais \n    SET onboarding_concluido = true, \n        primeiro_acesso = false,\n        updated_at = now()\n    WHERE id = p_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.upsert_profissional_completo(p_id uuid, p_estabelecimento_id uuid, p_nome text, p_email text, p_phone text, p_cargo text, p_foto_url text, p_servicos_ids uuid[])\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n    v_prof_id UUID;\nBEGIN\n    INSERT INTO profissionais (id, estabelecimento_id, nome, email, phone, cargo, foto_url, updated_at)\n    VALUES (COALESCE(p_id, gen_random_uuid()), p_estabelecimento_id, p_nome, p_email, p_phone, p_cargo, p_foto_url, now())\n    ON CONFLICT (id) DO UPDATE SET\n        nome = EXCLUDED.nome,\n        email = EXCLUDED.email,\n        phone = EXCLUDED.phone,\n        cargo = EXCLUDED.cargo,\n        foto_url = EXCLUDED.foto_url,\n        updated_at = now()\n    RETURNING id INTO v_prof_id;\n\n    DELETE FROM profissional_servicos WHERE profissional_id = v_prof_id;\n    INSERT INTO profissional_servicos (profissional_id, servico_id)\n    SELECT v_prof_id, UNNEST(p_servicos_ids);\n\n    RETURN json_build_object('id', v_prof_id, 'status', 'success');\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.log_security_event(p_user_id uuid, p_estabelecimento_id uuid, p_acao text, p_detalhes jsonb)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    INSERT INTO logs_seguranca (user_id, estabelecimento_id, acao, detalhes, ip_address, created_at)\n    VALUES (p_user_id, p_estabelecimento_id, p_acao, p_detalhes, inet_client_addr(), now());\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_user_profile_safe(p_user_id uuid DEFAULT NULL::uuid, p_email text DEFAULT NULL::text, p_phone text DEFAULT NULL::text)\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n    v_estab RECORD;\n    v_prof RECORD;\nBEGIN\n    -- 1. Tentar encontrar como DONO do estabelecimento\n    IF p_user_id IS NOT NULL THEN\n        SELECT id, nome, 'dono' as role, onboarding_completo as onboarding_concluido, false as primeiro_acesso\n        INTO v_estab\n        FROM estabelecimento\n        WHERE user_id = p_user_id\n        LIMIT 1;\n\n        IF v_estab.id IS NOT NULL THEN\n            RETURN json_build_object(\n                'id', v_estab.id,\n                'nome', v_estab.nome,\n                'role', 'dono',\n                'email', p_email,\n                'primeiro_acesso', false,\n                'onboarding_concluido', v_estab.onboarding_concluido\n            );\n        END IF;\n    END IF;\n\n    -- 2. Tentar encontrar como PROFISSIONAL/EQUIPE\n    SELECT id, nome, role, email, telefone, primeiro_acesso, onboarding_concluido\n    INTO v_prof\n    FROM profissionais\n    WHERE (p_user_id IS NOT NULL AND user_id = p_user_id) -- Modificado para buscar por user_id, não pelo id do profissional\n       OR (p_email IS NOT NULL AND email = p_email)\n       OR (p_phone IS NOT NULL AND telefone = p_phone)\n    LIMIT 1;\n\n    IF v_prof.id IS NOT NULL THEN\n        RETURN json_build_object(\n            'id', v_prof.id,\n            'nome', v_prof.nome,\n            'role', v_prof.role,\n            'email', v_prof.email,\n            'primeiro_acesso', v_prof.primeiro_acesso,\n            'onboarding_concluido', v_prof.onboarding_concluido\n        );\n    ELSE\n        RETURN NULL;\n    END IF;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.link_user_to_professional(p_professional_id uuid, p_user_id uuid)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n    UPDATE public.profissionais \n    SET user_id = p_user_id, updated_at = now()\n    WHERE id = p_professional_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_platform_metrics()\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_total_tenants int;\n  v_active_tenants int;\n  v_total_appointments int;\n  v_total_mrr numeric;\n  v_ai_messages int;\n  v_requester_email text;\nBEGIN\n  -- Security check: Ensure only the platform owner can execute this\n  SELECT auth.email() INTO v_requester_email;\n  IF v_requester_email != 'joao.almeida_msbrasil@outlook.com' THEN\n    RAISE EXCEPTION 'Unauthorized: Only the platform owner can access global metrics.';\n  END IF;\n\n  -- 1. Tenants metrics\n  SELECT count(*) INTO v_total_tenants FROM public.estabelecimento;\n  SELECT count(*) INTO v_active_tenants FROM public.estabelecimento WHERE active = true;\n\n  -- 2. Appointments metrics\n  SELECT count(*) INTO v_total_appointments FROM public.agenda_events;\n\n  -- 3. Mock MRR based on active tenants (e.g., 97 BRL per tenant on average)\n  v_total_mrr := v_active_tenants * 97.00;\n\n  -- 4. Mock AI messages\n  v_ai_messages := v_total_appointments * 3;\n\n  RETURN json_build_object(\n    'totalTenants', COALESCE(v_total_tenants, 0),\n    'activeTenants', COALESCE(v_active_tenants, 0),\n    'totalMrr', v_total_mrr,\n    'totalAppointments', COALESCE(v_total_appointments, 0),\n    'aiMessagesSent', v_ai_messages\n  );\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.search_public_estabelecimentos(p_query text DEFAULT NULL::text)\n RETURNS SETOF estabelecimento\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nBEGIN\n  IF p_query IS NULL OR p_query = '' THEN\n    RETURN QUERY \n      SELECT * FROM public.estabelecimento \n      WHERE slug IS NOT NULL AND slug != ''\n      LIMIT 12;\n  ELSE\n    RETURN QUERY \n      SELECT * FROM public.estabelecimento \n      WHERE (nome ILIKE '%' || p_query || '%' OR descricao ILIKE '%' || p_query || '%')\n        AND slug IS NOT NULL AND slug != ''\n      LIMIT 20;\n  END IF;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.create_cliente_safe(p_data jsonb)\n RETURNS clientes\n LANGUAGE plpgsql\nAS $function$\ndeclare\n  v_res public.clientes;\nbegin\n  insert into public.clientes (estabelecimento_id, nome, telefone, email, nascimento, observacoes, ultima_visita, faltas, metadata)\n  values (\n    (p_data->>'estabelecimento_id')::uuid,\n    p_data->>'nome',\n    p_data->>'telefone',\n    p_data->>'email',\n    (p_data->>'nascimento')::date,\n    p_data->>'observacoes',\n    (p_data->>'ultima_visita')::timestamp,\n    coalesce((p_data->>'faltas')::integer, 0),\n    coalesce(p_data->'metadata', '{}'::jsonb)\n  ) returning * into v_res;\n  return v_res;\nend; $function$\n",
+    "CREATE OR REPLACE FUNCTION public.add_produto_comanda(p_caixa_id uuid, p_produto_id uuid, p_quantidade integer)\n RETURNS void\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_produto record;\nBEGIN\n  SELECT * INTO v_produto FROM public.produtos WHERE id = p_produto_id AND ativo = true;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Produto não encontrado ou inativo.';\n  END IF;\n\n  IF v_produto.estoque < p_quantidade THEN\n    RAISE EXCEPTION 'Estoque insuficiente para o produto %.', v_produto.nome;\n  END IF;\n\n  -- Insere na comanda\n  INSERT INTO public.caixa_produtos (caixa_item_id, produto_id, quantidade, valor_unitario)\n  VALUES (p_caixa_id, p_produto_id, p_quantidade, v_produto.preco);\n\n  -- Atualiza o total da comanda\n  UPDATE public.caixa_itens \n  SET valor_total = valor_total + (v_produto.preco * p_quantidade)\n  WHERE id = p_caixa_id;\n\n  -- Dá baixa no estoque\n  UPDATE public.produtos\n  SET estoque = estoque - p_quantidade\n  WHERE id = p_produto_id;\nEND;\n$function$\n",
+    "CREATE OR REPLACE FUNCTION public.get_comanda_digital(p_token uuid)\n RETURNS json\n LANGUAGE plpgsql\n SECURITY DEFINER\nAS $function$\nDECLARE\n  v_comanda record;\n  v_produtos json;\n  v_estabelecimento record;\nBEGIN\n  -- Busca a comanda pelo token\n  SELECT * INTO v_comanda FROM public.caixa_itens WHERE token_publico = p_token LIMIT 1;\n  IF NOT FOUND THEN\n    RAISE EXCEPTION 'Comanda não encontrada';\n  END IF;\n\n  -- Busca detalhes dos produtos associados\n  SELECT COALESCE(json_agg(\n    json_build_object(\n      'id', cp.id,\n      'produto_id', p.id,\n      'nome', p.nome,\n      'quantidade', cp.quantidade,\n      'valor_unitario', cp.valor_unitario,\n      'subtotal', cp.quantidade * cp.valor_unitario\n    )\n  ), '[]') INTO v_produtos\n  FROM public.caixa_produtos cp\n  JOIN public.produtos p ON p.id = cp.produto_id\n  WHERE cp.caixa_item_id = v_comanda.id;\n\n  -- Busca estabelecimento\n  SELECT * INTO v_estabelecimento FROM public.estabelecimento WHERE id = v_comanda.estabelecimento_id;\n\n  RETURN json_build_object(\n    'id', v_comanda.id,\n    'cliente_nome', v_comanda.cliente_nome,\n    'servicos', v_comanda.servicos,\n    'produtos', v_produtos,\n    'valor_total', v_comanda.valor_total,\n    'desconto', v_comanda.desconto,\n    'status_caixa', v_comanda.status_caixa,\n    'created_at', v_comanda.created_at,\n    'estabelecimento', json_build_object(\n      'nome', v_estabelecimento.nome,\n      'logo_url', v_estabelecimento.logo_url\n    )\n  );\nEND;\n$function$\n"
+  ],
+  "policies": [
+    {
+      "table": "produtos",
+      "name": "Acesso Produtos RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "profissionais",
+      "name": "Acesso Profissionais RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "profissionais",
+      "name": "Owners see their professionals",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(EXISTS ( SELECT 1\n   FROM estabelecimento e\n  WHERE ((e.id = profissionais.estabelecimento_id) AND (e.user_id = auth.uid()))))",
+      "check": null
+    },
+    {
+      "table": "profissionais",
+      "name": "Professional manages own profile",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(user_id = auth.uid())",
+      "check": null
+    },
+    {
+      "table": "profissional_otps",
+      "name": "Permitir exclusão de OTP usado",
+      "cmd": "DELETE",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "profissional_otps",
+      "name": "Permitir inserção de OTP",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "profissional_otps",
+      "name": "Permitir leitura de OTP por pro_id",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "servicos",
+      "name": "Acesso Servicos RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "servicos",
+      "name": "Isolamento de Serviços por Dono",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(EXISTS ( SELECT 1\n   FROM estabelecimento\n  WHERE ((estabelecimento.id = servicos.estabelecimento_id) AND (estabelecimento.user_id = auth.uid()))))",
+      "check": null
+    },
+    {
+      "table": "sys_cargos",
+      "name": "Leitura pública sys_cargos",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "sys_segmentos",
+      "name": "Leitura pública sys_segmentos",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "marketing_posts",
+      "name": "Estabelecimentos gerenciam seus posts de marketing",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT estabelecimento.id\n   FROM estabelecimento\n  WHERE (estabelecimento.user_id = auth.uid())))",
+      "check": null
+    },
+    {
+      "table": "caixa_produtos",
+      "name": "Acesso Caixa Produtos RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(caixa_item_id IN ( SELECT caixa_itens.id\n   FROM caixa_itens\n  WHERE (caixa_itens.estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n           FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))))",
+      "check": null
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "Acesso Horarios RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "horarios_funcionamento",
+      "name": "Isolamento de Horários por Dono",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(EXISTS ( SELECT 1\n   FROM estabelecimento\n  WHERE ((estabelecimento.id = horarios_funcionamento.estabelecimento_id) AND (estabelecimento.user_id = auth.uid()))))",
+      "check": null
+    },
+    {
+      "table": "chatbot_robots",
+      "name": "Estabelecimentos gerenciam seus proprios robos",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT e.id\n   FROM estabelecimento e\n  WHERE (e.user_id = auth.uid())))",
+      "check": null
+    },
+    {
+      "table": "chatbot_messages",
+      "name": "Estabelecimentos podem ler as proprias conversas",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT e.id\n   FROM estabelecimento e\n  WHERE (e.user_id = auth.uid())))",
+      "check": null
+    },
+    {
+      "table": "price_alerts",
+      "name": "Allow public insert",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "price_alerts",
+      "name": "Allow public read",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "workflows",
+      "name": "Autenticado gerencia workflows",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "check": null
+    },
+    {
+      "table": "estabelecimento",
+      "name": "Acesso Estabelecimento RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "estabelecimento",
+      "name": "Dono cria seu estabelecimento",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "(user_id = auth.uid())"
+    },
+    {
+      "table": "fila_espera",
+      "name": "Painel acessa sua fila",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT estabelecimento.id\n   FROM estabelecimento\n  WHERE (estabelecimento.user_id = auth.uid())))",
+      "check": null
+    },
+    {
+      "table": "agenda_events",
+      "name": "Acesso Agenda RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "agenda_events",
+      "name": "Owners see all establishment events",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(EXISTS ( SELECT 1\n   FROM estabelecimento e\n  WHERE ((e.id = agenda_events.estabelecimento_id) AND (e.user_id = auth.uid()))))",
+      "check": null
+    },
+    {
+      "table": "agenda_events",
+      "name": "Professional sees own appointments",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(profissional_id IN ( SELECT p.id\n   FROM profissionais p\n  WHERE (p.user_id = auth.uid())))",
+      "check": null
+    },
+    {
+      "table": "clientes",
+      "name": "Acesso Clientes RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "agent_tasks",
+      "name": "Autenticado gerencia agent_tasks",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "check": "(auth.role() = 'authenticated'::text)"
+    },
+    {
+      "table": "products",
+      "name": "Allow public inserts on products",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "products",
+      "name": "Allow public read access on products",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "products",
+      "name": "Allow public updates on products",
+      "cmd": "UPDATE",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "usage_quotas",
+      "name": "Autenticado gerencia suas quotas",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT estabelecimento.id\n   FROM estabelecimento\n  WHERE (estabelecimento.user_id = auth.uid())))",
+      "check": "(estabelecimento_id IN ( SELECT estabelecimento.id\n   FROM estabelecimento\n  WHERE (estabelecimento.user_id = auth.uid())))"
+    },
+    {
+      "table": "chatbot_integrations",
+      "name": "Establishments can manage their own chatbot integrations",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(EXISTS ( SELECT 1\n   FROM estabelecimento\n  WHERE ((estabelecimento.id = chatbot_integrations.establishment_id) AND (estabelecimento.user_id = auth.uid()))))",
+      "check": null
+    },
+    {
+      "table": "agent_mailbox",
+      "name": "Autenticado gerencia mailbox",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "check": "(auth.role() = 'authenticated'::text)"
+    },
+    {
+      "table": "caixa_itens",
+      "name": "Acesso Caixa Itens RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n   FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))",
+      "check": null
+    },
+    {
+      "table": "profissional_servicos",
+      "name": "Acesso Prof Servs RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(profissional_id IN ( SELECT profissionais.id\n   FROM profissionais\n  WHERE (profissionais.estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n           FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))))",
+      "check": null
+    },
+    {
+      "table": "sessions",
+      "name": "Allow service role inserts on sessions",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": "true"
+    },
+    {
+      "table": "sessions",
+      "name": "Enable insert for anonymous sessions",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "sessions",
+      "name": "Enable read for anonymous sessions",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "intent_events",
+      "name": "Allow service role inserts on intent_events",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": "true"
+    },
+    {
+      "table": "intent_events",
+      "name": "Enable insert for intent events",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "intent_events",
+      "name": "Enable read for intent events",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "profissional_disponibilidades",
+      "name": "Acesso Prof Disp RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(profissional_id IN ( SELECT profissionais.id\n   FROM profissionais\n  WHERE (profissionais.estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n           FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))))",
+      "check": null
+    },
+    {
+      "table": "donations_catalog",
+      "name": "Enable read for approved donations",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "(approved = true)",
+      "check": null
+    },
+    {
+      "table": "comissoes",
+      "name": "Acesso Comissoes RBAC",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(profissional_id IN ( SELECT profissionais.id\n   FROM profissionais\n  WHERE (profissionais.estabelecimento_id IN ( SELECT get_meus_estabelecimentos.get_meus_estabelecimentos\n           FROM get_meus_estabelecimentos() get_meus_estabelecimentos(get_meus_estabelecimentos)))))",
+      "check": null
+    },
+    {
+      "table": "comissoes",
+      "name": "Acesso as comissoes",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(auth.role() = 'authenticated'::text)",
+      "check": null
+    },
+    {
+      "table": "leaderboard",
+      "name": "Allow anonymous insert on leaderboard",
+      "cmd": "INSERT",
+      "roles": [
+        "public"
+      ],
+      "qual": null,
+      "check": "true"
+    },
+    {
+      "table": "leaderboard",
+      "name": "Allow anonymous select on leaderboard",
+      "cmd": "SELECT",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "leaderboard",
+      "name": "Allow anonymous update on leaderboard",
+      "cmd": "UPDATE",
+      "roles": [
+        "public"
+      ],
+      "qual": "true",
+      "check": null
+    },
+    {
+      "table": "caixa_movimentacoes",
+      "name": "admin_all_caixa_movs",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "(sessao_id IN ( SELECT caixa_sessoes.id\n   FROM caixa_sessoes\n  WHERE (caixa_sessoes.estabelecimento_id IN ( SELECT estabelecimento.id\n           FROM estabelecimento\n          WHERE (estabelecimento.user_id = auth.uid())))))",
+      "check": null
+    },
+    {
+      "table": "caixa_sessoes",
+      "name": "admin_all_caixa_sessoes",
+      "cmd": "ALL",
+      "roles": [
+        "public"
+      ],
+      "qual": "((estabelecimento_id IN ( SELECT estabelecimento.id\n   FROM estabelecimento\n  WHERE (estabelecimento.user_id = auth.uid()))) OR (auth.uid() = operador_id))",
+      "check": null
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+name: Pay Express regression checks
+
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'src/app/pages/admin-caixa/**'
+      - 'src/app/pages/comanda/**'
+      - 'src/app/components/pay-qr/**'
+      - 'src/app/utils/vendor/qrcodegen.ts'
+      - 'server/connect.ts'
+      - 'tests/pay-express.test.ts'
+      - '.github/workflows/pay-express.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  payment-safety:
+    name: Payment safety and Angular build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: Verify Stripe integration unit tests
+        run: npm run test:api
+      - name: Typecheck payment backend
+        run: npm run typecheck:api
+      - name: Build Angular production bundle
+        run: npm run build

@@ -1,0 +1,200 @@
+<p *ngIf="busy() && !state()" class="loading" role="status">
+  <i class="pi pi-spin pi-spinner" aria-hidden="true"></i> Conferindo sua conta…
+</p>
+<div *ngIf="error()" class="feedback error" role="alert">
+  <strong>Não foi possível concluir</strong>
+  <p>{{ error() }}</p>
+  <button type="button" (click)="load()" [disabled]="busy()">Tentar novamente</button>
+</div>
+<ng-container *ngIf="state() as s">
+  <section class="account" aria-labelledby="account-title">
+    <div class="account-heading">
+      <div class="provider-icon" aria-hidden="true"><i class="pi pi-credit-card"></i></div>
+      <div>
+        <h2 id="account-title">Sua conta de recebimentos</h2>
+        <span class="status" [class.active]="s.enabled && s.ready">{{ accountStatus }}</span>
+      </div>
+    </div>
+    <p class="intro" *ngIf="!s.linked">
+      Ofereça pagamento por link na comanda. Seu cliente paga com cartão e a Stripe processa os
+      repasses para o banco cadastrado.
+    </p>
+    <ol class="journey" aria-label="Etapas da vinculação">
+      <li [class.current]="step === 1" [class.done]="step > 1"><span>1</span>Vincular conta</li>
+      <li [class.current]="step === 2" [class.done]="step > 2"><span>2</span>Validar cadastro</li>
+      <li [class.current]="step === 3"><span>3</span>Ativar recebimentos</li>
+    </ol>
+    <p *ngIf="!s.available" class="feedback">
+      Os recebimentos online ainda não estão disponíveis. Você pode continuar registrando pagamentos
+      presenciais no caixa.
+    </p>
+    <p *ngIf="s.linked && !s.ready" class="feedback">
+      A Stripe ainda precisa validar seu cadastro. Confira os dados e documentos solicitados para
+      liberar cobranças e repasses.
+    </p>
+    <div class="pricing">
+      <div>
+        <span>Taxa AgendaAI</span><strong>R$ 1,00 <small>por pagamento confirmado</small></strong>
+      </div>
+      <p>
+        Além das tarifas de processamento da Stripe. Descontada do estabelecimento, sem aumentar o
+        preço para seu cliente.
+      </p>
+    </div>
+    <label class="consent" *ngIf="s.available && (!s.linked || !s.ready || !s.enabled)"
+      ><input type="checkbox" [(ngModel)]="accepted" [disabled]="busy()" /><span
+        >Aceito a taxa de R$ 1,00, as tarifas Stripe e os prazos de disponibilização e repasse da
+        conta. <a href="/termos" target="_blank" rel="noopener">Consultar termos</a></span
+      ></label
+    >
+    <div class="actions">
+      <button
+        class="primary"
+        *ngIf="s.available && (!s.linked || !s.ready)"
+        type="button"
+        (click)="onboard()"
+        [disabled]="busy() || !accepted"
+      >
+        {{
+          busy() ? 'Aguarde…' : s.linked ? 'Continuar cadastro na Stripe' : 'Vincular conta Stripe'
+        }}
+        <i class="pi pi-arrow-up-right" aria-hidden="true"></i>
+      </button>
+      <button
+        class="primary"
+        *ngIf="s.linked && s.ready && !s.enabled"
+        type="button"
+        (click)="toggle()"
+        [disabled]="busy() || !s.available || !accepted"
+      >
+        {{ busy() ? 'Ativando…' : 'Ativar recebimentos online' }}
+      </button>
+      <a
+        class="secondary"
+        *ngIf="s.linked"
+        href="https://dashboard.stripe.com"
+        target="_blank"
+        rel="noopener"
+        >Abrir painel Stripe <i class="pi pi-external-link" aria-hidden="true"></i
+      ></a>
+      <button class="text" type="button" (click)="load()" [disabled]="busy()">
+        {{ busy() ? 'Conferindo…' : 'Atualizar situação' }}
+      </button>
+    </div>
+    <a *ngIf="onboardingUrl()" class="resume" [href]="onboardingUrl()"
+      >Continuar cadastro seguro na Stripe →</a
+    >
+    <p class="security">
+      <i class="pi pi-shield" aria-hidden="true"></i> Dados bancários e documentos são informados
+      diretamente à Stripe.
+    </p>
+  </section>
+  <section class="transfers" *ngIf="s.linked" aria-labelledby="payout-title">
+    <div>
+      <h2 id="payout-title">Repasses para seu banco</h2>
+      <p>
+        A Stripe processa os repasses conforme saldo disponível e calendário da conta. Gerencie o
+        banco e os prazos no painel Stripe.
+      </p>
+      <p *ngIf="s.schedule === 'manual'" class="feedback">
+        Seu calendário está manual. Altere para repasses automáticos no painel Stripe.
+      </p>
+    </div>
+    <div class="payout-list">
+      <p *ngIf="!s.payouts?.length">Nenhum repasse disponível para exibição.</p>
+      <article *ngFor="let p of s.payouts">
+        <div>
+          <strong>{{ p.amountCents / 100 | currency: 'BRL' }}</strong
+          ><span>{{ label(p.status) }}</span>
+        </div>
+        <small
+          >{{ p.status === 'paid' ? 'Data informada' : 'Previsão' }}:
+          {{ p.arrivalDate * 1000 | date: 'dd/MM/yyyy' }}</small
+        >
+      </article>
+    </div>
+  </section>
+  <section class="transactions" *ngIf="s.linked" aria-labelledby="transactions-title">
+    <h2 id="transactions-title">Cobranças recentes</h2>
+    <p class="muted">
+      Últimas {{ s.orders?.length || 0 }} cobranças. Os totais abaixo correspondem somente a esta
+      lista.
+    </p>
+    <div class="totals">
+      <div>
+        <span>Confirmado após reembolsos</span><strong>{{ recentPaid | currency: 'BRL' }}</strong>
+      </div>
+      <div>
+        <span>Aguardando pagamento</span><strong>{{ recentPending | currency: 'BRL' }}</strong>
+      </div>
+    </div>
+    <p class="empty" *ngIf="!s.orders?.length">
+      As cobranças aparecerão aqui quando você escolher pagamento online ao concluir uma venda no
+      caixa.
+    </p>
+    <article class="transaction" *ngFor="let o of s.orders">
+      <div class="transaction-top">
+        <div>
+          <strong>{{ o.amount_cents / 100 | currency: 'BRL' }}</strong
+          ><small>{{ o.created_at | date: 'dd/MM/yyyy HH:mm' }}</small>
+        </div>
+        <span class="status" [class.active]="o.status === 'paid'">{{ label(o.status) }}</span>
+      </div>
+      <p class="muted">
+        Taxa AgendaAI: {{ o.fee_cents / 100 | currency: 'BRL'
+        }}<span *ngIf="o.net_cents != null">
+          · Líquido original: {{ o.net_cents / 100 | currency: 'BRL' }}</span
+        >
+      </p>
+      <p *ngIf="o.refunded_cents">Reembolsado: {{ o.refunded_cents / 100 | currency: 'BRL' }}</p>
+      <div class="actions">
+        <button
+          type="button"
+          class="text"
+          *ngIf="o.status === 'pending'"
+          (click)="operate('cancel', o)"
+          [disabled]="busy()"
+        >
+          Cancelar cobrança pendente</button
+        ><button
+          type="button"
+          class="text"
+          *ngIf="o.status === 'paid'"
+          (click)="refundId.set(o.id)"
+          [disabled]="busy()"
+        >
+          Reembolsar
+        </button>
+      </div>
+      <div class="refund" *ngIf="refundId() === o.id">
+        <p>
+          Devolver {{ o.amount_cents / 100 | currency: 'BRL' }} ao cliente e a taxa AgendaAI? As
+          tarifas de processamento seguem as regras da Stripe. Revise comissões já pagas e devolução
+          de produtos.
+        </p>
+        <div class="actions">
+          <button type="button" class="danger" (click)="operate('refund', o)" [disabled]="busy()">
+            Confirmar reembolso total</button
+          ><button type="button" (click)="refundId.set('')" [disabled]="busy()">Voltar</button>
+        </div>
+      </div>
+    </article>
+  </section>
+  <section class="manual">
+    <div>
+      <h2>Receber no estabelecimento</h2>
+      <p>
+        Prefere usar seu Pix ou sua maquininha? Receba diretamente e registre o pagamento no caixa.
+      </p>
+    </div>
+    <button
+      class="secondary"
+      type="button"
+      *ngIf="s.enabled"
+      (click)="toggle()"
+      [disabled]="busy()"
+    >
+      Usar somente recebimentos presenciais</button
+    ><span class="status" *ngIf="!s.enabled">Disponível no caixa</span>
+  </section>
+</ng-container>

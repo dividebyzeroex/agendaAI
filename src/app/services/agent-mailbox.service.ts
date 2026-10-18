@@ -1,3 +1,4 @@
+import { SupabaseService } from './supabase.service';
 /**
  * src/app/services/agent-mailbox.service.ts
  *
@@ -61,11 +62,8 @@ export class AgentMailboxService implements OnDestroy {
   private _activeTasks$ = new BehaviorSubject<AgentTask[]>([]);
   activeTasks$ = this._activeTasks$.asObservable();
 
-  constructor() {
-    this.supabase = createClient(
-      environment.supabaseUrl,
-      environment.supabaseKey,
-    );
+  constructor(shared: SupabaseService) {
+    this.supabase = shared.client;
   }
 
   /** Escreve uma mensagem na mailbox de um agente via RPC (POST). */
@@ -121,9 +119,9 @@ export class AgentMailboxService implements OnDestroy {
    */
   /** Claim atômico via RPC (POST) — 100% thread-safe e blindado. */
   async claimTask(taskId: string, agentId: string): Promise<boolean> {
-    const { data, error } = await this.supabase.rpc('claim_agent_task_atomic', { 
-      p_id: taskId, 
-      p_agent_id: agentId 
+    const { data, error } = await this.supabase.rpc('claim_agent_task_atomic', {
+      p_id: taskId,
+      p_agent_id: agentId
     });
     return !error && !!data;
   }
@@ -136,9 +134,9 @@ export class AgentMailboxService implements OnDestroy {
   /** Lista tarefas pendentes (sem dono). */
   /** Lista tarefas pendentes sem expor IDs na URL (POST via RPC). */
   async getPendingTasks(estabelecimentoId?: string): Promise<AgentTask[]> {
-    const { data } = await this.supabase.rpc('get_agent_tasks_safe', { 
-      p_status: 'pending', 
-      p_estab_id: estabelecimentoId || null 
+    const { data } = await this.supabase.rpc('get_agent_tasks_safe', {
+      p_status: 'pending',
+      p_estab_id: estabelecimentoId || null
     });
     return (data as AgentTask[]) ?? [];
   }

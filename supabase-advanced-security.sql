@@ -222,7 +222,8 @@ begin
     cidade = coalesce(p_changes->>'cidade', cidade),
     logo_url = coalesce(p_changes->>'logo_url', logo_url),
     cor_primaria = coalesce(p_changes->>'cor_primaria', cor_primaria),
-    onboarding_completo = coalesce((p_changes->>'onboarding_completo')::boolean, onboarding_completo)
+    onboarding_completo = coalesce((p_changes->>'onboarding_completo')::boolean, onboarding_completo),
+    config_fidelidade = coalesce(p_changes->'config_fidelidade', config_fidelidade)
   where id = p_id;
   return query select * from public.estabelecimento where id = p_id;
 end; $$;
@@ -254,8 +255,8 @@ returns setof public.horarios_funcionamento language plpgsql security invoker as
 begin
   update public.horarios_funcionamento 
   set 
-    abre = coalesce(p_changes->>'abre', abre),
-    fecha = coalesce(p_changes->>'fecha', fecha),
+    abre = coalesce((p_changes->>'abre')::time, abre),
+    fecha = coalesce((p_changes->>'fecha')::time, fecha),
     ativo = coalesce((p_changes->>'ativo')::boolean, ativo)
   where id = p_id;
   return query select * from public.horarios_funcionamento where id = p_id;

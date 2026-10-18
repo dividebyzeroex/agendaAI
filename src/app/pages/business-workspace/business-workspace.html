@@ -1,0 +1,1036 @@
+<div class="ag-page business-page">
+  <a class="back" routerLink="/admin/agenda" *ngIf="module === 'fila'">← Voltar à agenda</a>
+  <header>
+    <div>
+      <h1>{{ config.title }}</h1>
+      <p>{{ config.description }}</p>
+    </div>
+    <button type="button" (click)="load()" [disabled]="loading || busy">Atualizar</button>
+  </header>
+  <p role="status" *ngIf="loading">Conferindo registros…</p>
+  <p class="feedback error" role="alert" *ngIf="error">{{ error }}</p>
+  <p class="feedback" role="status" *ngIf="notice">{{ notice }}</p>
+  <a *ngIf="receiptUrl" [href]="receiptUrl" target="_blank" rel="noopener"
+    >Abrir comanda para pagamento →</a
+  >
+  <ng-container *ngIf="!loading && loaded" [ngSwitch]="module">
+    <ng-container *ngSwitchCase="'fila'">
+      <div class="toolbar">
+        <strong>{{ waiting.length }} aguardando</strong
+        ><button class="primary" type="button" (click)="start('queue')">Adicionar à fila</button>
+      </div>
+      <form
+        *ngIf="editing"
+        (ngSubmit)="act('queue-add', form, 'Cliente adicionado à fila.')"
+        class="editor"
+      >
+        <h2>Quem chegou?</h2>
+        <div class="fields">
+          <label
+            >Cliente<select name="customer" [(ngModel)]="form.cliente_id" required>
+              <option [ngValue]="undefined">Selecione</option>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Serviço<select name="service" [(ngModel)]="form.servico_id" required>
+              <option *ngFor="let s of services" [value]="s.id">{{ s.titulo }}</option>
+            </select></label
+          ><label
+            >Preferência de profissional<select
+              name="pro"
+              [(ngModel)]="form.preferred_professional"
+            >
+              <option value="">Próximo disponível no rodízio</option>
+              <option *ngFor="let p of professionals" [value]="p.id">{{ p.nome }}</option>
+            </select></label
+          >
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Adicionar</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button
+          ><a routerLink="/admin/clientes/novo">Cadastrar cliente</a>
+        </div>
+      </form>
+      <p class="empty" *ngIf="!waiting.length">
+        Fila vazia. Adicione o cliente quando ele chegar ao estabelecimento.
+      </p>
+      <article *ngFor="let row of waiting; let i = index" class="row">
+        <div>
+          <strong>{{ i + 1 }}. {{ customer(row.cliente_id) }}</strong>
+          <p>
+            {{ service(row.servico_id) }} · chegou às {{ row.created_at | date: 'HH:mm' : '-0300' }}
+          </p>
+          <small *ngIf="row.preferred_professional"
+            >Prefere {{ professional(row.preferred_professional) }}</small
+          >
+        </div>
+        <div class="actions">
+          <button
+            class="primary"
+            type="button"
+            (click)="
+              act(
+                'queue-call',
+                { id: row.id },
+                'Cliente chamado. O atendimento foi criado na agenda.'
+              )
+            "
+            [disabled]="busy"
+          >
+            Chamar</button
+          ><button
+            type="button"
+            (click)="act('queue-cancel', { id: row.id }, 'Cliente removido da fila.')"
+            [disabled]="busy"
+          >
+            Remover
+          </button>
+        </div>
+      </article>
+      <section>
+        <h2>Profissionais no rodízio</h2>
+        <p>
+          Ative quem está disponível para os encaixes. O próximo é quem está há mais tempo sem ser
+          chamado.
+        </p>
+        <article class="row" *ngFor="let pro of professionals">
+          <div>
+            <strong>{{ pro.nome }}</strong>
+            <p>
+              {{
+                rotation(pro.id)?.last_called
+                  ? 'Última chamada: ' +
+                    (rotation(pro.id).last_called | date: 'dd/MM HH:mm' : '-0300')
+                  : 'Ainda não chamado'
+              }}
+            </p>
+          </div>
+          <button
+            type="button"
+            [disabled]="busy"
+            (click)="
+              act('rotation', { professional_id: pro.id, active: !rotation(pro.id)?.active })
+            "
+          >
+            {{ rotation(pro.id)?.active ? 'Pausar' : 'Entrar no rodízio' }}
+          </button>
+        </article>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'fidelizacao'">
+      <p><a routerLink="/admin/clube">Configurar adesões e renovação mensal automática →</a></p>
+      <div class="toolbar">
+        <button class="primary" type="button" (click)="start('sell')">Vender pacote ou ciclo</button
+        ><button type="button" (click)="start('package')">Criar pacote</button
+        ><button type="button" (click)="start('membership')">Criar plano do clube</button>
+      </div>
+      <form
+        class="editor"
+        *ngIf="editing && form.type !== 'sell'"
+        (ngSubmit)="act('bundle-save', form, 'Oferta criada.')"
+      >
+        <h2>{{ form.kind === 'membership' ? 'Novo plano de clube' : 'Novo pacote' }}</h2>
+        <div class="fields">
+          <label
+            >Nome<input
+              name="title"
+              [(ngModel)]="form.title"
+              required
+              maxlength="120"
+              placeholder="Ex.: 4 cortes no mês" /></label
+          ><label
+            >Serviço incluído<select name="service" [(ngModel)]="form.servico_id" required>
+              <option *ngFor="let s of services" [value]="s.id">{{ s.titulo }}</option>
+            </select></label
+          ><label
+            >Sessões<input
+              type="number"
+              name="sessions"
+              [(ngModel)]="form.sessions"
+              min="1"
+              max="100"
+              required /></label
+          ><label
+            >Preço total (R$)<input
+              type="number"
+              name="price"
+              [(ngModel)]="form.price"
+              min="1.01"
+              max="100000"
+              step=".01"
+              required /></label
+          ><label
+            >Validade (dias)<input
+              type="number"
+              name="validity"
+              [(ngModel)]="form.validity_days"
+              min="1"
+              max="730"
+              required
+          /></label>
+        </div>
+        <p class="hint" *ngIf="form.kind === 'membership'">
+          Cada ciclo avulso libera o número de sessões definido e é registrado no caixa. Para adesão
+          e débito mensal automático, use a área Clube recorrente.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Criar oferta</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'sell'"
+        (ngSubmit)="
+          act(
+            'pass-sell',
+            form,
+            form.payment_method === 'online'
+              ? 'Cobrança criada. O saldo será liberado quando o pagamento for confirmado.'
+              : 'Venda registrada e sessões liberadas.'
+          )
+        "
+      >
+        <h2>Registrar venda</h2>
+        <div class="fields">
+          <label
+            >Cliente<select name="client" [(ngModel)]="form.cliente_id" required>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Pacote ou plano<select name="bundle" [(ngModel)]="form.bundle_id" required>
+              <ng-container *ngFor="let b of data['service_bundles']"
+                ><option *ngIf="b.active" [value]="b.id">
+                  {{ b.title }} · {{ b.price | currency: 'BRL' }}
+                </option></ng-container
+              >
+            </select></label
+          ><label
+            >Recebimento<select name="method" [(ngModel)]="form.payment_method">
+              <option value="pix">Pix recebido no local</option>
+              <option value="dinheiro">Dinheiro recebido</option>
+              <option value="cartao_credito">Crédito recebido na maquininha</option>
+              <option value="cartao_debito">Débito recebido na maquininha</option>
+              <option value="online">Gerar link Stripe</option>
+            </select></label
+          >
+        </div>
+        <p class="hint">
+          Para pagamentos presenciais, confirme que recebeu antes de salvar. Sessões são consumidas
+          ao concluir o atendimento, pela opção “Usar pacote”.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">
+            {{
+              form.payment_method === 'online'
+                ? 'Gerar cobrança'
+                : 'Confirmar recebimento e liberar sessões'
+            }}</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <h2>Saldo dos clientes</h2>
+      <p class="empty" *ngIf="!passes.length">
+        Os pacotes vendidos aparecerão aqui com saldo e validade.
+      </p>
+      <article class="row" *ngFor="let p of passes">
+        <div>
+          <strong>{{ customer(p.cliente_id) }} · {{ p.title }}</strong>
+          <p>
+            {{ p.remaining }} de {{ p.sessions }} sessões · {{ label(passState(p))
+            }}<span *ngIf="p.expires_at">
+              · vence {{ p.expires_at | date: 'dd/MM/yyyy' : '-0300' }}</span
+            >
+          </p>
+          <small>{{ label(p.kind) }} · {{ p.price | currency: 'BRL' }}</small>
+        </div>
+      </article>
+      <section>
+        <h2>Ofertas do negócio</h2>
+        <article class="row" *ngFor="let b of data['service_bundles']">
+          <div>
+            <strong>{{ b.title }}</strong>
+            <p>
+              {{ b.sessions }} sessões de {{ service(b.servico_id) }} ·
+              {{ b.price | currency: 'BRL' }} · {{ b.validity_days }} dias
+            </p>
+          </div>
+          <button
+            type="button"
+            (click)="act('bundle-toggle', { id: b.id, active: !b.active })"
+            [disabled]="busy"
+          >
+            {{ b.active ? 'Pausar oferta' : 'Reativar oferta' }}
+          </button>
+        </article>
+      </section>
+      <section *ngIf="data['pass_redemptions']?.length">
+        <h2>Sessões utilizadas</h2>
+        <article class="row" *ngFor="let r of data['pass_redemptions']">
+          <div>
+            <a [routerLink]="['/admin/agenda/atendimento', r.event_id]">Abrir atendimento</a>
+            <p>
+              {{ r.created_at | date: 'dd/MM HH:mm' : '-0300' }} ·
+              {{ r.reversed_at ? 'Consumo estornado' : 'Sessão consumida' }}
+            </p>
+          </div>
+          <button
+            type="button"
+            *ngIf="!r.reversed_at"
+            (click)="
+              act(
+                'pass-undo',
+                { id: r.id },
+                'Sessão devolvida ao pacote. O atendimento pode ser recebido novamente.'
+              )
+            "
+            [disabled]="busy"
+          >
+            Estornar sessão
+          </button>
+        </article>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'satisfacao'">
+      <div class="metrics">
+        <div>
+          <span>Nota média</span
+          ><strong
+            >{{ responses.length ? (average | number: '1.1-1') : '—' }}<small> / 5</small></strong
+          >
+        </div>
+        <div>
+          <span>Respostas</span><strong>{{ responses.length }} / {{ feedback.length }}</strong>
+        </div>
+        <div>
+          <span>Taxa de resposta</span
+          ><strong
+            >{{
+              feedback.length
+                ? ((100 * responses.length) / feedback.length | number: '1.0-0')
+                : '0'
+            }}%</strong
+          >
+        </div>
+      </div>
+      <p class="hint">
+        Base: convites gerados nesta lista. O cliente tem 30 dias para responder; comentários ficam
+        visíveis somente ao dono.
+      </p>
+      <p>
+        Após concluir um atendimento, use “Pedir avaliação” na página do atendimento para
+        compartilhar o link.
+      </p>
+      <article class="row" *ngFor="let r of feedback">
+        <div>
+          <strong>{{ r.submitted_at ? r.rating + ' / 5' : 'Aguardando resposta' }}</strong>
+          <p>{{ r.created_at | date: 'dd/MM/yyyy' : '-0300' }}</p>
+          <p *ngIf="r.comment">{{ r.comment }}</p>
+        </div>
+        <div class="actions">
+          <button type="button" (click)="copy('/avaliar/' + r.token)">Copiar link</button
+          ><a [routerLink]="['/admin/agenda/atendimento', r.event_id]">Ver atendimento</a>
+        </div>
+      </article>
+      <p class="empty" *ngIf="!feedback.length">Ainda não há convites de avaliação.</p>
+    </ng-container>
+    <ng-container *ngSwitchCase="'financeiro'">
+      <p><a routerLink="/admin/resultados">Abrir DRE, projeção e conciliação →</a></p>
+      <div class="metrics">
+        <div>
+          <span>A pagar em aberto</span><strong>{{ financial.pay | currency: 'BRL' }}</strong>
+        </div>
+        <div>
+          <span>A receber em aberto</span><strong>{{ financial.receive | currency: 'BRL' }}</strong>
+        </div>
+        <div>
+          <span>Resultado dos títulos no mês</span
+          ><strong>{{ financial.result | currency: 'BRL' }}</strong>
+        </div>
+      </div>
+      <p class="hint">
+        Resultado por competência dos títulos desta lista, inclusive não baixados. Não inclui
+        automaticamente vendas do Caixa, estoque ou tarifas; não é o lucro completo do
+        estabelecimento. As baixas aqui não movimentam o caixa físico. Não duplique recebimentos já
+        registrados no Caixa.
+      </p>
+      <div class="toolbar">
+        <button class="primary" type="button" (click)="start('payable')">Nova conta a pagar</button
+        ><button type="button" (click)="start('receivable')">Nova conta a receber</button>
+      </div>
+      <form
+        class="editor"
+        *ngIf="editing && form.type !== 'settle'"
+        (ngSubmit)="act('title-add', form, 'Conta registrada.')"
+      >
+        <h2>{{ form.kind === 'payable' ? 'Conta a pagar' : 'Conta a receber' }}</h2>
+        <div class="fields">
+          <label
+            >Descrição<input
+              name="description"
+              [(ngModel)]="form.description"
+              required
+              maxlength="200" /></label
+          ><label
+            >Categoria<input
+              name="category"
+              [(ngModel)]="form.category"
+              required
+              maxlength="100"
+              placeholder="Aluguel, fornecedor…" /></label
+          ><label
+            >Valor (R$)<input
+              type="number"
+              name="amount"
+              [(ngModel)]="form.amount"
+              min=".01"
+              step=".01"
+              required /></label
+          ><label
+            >Vencimento<input type="date" name="due" [(ngModel)]="form.due_date" required /></label
+          ><label
+            >Competência<input type="date" name="competence" [(ngModel)]="form.competence" required
+          /></label>
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar conta</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'settle'"
+        (ngSubmit)="act('title-settle', form, 'Baixa registrada no título.')"
+      >
+        <h2>Registrar pagamento ou recebimento</h2>
+        <div class="fields">
+          <label
+            >Valor da baixa (R$)<input
+              name="amount"
+              type="number"
+              [(ngModel)]="form.amount"
+              min=".01"
+              [max]="form.max"
+              step=".01"
+              required /></label
+          ><label
+            >Forma<select name="method" [(ngModel)]="form.payment_method">
+              <option value="pix">Pix</option>
+              <option value="transferencia">Transferência</option>
+              <option value="dinheiro">Dinheiro</option>
+              <option value="cartao_credito">Cartão</option>
+            </select></label
+          >
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Confirmar baixa</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <article class="row" *ngFor="let r of data['financial_titles']">
+        <div>
+          <strong>{{ r.description }}</strong>
+          <p>
+            {{ label(r.kind) }} · {{ r.category }} · vence
+            {{ r.due_date | date: 'dd/MM/yyyy' : 'UTC' }}
+          </p>
+          <span [class.warning]="overdue(r)">{{
+            r.cancelled
+              ? 'Cancelado'
+              : outstanding(r) === 0
+                ? 'Quitado'
+                : overdue(r)
+                  ? 'Vencido'
+                  : 'Em aberto'
+          }}</span>
+          <p>Saldo {{ outstanding(r) | currency: 'BRL' }} de {{ r.amount | currency: 'BRL' }}</p>
+        </div>
+        <div class="actions" *ngIf="!r.cancelled && outstanding(r) > 0">
+          <button
+            type="button"
+            (click)="
+              editing = true;
+              form = {
+                type: 'settle',
+                id: r.id,
+                amount: outstanding(r),
+                max: outstanding(r),
+                payment_method: 'pix',
+              }
+            "
+          >
+            Registrar baixa</button
+          ><button
+            type="button"
+            *ngIf="r.settled == 0"
+            (click)="act('title-cancel', { id: r.id }, 'Conta cancelada.')"
+            [disabled]="busy"
+          >
+            Cancelar conta
+          </button>
+        </div>
+      </article>
+      <p class="empty" *ngIf="!data['financial_titles']?.length">
+        Cadastre seus compromissos para acompanhar vencimentos.
+      </p>
+    </ng-container>
+    <ng-container *ngSwitchCase="'estoque'">
+      <div class="metrics">
+        <div>
+          <span>Itens para repor</span><strong>{{ lowStock.length }}</strong>
+        </div>
+        <div>
+          <span>Valor do estoque a custo</span><strong>{{ stockValue | currency: 'BRL' }}</strong>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="primary" type="button" (click)="start('stock')">Registrar movimento</button
+        ><button type="button" (click)="start('supply')">Insumos por serviço</button
+        ><a routerLink="/admin/produtos">Catálogo de produtos →</a>
+      </div>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'stock'"
+        (ngSubmit)="act('stock-move', form, 'Movimento registrado.')"
+      >
+        <h2>Entrada ou saída de estoque</h2>
+        <div class="fields">
+          <label
+            >Produto<select name="product" [(ngModel)]="form.produto_id" required>
+              <option *ngFor="let p of products" [value]="p.id">{{ p.nome }}</option>
+            </select></label
+          ><label
+            >Quantidade (+ entrada / − saída)<input
+              type="number"
+              name="quantity"
+              [(ngModel)]="form.quantity"
+              required
+              step="1" /></label
+          ><label
+            >Custo unitário da entrada (R$)<input
+              type="number"
+              name="cost"
+              [(ngModel)]="form.unit_cost"
+              min="0"
+              step=".01" /></label
+          ><label
+            >Motivo<input name="reason" [(ngModel)]="form.reason" required maxlength="200"
+          /></label>
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar movimento</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'config'"
+        (ngSubmit)="act('stock-config', form, 'Parâmetros atualizados.')"
+      >
+        <h2>{{ form.name }}</h2>
+        <div class="fields">
+          <label
+            >Estoque mínimo<input
+              name="minimum"
+              type="number"
+              [(ngModel)]="form.minimum_stock"
+              min="0"
+              required /></label
+          ><label
+            >Custo unitário (R$)<input
+              name="cost"
+              type="number"
+              [(ngModel)]="form.unit_cost"
+              min="0"
+              step=".01"
+              required
+          /></label>
+        </div>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'supply'"
+        (ngSubmit)="act('supply-save', form, 'Consumo por serviço configurado.')"
+      >
+        <h2>Ficha de insumos</h2>
+        <div class="fields">
+          <label
+            >Serviço<select name="service" [(ngModel)]="form.servico_id" required>
+              <option *ngFor="let s of services" [value]="s.id">{{ s.titulo }}</option>
+            </select></label
+          ><label
+            >Produto<select name="product" [(ngModel)]="form.produto_id" required>
+              <option *ngFor="let p of products" [value]="p.id">{{ p.nome }}</option>
+            </select></label
+          ><label
+            >Unidades utilizadas<input
+              name="quantity"
+              type="number"
+              [(ngModel)]="form.quantity"
+              min="1"
+              max="1000"
+              required
+          /></label>
+        </div>
+        <p class="hint">
+          Após concluir o atendimento, registre o consumo na página do atendimento. A baixa não se
+          repete se você clicar novamente.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar regra</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <article class="row" *ngFor="let p of products">
+        <div>
+          <strong>{{ p.nome }}</strong>
+          <p>
+            {{ p.estoque }} unidades · mínimo {{ p.minimum_stock }} · custo
+            {{ p.unit_cost | currency: 'BRL' }}
+          </p>
+          <span class="warning" *ngIf="p.estoque <= p.minimum_stock">Precisa de reposição</span>
+        </div>
+        <button
+          type="button"
+          (click)="
+            editing = true;
+            form = {
+              type: 'config',
+              id: p.id,
+              name: p.nome,
+              minimum_stock: p.minimum_stock,
+              unit_cost: p.unit_cost,
+            }
+          "
+        >
+          Ajustar parâmetros
+        </button>
+      </article>
+      <section>
+        <h2>Últimos movimentos de gestão</h2>
+        <p class="hint">
+          Vendas de produtos continuam registradas no Caixa; esta lista mostra entradas, saídas e
+          consumo lançados neste módulo.
+        </p>
+        <article class="row" *ngFor="let r of data['inventory_movements']">
+          <div>
+            <strong>{{ r.reason }}</strong>
+            <p>
+              {{ r.quantity > 0 ? '+' : '' }}{{ r.quantity }} unidades ·
+              {{ r.created_at | date: 'dd/MM HH:mm' : '-0300' }}
+            </p>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'fichas'">
+      <div class="toolbar">
+        <button class="primary" type="button" (click)="start('intake')">Preencher ficha</button
+        ><button type="button" (click)="start('template')">Criar modelo</button
+        ><button type="button" (click)="start('pet')">Cadastrar pet</button>
+      </div>
+      <form class="editor" *ngIf="editing && form.type === 'template'" (ngSubmit)="saveTemplate()">
+        <h2>Novo modelo de ficha</h2>
+        <label>Nome<input name="title" [(ngModel)]="form.title" required maxlength="120" /></label
+        ><label
+          >Perguntas (uma por linha)<textarea
+            name="questions"
+            [(ngModel)]="form.questions"
+            required
+            rows="6"
+            placeholder="Preferências de atendimento?&#10;Quais cuidados devemos observar?"
+          ></textarea>
+        </label>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Criar modelo</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'pet'"
+        (ngSubmit)="act('pet-add', form, 'Pet vinculado ao tutor.')"
+      >
+        <h2>Novo pet</h2>
+        <div class="fields">
+          <label
+            >Tutor<select name="client" [(ngModel)]="form.cliente_id" required>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Nome do pet<input
+              name="name"
+              [(ngModel)]="form.name"
+              required
+              maxlength="100" /></label
+          ><label
+            >Espécie<input
+              name="species"
+              [(ngModel)]="form.species"
+              required
+              maxlength="100" /></label
+          ><label>Raça<input name="breed" [(ngModel)]="form.breed" maxlength="100" /></label>
+        </div>
+        <label
+          >Cuidados<textarea name="notes" [(ngModel)]="form.notes" maxlength="2000"></textarea>
+        </label>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Cadastrar</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form class="editor" *ngIf="editing && form.type === 'intake'" (ngSubmit)="saveIntake()">
+        <h2>Preencher ficha</h2>
+        <div class="fields">
+          <label
+            >Cliente ou tutor<select
+              name="client"
+              [(ngModel)]="selectedClient"
+              (ngModelChange)="selectedPet = ''"
+              required
+            >
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Pet (se aplicável)<select name="pet" [(ngModel)]="selectedPet">
+              <option value="">Ficha do cliente</option>
+              <option *ngFor="let p of petsFor(selectedClient)" [value]="p.id">{{ p.name }}</option>
+            </select></label
+          ><label
+            >Modelo<select
+              name="template"
+              [(ngModel)]="selectedTemplate"
+              (ngModelChange)="templateChanged()"
+              required
+            >
+              <option *ngFor="let t of templates" [value]="t.id">{{ t.title }}</option>
+            </select></label
+          >
+        </div>
+        <label *ngFor="let q of questions; let i = index"
+          >{{ q
+          }}<textarea
+            [name]="'answer' + i"
+            [(ngModel)]="answers[i]"
+            maxlength="2000"
+            required
+          ></textarea></label
+        ><label class="check"
+          ><input name="consent" type="checkbox" [(ngModel)]="consent" required /> O cliente ou
+          tutor autorizou o registro destas informações para o atendimento.</label
+        >
+        <p class="hint">
+          O histórico de fichas é restrito ao dono. Registre somente o necessário para o serviço.
+        </p>
+        <div class="actions">
+          <button class="primary" [disabled]="busy || !consent">Salvar no histórico</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <section>
+        <h2>Histórico de fichas</h2>
+        <details *ngFor="let r of intakes">
+          <summary>
+            {{ customer(r.cliente_id) }} · {{ r.template_snapshot.title }} ·
+            {{ r.created_at | date: 'dd/MM/yyyy' : '-0300' }}
+          </summary>
+          <dl>
+            <ng-container *ngFor="let q of r.template_snapshot.questions; let i = index"
+              ><dt>{{ q }}</dt>
+              <dd>{{ r.answers[i] }}</dd></ng-container
+            >
+          </dl>
+          <small
+            >Consentimento registrado em {{ r.consent_at | date: 'dd/MM/yyyy HH:mm' : '-0300' }} ·
+            versão {{ r.template_snapshot.version }}</small
+          >
+        </details>
+        <p class="empty" *ngIf="!intakes.length">
+          Crie um modelo e preencha a primeira ficha com o cliente.
+        </p>
+      </section>
+      <section>
+        <h2>Pets e tutores</h2>
+        <article class="row" *ngFor="let p of data['client_pets']">
+          <div>
+            <strong>{{ p.name }} · {{ p.species }}</strong>
+            <p>Tutor: {{ customer(p.cliente_id) }} · {{ p.breed }}</p>
+            <p>{{ p.notes }}</p>
+          </div>
+        </article>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'relacionamento'">
+      <p>
+        <a routerLink="/admin/retencao">Configurar convites automáticos de retorno e renovação →</a>
+      </p>
+      <p class="hint">
+        Prepare o público e a mensagem aqui. E-mails podem ser agendados após revisar o público.
+        Outros canais dependem de integração e homologação. Preparar uma campanha não dispara
+        mensagens.
+      </p>
+      <div class="toolbar">
+        <button class="primary" type="button" (click)="start('campaign')">Nova campanha</button
+        ><button type="button" (click)="start('preference')">Preferência de contato</button>
+      </div>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'preference'"
+        (ngSubmit)="
+          act(
+            'contact-preference',
+            form,
+            'Preferência registrada. Revogações retiram o cliente dos envios pendentes.'
+          )
+        "
+      >
+        <h2>Preferência de contato</h2>
+        <div class="fields">
+          <label
+            >Cliente<select name="client" [(ngModel)]="form.cliente_id" required>
+              <option *ngFor="let c of clients" [value]="c.id">{{ c.nome }}</option>
+            </select></label
+          ><label
+            >Canal<select name="channel" [(ngModel)]="form.channel">
+              <option value="email">E-mail</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select></label
+          >
+        </div>
+        <label class="check"
+          ><input name="consent" type="checkbox" [(ngModel)]="form.consent" /> Cliente autorizou
+          mensagens neste canal</label
+        ><label
+          >Registro da preferência<input
+            name="evidence"
+            [(ngModel)]="form.evidence"
+            maxlength="500"
+            required
+            placeholder="Ex.: cliente solicitou contato na recepção em 16/10"
+        /></label>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar preferência</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <form
+        class="editor"
+        *ngIf="editing && form.type === 'campaign'"
+        (ngSubmit)="
+          act(
+            'campaign-add',
+            {
+              title: form.title,
+              segment: form.segment,
+              channel: form.channel,
+              message: form.message,
+              due_at: form.due_at,
+            },
+            'Rascunho salvo. Prepare o público para revisar.'
+          )
+        "
+      >
+        <h2>Nova campanha</h2>
+        <div class="fields">
+          <label>Nome<input name="title" [(ngModel)]="form.title" maxlength="120" required /></label
+          ><label
+            >Público<select name="segment" [(ngModel)]="form.segment">
+              <option value="inactive">Sem voltar há 45 dias</option>
+              <option value="birthday">Aniversariantes do mês</option>
+              <option value="all">Todos que autorizaram</option>
+            </select></label
+          ><label
+            >Canal<select name="channel" [(ngModel)]="form.channel">
+              <option value="email">E-mail</option>
+              <option value="sms">SMS</option>
+              <option value="whatsapp">WhatsApp</option>
+            </select></label
+          ><label
+            >Data pretendida<input
+              type="datetime-local"
+              name="due"
+              [(ngModel)]="form.due_at"
+              required
+          /></label>
+        </div>
+        <label
+          >Mensagem<textarea
+            name="message"
+            [(ngModel)]="form.message"
+            rows="5"
+            maxlength="2000"
+            required
+          ></textarea>
+        </label>
+        <div class="actions">
+          <button class="primary" [disabled]="busy">Salvar rascunho</button
+          ><button type="button" (click)="editing = false" [disabled]="busy">Voltar</button>
+        </div>
+      </form>
+      <article class="row" *ngFor="let c of data['client_campaigns']">
+        <div>
+          <strong>{{ c.title }}</strong>
+          <p>
+            {{ label(c.channel) }} · {{ label(c.status) }} ·
+            {{ c.due_at | date: 'dd/MM/yyyy HH:mm' : '-0300' }}
+          </p>
+          <p>{{ c.message }}</p>
+          <ng-container *ngIf="campaignProgress[c.id] as progress">
+            <p class="campaign-progress" aria-label="Andamento da campanha">
+              {{ progress.total }} no público · {{ progress.pending }} pendentes ·
+              {{ progress.sent }} aceitos pelo provedor · {{ progress.suppressed }} retirados
+            </p>
+            <p class="warning" *ngIf="+progress.failed + +progress.sending > 0">
+              {{ +progress.failed + +progress.sending }} envio(s) precisam de conferência. Confira o
+              provedor antes de repetir; o cliente pode ter recebido a mensagem.
+            </p>
+          </ng-container>
+          <p class="hint" *ngIf="c.status === 'scheduled'">
+            Próxima rotina diária às 08h de São Paulo, após a data escolhida. Até 10 destinatários
+            por campanha em cada execução.
+          </p>
+          <p class="hint" *ngIf="c.status === 'paused'">
+            O acesso do estabelecimento precisa estar ativo. Após regularizar, retome o envio.
+          </p>
+          <button type="button" (click)="loadCampaignRecipients(c.id)">
+            Ver público desta campanha
+          </button>
+        </div>
+        <div class="actions" *ngIf="c.status !== 'cancelled' && c.status !== 'completed'">
+          <button
+            *ngIf="c.status === 'draft' || c.status === 'ready'"
+            type="button"
+            (click)="
+              act(
+                'campaign-prepare',
+                { id: c.id },
+                'Público preparado. Nenhuma mensagem foi enviada.'
+              )
+            "
+            [disabled]="busy"
+          >
+            Preparar público</button
+          ><button
+            type="button"
+            *ngIf="(c.status === 'ready' || c.status === 'paused') && c.channel === 'email'"
+            (click)="scheduleCampaign(c.id)"
+            [disabled]="busy"
+          >
+            {{
+              c.status === 'paused' ? 'Retomar envio por e-mail' : 'Agendar envio por e-mail'
+            }}</button
+          ><button
+            type="button"
+            (click)="act('campaign-cancel', { id: c.id }, 'Campanha cancelada.')"
+            [disabled]="busy"
+          >
+            Cancelar
+          </button>
+        </div>
+      </article>
+      <section *ngIf="selectedCampaign">
+        <h2>Público: {{ campaignTitle(selectedCampaign) }}</h2>
+        <p class="hint">
+          {{ recipientTotal }} destinatários nesta campanha. Exibindo até 50 por página.
+        </p>
+        <p role="status" *ngIf="recipientLoading">Conferindo público…</p>
+        <p class="feedback error" role="alert" *ngIf="recipientError">{{ recipientError }}</p>
+        <p class="empty" *ngIf="!recipientLoading && !recipientError && !campaignRecipients.length">
+          Nenhum destinatário nesta página.
+        </p>
+        <article class="row" *ngFor="let r of campaignRecipients">
+          <strong>{{ customer(r.cliente_id) }}</strong
+          ><span>{{ label(r.status) }}</span>
+        </article>
+        <div class="actions">
+          <button
+            type="button"
+            [disabled]="recipientLoading || recipientPage === 0"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage - 1)"
+          >
+            Anterior
+          </button>
+          <span>Página {{ recipientPage + 1 }}</span>
+          <button
+            type="button"
+            [disabled]="recipientLoading || (recipientPage + 1) * 50 >= recipientTotal"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage + 1)"
+          >
+            Próxima
+          </button>
+          <button
+            type="button"
+            *ngIf="recipientError"
+            (click)="loadCampaignRecipients(selectedCampaign, recipientPage)"
+          >
+            Tentar novamente
+          </button>
+        </div>
+      </section>
+    </ng-container>
+    <ng-container *ngSwitchCase="'pagina'">
+      <section>
+        <h2>Sinal na reserva</h2>
+        <p class="hint">
+          Opcional e disponível com Stripe Connect ativo. O sinal entra como adiantamento e é
+          abatido no caixa. Reservas com sinal exigem pelo menos 45 minutos de antecedência; o
+          pagamento tem prazo de 35 minutos. O horário só é liberado após a Stripe confirmar a
+          expiração. Alterações e cancelamentos exigem tratar a cobrança em Recebimentos.
+        </p>
+        <label
+          >Percentual do serviço<select [(ngModel)]="depositPercent">
+            <option [ngValue]="0">Não exigir sinal</option>
+            <option *ngFor="let p of [10, 20, 30, 40, 50]" [ngValue]="p">{{ p }}%</option>
+          </select></label
+        >
+        <p class="hint">
+          Sinal mínimo de R$ 2, limitado à metade do serviço. Serviços abaixo de R$ 4 ficam sem
+          sinal. A plataforma retém R$ 1 por pagamento confirmado, além das taxas Stripe.
+        </p>
+        <div class="actions">
+          <button type="button" [disabled]="busy" (click)="saveDeposit()">
+            Salvar regra de sinal</button
+          ><a routerLink="/admin/recebimentos">Configurar recebimentos</a>
+        </div>
+      </section>
+      <form (ngSubmit)="saveSettings()">
+        <section>
+          <h2>Apresentação do negócio</h2>
+          <label
+            >Mensagem de boas-vindas<textarea
+              name="headline"
+              [(ngModel)]="headline"
+              maxlength="300"
+              rows="3"
+              placeholder="Conte o que o cliente encontra no seu espaço."
+            ></textarea></label
+          ><label
+            >Fotos do portfólio (links HTTPS, um por linha; até 12)<textarea
+              name="gallery"
+              [(ngModel)]="gallery"
+              rows="5"
+              placeholder="https://…/foto.jpg"
+            ></textarea>
+          </label>
+        </section>
+        <section>
+          <h2>Novas reservas</h2>
+          <label class="check"
+            ><input type="checkbox" name="approval" [(ngModel)]="approval" /> Quero aprovar os
+            pedidos antes de confirmar</label
+          >
+          <p>
+            Quando ativado, o horário fica reservado como pendente e você confirma pela agenda.
+            Quando desativado, a reserva já nasce confirmada.
+          </p>
+        </section>
+        <button class="primary" [disabled]="busy">Salvar página e regras</button>
+      </form>
+    </ng-container>
+  </ng-container>
+</div>

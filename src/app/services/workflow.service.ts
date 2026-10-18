@@ -1,3 +1,4 @@
+import { EstabelecimentoService } from './estabelecimento.service';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { SupabaseService } from './supabase.service';
@@ -14,6 +15,7 @@ export interface WorkflowRule {
 
 @Injectable({ providedIn: 'root' })
 export class WorkflowService {
+  private establishments = inject(EstabelecimentoService);
   private supabase = inject(SupabaseService).client;
   private costTracker = inject(CostTrackerService);
   private agendaService = inject(AgendaEventService);
@@ -45,7 +47,7 @@ export class WorkflowService {
   }
 
   async addRule(rule: Omit<WorkflowRule, 'id'>): Promise<WorkflowRule> {
-    const { data, error } = await this.supabase.from('workflows').insert([rule]).select().single();
+    const { data, error } = await this.supabase.from('workflows').insert([{...rule, estabelecimento_id:this.establishments.estabelecimento$.value?.id}]).select().single();
     if (error) throw error;
     this.rules$.next([...this.rules$.value, data as WorkflowRule]);
     return data as WorkflowRule;
@@ -57,28 +59,25 @@ export class WorkflowService {
   }
 
   private listenToEvents() {
-    this.previousEventsCount = this.agendaService.getEvents().length;
-    this.agendaService.events$.subscribe(events => {
-      const n = events.length;
-      if (n > this.previousEventsCount) this.executeRulesFor('ON_EVENT_CREATED', events[events.length - 1]);
-      else if (n < this.previousEventsCount) this.executeRulesFor('ON_EVENT_CANCELED', null);
-      this.previousEventsCount = n;
+    this.agendaService.workflowEvents$.subscribe(({ trigger, payload }) => {
+      void this.executeRulesFor(trigger, payload);
     });
   }
 
   private async executeRulesFor(trigger: string, payload: any) {
-    const active = this.rules$.value.filter(r => r.trigger === trigger && r.active);
-    for (const rule of active) {
-      try {
-        await fetch('/api/trigger-workflow', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ trigger: rule.trigger, payload })
-        });
-        if (rule.action === 'SEND_SMS') this.costTracker.trackSms();
-      } catch {
-        if (rule.action === 'SEND_SMS') this.costTracker.trackSms();
+    if (!payload?.id || !payload?.estabelecimento_id) return;
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (!session) return;
+    try {
+      const response = await fetch('/api/trigger-workflow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ trigger, payload })
+      });
+      const result = await response.json();
+      for (const action of result.actions || []) {
+        if (action.action === 'SEND_SMS' && action.success) this.costTracker.trackSms();
       }
-    }
+    } catch { /* A failed request is never counted as a sent message. */ }
   }
 }

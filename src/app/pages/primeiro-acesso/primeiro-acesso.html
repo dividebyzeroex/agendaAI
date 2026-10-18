@@ -1,136 +1,48 @@
-<div class="pa-container">
-  <div class="glass-orb orb-1"></div>
-  <div class="glass-orb orb-2"></div>
-
-  <div class="pa-card-glass">
-    
-    <!-- HEADER -->
-    <div class="pa-header">
-      <div class="pa-logo">
-        <i class="pi pi-shield"></i>
-        <span>AgendaAi <small>Pro</small></span>
-      </div>
-      <h2>Bem-vindo, <span class="gradient-text" [class.name-swap]="animateName">{{ displayName }}!</span></h2>
-      <p>{{ fase === 'senha' ? 'Sua segurança vem em primeiro lugar. Vamos ativar sua credencial permanente.' : 'Falta pouco! Entenda como seu papel de ' + userRole + ' decola na plataforma.' }}</p>
+<main class="customer-page first-access">
+  <p class="brand">agendaAI</p>
+  <header class="page-heading">
+    <div>
+      <h1>{{ fase === 'senha' ? 'Prepare seu acesso' : 'Tudo pronto para começar.' }}</h1>
+      <p>
+        {{
+          fase === 'senha'
+            ? 'Defina seu nome e uma senha para os próximos acessos.'
+            : 'Você pode conhecer as funções enquanto usa sua agenda.'
+        }}
+      </p>
     </div>
-
-    <!-- FASE 1: DEFINIR SENHA -->
-    <div class="pa-content-fade" *ngIf="fase === 'senha'">
-      <div class="field-pa">
-        <label>Seu Nome Completo</label>
-        <div class="input-pa">
-          <i class="pi pi-user"></i>
-          <input type="text" [(ngModel)]="nomeCorreto" (ngModelChange)="onNameChange()" placeholder="Ex: João Silva" />
-        </div>
-      </div>
-      <div class="field-pa">
-        <label>Nova Senha</label>
-        <div class="input-pa">
-          <i class="pi pi-lock"></i>
-          <input type="password" [(ngModel)]="pass1" placeholder="Mínimo 6 caracteres" />
-        </div>
-      </div>
-      <div class="field-pa">
-        <label>Confirmar Senha</label>
-        <div class="input-pa">
-          <i class="pi pi-lock-open"></i>
-          <input type="password" [(ngModel)]="pass2" placeholder="Repita sua senha" />
-        </div>
-      </div>
-      
-      <div class="pa-error" *ngIf="erro">
-        <i class="pi pi-exclamation-circle"></i> {{ erro }}
-      </div>
-
-      <button class="btn-pa-primary" (click)="confirmarSenha()" [disabled]="isSaving">
-        <span *ngIf="!isSaving">Ativar Senha Permanente</span>
-        <span *ngIf="isSaving">Criptografando... <i class="pi pi-spin pi-spinner"></i></span>
-      </button>
-    </div>
-
-    <!-- FASE 2: TOUR DE ONBOARDING -->
-    <div class="pa-content-fade tour-area" *ngIf="fase === 'tour'">
-      
-      <!-- Linha do Tempo Numerada -->
-      <div class="pa-timeline">
-        <div class="tl-dot" *ngFor="let s of [1,2,3,4]" [class.active]="tourStep >= s" [class.current]="tourStep === s">
-          <span>{{ s }}</span>
-        </div>
-        <div class="tl-line">
-           <div class="tl-fill" [style.width]="((tourStep - 1) / 3 * 100) + '%'"></div>
-        </div>
-      </div>
-
-      <!-- Visual de Luxo Baseado na Landing Page (DNA CSS) -->
-      <div class="tour-visual">
-        <div class="visual-container" [ngSwitch]="tourStep">
-          
-          <!-- Passo 1: Visão (Escudo Blindado) -->
-          <div *ngSwitchCase="1" class="mockup-scene fade-in">
-            <div class="eco-card glass highlight">
-              <div class="shield-pulse">
-                <i class="pi pi-lock-open unlock"></i>
-                <i class="pi pi-lock lock"></i>
-              </div>
-              <p>Rede Blindada</p>
-            </div>
-          </div>
-
-          <!-- Passo 2: Estratégia (Gráficos) -->
-          <div *ngSwitchCase="2" class="mockup-scene fade-in">
-            <div class="eco-card glass">
-              <div class="mockup-chart alive">
-                <div class="bar h-40"></div>
-                <div class="bar h-70"></div>
-                <div class="bar h-100 green-highlight"></div>
-              </div>
-              <p>Escala de Lucro</p>
-            </div>
-          </div>
-
-          <!-- Passo 3: Equipe (Agente IA) -->
-          <div *ngSwitchCase="3" class="mockup-scene fade-in">
-            <div class="mockup-chat">
-              <div class="m-bubble bot">Agent Júlia: "Horário confirmado via Túnel Seguro."</div>
-              <div class="m-bubble user">Obrigado!</div>
-            </div>
-          </div>
-
-          <!-- Passo 4: Decolagem (Portal do Cliente) -->
-          <div *ngSwitchCase="4" class="mockup-scene fade-in">
-            <div class="mockup-booking">
-              <div class="m-chip">14:00</div>
-              <div class="m-chip active">15:00 <i class="pi pi-check"></i></div>
-              <div class="m-btn">Agendado</div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <!-- Conteúdo Dinâmico -->
-      <div class="tour-card" [class.slide-in]="tourStep">
-        <h3>{{ getStepContent().t }}</h3>
-        <p>{{ getStepContent().d }}</p>
-      </div>
-
-      <!-- Ações do Tour -->
-      <div class="tour-actions">
-        <button class="btn-pa-ghost" (click)="voltar()" [disabled]="tourStep === 1 || isSaving">Anterior</button>
-        
-        <!-- Botão de Avanço Normal -->
-        <button *ngIf="tourStep < 4" class="btn-pa-primary next" (click)="proximo()">
-          <span>Avançar</span> <i class="pi pi-arrow-right"></i>
-        </button>
-
-        <!-- Botão de Decolagem Final -->
-        <button *ngIf="tourStep === 4" class="btn-pa-primary next pulse-success" (click)="finalizarTour()" [disabled]="isSaving">
-          <span *ngIf="!isSaving">Entrar no Sistema</span>
-          <span *ngIf="isSaving">Decolando... <i class="pi pi-spin pi-spinner"></i></span>
-        </button>
-      </div>
-
-    </div>
-
-  </div>
-</div>
+  </header>
+  <form *ngIf="fase === 'senha'" (ngSubmit)="confirmarSenha()">
+    <label class="field"
+      >Seu nome<input name="name" [(ngModel)]="nomeCorreto" autocomplete="name" required /></label
+    ><label class="field"
+      >Senha<input
+        name="password"
+        type="password"
+        [(ngModel)]="pass1"
+        minlength="6"
+        autocomplete="new-password"
+        placeholder="Pelo menos 6 caracteres"
+        required /></label
+    ><label class="field"
+      >Repita a senha<input
+        name="confirm"
+        type="password"
+        [(ngModel)]="pass2"
+        autocomplete="new-password"
+        required /></label
+    ><button type="submit" class="action" [disabled]="isSaving">
+      {{ isSaving ? 'Preparando acesso…' : 'Salvar e entrar' }}
+    </button>
+  </form>
+  <section *ngIf="fase === 'tour'">
+    <p>
+      Na página inicial você encontra os atendimentos de hoje. Use a Agenda para criar e acompanhar
+      horários; o restante fica em Gerenciar.
+    </p>
+    <button type="button" class="action" (click)="finalizarTour()" [disabled]="isSaving">
+      {{ isSaving ? 'Entrando…' : 'Entrar na minha agenda' }}
+    </button>
+  </section>
+  <p class="feedback error" role="alert" *ngIf="erro">{{ erro }}</p>
+</main>

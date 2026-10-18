@@ -1,0 +1,26 @@
+/* Neon Theme — Cyberpunk Dark with Neon Accents */
+.theme-neon {
+  --bg-color: #0b071a;
+  --text-main: #ffffff;
+  --text-muted: #94a3b8;
+
+  --glass-bg: rgba(11, 7, 26, 0.65);
+  --glass-border: rgba(255, 0, 127, 0.3);
+  --glass-blur: 20px;
+  --glass-edge: rgba(0, 240, 255, 0.5);
+
+  --active-bg: rgba(255, 0, 127, 0.15);
+  --hover-bg: rgba(255, 0, 127, 0.2);
+
+  --primary-color: #ff007f;
+  --primary-rgb: 255, 0, 127;
+  --accent-color: #00f0ff;
+
+  --bg-image: radial-gradient(circle at 10% 20%, rgba(255, 0, 127, 0.25), transparent 45%),
+              radial-gradient(circle at 90% 60%, rgba(0, 240, 255, 0.2), transparent 45%),
+              radial-gradient(circle at 50% 90%, rgba(139, 92, 246, 0.15), transparent 50%);
+
+  --elite-shadow: 0 4px 20px rgba(255, 0, 127, 0.15);
+  --elite-hover-shadow: 0 8px 30px rgba(0, 240, 255, 0.25), 0 2px 10px rgba(255, 0, 127, 0.2);
+  --text-shadow: 0 0 10px rgba(255, 0, 127, 0.4);
+}

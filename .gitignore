@@ -45,3 +45,6 @@ Thumbs.db
 .vercel
 .env*.local
 .env*
+
+.temp_accounts.json
+!.env.example

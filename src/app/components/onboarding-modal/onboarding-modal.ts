@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OnboardingService } from '../../services/onboarding.service';
@@ -32,6 +32,8 @@ interface HorarioInput {
   styleUrls: ['./onboarding-modal.css']
 })
 export class OnboardingModalComponent implements OnInit {
+  private cdr=inject(ChangeDetectorRef);
+  errorMessage='';
   private onboardingService = inject(OnboardingService);
   private estabService = inject(EstabelecimentoService);
   private supabase = inject(SupabaseService).client;
@@ -117,50 +119,25 @@ export class OnboardingModalComponent implements OnInit {
   async finalizarOnboarding() {
     if (this.isSaving) return;
     this.isSaving = true;
+    this.errorMessage='';
     try {
       const { data: { user } } = await this.supabase.auth.getUser();
       if (!user) throw new Error('Usuário não encontrado');
 
-      // 1. Salvar dados do estabelecimento
-      await this.supabase
-        .from('estabelecimento')
-        .update({
-          nome: this.nomeNegocio,
-          cidade: this.cidadeNegocio,
-          telefone: this.telefoneNegocio
-        })
-        .eq('user_id', user.id);
-
-      // 2. Salvar serviços (apenas os que têm título e preço)
-      const servicosValidos = this.servicos
-        .filter(s => s.titulo.trim() && s.preco > 0)
-        .map(s => ({ ...s, ativo: true }));
-
-      if (servicosValidos.length > 0) {
-        await this.supabase.from('servicos').insert(servicosValidos);
-      }
-
-      // 3. Salvar horários de funcionamento
-      const horariosParaSalvar = this.horarios.map(h => ({
-        dia_semana: h.dia_semana,
-        dia_nome: h.dia_nome,
-        abre: h.ativo ? h.abre : null,
-        fecha: h.ativo ? h.fecha : null,
-        ativo: h.ativo
-      }));
-
-      // Delete existing and re-insert
-      await this.supabase.from('horarios_funcionamento').delete().neq('id', '00000000-0000-0000-0000-000000000000');
-      await this.supabase.from('horarios_funcionamento').insert(horariosParaSalvar);
-
-      // 4. Marcar onboarding como completo (flag)
+      await this.estabService.fetchEstabelecimento();
+      const id=this.estabService.estabelecimento$.value?.id;
+      if(!id)throw new Error('Estabelecimento não encontrado. Atualize a página.');
+      const services=this.servicos.filter(s=>s.titulo.trim()&&s.preco>0);
+      const {error}=await this.supabase.rpc('configure_client_setup',{p_id:id,p_changes:{nome:this.nomeNegocio,cidade:this.cidadeNegocio,telefone:this.telefoneNegocio,segmento:this.tipoNegocio},p_services:services,p_hours:this.horarios});
+      if(error)throw error;
+      await this.estabService.refreshCurrent();
       await this.onboardingService.completeOnboarding();
-
       this.step = 'conclusao';
     } catch (e) {
-      console.error('Onboarding error:', e);
+      this.errorMessage=e instanceof Error?e.message:'Não foi possível salvar. Confira os dados e tente novamente.';
     } finally {
       this.isSaving = false;
+      this.cdr.markForCheck();
     }
   }
 

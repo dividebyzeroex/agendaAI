@@ -1,0 +1,298 @@
+<div class="customer-page">
+  <header class="page-heading">
+    <div>
+      <h1>Integrações</h1>
+      <p>Recebimentos, comunicação e documentos fiscais no mesmo lugar.</p>
+    </div>
+    <button class="text-action" (click)="load()" [disabled]="loading() || busy()">Atualizar</button>
+  </header>
+  <nav aria-label="Integrações">
+    <button
+      *ngFor="let t of ['whatsapp', 'pix', 'notas', 'configuracao']"
+      (click)="tab = t"
+      [attr.aria-current]="tab === t ? 'page' : null"
+    >
+      {{
+        t === 'whatsapp'
+          ? 'WhatsApp'
+          : t === 'pix'
+            ? 'Pix'
+            : t === 'notas'
+              ? 'Notas fiscais'
+              : 'Configurar emissor'
+      }}
+    </button>
+  </nav>
+  <p *ngIf="loading()" role="status">Conferindo integrações…</p>
+  <p *ngIf="error()" class="feedback error" role="alert">{{ error() }}</p>
+  <p *ngIf="notice()" class="feedback" role="status">{{ notice() }}</p>
+  <ng-container *ngIf="data() as d"
+    ><section *ngIf="tab === 'whatsapp'">
+      <h2>WhatsApp oficial</h2>
+      <p>
+        Confirmações, lembretes de véspera e alterações para clientes que autorizaram este canal.
+      </p>
+      <p class="helper">
+        Registre a autorização em <a routerLink="/admin/relacionamento">Relacionamento</a>. O
+        cliente pode responder SAIR para interromper os avisos.
+      </p>
+      <div class="fields">
+        <label class="field"
+          >ID do número na Meta<input
+            [(ngModel)]="config.whatsapp_phone_id"
+            inputmode="numeric" /></label
+        ><label class="field"
+          >Modelo aprovado<input
+            [(ngModel)]="config.whatsapp_template"
+            placeholder="aviso_agendamento" /></label
+        ><label class="field"
+          >Token de acesso<input
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="whatsappToken"
+            [placeholder]="
+              d.credentials.whatsapp
+                ? 'Credencial salva. Preencha para trocar.'
+                : 'Token permanente Meta'
+            "
+        /></label>
+      </div>
+      <details>
+        <summary>Preparar o modelo e o webhook</summary>
+        <p>
+          Use um modelo aprovado em português do Brasil, com quatro variáveis no corpo: nome do
+          cliente, estabelecimento, data e hora, situação do horário. Exemplo: “Olá, {{'{{1}}'}}.
+          Seu atendimento em {{'{{2}}'}} está marcado para {{'{{3}}'}}. Situação: {{'{{4}}'}}.
+          Responda SAIR para interromper avisos.”
+        </p>
+        <p>
+          Callback Meta: <code>/api/webhook?channel=whatsapp</code>. A plataforma precisa configurar
+          o segredo do aplicativo e o token de verificação.
+        </p>
+      </details>
+      <label class="check"
+        ><input type="checkbox" [(ngModel)]="whatsappConfirmed" />O modelo foi aprovado pela Meta
+        com os quatro campos acima.</label
+      ><label class="check"
+        ><input type="checkbox" [(ngModel)]="config.whatsapp_enabled" />Ativar avisos
+        automáticos</label
+      ><button class="action" (click)="save()" [disabled]="busy()">Salvar WhatsApp</button>
+      <h2 class="section-title">Últimos 50 avisos</h2>
+      <p *ngIf="!d.deliveries.length">Nenhum aviso registrado.</p>
+      <article *ngFor="let m of d.deliveries">
+        <div>
+          <strong>{{
+            m.kind === 'reminder' ? 'Lembrete' : m.kind === 'change' ? 'Alteração' : 'Confirmação'
+          }}</strong
+          ><small>{{ m.created_at | date: 'dd/MM HH:mm' }}</small>
+          <p *ngIf="m.error">{{ m.error }}</p>
+        </div>
+        <span>{{ status(m.status) }}</span>
+      </article>
+    </section>
+    <section *ngIf="tab === 'pix'">
+      <h2>Pix conciliado pela Stripe</h2>
+      <p>
+        O cliente escolhe Pix no checkout, usa o QR Code ou o código copia e cola e o recebimento é
+        confirmado automaticamente pelo webhook da Stripe.
+      </p>
+      <p>
+        A conta Connect precisa estar vinculada e habilitada para Pix pela Stripe. A taxa da
+        plataforma segue em R$ 1 por pagamento confirmado, além das tarifas Stripe.
+      </p>
+      <p class="helper">
+        O clube mensal continua usando cartão. O Pix deste fluxo é para pagamentos avulsos e sinais.
+        Checkouts já abertos mantêm suas opções originais.
+      </p>
+      <a routerLink="/admin/recebimentos">Conferir conta vinculada</a
+      ><label class="check"
+        ><input type="checkbox" [(ngModel)]="config.pix_enabled" />Oferecer cartão e Pix nos novos
+        checkouts</label
+      ><button class="action" (click)="save()" [disabled]="busy()">Salvar Pix</button>
+    </section>
+    <section *ngIf="tab === 'notas'">
+      <h2>Notas fiscais</h2>
+      <p *ngIf="!config.fiscal_enabled">Configure o emissor antes de preparar sua primeira nota.</p>
+      <p *ngIf="config.fiscal_enabled">
+        Ambiente:
+        <strong>{{
+          config.fiscal_environment === 'production'
+            ? 'Produção — validade fiscal'
+            : 'Homologação — sem validade fiscal'
+        }}</strong
+        >. Emissor: Focus NFe.
+      </p>
+      <div *ngIf="config.fiscal_enabled">
+        <div class="fields">
+          <label class="field"
+            >Venda paga<select [(ngModel)]="receipt">
+              <option value="">Selecione uma das últimas 100 vendas</option>
+              <option *ngFor="let r of receipts" [value]="r.id">
+                {{ r.created_at | date: 'dd/MM' }} · {{ r.cliente_nome }} ·
+                {{ r.valor_total | currency: 'BRL' }}
+              </option>
+            </select></label
+          ><label class="field" *ngIf="config.fiscal_kind === 'nfse'"
+            >CPF ou CNPJ do tomador<input [(ngModel)]="customerDocument" inputmode="numeric"
+          /></label>
+        </div>
+        <button
+          class="action"
+          [disabled]="busy() || !receipt"
+          (click)="action('fiscal-draft', { receipt, customerDocument })"
+        >
+          Preparar rascunho
+        </button>
+      </div>
+      <p class="helper">
+        NFS-e municipal para serviços avulsos; NFC-e para vendas somente de produtos em dinheiro ou
+        Pix. Operações com sinal, pacotes, descontos ou regras tributárias especiais precisam de
+        tratamento fiscal específico. Confirme a compatibilidade do município e o cadastro com o
+        contador.
+      </p>
+      <h2 class="section-title">Últimos 50 documentos</h2>
+      <p *ngIf="!d.documents.length">Nenhum documento preparado.</p>
+      <article *ngFor="let n of d.documents">
+        <div>
+          <strong>{{ n.kind.toUpperCase() }} · {{ status(n.status) }}</strong
+          ><small
+            >{{ n.created_at | date: 'dd/MM HH:mm' }} ·
+            {{ n.environment === 'production' ? 'Produção' : 'Homologação' }}</small
+          >
+          <p *ngIf="n.error">{{ n.error }}</p>
+          <small>Referência: {{ n.id }}</small>
+        </div>
+        <div class="row-actions">
+          <button (click)="action('fiscal-preview', { document: n.id })" [disabled]="busy()">
+            Revisar dados</button
+          ><button *ngIf="n.status === 'draft'" (click)="sendConfirm = n.id" [disabled]="busy()">
+            Emitir</button
+          ><button
+            *ngIf="n.status !== 'draft'"
+            (click)="action('fiscal-sync', { document: n.id })"
+            [disabled]="busy()"
+          >
+            Consultar emissor</button
+          ><a
+            *ngIf="n.status === 'authorized' && n.pdf_url"
+            [href]="n.pdf_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            >PDF</a
+          ><a
+            *ngIf="n.status === 'authorized' && n.xml_url"
+            [href]="n.xml_url"
+            target="_blank"
+            rel="noopener noreferrer"
+            >XML</a
+          >
+        </div>
+        <div class="inline-confirm" *ngIf="sendConfirm === n.id">
+          <p>
+            Conferi os valores, o tomador, o tipo da nota e a tributação com meu contador.
+            {{
+              n.environment === 'production'
+                ? 'Este envio poderá gerar um documento fiscal válido.'
+                : 'Este envio é um teste sem validade fiscal.'
+            }}
+          </p>
+          <button
+            class="action"
+            (click)="action('fiscal-send', { document: n.id, confirmed: true })"
+            [disabled]="busy()"
+          >
+            Confirmar emissão</button
+          ><button (click)="sendConfirm = ''" [disabled]="busy()">Voltar</button>
+        </div>
+      </article>
+      <details *ngIf="preview()">
+        <summary>Dados do rascunho para conferência</summary>
+        <pre>{{ preview() | json }}</pre>
+        <button (click)="preview.set(null)">Fechar conferência</button>
+      </details>
+    </section>
+    <section *ngIf="tab === 'configuracao'">
+      <h2>Configurar emissor fiscal</h2>
+      <p>
+        Contrate e cadastre a empresa na Focus NFe, configure certificado e credenciamento
+        aplicáveis e homologue os dados com o contador.
+      </p>
+      <div class="fields">
+        <label class="field"
+          >CNPJ emitente<input
+            [(ngModel)]="config.fiscal_cnpj"
+            inputmode="numeric"
+            maxlength="14" /></label
+        ><label class="field"
+          >Token Focus NFe<input
+            type="password"
+            autocomplete="new-password"
+            [(ngModel)]="fiscalToken"
+            [placeholder]="
+              d.credentials.fiscal
+                ? 'Credencial salva. Preencha para trocar.'
+                : 'Token do ambiente escolhido'
+            " /></label
+        ><label class="field"
+          >Ambiente<select [(ngModel)]="config.fiscal_environment">
+            <option value="homologation">Homologação</option>
+            <option value="production">Produção</option>
+          </select></label
+        ><label class="field"
+          >Documento<select [(ngModel)]="config.fiscal_kind">
+            <option value="nfse">NFS-e municipal</option>
+            <option value="nfce">NFC-e</option>
+          </select></label
+        >
+      </div>
+      <div *ngIf="config.fiscal_kind === 'nfse'" class="fields">
+        <label class="field"
+          >Inscrição municipal<input [(ngModel)]="config.fiscal_profile.registration" /></label
+        ><label class="field"
+          >Município (código IBGE)<input [(ngModel)]="config.fiscal_profile.municipality" /></label
+        ><label class="field"
+          >Item da lista de serviços<input [(ngModel)]="config.fiscal_profile.serviceCode" /></label
+        ><label class="field"
+          >Código tributário municipal<input [(ngModel)]="config.fiscal_profile.taxCode" /></label
+        ><label class="field"
+          >Alíquota ISS (%)<input
+            type="number"
+            min="0"
+            max="100"
+            step="0.01"
+            [(ngModel)]="config.fiscal_profile.issRate" /></label
+        ><label class="check"
+          ><input type="checkbox" [(ngModel)]="config.fiscal_profile.simple" />Optante pelo Simples
+          Nacional</label
+        >
+      </div>
+      <div *ngIf="config.fiscal_kind === 'nfce'">
+        <h3>Emitente</h3>
+        <div class="fields">
+          <label class="field" *ngFor="let f of issuerFields"
+            >{{ f.label }}<input [(ngModel)]="config.fiscal_profile.issuer[f.key]"
+          /></label>
+        </div>
+        <details>
+          <summary>Tributação dos produtos</summary>
+          <p>Preencha os códigos informados pelo contador para cada produto.</p>
+          <details *ngFor="let p of products" (toggle)="editProduct(p, $any($event.target).open)">
+            <summary>{{ p.nome }}</summary>
+            <div class="fields" *ngIf="editingProduct === p.id">
+              <label class="field" *ngFor="let f of taxFields"
+                >{{ f.label }}<input [(ngModel)]="config.fiscal_profile.products[p.id][f.key]"
+              /></label>
+            </div>
+          </details>
+        </details>
+      </div>
+      <label class="check" *ngIf="config.fiscal_environment === 'production'"
+        ><input type="checkbox" [(ngModel)]="productionConfirmed" />Homologuei os dados e autorizei
+        o uso em produção com meu contador.</label
+      ><label class="check"
+        ><input type="checkbox" [(ngModel)]="config.fiscal_enabled" />Ativar preparação e emissão
+        fiscal</label
+      ><button class="action" (click)="save()" [disabled]="busy()">Salvar emissor</button>
+    </section></ng-container
+  >
+</div>

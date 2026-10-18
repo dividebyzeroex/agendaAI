@@ -1,0 +1,563 @@
+<div class="ag-page customer-page">
+  <div class="page-header flex-between">
+    <div>
+      <h2>Caixa</h2>
+      <p>Receba os atendimentos e acompanhe as entradas do dia.</p>
+      <a *ngIf="isOwner" routerLink="/admin/recebimentos" class="text-action">Recebimentos online e conta Stripe →</a>
+    </div>
+
+    <div class="header-actions" *ngIf="sessaoAtual&&!cashTaskActive"><button type="button" class="action" (click)="iniciarVendaAvulsa()">Nova venda</button><button type="button" class="action action-display" (click)="openCustomerDisplay()"><i class="pi pi-desktop" aria-hidden="true"></i> Display do cliente</button><details class="cash-menu"><summary>Gerenciar caixa <i class="pi pi-angle-down" aria-hidden="true"></i></summary><button type="button" (click)="openTask('movement')">Registrar entrada ou retirada</button><button type="button" (click)="openTask('close')">Fechar caixa</button></details></div>
+  </div>
+
+  <section class="quiet-metrics" *ngIf="overview as o" aria-label="Resumo financeiro"><div><strong>{{o.received|currency:'BRL'}}</strong><span>Recebido hoje</span></div><div><strong>{{o.pending|currency:'BRL'}}</strong><span>Atendimentos a receber</span></div><div><strong>{{o.withdrawals|currency:'BRL'}}</strong><span>Retiradas hoje</span></div></section>
+  <p class="helper" *ngIf="overview">Recebimentos registrados no caixa; não representam conciliação bancária. <button class="text-action" (click)="loadOverview()">Atualizar</button></p>
+  <p class="feedback error" *ngIf="overviewError" role="alert">{{overviewError}} <button class="text-action" (click)="loadOverview()">Tentar novamente</button></p>
+  <details class="disclosure" *ngIf="overview?.commissions?.length"><summary>Comissões geradas hoje</summary><p *ngFor="let c of overview.commissions">{{c.nome}} · {{c.amount|currency:'BRL'}}</p><p class="helper">Comissão sobre o serviço após desconto de fidelidade, conforme regra do profissional. Retiradas incluem despesas e outras saídas; não são cálculo de lucro.</p></details>
+  <p class="feedback" [class.error]="messageError" *ngIf="message" [attr.role]="messageError?'alert':'status'">{{message}}</p>
+
+  <!-- Customer-facing paired display. The URL fragment contains a private pairing secret. -->
+  <section class="cash-display-panel" *ngIf="sessaoAtual" aria-labelledby="cash-display-title">
+    <div class="cash-display-top">
+      <div class="cash-display-heading">
+        <span class="cash-display-mark"><i class="pi pi-desktop" aria-hidden="true"></i></span>
+        <div>
+          <span class="cash-display-tag">AGENDAAI PAY EXPRESS</span>
+          <h3 id="cash-display-title">Display do cliente</h3>
+          <p>Conecte o monitor uma vez. Depois, basta selecionar o atendimento ou cliente no caixa: serviços, produtos e valores aparecem automaticamente, sem escanear uma comanda.</p>
+          <p class="cash-display-auto"><i class="pi pi-sync" aria-hidden="true"></i> Sincronização automática ao selecionar o cliente</p>
+        </div>
+      </div>
+      <div class="cash-display-actions">
+        <span class="cash-display-state" *ngIf="displayPairingUrl" [class.cash-display-paired]="payDisplay.viewerConnected()">
+          <i class="pi" [ngClass]="payDisplay.viewerConnected() ? 'pi-check-circle' : 'pi-circle'" aria-hidden="true"></i>
+          {{payDisplay.viewerConnected() ? 'Visor pareado' : 'Aguardando visor'}}
+        </span>
+        <button type="button" class="cash-display-main-btn" (click)="openCustomerDisplay()">
+          <i class="pi pi-external-link" aria-hidden="true"></i> {{displayPairingUrl ? 'Reabrir visor' : 'Abrir segunda tela'}}
+        </button>
+      </div>
+    </div>
+    <div class="cash-display-details" *ngIf="displayPairingUrl">
+      <div class="cash-pairing-qr">
+        <app-pay-qr [value]="displayPairingUrl" [size]="126"
+          label="QR de pareamento privado do display do cliente"></app-pay-qr>
+        <div>
+          <strong>Parear apenas o monitor ou tablet</strong>
+          <p>Este QR é usado somente uma vez para conectar a segunda tela. Não é a comanda do cliente e não será exigido em cada atendimento.</p>
+          <p class="cash-display-security"><i class="pi pi-lock" aria-hidden="true"></i> Trate este QR como privado: quem tiver o link poderá ver a tela pareada.</p>
+          <div class="cash-display-link-actions">
+            <button type="button" class="cash-display-secondary" (click)="copyDisplayPairingUrl()"><i class="pi pi-copy" aria-hidden="true"></i> Copiar link</button>
+            <button type="button" class="cash-display-disconnect" (click)="disconnectCustomerDisplay()"><i class="pi pi-times-circle" aria-hidden="true"></i> Encerrar pareamento</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <p class="cash-display-error" *ngIf="displayPairingError" role="alert">{{displayPairingError}}</p>
+    <details class="cash-display-scan">
+      <summary><i class="pi pi-qrcode" aria-hidden="true"></i> Comanda física ou recuperação de cobrança · opcional</summary>
+      <form class="cash-display-scan-form" (ngSubmit)="readCustomerComanda()">
+        <label for="cash-comanda-code">Código impresso da comanda, ID de atendimento ou link de cobrança</label>
+        <div>
+          <input id="cash-comanda-code" type="text" name="comandaScanValue"
+            autocomplete="off" [(ngModel)]="comandaScanValue"
+            placeholder="Apenas para comanda física ou cobrança já emitida"
+            aria-describedby="cash-comanda-hint" />
+          <button type="submit" class="cash-display-main-btn" [disabled]="comandaScanBusy || !comandaScanValue.trim()">
+            {{comandaScanBusy ? 'Lendo…' : 'Localizar comanda'}}
+          </button>
+        </div>
+        <small id="cash-comanda-hint">A seleção normal do cliente sincroniza o visor sem leitura. Para uma comanda física, use o identificador impresso; para recuperar uma cobrança existente, use o link ou QR. O código físico precisa estar previamente associado à venda. Só são recuperadas cobranças pendentes deste estabelecimento.</small>
+      </form>
+    </details>
+  </section>
+
+  <!-- Express: pending charges remain accessible while the reception handles another client. -->
+  <section class="express-queue" *ngIf="sessaoAtual && (onlineEnabled || pendingOnline.length || pendingOnlineError)" aria-labelledby="express-queue-title">
+    <div class="express-queue-header">
+      <div class="express-queue-title">
+        <span class="express-queue-icon"><i class="pi pi-qrcode" aria-hidden="true"></i></span>
+        <div><h3 id="express-queue-title">AgendaAI Pay Express</h3>
+          <p>Compartilhe o QR e continue atendendo. A baixa ocorre após confirmação da Stripe.</p>
+        </div>
+      </div>
+      <button type="button" class="express-btn express-quiet" (click)="loadPendingCharges()" [disabled]="pendingOnlineLoading">
+        <i class="pi" [ngClass]="pendingOnlineLoading ? 'pi-spin pi-spinner' : 'pi-refresh'" aria-hidden="true"></i>
+        Atualizar
+      </button>
+    </div>
+    <p class="express-empty" *ngIf="!pendingOnlineLoading && !pendingOnline.length && !pendingOnlineError">Nenhuma cobrança online pendente entre as últimas verificadas.</p>
+    <p class="feedback error" *ngIf="pendingOnlineError" role="alert">{{pendingOnlineError}}</p>
+    <div class="express-queue-list" *ngIf="pendingOnline.length">
+      <article class="express-pending-item" *ngFor="let item of pendingOnline">
+        <div class="express-pending-info">
+          <strong>{{item.customer}}</strong>
+          <span>{{item.createdAt | date:'dd/MM HH:mm'}} · <em>Pendente</em></span>
+        </div>
+        <b class="express-pending-amount">{{item.amount | currency:'BRL'}}</b>
+        <button type="button" class="express-btn express-outline" (click)="openPendingQr(item)">
+          <i class="pi pi-qrcode" aria-hidden="true"></i> Mostrar QR
+        </button>
+        <a class="express-btn express-quiet" [href]="getPayUrl(item.token)" target="_blank" rel="noopener noreferrer">Comanda <i class="pi pi-external-link" aria-hidden="true"></i></a>
+      </article>
+    </div>
+    <p class="express-disclaimer" *ngIf="pendingOnline.length === 25">Exibindo até 25 cobranças recentes. Consulte Recebimentos para o histórico completo.</p>
+  </section>
+<button class="text-action" *ngIf="lastClosure&&!sessaoAtual" (click)="imprimirFechamento(lastClosure.data,lastClosure.movimentacoes)">Imprimir relatório do último fechamento</button>
+  <div class="elite-loader-container" *ngIf="isLoading" style="min-height: 400px;">
+    <div class="pi pi-spin pi-spinner" style="font-size: 2rem; color: var(--primary-color);"></div>
+  </div>
+
+  <button class="text-action" type="button" *ngIf="sessionError" (click)="checkSessaoAberta()">Verificar caixa novamente</button>
+  <!-- Abertura inline -->
+  <div class="cash-task" *ngIf="!sessaoAtual&&!isLoading&&!sessionError">
+    <div class="cash-task-content">
+      <div class="modal-header">
+        <h3>Abrir caixa</h3>
+
+      </div>
+      <div class="modal-body">
+        <p style="color: var(--text-muted); margin-top:0;">Informe o troco inicial se houver. Para receber apenas por Pix ou cartão, deixe zero.</p>
+        <div class="form-group">
+          <label>Fundo de Caixa (R$)</label>
+          <input type="number" [(ngModel)]="trocoInicial" class="ag-input" placeholder="0.00" min="0">
+        </div>
+      </div>
+      <div class="modal-footer">
+
+        <button class="btn-primary primary" (click)="abrirCaixa()" [disabled]="sessionBusy"><i class="pi pi-unlock"></i> Abrir Caixa</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SANGRIA / SUPRIMENTO -->
+  <div class="cash-task" *ngIf="showSangriaModal">
+    <div class="cash-task-content">
+      <div class="modal-header">
+        <h3>Movimentação Manual</h3>
+        <button class="btn-icon" (click)="showSangriaModal = false"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Tipo</label>
+          <select [(ngModel)]="tipoMovimento" class="ag-select">
+            <option value="sangria">Sangria (Saída / Retirada)</option>
+            <option value="suprimento">Suprimento (Entrada de Troco)</option>
+          </select>
+        </div>
+        <div class="form-group mt-3">
+          <label>Valor (R$)</label>
+          <input type="number" [(ngModel)]="valorMovimento" class="ag-input" placeholder="0.00" min="0">
+        </div>
+        <div class="form-group mt-3">
+          <label>Motivo</label>
+          <input type="text" [(ngModel)]="motivoMovimento" class="ag-input" placeholder="Ex: Pagamento de material, Troco...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="showSangriaModal = false">Cancelar</button>
+        <button class="btn-primary" [ngClass]="tipoMovimento === 'sangria' ? 'danger' : 'success'" (click)="registrarMovimentoManual()" [disabled]="sessionBusy">
+          Registrar {{ tipoMovimento | titlecase }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: FECHAMENTO COM CONFERÊNCIA -->
+  <div class="cash-task" *ngIf="showFechamentoModal && fechamentoRelatorio">
+    <div class="cash-task-content">
+      <div class="modal-header" style="border-bottom-color: var(--danger-color, #ef4444);">
+        <h3>Fechamento de Caixa</h3>
+        <button class="btn-icon" (click)="showFechamentoModal = false"><i class="pi pi-times"></i></button>
+      </div>
+      <div class="modal-body">
+
+        <div style="background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 16px; border-radius: 8px; margin-bottom: 20px;">
+          <h4 style="margin:0 0 12px 0; color:var(--text-color);">Resumo do Turno (Apenas Dinheiro)</h4>
+          <div class="flex-between"><span>Fundo Abertura:</span> <strong>R$ {{ fechamentoRelatorio.saldoInicial | number:'1.2-2' }}</strong></div>
+          <div class="flex-between"><span>Entradas Dinheiro (+):</span> <strong style="color:var(--success, #10b981);">R$ {{ fechamentoRelatorio.totalEntradasDinheiro | number:'1.2-2' }}</strong></div>
+          <div class="flex-between"><span>Saídas Dinheiro (-):</span> <strong style="color:var(--danger, #ef4444);">R$ {{ fechamentoRelatorio.totalSaidasDinheiro | number:'1.2-2' }}</strong></div>
+          <hr style="border: 0; border-top: 1px dashed var(--glass-border); margin: 8px 0;">
+          <div class="flex-between">
+            <span>Saldo Calculado (Sistema):</span>
+            <strong style="font-size:1.1rem; color:var(--primary-color);">R$ {{ fechamentoRelatorio.saldoCalculado | number:'1.2-2' }}</strong>
+          </div>
+        </div>
+
+        <div class="form-group highlight-input">
+          <label style="color: var(--danger, #ef4444); font-weight: 800;">Conferência de Gaveta (R$)</label>
+          <p style="font-size:0.8rem; color:var(--text-muted); margin:0 0 8px 0;">
+            Conte o dinheiro vivo na gaveta e digite o valor abaixo para comparar com o sistema.
+          </p>
+          <input type="number" [(ngModel)]="saldoInformado" class="ag-input" style="font-size: 1.5rem; text-align: right; padding: 12px; border-color: var(--danger, #ef4444);" placeholder="0.00">
+        </div>
+
+        <div *ngIf="saldoInformado !== null" style="margin-top: 12px; text-align: right;">
+           <span *ngIf="saldoInformado === fechamentoRelatorio.saldoCalculado" style="color: var(--success, #10b981); font-weight:bold;"><i class="pi pi-check"></i> Caixa Bateu perfeitamente!</span>
+           <span *ngIf="saldoInformado < fechamentoRelatorio.saldoCalculado" style="color: var(--danger, #ef4444); font-weight:bold;"><i class="pi pi-exclamation-triangle"></i> Faltando R$ {{ (fechamentoRelatorio.saldoCalculado - saldoInformado) | number:'1.2-2' }} na gaveta.</span>
+           <span *ngIf="saldoInformado > fechamentoRelatorio.saldoCalculado" style="color: var(--warning, #f59e0b); font-weight:bold;"><i class="pi pi-exclamation-triangle"></i> Sobrando R$ {{ (saldoInformado - fechamentoRelatorio.saldoCalculado) | number:'1.2-2' }} na gaveta.</span>
+        </div>
+
+      </div>
+      <div class="modal-footer">
+        <button class="btn-ghost" (click)="showFechamentoModal = false">Cancelar</button>
+        <button class="btn-primary danger" [disabled]="saldoInformado === null||sessionBusy" (click)="fecharCaixa()">
+          <i class="pi pi-print"></i> Confirmar fechamento
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <ng-container *ngIf="!isLoading">
+
+    <!-- TELA CAIXA ABERTO -->
+    <div class="caixa-container" [class.checkout-open]="eventoSelecionado || showVendaAvulsaModal" *ngIf="sessaoAtual&&!cashTaskActive">
+
+      <!-- LADO ESQUERDO: FILA & MOVS -->
+      <div class="caixa-left bento-card custom-scroll">
+        <div class="tabs-header">
+          <div class="tab-item" [class.active]="currentTab === 'fila'" (click)="currentTab = 'fila'">
+            A receber <span class="badge" *ngIf="eventosPendentes.length > 0">{{eventosPendentes.length}}</span>
+          </div>
+          <div class="tab-item" [class.active]="currentTab === 'movimentacoes'" (click)="currentTab = 'movimentacoes'">
+            Movimentações ({{movimentacoes.length}})
+          </div>
+        </div>
+
+        <!-- TAB: FILA -->
+        <div class="tab-content" *ngIf="currentTab === 'fila'">
+          <div class="empty-state" *ngIf="eventosPendentes.length === 0">
+            Nenhum cliente aguardando pagamento no momento.
+          </div>
+
+          <div class="caixa-list">
+            <div class="caixa-item" *ngFor="let evento of eventosPendentes"
+                 [class.active]="eventoSelecionado?.id === evento.id"
+                 (click)="selecionarEvento(evento)">
+
+              <div class="ci-icon" [style.color]="evento.backgroundColor || 'var(--primary-color)'">
+                <i class="pi pi-user"></i>
+              </div>
+
+              <div class="ci-info">
+                <strong>{{ evento.title ? evento.title.replace(' - ' + evento.profissional_nome, '') : 'Cliente' }}</strong>
+                <div class="ci-meta">
+                  <span>{{ formatTime(evento.start) }}</span>
+                  <span>•</span>
+                  <span>{{ evento.profissional_nome }}</span>
+                </div>
+              </div>
+
+              <div class="ci-action"><i class="pi pi-chevron-right"></i></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB: MOVS -->
+        <div class="tab-content" *ngIf="currentTab === 'movimentacoes'">
+           <div class="elite-loader-container" *ngIf="isLoadingMovs">
+             <i class="pi pi-spin pi-spinner"></i>
+           </div>
+
+           <div class="mov-list" *ngIf="!isLoadingMovs">
+             <div class="empty-state" *ngIf="movimentacoes.length === 0">Nenhuma movimentação registrada.</div>
+
+             <div class="mov-item" *ngFor="let m of movimentacoes" [ngClass]="m.tipo">
+                <div class="mov-icon">
+                  <i class="pi pi-shopping-bag" *ngIf="m.tipo === 'venda'"></i>
+                  <i class="pi pi-arrow-up-right" *ngIf="m.tipo === 'sangria'"></i>
+                  <i class="pi pi-arrow-down-left" *ngIf="m.tipo === 'suprimento'"></i>
+                  <i class="pi pi-refresh" *ngIf="m.tipo === 'estorno'"></i>
+                </div>
+                <div class="mov-info">
+                  <strong>{{ m.descricao }}</strong>
+                  <span class="mov-meta">{{ m.created_at | date:'HH:mm' }} • {{ m.forma_pagamento | uppercase }} • {{ m.operador_nome }}</span>
+                </div>
+                <div class="mov-valor" [class.positivo]="m.tipo==='venda' || m.tipo==='suprimento'" [class.negativo]="m.tipo==='sangria' || m.tipo==='estorno'">
+                  {{ (m.tipo==='venda' || m.tipo==='suprimento' ? '+' : '-') }} R$ {{ m.valor | number:'1.2-2' }}
+                </div>
+                <button class="btn-icon danger-icon" *ngIf="m.tipo === 'venda'" (click)="estornarMovimento(m)" [disabled]="sessionBusy" title="Registrar estorno da venda">
+                  <i class="pi pi-undo"></i>
+                </button>
+             </div>
+           </div>
+        </div>
+      </div>
+
+      <!-- LADO DIREITO: CHECKOUT E COMANDA -->
+      <div class="caixa-right bento-card custom-scroll">
+
+        <!-- SE NENHUM SELECIONADO -->
+        <div class="empty-checkout" *ngIf="!eventoSelecionado && !showVendaAvulsaModal">
+          <div class="empty-icon"><i class="pi pi-shopping-cart"></i></div>
+          <h3>Receber atendimento</h3>
+          <p>Selecione um atendimento concluído na lista. Para uma venda de balcão, use Nova venda.</p>
+        </div>
+
+        <!-- SUCESSO -->
+        <div class="checkout-success" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && checkoutComplete">
+          <div class="success-icon" [class.express-waiting]="onlinePending">
+            <i class="pi" [ngClass]="onlinePending ? 'pi-qrcode' : 'pi-check-circle'" aria-hidden="true"></i>
+          </div>
+          <h3>{{onlinePending?'Cobrança pronta para o cliente':'Venda registrada!'}}</h3>
+          <p>{{onlinePending?'Mostre o QR Code. O cliente abre a comanda e paga no próprio celular — sem instalar nada.':'Comanda gerada e caixa atualizado.'}}</p>
+
+          <div *ngIf="onlinePending && comandaToken" class="express-checkout">
+            <p class="express-checkout-tag">AGENDAAI PAY EXPRESS</p>
+            <strong class="express-checkout-total">{{getValorTotalCheckout() | currency:'BRL'}}</strong>
+            <app-pay-qr [value]="getExpressPayUrl(comandaToken)" [size]="218"></app-pay-qr>
+            <p class="express-instruction">{{expressCheckoutUrl ? 'Escaneie e vá direto ao pagamento seguro da Stripe.' : 'Escaneie para abrir a comanda e escolher como pagar.'}}</p>
+            <div class="express-checkout-actions">
+              <button type="button" class="express-btn express-outline" (click)="copyPayLink(comandaToken)">
+                <i class="pi pi-copy" aria-hidden="true"></i> Copiar link
+              </button>
+              <button type="button" class="express-btn express-outline" (click)="sharePayLink(comandaToken)">
+                <i class="pi pi-share-alt" aria-hidden="true"></i> Compartilhar
+              </button>
+            </div>
+            <button type="button" class="express-btn express-quiet" (click)="reviewActivePayment()" [disabled]="activePaymentChecking">
+              <i class="pi pi-refresh" aria-hidden="true"></i> {{ activePaymentChecking ? 'Conferindo…' : 'Conferir pagamento' }}
+            </button>
+            <p class="express-checkout-hint"><i class="pi pi-clock" aria-hidden="true"></i> A cobrança fica na lista de pendentes. O atendente pode liberar o balcão agora.</p>
+          </div>
+
+          <button *ngIf="!onlinePending" class="btn-ghost" style="margin-top: 16px; width: 100%; border-color: var(--primary-color); color: var(--primary-color);" (click)="imprimirComprovante({cliente_nome: eventoSelecionado?.title, profissional: eventoSelecionado?.profissional_nome}, getValorTotalCheckout(), showVendaAvulsaModal)">
+            <i class="pi pi-print"></i> Imprimir recibo
+          </button>
+
+          <div class="comanda-link-box" *ngIf="comandaToken && !onlinePending">
+            <p>Recibo digital</p>
+            <a [href]="getComandaUrl()" target="_blank" rel="noopener noreferrer" class="comanda-url">Acessar Comanda Digital</a>
+          </div>
+
+          <button class="btn-primary primary" style="margin-top: 24px; width: 100%;" (click)="concluirTela()">{{onlinePending?'Liberar balcão · Próximo atendimento':'Nova venda / Voltar'}}</button>
+        </div>
+
+        <!-- CHECKOUT ATIVO -->
+        <div class="checkout-active" *ngIf="(eventoSelecionado || showVendaAvulsaModal) && !checkoutComplete">
+          <div class="chk-header">
+            <h3>{{ showVendaAvulsaModal ? 'Venda Avulsa (Balcão)' : 'Fechamento de Conta' }}</h3>
+            <button class="btn-ghost" style="padding:6px 12px;" (click)="cancelarCheckout()">Cancelar</button>
+          </div>
+
+          <div class="chk-section"><h4>Cliente</h4><p *ngIf="selectedClientName"><strong>{{selectedClientName}}</strong></p><details [open]="!clienteSelecionadoId"><summary>{{clienteSelecionadoId?'Trocar cliente':'Selecionar cliente'}}</summary><select aria-label="Cliente do recebimento" [(ngModel)]="clienteSelecionadoId" (change)="onClienteChange()" class="ag-select"><option value="">Escolher cliente</option><option *ngFor="let c of clientesLista" [value]="c.id">{{c.nome}} · {{c.telefone||'Sem telefone'}}</option></select><a routerLink="/admin/clientes/novo" class="text-action" *ngIf="!clientesLista.length">Cadastrar cliente</a></details></div>
+
+          <ng-container *ngIf="clienteSelecionadoId">
+            <details class="chk-section cash-physical-order">
+              <summary><i class="pi pi-tag" aria-hidden="true"></i> Associar comanda física (opcional)</summary>
+              <label for="cash-physical-code">Código da comanda impressa</label>
+              <input id="cash-physical-code" type="text" maxlength="64" autocomplete="off"
+                [(ngModel)]="comandaFisica" class="ag-select" placeholder="Ex.: MESA-014 ou número do cartão" />
+              <p>Sem necessidade no atendimento digital. Preencha somente se houver uma comanda física com código próprio; ela ficará associada à cobrança gerada.</p>
+            </details>
+            <div class="chk-section" *ngIf="!showVendaAvulsaModal">
+             <h4>Serviço Realizado</h4>
+             <div class="chk-item" *ngIf="servicoPrincipal">
+               <span>{{ servicoPrincipal.titulo }}</span>
+               <strong>R$ {{ servicoPrincipal.preco | number:'1.2-2' }}</strong>
+             </div>
+
+
+             <section class="cash-multiservice" *ngIf="eventoSelecionado" aria-labelledby="cash-multi-heading">
+               <div class="cash-multi-heading">
+                 <div><h4 id="cash-multi-heading">Serviços deste atendimento</h4>
+                   <p>Uma comanda · comissões separadas por profissional e serviço</p>
+                 </div>
+                 <span class="cash-multi-count">{{extraServices.length+1}} serviço(s)</span>
+               </div>
+               <div class="cash-multi-row" *ngFor="let item of extraServices">
+                 <div><strong>{{item.title}}</strong>
+                   <small>{{item.name}} · {{item.start|date:'HH:mm'}}–{{item.end|date:'HH:mm'}}</small>
+                 </div>
+                 <b>{{item.price|currency:'BRL'}}</b>
+                 <button type="button" class="cash-multi-remove" [disabled]="extraServiceBusy || checkoutComplete"
+                   (click)="removeExtraServiceFromAttendance(item)" [attr.aria-label]="'Remover '+item.title">
+                   <i class="pi pi-times-circle" aria-hidden="true"></i>
+                 </button>
+               </div>
+               <details class="cash-multi-add" [open]="extraServices.length===0">
+                 <summary><i class="pi pi-plus-circle" aria-hidden="true"></i> Acrescentar serviço durante o atendimento</summary>
+                 <div class="cash-multi-controls">
+                   <label>Serviço
+                     <select class="ag-select" [(ngModel)]="extraServiceId">
+                       <option value="">Selecione um serviço</option>
+                       <option *ngFor="let s of availableExtraServices" [value]="s.id">
+                         {{s.titulo}} · {{s.preco|currency:'BRL'}} · {{s.duracao_min}} min
+                       </option>
+                     </select>
+                   </label>
+                   <label>Profissional
+                     <select class="ag-select" [(ngModel)]="extraProfessionalId">
+                       <option value="">Escolher profissional</option>
+                       <option *ngFor="let p of staffForServices" [value]="p.id">{{p.nome}}</option>
+                     </select>
+                   </label>
+                   <label>Execução
+                     <select class="ag-select" [(ngModel)]="extraMode">
+                       <option value="sequencial">Após os serviços existentes</option>
+                       <option value="paralelo">Em paralelo com outro profissional</option>
+                     </select>
+                   </label>
+                 </div>
+                 <p>O sistema confere a agenda e reserva o horário do responsável antes de incluir o item.</p>
+                 <button type="button" class="cash-multi-save" (click)="addExtraServiceToAttendance()"
+                   [disabled]="extraServiceBusy || !extraServiceId || !extraProfessionalId || checkoutComplete || !depositVerified">
+                   {{extraServiceBusy ? 'Verificando horário…':'Adicionar à comanda'}}
+                 </button>
+               </details>
+               <p *ngIf="extraServicesError" role="alert" class="feedback error">{{extraServicesError}}</p>
+               <div *ngIf="extraServices.length" class="cash-multi-subtotal">
+                 <span>Serviços extras</span><strong>{{groupedServiceTotal|currency:'BRL'}}</strong>
+               </div>
+             </section>
+             <div class="fidelidade-card" *ngIf="visitasMeta > 0 && eventoSelecionado && eventoSelecionado.cliente_id">
+               <div class="fid-head">
+                 <i class="pi pi-star-fill" style="color: #f59e0b"></i> Fidelidade do Cliente
+               </div>
+               <p style="font-size: 0.85rem; color: #64748b; margin: 4px 0 10px 0;">
+                 Este cliente possui <b>{{ visitasFidelidade }}</b> visitas de <b>{{ visitasMeta }}</b> necessárias.
+               </p>
+               <div class="fid-progress-bg">
+                 <div class="fid-progress-fill" [style.width]="(visitasFidelidade / visitasMeta) * 100 + '%'"></div>
+               </div>
+
+               <div *ngIf="visitasFidelidade >= visitasMeta" style="margin-top: 12px; background: rgba(16, 185, 129, 0.1); padding: 10px; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
+                 <label class="ag-checkbox" style="font-size: 0.9rem; font-weight: 500; color: #10b981; cursor: pointer;">
+                   <input type="checkbox" [(ngModel)]="aplicarFidelidade" style="margin-right: 8px;">
+                   Aplicar desconto de {{ descontoPercentual }}% no serviço!
+                 </label>
+               </div>
+             </div>
+          </div>
+
+          <details class="chk-section extra-products" [open]="showVendaAvulsaModal">
+             <summary>{{showVendaAvulsaModal?'Produtos da venda':'Adicionar produtos'}}</summary>
+             <div class="add-prod-row">
+               <select [(ngModel)]="prodSelecionadoId" class="ag-select" style="flex:1;">
+                 <option value="">Selecione um produto...</option>
+                 <option *ngFor="let p of produtosCatalogo" [value]="p.id">
+                   {{ p.nome }} - R$ {{ p.preco | number:'1.2-2' }} (Est: {{p.estoque}})
+                 </option>
+               </select>
+               <button class="btn-primary" (click)="addProdutoNaComanda()" style="width: auto; padding: 0 16px;"><i class="pi pi-plus"></i></button>
+             </div>
+
+             <form class="cash-barcode-row" (ngSubmit)="addProductByBarcode()">
+               <label for="cash-barcode-input"><i class="pi pi-barcode" aria-hidden="true"></i> Ler código de barras de produto</label>
+               <div>
+                 <input id="cash-barcode-input" name="productBarcode" type="text" autocomplete="off"
+                   [(ngModel)]="productBarcode" placeholder="Bipe ou digite o código e pressione Enter" />
+                 <button type="submit" class="cash-display-secondary" [disabled]="!productBarcode.trim()">Adicionar</button>
+               </div>
+               <small>Use um leitor USB/Bluetooth ou digite o código. Os itens são exibidos imediatamente no display do cliente.</small>
+             </form>
+
+             <div class="comanda-items" *ngIf="comandaProdutos.length > 0">
+                <div class="c-item" *ngFor="let cp of comandaProdutos; let i = index">
+                  <div class="c-item-info">
+                    <span class="c-name">{{ cp.produto.nome }}</span>
+                    <span class="c-price">R$ {{ cp.produto.preco | number:'1.2-2' }} x {{ cp.quantidade }}</span>
+                  </div>
+                  <div class="c-item-actions">
+                     <button class="btn-icon" (click)="cp.quantidade = cp.quantidade + 1" [disabled]="cp.quantidade >= cp.produto.estoque"><i class="pi pi-plus"></i></button>
+                     <button class="btn-icon" (click)="diminuirQtd(i)"><i class="pi pi-minus"></i></button>
+                  </div>
+                </div>
+             </div>
+          </details>
+
+          <div class="chk-section">
+             <h4>Pagamento</h4>
+             <p *ngIf="!depositVerified" role="alert">O sinal ainda não foi confirmado. Reabra o atendimento após conferir Recebimentos.</p>
+             <p *ngIf="prepaidAmount > 0">Sinal já recebido: <strong>R$ {{ prepaidAmount | number:'1.2-2' }}</strong>. O total abaixo corresponde somente ao saldo.</p>
+             <div class="form-group">
+               <label>Forma de Pagamento *</label>
+               <select [(ngModel)]="formaPagamento" (ngModelChange)="onPaymentMethodChanged($event)" class="ag-select">
+                 <option value="">Como deseja receber?</option>
+                 <optgroup *ngIf="onlineEnabled" label="COBRAR AGORA · O CLIENTE AINDA NÃO PAGOU">
+                   <option value="online">AgendaAI Pay Express · Link e QR pela Stripe</option>
+                 </optgroup>
+                 <optgroup label="REGISTRAR SOMENTE APÓS RECEBER PRESENCIALMENTE">
+                   <option value="pix">Pix já recebido no banco ou maquininha</option>
+                   <option value="dinheiro">Dinheiro já recebido no balcão</option>
+                   <option value="cartao_credito">Crédito já aprovado na maquininha</option>
+                   <option value="cartao_debito">Débito já aprovado na maquininha</option>
+                 </optgroup>
+               </select>
+               <p class="cash-payment-route-hint" *ngIf="formaPagamento === 'online'">
+                 <i class="pi pi-qrcode" aria-hidden="true"></i>
+                 Esta ação cria uma cobrança <strong>pendente</strong>. Mostre o QR para que o cliente pague.
+                 O pagamento somente será confirmado após a validação da Stripe.
+               </p>
+               <p class="cash-payment-route-hint" *ngIf="!onlineEnabled">
+                 <i class="pi pi-info-circle" aria-hidden="true"></i>
+                 Para receber por link ou QR Code, ative a Stripe Connect em
+                 <a routerLink="/admin/recebimentos">Recebimentos</a>.
+                 As opções abaixo apenas registram pagamentos já recebidos.
+               </p>
+               <label class="cash-received-confirmation" *ngIf="requiresManualConfirmation()">
+                 <input type="checkbox" [(ngModel)]="manualPaymentConfirmed"
+                   aria-label="Confirmo que já recebi este pagamento fora do AgendaAI" />
+                 <span><strong>Confirmo que o cliente já pagou {{getValorTotalCheckout() | currency:'BRL'}} fora do AgendaAI.</strong>
+                   A comanda será marcada <b>PAGA imediatamente</b>. Esta opção não cria um link nem um QR de cobrança.
+                   Se o cliente ainda não pagou, use o <b>AgendaAI Pay Express</b> acima.</span>
+               </label>
+             </div>
+
+             <div class="form-group mt-3" *ngIf="formaPagamento === 'dinheiro'" style="margin-top: 16px;">
+               <label>Valor Recebido (R$)</label>
+               <input type="number" [(ngModel)]="valorRecebido" class="ag-input" placeholder="Ex: 50.00" min="0">
+
+               <div *ngIf="valorRecebido && valorRecebido >= getValorTotalCheckout()" style="margin-top: 8px; color: var(--success); font-weight: 500; font-size: 0.9rem; padding: 8px; background: var(--success-soft); border-radius: 6px;">
+                 <i class="pi pi-money-bill"></i> Troco a devolver: <b>R$ {{ getTroco() | number:'1.2-2' }}</b>
+               </div>
+               <div *ngIf="valorRecebido && valorRecebido < getValorTotalCheckout()" style="margin-top: 8px; color: var(--danger); font-weight: 500; font-size: 0.9rem;">
+                 <i class="pi pi-exclamation-triangle"></i> Valor insuficiente
+               </div>
+             </div>
+          </div>
+
+          <p *ngIf="formaPagamento==='online'">R$ 1,00 de taxa AgendaAI + tarifas Stripe. O recebimento só será registrado após confirmação do pagamento. Para resgatar fidelidade, use recebimento presencial.</p>
+          <div class="chk-total">
+             <span>Total a Receber</span>
+             <div style="display: flex; flex-direction: column; align-items: flex-end;">
+               <strong *ngIf="aplicarFidelidade" style="font-size: 0.9rem; text-decoration: line-through; color: #94a3b8; font-weight: 400; line-height: 1;">
+                 R$ {{ getValorTotalCheckout()+getDescontoFidelidade() | number:'1.2-2' }}
+               </strong>
+               <strong style="color: var(--primary-color);">R$ {{ getValorTotalCheckout() | number:'1.2-2' }}</strong>
+             </div>
+          </div>
+
+          <button class="btn-primary primary" style="width: 100%; margin-top: 16px;"
+            [disabled]="isFinalizing || !depositVerified || !canSubmitCashPayment(formaPagamento, manualPaymentConfirmed) || getValorTotalCheckout() === 0 || (formaPagamento === 'dinheiro' && (!valorRecebido || valorRecebido < getValorTotalCheckout()))"
+            (click)="finalizarEGerarComanda(showVendaAvulsaModal)">
+              <i class="pi pi-spin pi-spinner" *ngIf="isFinalizing"></i>
+              <i class="pi pi-check-circle" *ngIf="!isFinalizing"></i>
+              {{formaPagamento==='online'?'Gerar cobrança e QR Code':'Confirmar pagamento já recebido'}}
+          </button>
+          </ng-container>
+
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="express-dialog-backdrop" *ngIf="payQrToken" (click)="closePendingQr()">
+    <section class="express-dialog" role="dialog" aria-modal="true" aria-labelledby="express-dialog-title"
+      (click)="$event.stopPropagation()">
+      <button type="button" class="express-dialog-close" aria-label="Fechar QR Code" (click)="closePendingQr()">
+        <i class="pi pi-times" aria-hidden="true"></i>
+      </button>
+      <span class="express-dialog-kicker">PAGAMENTO PENDENTE</span>
+      <h2 id="express-dialog-title">{{payQrLabel}}</h2>
+      <strong class="express-dialog-amount">{{payQrAmount | currency:'BRL'}}</strong>
+      <app-pay-qr [value]="getExpressPayUrl(payQrToken)" [size]="230"></app-pay-qr>
+      <p>{{ payQrUrl.includes('checkout.stripe.com') ? 'Escaneie para abrir o pagamento diretamente na Stripe.' : 'Escaneie para abrir a comanda e iniciar o pagamento.' }}</p>
+      <div class="express-checkout-actions">
+        <button type="button" class="express-btn express-outline" (click)="copyPayLink(payQrToken)"><i class="pi pi-copy" aria-hidden="true"></i> Copiar link</button>
+        <button type="button" class="express-btn express-outline" (click)="sharePayLink(payQrToken)"><i class="pi pi-share-alt" aria-hidden="true"></i> Compartilhar</button>
+      </div>
+      <button type="button" class="express-btn express-primary" (click)="closePendingQr()">Continuar atendimento</button>
+    </section>
+  </div>
+</div>

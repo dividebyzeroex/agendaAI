@@ -1,0 +1,139 @@
+<div class="comanda-wrapper">
+  <div class="comanda-container">
+    <div class="express-branding">
+      <span class="express-mark" aria-hidden="true">▲</span>
+      <span>AgendaAI <b>Pay Express</b></span>
+      <span class="express-security"><i class="pi pi-lock" aria-hidden="true"></i> Área segura</span>
+    </div>
+    <div *ngIf="loading()" class="loading-state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Carregando sua comanda...</p>
+    </div>
+
+    <div *ngIf="error() && !loading()" class="error-state">
+      <i class="pi pi-times-circle"></i>
+      <p role="alert">{{ error() }}</p>
+      <button type="button" *ngIf="token" (click)="carregarComanda()">Tentar novamente</button>
+    </div>
+
+    <div *ngIf="caixaItem && !loading()" class="comanda-content">
+      <div class="comanda-header">
+        <div class="brand">{{ nomeEstabelecimento() }}</div>
+        <h1>{{ caixaItem.origem === 'sinal' ? 'Sinal da reserva' : 'Sua comanda digital' }}</h1>
+        <p class="date">Atendimento em: {{ caixaItem.created_at | date: 'dd/MM/yyyy HH:mm' }}</p>
+        <span class="status-badge" [class.pago]="receiptPaid" [class.registrado]="receiptRecorded"
+          aria-live="polite">{{receiptLabel}}</span>
+        <p class="receipt-status-warning" *ngIf="receiptWarning()" role="status">{{receiptWarning()}}</p>
+      </div>
+
+      <div class="comanda-body">
+        <div class="info-row">
+          <span>Cliente:</span>
+          <strong>{{ caixaItem.cliente_nome }}</strong>
+        </div>
+        <div class="info-row" *ngIf="caixaItem.profissional">
+          <span>Profissional:</span>
+          <strong>{{ caixaItem.profissional }}</strong>
+        </div>
+
+        <hr />
+
+        <h3>Serviços</h3>
+        <div class="item-list">
+          <div class="item-row" *ngFor="let s of caixaItem.servicos">
+            <span class="item-name">{{ s.titulo }}</span>
+            <span class="item-price">R$ {{ s.preco | number: '1.2-2' }}</span>
+          </div>
+        </div>
+
+        <div *ngIf="produtos.length > 0">
+          <hr />
+          <h3>Produtos</h3>
+          <div class="item-list">
+            <div class="item-row" *ngFor="let p of produtos">
+              <span class="item-name">{{ p.nome }} x{{ p.quantidade }}</span>
+              <span class="item-price"
+                >R$ {{ p.valor_unitario * p.quantidade | number: '1.2-2' }}</span
+              >
+            </div>
+          </div>
+        </div>
+
+        <hr />
+
+        <div class="info-row" *ngIf="caixaItem.prepaid_amount > 0">
+          <span>Sinal já recebido:</span
+          ><strong>− R$ {{ caixaItem.prepaid_amount | number: '1.2-2' }}</strong>
+        </div>
+        <div class="total-row">
+          <span>Total:</span>
+          <strong>R$ {{ caixaItem.valor_total | number: '1.2-2' }}</strong>
+        </div>
+
+        <div class="pagamento-info" *ngIf="receiptPaid || receiptRecorded">
+          <p>{{ receiptPaid ? 'Confirmado pela Stripe:' : 'Registrado pelo estabelecimento:' }}
+            <strong>{{ paymentMethodLabel }}</strong></p>
+          <p *ngIf="paidAt()">Data do registro: {{ paidAt() | date: 'dd/MM/yyyy HH:mm' }}</p>
+        </div>
+        <div class="receipt-manual-explanation" *ngIf="receiptRecorded" role="note">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <p><strong>Pagamento registrado pelo estabelecimento.</strong>
+            Esta comanda não foi cobrada pela Stripe. Se você ainda não pagou,
+            avise a recepção para corrigir o lançamento e emitir uma cobrança online.
+            Não faça outro pagamento antes da conferência.</p>
+        </div>
+        <div class="receipt-manual-explanation" *ngIf="receiptSource() === 'merchant' && receiptState() === 'pendente'">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <p>Este link não possui uma cobrança Stripe ativa. Solicite ao estabelecimento
+            que gere um link de pagamento no AgendaAI Pay Express.</p>
+        </div>
+      </div>
+
+      <section class="express-payment" *ngIf="onlineStatus()" aria-labelledby="express-title">
+        <div *ngIf="onlineStatus() === 'pending'" class="express-pay-ready">
+          <div class="express-payment-title"><span class="express-payment-icon"><i class="pi pi-credit-card" aria-hidden="true"></i></span>
+            <div><span class="express-kicker">PAGAMENTO ONLINE</span><h2 id="express-title">Falta só confirmar seu pagamento</h2></div>
+          </div>
+          <p *ngIf="caixaItem.origem === 'sinal'">Este valor garante seu horário e será abatido no atendimento. O link do sinal tem prazo de pagamento.</p>
+          <p *ngIf="caixaItem.origem !== 'sinal'">Confira o valor da sua comanda e pague diretamente no ambiente seguro da Stripe. Não é necessário criar uma conta no AgendaAI.</p>
+          <button class="express-pay-button" type="button" (click)="pagar()" [disabled]="paymentBusy()" aria-label="Pagar com segurança no checkout da Stripe">
+            <i class="pi" [ngClass]="paymentBusy() ? 'pi-spinner pi-spin' : 'pi-lock'" aria-hidden="true"></i>
+            {{ paymentBusy() ? 'Abrindo pagamento seguro…' : 'Pagar agora com segurança' }}
+            <i *ngIf="!paymentBusy()" class="pi pi-arrow-right" aria-hidden="true"></i>
+          </button>
+          <p class="express-methods"><i class="pi pi-shield" aria-hidden="true"></i>
+            Cartão e outros meios habilitados na conta do estabelecimento, apresentados no checkout Stripe.</p>
+          <button type="button" class="express-status-refresh" (click)="conferirPagamento()" [disabled]="checkingPayment()">
+            <i class="pi pi-refresh" [class.pi-spin]="checkingPayment()" aria-hidden="true"></i>
+            {{checkingPayment() ? 'Conferindo pagamento…' : 'Já pagou? Conferir situação'}}
+          </button>
+          <p class="express-auto-status"><span class="express-dot"></span> A confirmação também é atualizada automaticamente.</p>
+        </div>
+        <div *ngIf="onlineStatus() === 'paid'" class="express-finished" role="status">
+          <div class="express-finished-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></div>
+          <h2 id="express-title">Pagamento confirmado!</h2>
+          <p *ngIf="caixaItem.origem === 'sinal'">
+            {{ reservationStatus() === 'pendente' ? 'Sinal pago. Aguarde a aprovação do estabelecimento.' :
+              reservationStatus() === 'confirmado' ? 'Sinal pago e reserva confirmada.' :
+              'Sinal pago. Consulte a situação da reserva com o estabelecimento.' }}
+          </p>
+          <p *ngIf="caixaItem.origem !== 'sinal'">Seu comprovante está disponível nesta comanda. Obrigado pela preferência!</p>
+        </div>
+        <div *ngIf="onlineStatus() === 'expired' || onlineStatus() === 'refunded' ||
+          onlineStatus() === 'refund_pending' || onlineStatus() === 'disputed'" class="express-attention" role="status">
+          <i class="pi pi-info-circle" aria-hidden="true"></i>
+          <h2 id="express-title">Sua cobrança precisa de atenção</h2>
+          <p *ngIf="onlineStatus() === 'expired'">Este pagamento expirou. Solicite um novo link ao estabelecimento.</p>
+          <p *ngIf="onlineStatus() === 'refunded'">O pagamento foi reembolsado. O prazo de crédito depende do meio de pagamento.</p>
+          <p *ngIf="onlineStatus() === 'refund_pending'">Reembolso em processamento. Aguarde a confirmação da Stripe.</p>
+          <p *ngIf="onlineStatus() === 'disputed'">Pagamento em análise. Converse com o estabelecimento.</p>
+        </div>
+        <p *ngIf="paymentError()" class="express-payment-error" role="alert">{{ paymentError() }}</p>
+      </section>
+      <div class="comanda-footer">
+        <p>Obrigado pela preferência!</p>
+        <p class="small-text">Esta é uma via digital gerada pelo {{ nomeEstabelecimento() }}.</p>
+      </div>
+    </div>
+  </div>
+</div>
