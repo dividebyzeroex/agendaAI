@@ -21,8 +21,8 @@ describe('Zernio tenant isolation', () => {
 });
 describe('Zernio post scheduling', () => {
  const now=Date.parse('2026-10-18T15:00:00Z');
- it('requires future dates between 2 minutes and 90 days', () => {
-  expect(validSchedule('2026-10-18T15:01:00Z',now)).toBe(false);
+ it('requires future instants with a 30-second safety margin and 90-day cap', () => {
+  expect(validSchedule('2026-10-18T15:01:00Z',now)).toBe(true);
   expect(validSchedule('2026-10-19T15:00:00Z',now)).toBe(true);
   expect(validSchedule('2027-01-18T15:00:00Z',now)).toBe(false);
   expect(validSchedule('invalid',now)).toBe(false);
