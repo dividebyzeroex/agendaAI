@@ -277,6 +277,12 @@ export const routes: Routes = [
         data: { roles: ['dono', 'financeiro', 'barbeiro'] },
       },
       {
+        path: 'crescimento',
+        loadComponent: () => import('./pages/growth-studio/growth-studio').then(m => m.GrowthStudio),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
+      },
+      {
         path: 'social',
         loadComponent: () => import('./pages/zernio-workspace/zernio-workspace').then(m => m.ZernioWorkspace),
         canActivate: [roleGuard],

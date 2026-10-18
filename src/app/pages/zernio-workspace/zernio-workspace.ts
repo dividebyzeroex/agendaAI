@@ -1,7 +1,7 @@
 import { ChangeDetectorRef, Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SupabaseService } from '../../services/supabase.service';
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
 
@@ -22,6 +22,9 @@ export class ZernioWorkspace implements OnInit, OnDestroy {
   private db = inject(SupabaseService).client;
   private est = inject(EstabelecimentoService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+  growthCampaignName = '';
+  private loadedGrowthCampaign = '';
   private cdr = inject(ChangeDetectorRef);
 
   get isOwner() { return this.router.url.startsWith('/platform-admin'); }
@@ -102,6 +105,19 @@ export class ZernioWorkspace implements OnInit, OnDestroy {
       const data=await this.api('overview');
       this.profileId=data.profileId||'';
       this.accounts=data.accounts||[];
+      const campaignId = this.route.snapshot.queryParamMap.get('campanha');
+      if (!this.isOwner && campaignId && /^[0-9a-f-]{36}$/i.test(campaignId) && campaignId !== this.loadedGrowthCampaign) {
+        const tenant = (await this.scope() as {estabelecimentoId?:string}).estabelecimentoId;
+        const {data:campaign,error:campaignError}=await this.db.from('growth_social_campaigns')
+          .select('id,title,caption').eq('id',campaignId).eq('estabelecimento_id',tenant!).maybeSingle();
+        if (campaignError) throw Error(campaignError.message);
+        if (campaign) {
+          this.content = campaign.caption;
+          this.growthCampaignName = campaign.title;
+          this.loadedGrowthCampaign = campaignId;
+        }
+      }
+
       this.tenantProfiles=this.isOwner?(data.tenants||[]):[];
       this.selected=new Set([...this.selected].filter(id=>this.accounts.some(a=>a.id===id&&a.isActive)));
       if(new URLSearchParams(window.location.search).has('connected'))

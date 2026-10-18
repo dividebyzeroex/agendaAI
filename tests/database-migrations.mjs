@@ -63,7 +63,8 @@ await db.query(`update estabelecimento set stripe_livemode=true where id=$1`,[te
 assert.equal((await asRole('authenticated',owner,`select get_platform_metrics() as data`)).rows[0].data.totalMrr,97);
 await db.query(`update estabelecimento set plano_expires_at=null where id=$1`,[tenant]);
 for(let i=0;i<5;i++)await db.query(`insert into profissionais(id,estabelecimento_id,nome,ativo) values(gen_random_uuid(),$1,'Professional',true)`,[tenant]);
-await assert.rejects(()=>db.query(`insert into profissionais(id,estabelecimento_id,nome,ativo) values(gen_random_uuid(),$1,'Excess',true)`,[tenant]));
+await db.query(`insert into profissionais(id,estabelecimento_id,nome,ativo) values(gen_random_uuid(),$1,'Sixth professional',true)`,[tenant]);
+assert.equal((await db.query(`select count(*)::int as total from profissionais where estabelecimento_id=$1 and ativo`,[tenant])).rows[0].total,6);
 const pendingOwner='10000000-0000-4000-8000-000000000003';
 await db.query(`insert into auth.users(id,email) values($1,'joao.almeida.msbrasil@gmail.com')`,[pendingOwner]);
 assert.equal((await db.query(`select count(*)::int n from private.platform_owners where user_id=$1`,[pendingOwner])).rows[0].n,0);

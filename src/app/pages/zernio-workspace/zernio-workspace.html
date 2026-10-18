@@ -14,6 +14,7 @@
   <div *ngIf="error" class="feedback danger" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{error}}</span><button type="button" (click)="error=''" aria-label="Fechar aviso">×</button></div>
   <div *ngIf="notice" class="feedback positive" role="status"><i class="pi pi-check-circle" aria-hidden="true"></i><span>{{notice}}</span><button type="button" (click)="notice=''" aria-label="Fechar aviso">×</button></div>
 
+  <div class="feedback positive" role="status" *ngIf="growthCampaignName"><i class="pi pi-link" aria-hidden="true"></i><span>Campanha do AgendaAI Growth carregada: <strong>{{growthCampaignName}}</strong>. Anexe a foto ou vídeo do salão e escolha as redes para publicar.</span></div>
   <div class="overview-grid">
     <article class="overview-item"><span class="overview-icon"><i class="pi pi-share-alt" aria-hidden="true"></i></span><div><span>Contas conectadas</span><strong>{{activeAccounts}}</strong><small>Disponíveis para publicação</small></div></article>
     <article class="overview-item"><span class="overview-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></span><div><span>Canais selecionados</span><strong>{{selectedAccounts.length}}</strong><small>Destino do próximo post</small></div></article>

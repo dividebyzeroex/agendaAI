@@ -18,6 +18,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   try {
     const supabase = adminClient();
+    const attributeGrowth = async (tenant:string,eventId:string|undefined) => {
+      const code = req.body?.campaign_code;
+      if (!eventId || !isUuid(eventId) || !isUuid(code)) return;
+      try {
+        const {error}=await supabase.rpc('growth_attribute_booking',{
+          p_tenant:tenant,p_event:eventId,p_code:code,
+        });
+        if (error) console.warn('[Growth attribution] Not recorded:',error.code);
+      } catch { /* A tracking failure cannot invalidate a real booking. */ }
+    };
     let {
       estabelecimento_id,
       servico_id,
@@ -441,6 +451,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             ? 'Este horário já foi reservado. Escolha outro.'
             : reservationError.message || 'Não foi possível reservar com sinal.',
         });
+      await attributeGrowth(estabelecimento_id,reservation?.event?.id);
       return res
         .status(201)
         .json(await depositReservationResponse(supabase, depositStripe, reservation));
@@ -463,6 +474,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(500).json({ error: 'Falha ao criar agendamento.' });
     }
 
+    await attributeGrowth(estabelecimento_id,event.id);
     return res.status(201).json({
       success: true,
       event,
