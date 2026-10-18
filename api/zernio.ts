@@ -1,4 +1,4 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import type { VercelRequest, VercelResponse } from '../server/http.js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 const API = 'https://zernio.com/api/v1';
