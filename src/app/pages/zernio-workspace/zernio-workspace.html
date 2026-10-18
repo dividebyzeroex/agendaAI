@@ -1,0 +1,38 @@
+<div class="social-shell">
+  <header class="social-heading">
+    <div><p class="eyebrow">AGENDAAI · ZERNIO</p><h1>{{ isOwner ? 'Redes da AgendaAI' : 'Marketing e redes sociais' }}</h1><p>{{ isOwner ? 'Gerencie os perfis oficiais da plataforma sem acessar as contas dos clientes.' : 'Conecte as redes sociais do seu estabelecimento e prepare publicações em um só lugar.' }}</p></div>
+    <button type="button" class="btn subtle" (click)="load()" [disabled]="loading || busy">Atualizar conexões</button>
+  </header>
+  <p class="feedback error" role="alert" *ngIf="error">{{error}}</p>
+  <p class="feedback success" role="status" *ngIf="notice">{{notice}}</p>
+  <div class="social-grid">
+    <section class="social-card">
+      <h2>Contas conectadas</h2>
+      <p>Você autoriza cada canal diretamente pelo Zernio. O AgendaAI não solicita senhas das redes.</p>
+      <div class="connect-row">
+        <label for="zernio-platform">Nova conexão</label>
+        <select id="zernio-platform" [(ngModel)]="platform"><option *ngFor="let p of platforms" [value]="p.value">{{p.label}}</option></select>
+        <button class="btn primary" type="button" (click)="connect()" [disabled]="busy || loading">Conectar conta</button>
+      </div>
+      <p *ngIf="loading">Consultando contas…</p>
+      <p *ngIf="!loading && !accounts.length" class="empty">Nenhuma conta conectada neste perfil.</p>
+      <label class="account-row" *ngFor="let a of accounts">
+        <input type="checkbox" [checked]="selected.has(a.id)" [disabled]="!a.isActive" (change)="toggleAccount(a.id, $any($event.target).checked)" />
+        <span><strong>{{a.username || a.platform}}</strong><small>{{a.platform}}</small></span>
+        <em [class.offline]="!a.isActive">{{a.isActive ? 'Conectada' : 'Desconectada'}}</em>
+      </label>
+      <small class="hint">As contas e publicações são isoladas por estabelecimento. Uma nova conta pode exigir aprovação no próprio canal.</small>
+    </section>
+    <section class="social-card">
+      <h2>Nova publicação</h2><p>Crie um rascunho ou agende uma publicação. Nada é publicado automaticamente nesta tela.</p>
+      <label class="field-label" for="zernio-post">Texto da publicação</label>
+      <textarea id="zernio-post" rows="7" maxlength="3000" [(ngModel)]="content" placeholder="O que deseja comunicar aos clientes?"></textarea>
+      <div class="schedule-row"><label for="zernio-datetime">Data e hora para agendar</label><input id="zernio-datetime" type="datetime-local" [(ngModel)]="scheduledFor"/></div>
+      <div class="actions">
+        <button class="btn subtle" type="button" [disabled]="busy || !content.trim() || !selected.size" (click)="save('draft')">Salvar rascunho</button>
+        <button class="btn primary" type="button" [disabled]="busy || !content.trim() || !selected.size || !scheduledFor" (click)="save('schedule')">Agendar publicação</button>
+      </div>
+      <small class="hint">Custos e limites de cada canal são definidos pelo Zernio. Consulte a política comercial antes de adicionar contas adicionais.</small>
+    </section>
+  </div>
+</div>
