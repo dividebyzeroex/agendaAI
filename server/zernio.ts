@@ -127,7 +127,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const accountsResult: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
       const accounts = scopedAccounts(accountsResult.accounts || accountsResult.data?.accounts, profileId)
         .map((a: any) => ({ id:a._id || a.id, platform:a.platform, username:a.username, isActive:a.isActive }));
-      return res.status(200).json({ profileId, accounts });
+      // Owner only: aggregated, read-only visibility over connected tenant profiles.
+      // A tenant never receives any other tenant's identifiers.
+      let tenants: Array<{ nome: string; profileId: string; connectedAccounts: number }> = [];
+      if (scope === 'owner') {
+        const { data: rows, error: lookup } = await db.from('zernio_profile_links')
+          .select('estabelecimento_id,zernio_profile_id,estabelecimento(nome)').eq('scope','tenant').limit(100);
+        if (lookup) throw new IntegrationError(503,'Não foi possível carregar perfis dos salões.');
+        const all: any = await callZernio('/accounts');
+        const allAccounts = all.accounts || all.data?.accounts;
+        tenants = (rows || []).map((r: any) => ({
+          nome: r.estabelecimento?.nome || 'Estabelecimento',
+          profileId: r.zernio_profile_id,
+          connectedAccounts: scopedAccounts(allAccounts, r.zernio_profile_id).filter((a: any) => a.isActive).length,
+        }));
+      }
+      return res.status(200).json({ profileId, accounts, tenants });
     }
     if (action === 'connect') {
       const platform = String(body.platform || '');
