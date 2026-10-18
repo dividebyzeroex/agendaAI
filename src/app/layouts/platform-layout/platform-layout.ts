@@ -21,6 +21,8 @@ export class PlatformLayout {
   {path:'/platform-admin/control',label:'Gestão e ativação',icon:'pi-compass',section:'Operação'},
   {path:'/platform-admin/tenants',label:'Estabelecimentos',icon:'pi-building',section:'Operação'},
   {path:'/platform-admin/growth',label:'Oportunidades',icon:'pi-users',section:'Crescimento'},
+  {path:'/platform-admin/partners',label:'Founders e Indica+',icon:'pi-gift',section:'Crescimento'},
+  {path:'/platform-admin/social',label:'Redes sociais',icon:'pi-share-alt',section:'Crescimento'},
   {path:'/platform-admin/billing',label:'Financeiro',icon:'pi-wallet',section:'Administração'},
   {path:'/platform-admin/observability',label:'Saúde do sistema',icon:'pi-heart',section:'Administração'},
   {path:'/platform-admin/settings',label:'Configurações',icon:'pi-cog',section:'Administração'}
