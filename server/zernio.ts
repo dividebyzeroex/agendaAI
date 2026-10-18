@@ -131,11 +131,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const verify: any = await callZernio('/auth/verify');
       return res.status(200).json({ configured: verify.valid === true, authType: verify.authType || null });
     }
-    const profileId = await ensureProfile(db,ctx);
+    const { data: mapped, error: mappedError } = await db.from('zernio_profile_links')
+      .select('zernio_profile_id').eq('external_id',ctx.externalId).maybeSingle();
+    if (mappedError) throw new IntegrationError(503,'Migração Zernio indisponível.');
+    let profileId: string | null = mapped?.zernio_profile_id || null;
+    // Browsing the dashboard must be read-only. Create a profile only after
+    // the salon or Owner explicitly starts an OAuth connection.
+    if (action === 'connect' && !profileId) profileId = await ensureProfile(db,ctx);
     if (action === 'overview') {
-      const accountsResult: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
-      const accounts = scopedAccounts(accountsResult.accounts || accountsResult.data?.accounts, profileId)
-        .map((a: any) => ({ id:a._id || a.id, platform:a.platform, username:a.username, isActive:a.isActive }));
+      let accounts: any[] = [];
+      if (profileId) {
+        const accountsResult: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
+        accounts = scopedAccounts(accountsResult.accounts || accountsResult.data?.accounts, profileId)
+          .map((a: any) => ({ id:a._id || a.id, platform:a.platform, username:a.username, isActive:a.isActive }));
+      }
       // Owner only: aggregated, read-only visibility over connected tenant profiles.
       // A tenant never receives any other tenant's identifiers.
       let tenants: Array<{ nome: string; profileId: string; connectedAccounts: number }> = [];
@@ -166,6 +175,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ authUrl: response.authUrl });
     }
     if (action === 'draft' || action === 'schedule') {
+      if (!profileId) throw new IntegrationError(409,'Conecte primeiro uma rede social ao seu estabelecimento.');
       const content = String(body.content || '').trim();
       if (!content || content.length > 3000) throw new IntegrationError(400,'Escreva uma mensagem de até 3.000 caracteres.');
       const requested = Array.isArray(body.accountIds) ? [...new Set(body.accountIds.filter((v: unknown) => typeof v === 'string'))] as string[] : [];
