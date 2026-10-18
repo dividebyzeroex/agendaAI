@@ -15,8 +15,23 @@ export function scopedAccounts(input: unknown, profileId: string): any[] {
   ));
 }
 export function validSchedule(value: unknown, now: number): boolean {
-  const time = new Date(String(value || '')).getTime();
-  return Number.isFinite(time) && time > now + 120000 && time <= now + 90 * 86400000;
+  // Only timestamps with an explicit timezone are accepted. The browser sends
+  // the exact instant from datetime-local as ISO UTC; no wall-clock reparse.
+  const input = String(value || '');
+  if (!/T.*(?:Z|[+-]\\d{2}:\\d{2})$/i.test(input)) return false;
+  const time = Date.parse(input);
+  return Number.isFinite(time) && time > now + 30_000 && time <= now + 90 * 86400000;
+}
+export function validMediaItems(input: unknown): input is Array<{url: string; type: 'image'|'video'}> {
+  return Array.isArray(input) && input.length <= 10 && input.every((item) =>
+    item && (item.type === 'image' || item.type === 'video')
+    && typeof item.url === 'string'
+    && /^https:\/\/media\\.zernio\\.com\/[A-Za-z0-9_./%-]+(?:\\?[A-Za-z0-9_=&%.-]+)?$/i.test(item.url)
+  );
+}
+export function mediaRequired(platforms: Array<{platform: string}>, media: unknown): boolean {
+  return platforms.some(p=>['instagram','tiktok','pinterest'].includes(p.platform))
+     && (!Array.isArray(media) || media.length === 0);
 }
 class IntegrationError extends Error { constructor(public status: number, message: string) { super(message); } }
 
@@ -175,6 +190,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (!response.authUrl || !/^https:\/\//.test(response.authUrl)) throw new IntegrationError(502,'Autorização indisponível no Zernio.');
       return res.status(200).json({ authUrl: response.authUrl });
     }
+    if (action === 'media-presign') {
+      const filename = String(body.filename || '');
+      const contentType = String(body.contentType || '');
+      const size = Number(body.size || 0);
+      const supported = ['image/jpeg','image/png','video/mp4','video/quicktime'];
+      if (!profileId) throw new IntegrationError(409,'Conecte uma rede social antes de enviar mídia.');
+      if (!supported.includes(contentType) || filename.length < 3 || filename.length > 160
+        || /[\\/\\\\]/.test(filename) || !Number.isFinite(size) || size <= 0 || size > 300 * 1024 * 1024)
+        throw new IntegrationError(400,'Envie JPG, PNG, MP4 ou MOV de até 300 MB.');
+      const upload: any = await callZernio('/media/presign','POST',{filename,contentType,size});
+      if (!/^https:\/\//i.test(upload.uploadUrl || '') || !/^https:\/\/media\\.zernio\\.com\//i.test(upload.publicUrl || ''))
+        throw new IntegrationError(502,'O Zernio não retornou um endereço de upload válido.');
+      return res.status(200).json({ uploadUrl:upload.uploadUrl, publicUrl:upload.publicUrl });
+    }
     if (action === 'draft' || action === 'schedule') {
       if (!profileId) throw new IntegrationError(409,'Conecte primeiro uma rede social ao seu estabelecimento.');
       const content = String(body.content || '').trim();
@@ -189,15 +218,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         if (!account || !account.isActive || !PLATFORMS.has(account.platform)) throw new IntegrationError(403,'A conta selecionada não pertence a este perfil ou está desconectada.');
         return { accountId:id, platform:account.platform };
       });
-      const payload: Record<string,unknown> = { content, platforms };
+      const mediaItems = body.mediaItems || [];
+      if (!validMediaItems(mediaItems)) throw new IntegrationError(400,'Os anexos de mídia são inválidos. Envie arquivos pela área de upload.');
+      if (mediaRequired(platforms,mediaItems))
+        throw new IntegrationError(400,'O Instagram exige uma foto ou vídeo. Adicione uma mídia antes de agendar.');
+      if (platforms.some(p => p.platform === 'instagram') && content.length > 2200)
+        throw new IntegrationError(400,'O Instagram aceita até 2.200 caracteres na legenda.');
+      const payload: Record<string,unknown> = {content,platforms, ...(mediaItems.length ? {mediaItems} : {})};
       if (action === 'schedule') {
-        const scheduledAt = new Date(String(body.scheduledFor || ''));
         if (!validSchedule(body.scheduledFor, Date.now()))
-          throw new IntegrationError(400,'Selecione uma data futura válida (até 90 dias).');
-        // ISO with timezone offset; Zernio accepts timezone + local scheduledFor.
-        const formatter = new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo', year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'});
-        payload['scheduledFor']=formatter.format(scheduledAt).replace(' ','T');
-        payload['timezone']='America/Sao_Paulo';
+          throw new IntegrationError(400,'Escolha uma data e horário ainda futuros. Para hoje, selecione um horário após o atual.');
+        // Zernio accepts an ISO instant with Z; never reinterpret it in another timezone.
+        payload['scheduledFor'] = new Date(String(body.scheduledFor)).toISOString();
+        payload['timezone'] = 'UTC';
       }
       const result: any = await callZernio('/posts','POST',payload, typeof body.requestId === 'string' && UUID.test(body.requestId)?body.requestId:undefined);
       const post = result.post || result.existingPost;
