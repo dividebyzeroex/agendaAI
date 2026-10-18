@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scopedAccounts, validSchedule } from '../api/zernio.js';
+import { scopedAccounts, validSchedule } from '../server/zernio.js';
 
 describe('Zernio tenant isolation', () => {
  const own = '66a1f0c2a4b9d3e8f1a2b3c4';
