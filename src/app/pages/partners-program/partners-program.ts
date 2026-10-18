@@ -19,6 +19,10 @@ export class PartnersProgram implements OnInit {
   establishments:PlatformTenant[]=[];
   selectedTenant=''; invitationLink=''; referralLink='';
   receipt='';
+  payoutFor='';
+  get referralCount(){return this.owner?(this.data.commissions?.length||0):(this.data.total_indications||0);}
+  get approvedValue(){return this.owner ? (this.data.commissions||[]).filter((c:any)=>c.status==='approved').reduce((sum:number,c:any)=>sum+(c.reward_cents||0),0):this.data.eligible_balance_cents||0;}
+  get remainingFounders(){return Math.max(0,(this.data.pilot_capacity||3)-(this.data.founders||[]).filter((f:any)=>f.status==='pending'||f.status==='active').length);}
   founderTermsAccepted=false;
   referralTermsAccepted=false;
   private get tenantId(){ return this.est.estabelecimento$.value?.id || ''; }
@@ -83,11 +87,17 @@ export class PartnersProgram implements OnInit {
     this.notice='Comissão aprovada, aguardando pagamento manual.';
   });}
   recordPayout(id:string){return this.action(async()=>{
-    const reference=window.prompt('Informe a referência do comprovante do Pix já realizado:');
-    if(!reference)return;
+    const reference=this.receipt.trim();
+    if(reference.length<6)throw Error('Informe a referência real do comprovante do Pix já realizado.');
     const ok=await this.rpc('partner_owner_record_payout',{p_attribution_id:id,p_pix_receipt:reference});
     if(!ok)throw Error('Comissão não aprovada ou já paga.');
-    this.notice='Comprovante registrado. Essa ação não movimentou dinheiro.';
+    this.payoutFor='';this.receipt='';
+    this.notice='Comprovante registrado. Nenhuma transferência foi realizada pelo sistema.';
   });}
-  async copy(value:string){if(value)await navigator.clipboard.writeText(value);}
+  async copy(value:string){
+    if(!value)return;
+    try{await navigator.clipboard.writeText(value);this.notice='Copiado para a área de transferência.';}
+    catch{this.error='Não foi possível copiar. Selecione o texto do link e copie manualmente.';}
+    this.cdr.markForCheck();
+  }
 }
