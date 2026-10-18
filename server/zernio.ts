@@ -38,7 +38,7 @@ async function callZernio(path: string, method: 'GET' | 'POST' = 'GET', body?: o
     });
     const result: any = await response.json().catch(() => ({}));
     if (!response.ok) {
-      if (response.status === 409 && result?.code === 'profile_external_id_conflict') return result;
+      if (response.status === 409 && result?.code === 'profile_external_id_conflict' && result?.details?.existingProfileId) return { profile:{_id:result.details.existingProfileId} };
       throw new IntegrationError(response.status >= 500 ? 502 : response.status, result?.error || 'Falha na comunicação com Zernio.');
     }
     return result;
@@ -61,7 +61,7 @@ async function getScope(db: SupabaseClient, bearer: string, scope: Scope, tenant
   if (error || !user) throw new IntegrationError(401, 'Sessão expirada.');
   if (scope === 'owner') {
     const url = process.env['SUPABASE_URL'] || process.env['NEXT_PUBLIC_SUPABASE_URL'];
-    const anonKey = process.env['SUPABASE_ANON_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
+    const anonKey = process.env['SUPABASE_ANON_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_PUBLISHABLE_DEFAULT_KEY'] || process.env['NEXT_PUBLIC_SUPABASE_ANON_KEY'];
     if (!url || !anonKey) throw new IntegrationError(503, 'Autorização indisponível.');
     // Existing SECURITY DEFINER RPC verifies private.is_platform_owner() against the JWT.
     const authClient = createClient(url, anonKey, { global: { headers: { Authorization: 'Bearer ' + token } } });
@@ -80,22 +80,22 @@ async function ensureProfile(db: SupabaseClient, ctx: { externalId: string; disp
   const { data: existing, error: readError } = await db.from('zernio_profile_links').select('zernio_profile_id').eq('external_id', ctx.externalId).maybeSingle();
   if (readError) throw new IntegrationError(503, 'Migração de perfis do Zernio pendente.');
   if (existing?.zernio_profile_id) return existing.zernio_profile_id as string;
-  // Zernio enforces a unique profile name. Reuse it when an earlier
+  // Zernio enforces a unique externalId and profile name. Reuse it when an earlier
   // request created the profile but our database write timed out.
   const profileName = 'agendaai-' + ctx.externalId;
   let profileId: string | undefined;
   try {
     const created: any = await callZernio('/profiles', 'POST', {
-      name: profileName, description: ctx.displayName
+      name: profileName, description: ctx.displayName, externalId: ctx.externalId
     });
     profileId = created.profile?._id;
   } catch (error) {
     if (!(error instanceof IntegrationError) || error.status !== 409) throw error;
   }
   if (!profileId || !OBJECT_ID.test(profileId)) {
-    const query: any = await callZernio('/profiles');
+    const query: any = await callZernio('/profiles?externalId=' + encodeURIComponent(ctx.externalId));
     const profiles = query.profiles || query.data?.profiles || [];
-    const found = profiles.find((p: any) => p.name === profileName);
+    const found = profiles.find((p: any) => p.externalId === ctx.externalId || p.name === profileName);
     profileId = found?._id || found?.id;
   }
   if (!profileId || !OBJECT_ID.test(profileId)) throw new IntegrationError(502, 'Não foi possível identificar o perfil do Zernio.');
