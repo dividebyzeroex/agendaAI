@@ -665,10 +665,19 @@ export class AdminCaixa implements OnInit, DoCheck, OnDestroy {
     interval(8000).pipe(takeUntilDestroyed(this.destroy)).subscribe(() => {
       if (this.payDisplay.activeHost) void this.payDisplay.heartbeat();
     });
+    // Poll active Stripe payments quickly; an idle open cash register does not
+    // need to hit connect_orders every 16 seconds for the whole workday.
+    let lastIdleCheck = 0;
     interval(16000).pipe(takeUntilDestroyed(this.destroy)).subscribe(() => {
       if (document.visibilityState !== 'visible' || !this.sessaoAtual) return;
+      if (this.onlinePending || this.pendingOnline.length) {
+        void this.loadPendingCharges();
+        void this.reviewActivePayment();
+        return;
+      }
+      if (Date.now() - lastIdleCheck < 64000) return;
+      lastIdleCheck = Date.now();
       void this.loadPendingCharges();
-      void this.reviewActivePayment();
     });
 
     this.prodService.produtos$.pipe(takeUntilDestroyed(this.destroy)).subscribe((p) => {
