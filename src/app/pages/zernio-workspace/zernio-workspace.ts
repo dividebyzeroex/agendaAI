@@ -32,6 +32,7 @@ export class ZernioWorkspace implements OnInit {
   scheduledFor = '';
   loading = true;
   busy = false;
+  verified: boolean | null = null;
   error = '';
   notice = '';
   profileId = '';
@@ -58,6 +59,19 @@ export class ZernioWorkspace implements OnInit {
     const result = await response.json();
     if (!response.ok) throw Error(result.error || 'Não foi possível comunicar com o Zernio.');
     return result;
+  }
+  async verifyKey() {
+    this.busy = true; this.error = '';
+    try {
+      const result = await this.api('health');
+      this.verified = result.configured === true;
+      this.notice = this.verified ? 'Chave do Zernio validada pelo servidor.' : 'A chave ainda não foi validada.';
+    } catch (error) {
+      this.verified = false;
+      this.error = error instanceof Error ? error.message : 'Falha ao validar a chave.';
+    } finally {
+      this.busy = false; this.cdr.markForCheck();
+    }
   }
   async load() {
     this.loading = true;
