@@ -21,7 +21,10 @@ export function validSchedule(value: unknown, now: number): boolean {
 class IntegrationError extends Error { constructor(public status: number, message: string) { super(message); } }
 
 async function callZernio(path: string, method: 'GET' | 'POST' = 'GET', body?: object, idempotency?: string) {
-  const key = process.env['ZERNIO_API_KEY'];
+  const key = process.env['ZERNIO_API_KEY'] || process.env['ZERNIO_APP_KEY'];
+  // Keep the key strictly server-side; reject placeholder and malformed keys.
+  if (key && !/^(?:sk|zrk)_[0-9a-f]{64}$/i.test(key))
+    throw new IntegrationError(503, 'Credencial Zernio inválida. Verifique ZERNIO_API_KEY na Vercel.');
   if (!key) throw new IntegrationError(503, 'Zernio ainda não foi configurado no servidor.');
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 14000);
@@ -122,6 +125,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const scope: Scope = body.scope === 'owner' ? 'owner' : 'tenant';
     const db = supabaseAdmin();
     const ctx = await getScope(db, String(req.headers.authorization || ''), scope, body.estabelecimentoId);
+    // Lightweight authenticated check: validates the app key without creating
+    // a Zernio profile, connecting an account or posting anything.
+    if (action === 'health') {
+      const verify: any = await callZernio('/auth/verify');
+      return res.status(200).json({ configured: verify.valid === true, authType: verify.authType || null });
+    }
     const profileId = await ensureProfile(db,ctx);
     if (action === 'overview') {
       const accountsResult: any = await callZernio('/accounts?profileId='+encodeURIComponent(profileId));
