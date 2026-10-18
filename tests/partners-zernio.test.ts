@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { scopedAccounts, validSchedule } from '../server/zernio.js';
+import { scopedAccounts, validSchedule, validMediaItems, mediaRequired } from '../server/zernio.js';
 
 describe('Zernio tenant isolation', () => {
  const own = '66a1f0c2a4b9d3e8f1a2b3c4';
@@ -27,4 +27,30 @@ describe('Zernio post scheduling', () => {
   expect(validSchedule('2027-01-18T15:00:00Z',now)).toBe(false);
   expect(validSchedule('invalid',now)).toBe(false);
  });
+});
+
+describe('Same-day scheduling and media guardrails', () => {
+  const brazilNoon = Date.parse('2026-10-18T15:00:00Z');
+  it('accepts later today with ISO UTC or timezone offset without another conversion', () => {
+    expect(validSchedule('2026-10-18T16:00:00Z',brazilNoon)).toBe(true);
+    expect(validSchedule('2026-10-18T13:00:00-03:00',brazilNoon)).toBe(true);
+    expect(validSchedule('2026-10-18T13:00:00',brazilNoon)).toBe(false);
+    expect(validSchedule('2026-10-18T11:59:00-03:00',brazilNoon)).toBe(false);
+    expect(validSchedule('2026-10-18T15:00:15Z',brazilNoon)).toBe(false);
+  });
+  it('accepts a trusted uploaded image and rejects unrelated or insecure URLs', () => {
+    expect(validMediaItems([{url:'https://media.zernio.com/temp/a1_photo.jpg',type:'image'}])).toBe(true);
+    expect(validMediaItems([{url:'https://media.zernio.com/temp/clip.mp4',type:'video'}])).toBe(true);
+    expect(validMediaItems([{url:'https://example.com/any.jpg',type:'image'}])).toBe(false);
+    expect(validMediaItems([{url:'http://media.zernio.com/temp/photo.jpg',type:'image'}])).toBe(false);
+    expect(validMediaItems([{url:'https://media.zernio.com.evil.example/temp/photo.jpg',type:'image'}])).toBe(false);
+    expect(validMediaItems(Array(11).fill({url:'https://media.zernio.com/temp/photo.jpg',type:'image'}))).toBe(false);
+  });
+  it('never allows Instagram text-only posts to reach the posting API', () => {
+    const instagram=[{platform:'instagram'}];
+    const linkedin=[{platform:'linkedin'}];
+    expect(mediaRequired(instagram,[])).toBe(true);
+    expect(mediaRequired(instagram,[{type:'image'}])).toBe(false);
+    expect(mediaRequired(linkedin,[])).toBe(false);
+  });
 });
