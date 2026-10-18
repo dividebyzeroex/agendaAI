@@ -49,7 +49,7 @@ export class ZernioWorkspace implements OnInit {
     const { data: { session } } = await this.db.auth.getSession();
     if (!session) throw Error('Sua sessão expirou. Entre novamente.');
     const body = { ...(await this.scope()), ...data };
-    const response = await fetch('/api/zernio?action=' + action, {
+    const response = await fetch('/api/commercial?action=zernio-' + action, {
       method: 'POST',
       headers: { 'Content-Type':'application/json', Authorization: 'Bearer ' + session.access_token },
       body: JSON.stringify(body),
