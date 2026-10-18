@@ -163,6 +163,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ profileId, accounts, tenants });
     }
     if (action === 'connect') {
+      if (!profileId) throw new IntegrationError(503,'Não foi possível criar o perfil Zernio.');
       const platform = String(body.platform || '');
       if (!PLATFORMS.has(platform)) throw new IntegrationError(400,'Plataforma não suportada.');
       // Use a trusted, configured first-party return URL; never use the request Host header.
