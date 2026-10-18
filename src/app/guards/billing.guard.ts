@@ -39,7 +39,10 @@ export const billingGuard: CanActivateFn = async (_route, state) => {
     .eq('id', selected || ids[0])
     .single();
   if (lookupError || !e) return router.parseUrl('/login');
-  if (state.url.includes('/admin/billing')) return true;
+  // Allow invited founders whose original trial expired to redeem the new
+  // access period, without granting access to any other operational module.
+  // The program RPC still verifies tenant ownership and invitation status.
+  if (state.url.includes('/admin/billing') || state.url.split(/[?#]/)[0] === '/admin/indicacoes') return true;
   const until = Math.max(
     Date.parse(e.trial_ends_at || '') || 0,
     Date.parse(e.plano_expires_at || '') || 0,

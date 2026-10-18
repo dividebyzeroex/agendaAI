@@ -277,6 +277,24 @@ export const routes: Routes = [
         data: { roles: ['dono', 'financeiro', 'barbeiro'] },
       },
       {
+        path: 'crescimento',
+        loadComponent: () => import('./pages/growth-studio/growth-studio').then(m => m.GrowthStudio),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
+      },
+      {
+        path: 'social',
+        loadComponent: () => import('./pages/zernio-workspace/zernio-workspace').then(m => m.ZernioWorkspace),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] }
+      },
+      {
+        path: 'indicacoes',
+        loadComponent: () => import('./pages/partners-program/partners-program').then(m => m.PartnersProgram),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] }
+      },
+      {
         path: 'billing',
         loadComponent: () =>
           import('./pages/admin-billing/admin-billing').then((m) => m.AdminBilling),
@@ -323,7 +341,8 @@ export const routes: Routes = [
           import('./pages/owner-console/owner-console').then((m) => m.OwnerConsole),
         data: { view: 'health' },
       },
-      { path: 'social', redirectTo: 'growth', pathMatch: 'full' },
+      { path: 'social', loadComponent: () => import('./pages/zernio-workspace/zernio-workspace').then(m => m.ZernioWorkspace) },
+      { path: 'partners', loadComponent: () => import('./pages/partners-program/partners-program').then(m => m.PartnersProgram) },
       {
         path: 'billing',
         loadComponent: () =>

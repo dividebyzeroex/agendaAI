@@ -12,9 +12,19 @@ export async function runGrowthWorker(
     fiscal?: () => Promise<any>;
     whatsapp?: () => Promise<any>;
     clubPayments?: () => Promise<any>;
+    /** True only when invoked by the automated database scheduler. */
+    scheduled?: boolean;
+    now?: () => number;
   } = {},
 ) {
   const db = deps.db || adminClient();
+  // Keep payment holds, reconciliation, campaigns and WhatsApp timely.
+  // Financial subscription generation only needs hourly checks, while
+  // draft fiscal reconciliation is checked every 20 minutes.
+  // Explicit/manual runs retain the full set of tasks for compatibility.
+  const minute = new Date(deps.now?.() ?? Date.now()).getUTCMinutes();
+  const runClubs = !deps.scheduled || minute === 0;
+  const runFiscal = !deps.scheduled || minute % 20 === 0;
   const results = await Promise.allSettled([
     (async () => {
       if (campaignReady()) {
@@ -23,11 +33,11 @@ export async function runGrowthWorker(
       }
       return deps.campaigns ? deps.campaigns() : runCustomerCampaigns();
     })(),
-    deps.clubs ? deps.clubs() : runClubRenewals(),
+    runClubs ? (deps.clubs ? deps.clubs() : runClubRenewals()) : Promise.resolve({ skipped: 'cadence' }),
     deps.holds ? deps.holds() : maintainDepositHolds(),
     deps.clubPayments ? deps.clubPayments() : maintainClubPayments(),
     deps.whatsapp ? deps.whatsapp() : runWhatsApp(db),
-    deps.fiscal ? deps.fiscal() : maintainFiscal(db),
+    runFiscal ? (deps.fiscal ? deps.fiscal() : maintainFiscal(db)) : Promise.resolve({ skipped: 'cadence' }),
   ]);
   const names = ['campaigns', 'clubs', 'holds', 'clubPayments', 'whatsapp', 'fiscal'];
   return {

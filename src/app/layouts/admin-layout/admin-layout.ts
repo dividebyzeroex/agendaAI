@@ -4,6 +4,7 @@ import { NavigationEnd, Router, RouterModule } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, map } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
+import { SupabaseService } from '../../services/supabase.service';
 import { EstabelecimentoService } from '../../services/estabelecimento.service';
 import { AppActivityService } from '../../services/app-activity.service';
 import { NotificationService } from '../../services/notification.service';
@@ -31,6 +32,8 @@ export class AdminLayout {
   private destroy = inject(DestroyRef);
   private router = inject(Router);
   auth = inject(AuthService);
+  private db = inject(SupabaseService).client;
+  private referralClaimedFor = new Set<string>();
   est = inject(EstabelecimentoService);
   notifications = inject(NotificationService);
   profile$ = this.auth.profile$;
@@ -54,7 +57,17 @@ export class AdminLayout {
   constructor() {
     this.est.estabelecimento$
       .pipe(takeUntilDestroyed(this.destroy))
-      .subscribe((e) => this.auth.setUnitRole(e?.role || null, e?.profile_id || null));
+      .subscribe((e) => {
+        this.auth.setUnitRole(e?.role || null, e?.profile_id || null);
+        const code = localStorage.getItem('agendaai_referral_code');
+        if (!e?.id || !code || this.referralClaimedFor.has(e.id)) return;
+        this.referralClaimedFor.add(e.id);
+        void this.db.rpc('partner_claim_referral', { p_estabelecimento_id: e.id, p_code: code }).then(({ error }) => {
+          if (!error || /already has a referral|já tem uma indicação/i.test(error.message))
+            localStorage.removeItem('agendaai_referral_code');
+          // Do not prevent the user from accessing the application if attribution fails.
+        });
+      });
     this.router.events
       .pipe(
         filter((e) => e instanceof NavigationEnd),
@@ -63,7 +76,7 @@ export class AdminLayout {
       .subscribe(() => this.closeSidebar());
   }
   get managementActive() {
-    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|integracoes|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|resultados|clube|retencao|unidades|primeiros-passos|portal)/.test(
+    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|integracoes|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|resultados|clube|retencao|unidades|primeiros-passos|portal|social|indicacoes)/.test(
       this.router.url,
     );
   }

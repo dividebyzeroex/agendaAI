@@ -8,13 +8,14 @@
         <span class="brand-text">AgendaAI</span>
       </a>
 
-      <nav class="nav-links desktop-only">
+      <nav class="nav-links desktop-only" aria-label="Navegação principal">
+        <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
+        <a href="#comparativo" (click)="scrollTo('comparativo')">Comparar preços</a>
         <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
-        <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express</a>
-        <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
-        <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
+        <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
         <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
         <a href="#precos" (click)="scrollTo('precos')">Planos</a>
+        <a href="#modulos" (click)="scrollTo('modulos')">Adicionais</a>
       </nav>
 
       <div class="header-actions">
@@ -30,6 +31,9 @@
   <!-- Mobile Menu Drawer -->
   <div class="mobile-nav" id="landing-mobile-nav" [class.open]="isMobileMenuOpen" [attr.aria-hidden]="!isMobileMenuOpen">
     <div class="mobile-links">
+      <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
+      <a href="#comparativo" (click)="scrollTo('comparativo')">Compare os preços</a>
+      <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
       <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
       <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express e Stripe</a>
       <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
@@ -37,6 +41,7 @@
       <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
       <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
       <a href="#precos" (click)="scrollTo('precos')">Preços</a>
+      <a href="#modulos" (click)="scrollTo('modulos')">Módulos adicionais</a>
       <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
     </div>
     <div class="mobile-actions">
@@ -50,25 +55,25 @@
     <!-- ═══════════════ HERO ═══════════════ -->
     <section class="hero-section" id="hero">
       <div class="hero-content">
-        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> A operação completa do seu salão, em uma plataforma</div>
-        <h1 class="hero-title">Seu cliente vem pela experiência. <span>Seu negócio cresce com a operação.</span></h1>
-        <p class="hero-subtitle">Agenda, recepção, profissionais, comanda digital e recebimentos integrados. Uma jornada que começa na reserva, acompanha o atendimento e termina com um checkout à altura da sua marca.</p>
+        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> GESTÃO COMPLETA, SEM TAXA POR AGENDA ADICIONAL</div>
+        <h1 class="hero-title">Seu salão cresce. <span>Sua mensalidade não precisa crescer junto.</span></h1>
+        <p class="hero-subtitle">Mais profissionais, sem pagar mais por agenda. Organize reservas, clientes, comissões e caixa — e use o AgendaAI Growth para transformar horários livres em oportunidades.</p>
         <div class="hero-feature-proof" aria-label="Diferenciais da plataforma">
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento online</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Checkout em duas telas</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Stripe Connect integrado</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> R$ 0 por agenda extra</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento, caixa e comissões</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Campanhas básicas incluídas</span>
         </div>
         <div class="hero-cta-group">
           <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
-          <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração</button>
+          <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Ver demonstração</button>
         </div>
-        <p class="hero-cta-note">30 dias grátis sem cartão. Pagamentos integrados disponíveis mediante habilitação; taxas de processamento e condições adicionais podem se aplicar.</p>
+        <p class="hero-cta-note">30 dias grátis, sem cartão e sem cobrança automática. Sem taxa por profissional adicional no mesmo estabelecimento; serviços externos e módulos opcionais podem ter custos próprios.</p>
         <div class="hero-metrics-row" aria-label="Vantagens do teste">
-          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na prática</span></div>
+          <div class="metric-item"><span class="m-val">R$ 0</span><span class="m-lbl">por profissional adicional</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Plano Essencial, depois do teste</span></div>
+          <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Essencial após o teste</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">Do agendamento ao caixa</span><span class="m-lbl">Um fluxo para a equipe e o cliente</span></div>
+          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">grátis, sem cartão</span></div>
         </div>
       </div>
 
@@ -165,6 +170,92 @@
       </div>
     </section>
 
+
+
+    <!-- DIFFERENTIATION — purpose-built for owners, no fabricated social proof -->
+    <section class="aa-value-section" id="diferenciais" aria-labelledby="aa-value-title">
+      <div class="container">
+        <div class="aa-value-intro">
+          <span class="aa-value-kicker">POR QUE O AGENDAAI</span>
+          <h2 id="aa-value-title">Mais profissionais. <em>A mesma mensalidade.</em></h2>
+          <p>Contratar alguém deveria aumentar sua capacidade de atendimento — não o custo de cada agenda. No Essencial, a quantidade de profissionais do mesmo estabelecimento não acrescenta uma nova mensalidade.</p>
+        </div>
+        <div class="aa-value-grid">
+          <article class="aa-value-card aa-value-primary">
+            <div class="aa-value-card-head"><i class="pi pi-users" aria-hidden="true"></i><span>UMA EQUIPE QUE PODE CRESCER</span></div>
+            <strong class="aa-value-amount">R$ 0</strong>
+            <h3>Por agenda adicional.</h3>
+            <p>Cadastre os profissionais do seu salão sem pagar uma taxa mensal extra para cada nova agenda.</p>
+            <span class="aa-value-note">No mesmo estabelecimento, com o Essencial.</span>
+          </article>
+          <article class="aa-value-card">
+            <div class="aa-value-card-head"><i class="pi pi-calendar-plus" aria-hidden="true"></i><span>ATENDIMENTO DE VERDADE</span></div>
+            <h3>Uma visita, vários serviços.</h3>
+            <p>Corte, barba e manicure em sequência ou ao mesmo tempo, com profissionais e comissões individuais em uma comanda.</p>
+            <a href="#multi-service" (click)="scrollTo('multi-service')">Conhecer multisserviços <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+          </article>
+          <article class="aa-value-card">
+            <div class="aa-value-card-head"><i class="pi pi-chart-line" aria-hidden="true"></i><span>GESTÃO + CRESCIMENTO</span></div>
+            <h3>A agenda também ajuda a divulgar.</h3>
+            <p>Crie campanhas simples a partir de horários vagos e acompanhe acessos e reservas atribuídas aos seus links.</p>
+            <a href="#crescimento" (click)="scrollTo('crescimento')">Conhecer AgendaAI Growth <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+          </article>
+          <article class="aa-value-card aa-value-photo-card">
+            <img src="https://images.unsplash.com/photo-1582771498000-8ad44e6c84db?auto=format&amp;fit=crop&amp;w=900&amp;q=80"
+              alt="Atendimento em barbearia, imagem ilustrativa" width="520" height="380" loading="lazy" decoding="async"/>
+            <div><span>VOCÊ CUIDA DO CLIENTE.</span><h3>O AgendaAI organiza os bastidores.</h3></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSPARENT, SOURCE-ATTRIBUTED PRICE COMPARISON -->
+    <section class="aa-price-section" id="comparativo" aria-labelledby="aa-price-title">
+      <div class="container">
+        <div class="aa-price-header">
+          <div><span class="aa-value-kicker">COMPARE SEM COMPLICAÇÃO</span>
+            <h2 id="aa-price-title">Quanto custa <em>crescer a equipe?</em></h2>
+          </div>
+          <p>Algumas plataformas somam agendas ou mudam a faixa do plano. No AgendaAI Essencial, o valor mensal anunciado não varia com o número de profissionais do mesmo salão.</p>
+        </div>
+        <div class="aa-price-workspace">
+          <div class="aa-price-controls">
+            <label for="aa-professional-count">Quantos profissionais trabalham no seu salão?</label>
+            <div class="aa-count"><strong>{{comparisonTeamSize}}</strong><span>{{comparisonTeamSize===1?'profissional':'profissionais'}}</span></div>
+            <input id="aa-professional-count" type="range" min="1" max="12" step="1" [(ngModel)]="comparisonTeamSize"
+              aria-label="Número de profissionais para comparação de preços" />
+            <div class="aa-range-limits"><span>1 profissional</span><span>12 profissionais</span></div>
+            <p>Simulação com um exemplo de concorrente que cobra R$ 99,99/mês e R$ 20 por profissional adicional, antes de impostos. Outros concorrentes podem cobrar de maneiras diferentes.</p>
+            <span class="aa-example-note">Exemplo ilustrativo, não representa todo o mercado.</span>
+          </div>
+          <div class="aa-compare-cards">
+            <div class="aa-compare-card aa-compare-us">
+              <span class="aa-compare-brand"><i class="pi pi-check-circle" aria-hidden="true"></i> AgendaAI Essencial</span>
+              <strong>R$ 97<small>/mês</small></strong>
+              <p>Sem taxa por agenda adicional.</p>
+              <span class="aa-compare-tag">Mesmo valor para {{comparisonTeamSize}} {{comparisonTeamSize===1?'profissional':'profissionais'}}</span>
+            </div>
+            <div class="aa-compare-card">
+              <span class="aa-compare-brand">Concorrente <small>· exemplo</small></span>
+              <strong>{{competitorMonthlyComparison | currency:'BRL':'symbol':'1.2-2'}}<small>/mês</small></strong>
+              <p>Simulação para {{comparisonTeamSize}} {{comparisonTeamSize===1?'profissional':'profissionais'}} da equipe, antes de impostos.</p>
+              <span class="aa-compare-tag aa-compare-muted">Exemplo: R$ 20 por profissional adicional</span>
+            </div>
+          </div>
+        </div>
+        <div class="aa-saving-strip">
+          <div><span>Diferença mensal na simulação com o concorrente</span><strong>{{comparisonSavings | currency:'BRL':'symbol':'1.2-2'}}</strong></div>
+          <div><span>Diferença em 12 meses*</span><strong>{{comparisonAnnualSavings | currency:'BRL':'symbol':'1.2-2'}}</strong></div>
+          <button type="button" (click)="goToLogin()">Quero testar sem taxa por agenda <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+        <p class="aa-price-fineprint">*Comparação ilustrativa com um modelo de cobrança de concorrente, consultado em 18/10/2026. Não representa todos os concorrentes nem economia garantida. Valores sem impostos, descontos, tarifas extras ou serviços de terceiros. Recursos e condições podem ser diferentes.</p>
+        <div class="aa-market-notes" aria-label="Entenda os modelos de cobrança">
+          <div><strong>Concorrente por profissional</strong><p>Alguns planos acrescentam uma tarifa mensal quando um novo profissional entra na equipe.</p></div>
+          <div><strong>Concorrente por faixa</strong><p>Outros planos aumentam de preço conforme a equipe ultrapassa determinadas faixas.</p></div>
+          <div><strong>AgendaAI</strong><p>O Essencial custa R$ 97/mês na contratação mensal, depois de 30 dias grátis. Sem taxa por agenda adicional no mesmo estabelecimento.</p><a href="#precos" (click)="scrollTo('precos')">Veja o que está incluído <i class="pi pi-arrow-right"></i></a></div>
+        </div>
+      </div>
+    </section>
 
     <!-- PAY EXPRESS / INTERACTIVE TWO-SCREEN CUSTOMER JOURNEY -->
     <section class="product-pay-section" id="pay-express" aria-labelledby="pay-title">
@@ -353,6 +444,57 @@
       </div>
     </section>
 
+    <!-- GROWTH — photo-led editorial storytelling, conversion-safe claims -->
+    <section class="ag-growth-showcase" id="crescimento" aria-labelledby="ag-growth-title">
+      <div class="container">
+        <header class="ag-growth-intro">
+          <div><span class="ag-growth-eyebrow"><i class="pi pi-sparkles" aria-hidden="true"></i> AGENDAAI GROWTH · NOVO</span>
+          <h2 id="ag-growth-title">Não basta organizar a agenda. <em>É hora de movimentá-la.</em></h2></div>
+          <p>Da divulgação de um horário livre até a reserva: prepare campanhas para as suas redes e acompanhe o interesse que chega pelo link de agendamento. Tudo conectado à rotina do salão.</p>
+        </header>
+        <div class="ag-growth-photos">
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1582771498000-8ad44e6c84db?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional atendendo um cliente em uma barbearia" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-megaphone"></i> CONTEÚDO E DIVULGAÇÃO</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">01 / DESPERTE INTERESSE</span>
+              <h3>Seu próximo post pode começar em um horário livre.</h3>
+              <p>Escolha um serviço, um profissional e uma vaga sugerida. O AgendaAI prepara uma legenda e um link rastreável para você divulgar com sua própria foto ou vídeo.</p></div>
+          </article>
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1547648946-2b1fd7eab923?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional em uma barbearia moderna" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-calendar-check"></i> RESERVAS E RESULTADOS</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">02 / CONVERTA EM RESERVA</span>
+              <h3>Da rede social direto para a sua agenda.</h3>
+              <p>O cliente consulta os horários e reserva pelo link. O painel mostra acessos aproximados e agendamentos atribuídos à campanha, sem confundir reservas com vendas pagas.</p></div>
+          </article>
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1750263147700-8bea3899f287?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional e cliente conversando em um salão de beleza" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-heart"></i> RETENÇÃO RESPONSÁVEL</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">03 / FAÇA VOLTAR</span>
+              <h3>O relacionamento não termina no primeiro corte.</h3>
+              <p>Identifique clientes sem visitas recentes e organize campanhas de retorno pelos canais autorizados. Nada de mensagens disparadas sem consentimento.</p></div>
+          </article>
+        </div>
+        <div class="ag-growth-conversion">
+          <div class="ag-growth-conversion-title"><span>AGENDA + MARKETING, TRABALHANDO JUNTOS</span><strong>Mais clareza para divulgar. Mais contexto para acompanhar o resultado.</strong></div>
+          <div class="ag-growth-conversion-actions">
+            <button type="button" class="btn-primary" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+            <span>As integrações com redes sociais exigem conexão e permissões dos canais. Publicações dependem da aprovação do salão.</span>
+          </div>
+        </div>
+        <p class="ag-growth-credits">Fotografias: André Reis, Wylkon Cardoso e SumUp, via Unsplash (licença gratuita). Imagens ilustrativas; não representam clientes reais do AgendaAI.</p>
+      </div>
+    </section>
+
     <!-- JOURNEY OF THE CUSTOMER AND THE BUSINESS -->
     <section class="evolution-section" id="novidades" aria-labelledby="evolution-title">
       <div class="container">
@@ -452,8 +594,8 @@
       <div class="container">
         <div class="section-intro">
           <span class="section-tag">Planos & Investimento</span>
-          <h2>Um começo simples. Um caminho para crescer.</h2>
-          <p>Faça seu primeiro agendamento real durante o teste. Depois, escolha se deseja continuar. O Essencial reúne as ferramentas para começar; módulos avançados e integrações têm condições próprias.</p>
+          <h2>Um preço claro. Sua equipe inteira.</h2>
+          <p>Comece com 30 dias grátis, sem cartão. Depois, o Essencial custa R$ 97/mês — sem cobrança por agenda ou profissional adicional no mesmo estabelecimento.</p>
 
         </div>
         <div class="pricing-grid" style="grid-template-columns:minmax(0,520px);justify-content:center">
@@ -461,19 +603,111 @@
             <div class="featured-badge">Comece por aqui</div>
             <div class="tier-head"><span class="tier-name">AgendaAI Essencial</span>
               <div class="tier-cost"><span class="currency">R$</span><span class="val">97</span><span class="cycle">/mês após contratação</span></div>
-              <p class="tier-description">Para profissionais e equipes que querem uma rotina organizada sem trocar todos os processos de uma vez.</p>
+              <p class="tier-description">Para barbearias e salões de todos os tamanhos que querem organizar a operação sem pagar mais a cada novo profissional.</p>
             </div>
             <ul class="tier-checklist">
               <li><i class="pi pi-check"></i> Agenda e link público de agendamento</li>
-              <li><i class="pi pi-check"></i> Até 5 profissionais ativos</li>
+              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por agenda ou profissional adicional</li>
               <li><i class="pi pi-check"></i> Cadastro de clientes e serviços</li>
-              <li><i class="pi pi-check"></i> Histórico de atendimentos e caixa</li>
+              <li><i class="pi pi-check"></i> Comanda, caixa e comissões por profissional</li>
+              <li><i class="pi pi-check"></i> Campanhas básicas do AgendaAI Growth</li>
+              <li><i class="pi pi-check"></i> Histórico e relatórios operacionais básicos</li>
               <li><i class="pi pi-check"></i> Atendimento por e-mail comercial</li>
             </ul>
             <button class="btn-primary w-full" (click)="goToLogin()">Começar meus 30 dias grátis</button>
-            <p class="pricing-disclaimer">30 dias grátis, sem cartão ou cobrança automática. Mensageria, serviços de pagamento e recursos avançados dependem de integração e condições específicas; chatbot de WhatsApp não está incluído.</p>
+            <p class="pricing-disclaimer">30 dias grátis, sem cartão ou cobrança automática. R$ 97/mês é o valor do Essencial na contratação mensal. Pagamentos, mensageria, publicação social multicanal e complementos opcionais podem ter tarifas próprias; chatbot de WhatsApp não está incluído. A regra sem taxa por agenda se aplica aos profissionais do mesmo estabelecimento.</p>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- Optional modules: base + add-on pricing, clearly identified as proposals -->
+    <section class="aa-addons" id="modulos" aria-labelledby="aa-addons-title">
+      <div class="container">
+        <header class="aa-addons-head">
+          <div>
+            <span class="aa-addons-eyebrow"><i class="pi pi-box" aria-hidden="true"></i> EXPANDA QUANDO FIZER SENTIDO</span>
+            <h2 id="aa-addons-title">O essencial já está incluído. <em>O extra é escolha sua.</em></h2>
+          </div>
+          <p>Sua agenda não precisa de adicionais para funcionar bem. Módulos avançados são opcionais e, quando estiverem disponíveis, o valor de cada um será <strong>somado à assinatura Essencial</strong>.</p>
+        </header>
+
+        <div class="aa-addons-pricing-rule" aria-label="Como funciona a cobrança dos adicionais">
+          <div class="aa-addons-rule-intro">
+            <span class="aa-addons-rule-label">COMO FUNCIONA O PREÇO</span>
+            <strong>R$ 97/mês do Essencial <span>+</span> valor do módulo escolhido</strong>
+            <p>O adicional não substitui os R$ 97 do plano. Ele é acrescentado à mensalidade. Se escolher dois módulos, os dois valores serão somados.</p>
+          </div>
+          <div class="aa-addons-rule-example" aria-label="Exemplo de cálculo de mensalidade">
+            <span>EXEMPLO · SOCIAL STUDIO PRO</span>
+            <div><span>Essencial</span><strong>R$ 97</strong></div>
+            <div><span>+ Social Studio Pro</span><strong>R$ 79</strong></div>
+            <div class="aa-addons-example-total"><span>Total mensal previsto</span><strong>R$ 176/mês</strong></div>
+          </div>
+        </div>
+
+        <div class="aa-addons-core" aria-label="O que continua incluído no Essencial">
+          <i class="pi pi-check-circle" aria-hidden="true"></i>
+          <div><strong>Incluído nos R$ 97/mês — sem contratar módulos</strong><span>Agendas adicionais sem taxa no mesmo estabelecimento, clientes, serviços, comissões, caixa, comandas, relatórios básicos e campanhas manuais do AgendaAI Growth.</span></div>
+        </div>
+
+        <div class="aa-addons-grid">
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-share-alt" aria-hidden="true"></i></div>
+            <h3>Social Studio Pro</h3>
+            <p>Calendário editorial, fila de publicações multicanal, revisão de conteúdo e métricas detalhadas das redes.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 79<small>/mês</small></strong></div>
+            <div class="aa-addon-total">R$ 97 + R$ 79 = <strong>R$ 176/mês</strong></div>
+            <small>Conexões sociais e eventuais custos externos serão informados antes da contratação.</small>
+          </article>
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-bolt" aria-hidden="true"></i></div>
+            <h3>Growth Automations</h3>
+            <p>Sugestões recorrentes de campanhas para horários vagos, regras avançadas, aprovações em lote e testes de campanhas.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 49<small>/mês</small></strong></div>
+            <div class="aa-addon-total">R$ 97 + R$ 49 = <strong>R$ 146/mês</strong></div>
+            <small>Publicações e ações automatizadas dependerão de aprovação e configuração.</small>
+          </article>
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-heart" aria-hidden="true"></i></div>
+            <h3>Retenção Premium</h3>
+            <p>Segmentos de clientes, campanhas autorizadas de retorno e relatórios avançados de recorrência.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 49<small>/mês</small></strong></div>
+            <div class="aa-addon-total">R$ 97 + R$ 49 = <strong>R$ 146/mês</strong></div>
+            <small>Mensagens externas poderão gerar custos adicionais de consumo, com consentimento.</small>
+          </article>
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-chart-bar" aria-hidden="true"></i></div>
+            <h3>Inteligência Financeira</h3>
+            <p>Previsões de caixa, margens por serviço e profissional, metas e análises avançadas de desempenho.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 39<small>/mês</small></strong></div>
+            <div class="aa-addon-total">R$ 97 + R$ 39 = <strong>R$ 136/mês</strong></div>
+            <small>O caixa e os relatórios operacionais básicos continuam incluídos no Essencial.</small>
+          </article>
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">SOB PROPOSTA · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-building" aria-hidden="true"></i></div>
+            <h3>Multiunidades e Franquias</h3>
+            <p>Visão consolidada de diferentes estabelecimentos, comparativos e permissões administrativas para redes.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Valor adicional ao Essencial</span><strong class="aa-addon-consult">+ Sob orçamento</strong></div>
+            <div class="aa-addon-total">Essencial + <strong>valor por unidade sob proposta</strong></div>
+            <small>O preço total será informado em proposta comercial antes de qualquer contratação.</small>
+          </article>
+          <article class="aa-addon-card">
+            <span class="aa-addon-status">SOB PROPOSTA · EM PLANEJAMENTO</span>
+            <div class="aa-addon-icon"><i class="pi pi-headphones" aria-hidden="true"></i></div>
+            <h3>Concierge Plus</h3>
+            <p>Migração complexa de cadastros, integrações específicas e treinamento dedicado da equipe.</p>
+            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional de contratação única</span><strong class="aa-addon-consult">+ Orçamento único</strong></div>
+            <div class="aa-addon-total">Essencial R$ 97/mês + <strong>taxa única sob orçamento</strong></div>
+            <small>Não é outra mensalidade: a taxa única será apresentada previamente. Suporte básico continua incluso.</small>
+          </article>
+        </div>
+        <p class="aa-addons-disclaimer"><i class="pi pi-info-circle" aria-hidden="true"></i> <span><strong>Preços em estudo, ainda não disponíveis para contratação.</strong> Todos os preços mensais adicionais informados são valores <strong>somados aos R$ 97/mês do Essencial</strong>, nunca substitutos do plano-base. Custos externos, consumo e condições especiais podem ser cobrados à parte quando especificados. Nenhum módulo é contratado automaticamente.</span></p>
       </div>
     </section>
 
@@ -515,8 +749,8 @@
     <section class="cta-banner-section">
       <div class="container">
         <div class="cta-box">
-          <h2>Comece pela agenda. Descubra o que mais o seu negócio pode fazer.</h2>
-          <p>Configure os serviços, teste o link de reservas e conheça os recursos de gestão durante 30 dias. Você decide depois se vale a pena continuar.</p>
+          <h2>Seu próximo profissional não deveria custar outra mensalidade.</h2>
+          <p>Experimente por 30 dias a agenda, o caixa, as comissões e as campanhas básicas de crescimento. Traga a equipe e continue crescendo sem tarifa por agenda adicional.</p>
           <div class="cta-actions">
             <button class="btn-primary btn-lg" (click)="goToLogin()">
               Criar conta gratuita agora
@@ -545,10 +779,13 @@
 
         <div class="footer-nav-col">
           <strong>Navegação</strong>
+          <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
+          <a href="#comparativo" (click)="scrollTo('comparativo')">Comparação de preços</a>
           <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
           <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos atendidos</a>
           <a href="#recursos" (click)="scrollTo('recursos')">Recursos da plataforma</a>
           <a href="#precos" (click)="scrollTo('precos')">Tabela de preços</a>
+          <a href="#modulos" (click)="scrollTo('modulos')">Módulos adicionais</a>
           <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
         </div>
 

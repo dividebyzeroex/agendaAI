@@ -28,22 +28,51 @@ export class ClienteService {
   loading$ = new BehaviorSubject(false);
   error$ = new BehaviorSubject('');
   private loadVersion = 0;
+  private refreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshWhenVisible = false;
   clientes$ = new BehaviorSubject<Cliente[]>([]);
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
+      if (this.refreshTimer) clearTimeout(this.refreshTimer);
+      this.refreshTimer = null;
+      this.refreshWhenVisible = false;
       if (id) void this.fetchClientes();
       else { this.loadVersion++; this.clientes$.next([]); this.loading$.next(false); this.error$.next(''); }
     });
     this.subscribeRealtime();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.refreshWhenVisible) {
+          this.refreshWhenVisible = false;
+          this.scheduleClientRefresh();
+        }
+      });
+    }
+  }
+  private scheduleClientRefresh() {
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      this.refreshWhenVisible = true;
+      return;
+    }
+    if (this.refreshTimer) clearTimeout(this.refreshTimer);
+    this.refreshTimer = setTimeout(() => {
+      this.refreshTimer = null;
+      void this.fetchClientes();
+    }, 600);
   }
 
   private subscribeRealtime() {
     this.supabase
       .channel('realtime_clientes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, (payload) => {
-        console.log('[ClientesRealtime] Syncing...', payload.eventType);
-        this.ngZone.run(() => this.fetchClientes());
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'clientes' }, (payload: any) => {
+        const currentTenant = (this.estService as any)['activeIdSubject'].value;
+        if (!currentTenant) return;
+        const row = payload.new || payload.old;
+        if (row?.estabelecimento_id && row.estabelecimento_id !== currentTenant) return;
+        if (!row?.estabelecimento_id && payload.eventType === 'DELETE' &&
+            !this.clientes$.value.some(c => c.id === payload.old?.id)) return;
+        this.scheduleClientRefresh();
       })
       .subscribe();
   }
