@@ -1,50 +1,91 @@
-<div class="social-shell">
-  <header class="social-heading">
-    <div><p class="eyebrow">AGENDAAI · ZERNIO</p><h1>{{ isOwner ? 'Redes da AgendaAI' : 'Marketing e redes sociais' }}</h1><p>{{ isOwner ? 'Gerencie os perfis oficiais da plataforma sem acessar as contas dos clientes.' : 'Conecte as redes sociais do seu estabelecimento e prepare publicações em um só lugar.' }}</p></div>
-    <div class="actions">
-      <button type="button" class="btn subtle" (click)="verifyKey()" [disabled]="busy">Testar chave Zernio</button>
-      <button type="button" class="btn subtle" (click)="load()" [disabled]="loading || busy">Atualizar conexões</button>
+<main class="social-page">
+  <header class="page-heading">
+    <div class="heading-copy">
+      <p class="section-label"><i class="pi pi-sparkles" aria-hidden="true"></i> ESTÚDIO DE CONTEÚDO</p>
+      <h1>Redes sociais</h1>
+      <p>{{isOwner ? 'Planeje as publicações oficiais do AgendaAI e acompanhe as conexões dos estabelecimentos.' : 'Crie, prepare e agende conteúdos para as redes sociais do seu salão.'}}</p>
+    </div>
+    <div class="heading-actions">
+      <button type="button" class="action-btn tertiary" (click)="verifyKey()" [disabled]="busy" title="Testar conexão com o provedor"><i class="pi pi-shield" aria-hidden="true"></i> Testar integração</button>
+      <button type="button" class="action-btn tertiary" (click)="load()" [disabled]="busy || loading"><i class="pi pi-refresh" aria-hidden="true"></i> Atualizar</button>
     </div>
   </header>
-  <p class="feedback error" role="alert" *ngIf="error">{{error}}</p>
-  <p class="feedback success" role="status" *ngIf="notice">{{notice}}</p>
-  <div class="social-grid">
-    <section class="social-card">
-      <h2>Contas conectadas</h2>
-      <p>Você autoriza cada canal diretamente pelo Zernio. O AgendaAI não solicita senhas das redes.</p>
-      <div class="connect-row">
-        <label for="zernio-platform">Nova conexão</label>
-        <select id="zernio-platform" [(ngModel)]="platform"><option *ngFor="let p of platforms" [value]="p.value">{{p.label}}</option></select>
-        <button class="btn primary" type="button" (click)="connect()" [disabled]="busy || loading">Conectar conta</button>
-      </div>
-      <p *ngIf="loading">Consultando contas…</p>
-      <p *ngIf="!loading && !accounts.length" class="empty">Nenhuma conta conectada neste perfil.</p>
-      <label class="account-row" *ngFor="let a of accounts">
-        <input type="checkbox" [checked]="selected.has(a.id)" [disabled]="!a.isActive" (change)="toggleAccount(a.id, $any($event.target).checked)" />
-        <span><strong>{{a.username || a.platform}}</strong><small>{{a.platform}}</small></span>
-        <em [class.offline]="!a.isActive">{{a.isActive ? 'Conectada' : 'Desconectada'}}</em>
-      </label>
-      <small class="hint">As contas e publicações são isoladas por estabelecimento. Uma nova conta pode exigir aprovação no próprio canal.</small>
-    </section>
-    <section class="social-card">
-      <h2>Nova publicação</h2><p>Crie um rascunho ou agende uma publicação. Nada é publicado automaticamente nesta tela.</p>
-      <label class="field-label" for="zernio-post">Texto da publicação</label>
-      <textarea id="zernio-post" rows="7" maxlength="3000" [(ngModel)]="content" placeholder="O que deseja comunicar aos clientes?"></textarea>
-      <div class="schedule-row"><label for="zernio-datetime">Data e hora para agendar</label><input id="zernio-datetime" type="datetime-local" [(ngModel)]="scheduledFor"/></div>
-      <div class="actions">
-        <button class="btn subtle" type="button" [disabled]="busy || !content.trim() || !selected.size" (click)="save('draft')">Salvar rascunho</button>
-        <button class="btn primary" type="button" [disabled]="busy || !content.trim() || !selected.size || !scheduledFor" (click)="save('schedule')">Agendar publicação</button>
-      </div>
-      <small class="hint">Custos e limites de cada canal são definidos pelo Zernio. Consulte a política comercial antes de adicionar contas adicionais.</small>
-    </section>
+
+  <div *ngIf="error" class="feedback danger" role="alert"><i class="pi pi-exclamation-circle" aria-hidden="true"></i><span>{{error}}</span><button type="button" (click)="error=''" aria-label="Fechar aviso">×</button></div>
+  <div *ngIf="notice" class="feedback positive" role="status"><i class="pi pi-check-circle" aria-hidden="true"></i><span>{{notice}}</span><button type="button" (click)="notice=''" aria-label="Fechar aviso">×</button></div>
+
+  <div class="overview-grid">
+    <article class="overview-item"><span class="overview-icon"><i class="pi pi-share-alt" aria-hidden="true"></i></span><div><span>Contas conectadas</span><strong>{{activeAccounts}}</strong><small>Disponíveis para publicação</small></div></article>
+    <article class="overview-item"><span class="overview-icon"><i class="pi pi-check-circle" aria-hidden="true"></i></span><div><span>Canais selecionados</span><strong>{{selectedAccounts.length}}</strong><small>Destino do próximo post</small></div></article>
+    <article class="overview-item"><span class="overview-icon"><i class="pi pi-calendar" aria-hidden="true"></i></span><div><span>Programação</span><strong class="overview-word">No seu horário</strong><small>Agende inclusive para hoje</small></div></article>
   </div>
 
-  <section *ngIf="isOwner" class="social-card" style="margin-top:18px">
-    <h2>Perfis dos estabelecimentos</h2>
-    <p>Visão de supervisão dos salões conectados. As publicações de cada salão continuam isoladas e só podem ser feitas pelo proprietário.</p>
-    <p *ngIf="!tenantProfiles.length" class="empty">Nenhum salão vinculou um perfil Zernio ainda.</p>
-    <div *ngFor="let item of tenantProfiles" class="account-row">
-      <span><strong>{{item.nome}}</strong><small>{{item.connectedAccounts}} conta(s) ativa(s) · Perfil separado</small></span>
+  <div class="workspace-grid">
+    <section class="panel composer-panel" aria-labelledby="compose-title">
+      <div class="panel-top"><div><p class="section-label">01 / CRIAÇÃO</p><h2 id="compose-title">Nova publicação</h2><p>Prepare a legenda e os arquivos que seus clientes vão ver.</p></div><span class="panel-icon"><i class="pi pi-pencil" aria-hidden="true"></i></span></div>
+      <div class="field-block">
+        <div class="field-row"><label for="social-caption">Legenda da publicação</label><small [class.limit]="selectedAccounts.length && content.length>2200">{{content.length}} / {{selectedAccounts.length && requiresMedia ? '2.200' : '3.000'}}</small></div>
+        <textarea id="social-caption" rows="6" maxlength="3000" [(ngModel)]="content" placeholder="Compartilhe uma novidade, horário especial, resultado de um serviço ou promoção do seu salão."></textarea>
+        <p class="field-hint">Dica: uma legenda direta com uma chamada para agendamento costuma ser mais fácil de entender.</p>
+      </div>
+      <div class="field-block">
+        <div class="field-row"><label>Fotos e vídeos</label><small>{{attachments.length}} / 10</small></div>
+        <input #mediaInput class="visually-hidden" type="file" accept="image/jpeg,image/png,video/mp4,video/quicktime" multiple (change)="addMedia($event)" aria-label="Escolher imagens ou vídeos"/>
+        <button type="button" class="media-drop" (click)="mediaInput.click()" [disabled]="busy || attachments.length>=10">
+          <span class="upload-icon"><i class="pi pi-images" aria-hidden="true"></i></span>
+          <strong>Adicionar fotos ou vídeos</strong>
+          <small>JPG, PNG, MP4 e MOV · até 300 MB por arquivo</small>
+        </button>
+        <div class="media-grid" *ngIf="attachments.length">
+          <div class="media-tile" *ngFor="let attachment of attachments;let i=index">
+            <img *ngIf="attachment.type==='image'" [src]="attachment.preview" [alt]="attachment.name"/>
+            <div *ngIf="attachment.type==='video'" class="video-thumb"><i class="pi pi-video" aria-hidden="true"></i><span>Vídeo</span></div>
+            <button type="button" class="remove-media" (click)="removeMedia(i)" [disabled]="busy" [attr.aria-label]="'Remover '+attachment.name"><i class="pi pi-times"></i></button>
+            <small [title]="attachment.name">{{attachment.name}}</small>
+          </div>
+        </div>
+        <div class="inline-tip" *ngIf="requiresMedia"><i class="pi pi-info-circle" aria-hidden="true"></i><span>Instagram e outros canais visuais exigem ao menos uma foto ou vídeo. Adicione uma mídia antes de publicar.</span></div>
+      </div>
+    </section>
+
+    <div class="sidebar-column">
+      <section class="panel channels-panel" aria-labelledby="channels-title">
+        <div class="panel-top"><div><p class="section-label">02 / DESTINOS</p><h2 id="channels-title">Canais de publicação</h2><p>Selecione as redes que receberão o post.</p></div><span class="panel-icon"><i class="pi pi-megaphone" aria-hidden="true"></i></span></div>
+        <p class="loading-line" *ngIf="loading"><i class="pi pi-spin pi-spinner"></i> Carregando conexões…</p>
+        <div class="connected-accounts" *ngIf="!loading && accounts.length">
+          <label class="channel-item" *ngFor="let a of accounts" [class.is-selected]="selected.has(a.id)" [class.is-disabled]="!a.isActive">
+            <input type="checkbox" [checked]="selected.has(a.id)" [disabled]="!a.isActive || busy" (change)="toggleAccount(a.id,$any($event.target).checked)" />
+            <span class="channel-mark"><i class="pi" [ngClass]="a.platform==='instagram'?'pi-instagram':a.platform==='facebook'?'pi-facebook':a.platform==='youtube'?'pi-youtube':a.platform==='linkedin'?'pi-linkedin':'pi-share-alt'"></i></span>
+            <span class="channel-name"><strong>{{a.username || a.platform}}</strong><small>{{a.platform | titlecase}}</small></span>
+            <span class="channel-status" [class.offline]="!a.isActive">{{a.isActive ? 'Ativa':'Reconectar'}}</span>
+          </label>
+        </div>
+        <div class="empty-state" *ngIf="!loading && !accounts.length"><i class="pi pi-link" aria-hidden="true"></i><strong>Conecte sua primeira rede</strong><span>Suas contas aparecerão aqui após a autorização.</span></div>
+        <div class="connect-box">
+          <label for="connect-platform">Conectar outra conta</label>
+          <div class="connect-actions"><select id="connect-platform" [(ngModel)]="platform"><option *ngFor="let option of platforms" [value]="option.value">{{option.label}}</option></select><button type="button" class="action-btn tertiary" (click)="connect()" [disabled]="busy || loading"><i class="pi pi-plus"></i> Conectar</button></div>
+        </div>
+      </section>
+
+      <section class="panel schedule-panel" aria-labelledby="schedule-title">
+        <div class="panel-top"><div><p class="section-label">03 / PROGRAMAÇÃO</p><h2 id="schedule-title">Quando publicar?</h2><p>Defina o melhor momento para seus clientes.</p></div><span class="panel-icon"><i class="pi pi-clock" aria-hidden="true"></i></span></div>
+        <div class="time-options"><button type="button" class="quick-time" (click)="scheduleToday()" [disabled]="busy"><i class="pi pi-bolt"></i> Hoje, em 30 minutos</button></div>
+        <label class="date-label" for="post-datetime">Data e horário</label>
+        <input id="post-datetime" class="date-field" type="datetime-local" [min]="minSchedule" [(ngModel)]="scheduledFor" [class.invalid]="scheduleInvalid" />
+        <p class="time-help" [class.invalid]="scheduleInvalid"><i class="pi pi-info-circle" aria-hidden="true"></i> {{scheduleText}}</p>
+        <div class="submission-area">
+          <p *ngIf="uploadProgress" class="upload-progress" role="status"><i class="pi pi-spin pi-spinner"></i> {{uploadProgress}}</p>
+          <button type="button" class="action-btn primary schedule-submit" (click)="save('schedule')" [disabled]="!canSubmit || !scheduledFor || scheduleInvalid"><i class="pi pi-calendar-plus" aria-hidden="true"></i> {{busy ? 'Preparando publicação…':'Agendar publicação'}}</button>
+          <button type="button" class="action-btn secondary draft-submit" (click)="save('draft')" [disabled]="!canSubmit"><i class="pi pi-save" aria-hidden="true"></i> Salvar rascunho</button>
+          <small>O agendamento será confirmado pelo Zernio. Nenhuma postagem é publicada ao abrir esta página.</small>
+        </div>
+      </section>
     </div>
+  </div>
+
+  <section *ngIf="isOwner" class="panel tenant-panel" aria-labelledby="tenant-title">
+    <div class="panel-top"><div><p class="section-label">SUPERVISÃO OWNER</p><h2 id="tenant-title">Conexões dos estabelecimentos</h2><p>Visibilidade de conexões, sem permissão para publicar nas contas dos clientes.</p></div></div>
+    <div class="tenant-grid" *ngIf="tenantProfiles.length"><article *ngFor="let item of tenantProfiles"><span class="tenant-avatar"><i class="pi pi-building"></i></span><div><strong>{{item.nome}}</strong><small>{{item.connectedAccounts}} {{item.connectedAccounts===1?'conta conectada':'contas conectadas'}}</small></div><span class="state-dot"></span></article></div>
+    <p class="empty-tenant" *ngIf="!tenantProfiles.length">Nenhum estabelecimento conectou suas redes ainda.</p>
   </section>
-</div>
+</main>
