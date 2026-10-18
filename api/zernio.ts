@@ -68,12 +68,23 @@ async function ensureProfile(db: SupabaseClient, ctx: { externalId: string; disp
   const { data: existing, error: readError } = await db.from('zernio_profile_links').select('zernio_profile_id').eq('external_id', ctx.externalId).maybeSingle();
   if (readError) throw new IntegrationError(503, 'Migração de perfis do Zernio pendente.');
   if (existing?.zernio_profile_id) return existing.zernio_profile_id as string;
-  const created: any = await callZernio('/profiles', 'POST', { name: 'AgendaAI ' + ctx.externalId, description: ctx.displayName, externalId: ctx.externalId });
-  let profileId = created.profile?._id || created.details?.existingProfileId;
+  // Zernio enforces a unique profile name. Reuse it when an earlier
+  // request created the profile but our database write timed out.
+  const profileName = 'agendaai-' + ctx.externalId;
+  let profileId: string | undefined;
+  try {
+    const created: any = await callZernio('/profiles', 'POST', {
+      name: profileName, description: ctx.displayName
+    });
+    profileId = created.profile?._id;
+  } catch (error) {
+    if (!(error instanceof IntegrationError) || error.status !== 409) throw error;
+  }
   if (!profileId || !OBJECT_ID.test(profileId)) {
-    const query: any = await callZernio('/profiles?externalId=' + encodeURIComponent(ctx.externalId));
+    const query: any = await callZernio('/profiles');
     const profiles = query.profiles || query.data?.profiles || [];
-    profileId = profiles.find((p: any) => p.externalId === ctx.externalId)?._id;
+    const found = profiles.find((p: any) => p.name === profileName);
+    profileId = found?._id || found?.id;
   }
   if (!profileId || !OBJECT_ID.test(profileId)) throw new IntegrationError(502, 'Não foi possível identificar o perfil do Zernio.');
   const { error: insertError } = await db.from('zernio_profile_links').insert({
@@ -143,7 +154,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         payload['timezone']='America/Sao_Paulo';
       }
       const result: any = await callZernio('/posts','POST',payload, typeof body.requestId === 'string' && UUID.test(body.requestId)?body.requestId:undefined);
-      return res.status(200).json({post:result.post || null,status:action === 'draft' ? 'draft':'scheduled'});
+      const post = result.post || result.existingPost;
+      if (!post?._id) throw new IntegrationError(502, 'Zernio não confirmou a criação da publicação.');
+      return res.status(200).json({post, status: post.status || (action === 'draft' ? 'draft' : 'scheduled')});
     }
     throw new IntegrationError(400,'Ação inválida.');
   } catch (error) {
