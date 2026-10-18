@@ -172,10 +172,15 @@ export class AuthService {
 
   // --- Real Auth Flow ---
 
-  async signUpWithPassword(email: string, password: string) {
+  /** Consent is captured from the actual checked UI, never dependent on storage. */
+  async signUpWithPassword(email: string, password: string,
+    consent?: {termsAccepted:boolean;marketingConsent:boolean}) {
     if (!this.supabase) {
-      throw new Error('Supabase not initialized.');
+      throw new Error('Não foi possível iniciar o cadastro. Atualize a página e tente novamente.');
     }
+    const saved=(key:string)=>{
+      try{return localStorage.getItem(key)==='true';}catch{return false;}
+    };
     const { data, error } = await this.supabase.auth.signUp({
       email,
       password,
@@ -183,8 +188,8 @@ export class AuthService {
         emailRedirectTo: window.location.origin + '/admin',
         data: {
           terms_version: '2026-10-10',
-          terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true',
-          marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true',
+          terms_accepted: consent?.termsAccepted ?? saved('ag_terms_accepted'),
+          marketing_consent: consent?.marketingConsent ?? saved('ag_marketing_consent'),
         },
       },
     });
@@ -205,18 +210,22 @@ export class AuthService {
     return data;
   }
 
-  async signInWithOtp(email: string) {
+  async signInWithOtp(email: string,
+    consent?: {termsAccepted:boolean;marketingConsent:boolean}) {
     if (!this.supabase) {
       throw new Error('Não foi possível iniciar a autenticação. Atualize a página.');
     }
+    const saved=(key:string)=>{
+      try{return localStorage.getItem(key)==='true';}catch{return false;}
+    };
     const { data, error } = await this.supabase.auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: window.location.origin + '/admin',
         data: {
           terms_version: '2026-10-10',
-          terms_accepted: localStorage.getItem('ag_terms_accepted') === 'true',
-          marketing_consent: localStorage.getItem('ag_marketing_consent') === 'true',
+          terms_accepted: consent?.termsAccepted ?? saved('ag_terms_accepted'),
+          marketing_consent: consent?.marketingConsent ?? saved('ag_marketing_consent'),
         },
       },
     });

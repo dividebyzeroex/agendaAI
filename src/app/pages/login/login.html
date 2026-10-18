@@ -13,7 +13,10 @@
 
           <p-card styleClass="login-card">
             <p role="status" *ngIf="isLoading">{{ isDoingOnboarding ? 'Preparando seu cadastro…' : 'Verificando acesso…' }}</p>
-            <div class="error-box" role="alert" *ngIf="errorMessage">{{ errorMessage }}</div>
+            <div class="error-box" role="alert" *ngIf="errorMessage">
+              <i class="pi pi-info-circle" aria-hidden="true"></i>
+              <span>{{ errorMessage }}</span>
+            </div>
 
             <!-- Timeline (Apenas no Onboarding) -->
 
@@ -53,7 +56,22 @@
                 <!-- CAMPO DE SENHA NO CADASTRO -->
                 <div class="field animate-in" *ngIf="isSignupMode && step === 'email' && authType === 'password' && !isOtpSent && email && isEmailValid">
                   <label for="new_password">Crie uma Senha</label>
-                  <input pInputText id="new_password" [(ngModel)]="password" type="password" class="w-full prime-input" placeholder="Min. 8 caracteres" />
+                  <input pInputText id="new_password" name="new_password" [(ngModel)]="password"
+                         (ngModelChange)="passwordTouched=true" type="password"
+                         autocomplete="new-password" class="w-full prime-input"
+                         [attr.aria-invalid]="passwordTouched && !passwordIsValid"
+                         aria-describedby="signup-password-requirements"
+                         placeholder="Crie uma senha segura" />
+                  <div id="signup-password-requirements" class="signup-password-hints"
+                       aria-label="Requisitos da senha">
+                    <p>Para proteger sua conta, sua senha precisa ter:</p>
+                    <ul>
+                      <li *ngFor="let check of passwordChecks" [class.met]="check.valid">
+                        <i class="pi" [ngClass]="check.valid?'pi-check-circle':'pi-circle'" aria-hidden="true"></i>
+                        {{check.label}}
+                      </li>
+                    </ul>
+                  </div>
                 </div>
 
                 <div class="method-toggles" *ngIf="!isSignupMode && step === 'auth' && !isOtpSent">
@@ -85,6 +103,15 @@
                   <p>30 dias grátis, sem cartão e sem cobrança automática.</p>
                   <label><input type="checkbox" [(ngModel)]="termsAccepted" /> Li e aceito as <a href="/termos" target="_blank" rel="noopener">condições do teste e privacidade</a>.</label>
                   <label style="display:block;margin-top:12px"><input type="checkbox" [(ngModel)]="marketingConsent" /> Quero receber dicas e ofertas da AgendaAI (opcional).</label>
+                </div>
+                <div class="signup-recovery-actions" *ngIf="isSignupMode && !isOtpSent && isEmailValid">
+                  <button type="button" (click)="solicitarLinkDeAcesso()" [disabled]="isLoading">
+                    <i class="pi pi-envelope" aria-hidden="true"></i>
+                    Prefiro continuar pelo e-mail, sem senha
+                  </button>
+                  <p class="signup-recovery-caption" *ngIf="showSignupRecovery">
+                    Se houver alguma dificuldade, você pode usar um link seguro sem recomeçar o cadastro.
+                  </p>
                 </div>
                 <p-button
                     *ngIf="!isOtpSent"
@@ -130,8 +157,12 @@
                    <input pInputText [(ngModel)]="form.slug" placeholder="seu-nome" />
                 </div>
               </div>
+              <p class="signup-draft-help">
+                <i class="pi pi-shield" aria-hidden="true"></i>
+                Seus dados permanecem aqui caso seja necessário ajustar o cadastro.
+              </p>
               <div class="btn-group-row mt-4">
-                <button class="btn-back-auth" (click)="backStep()"><i class="pi pi-arrow-left"></i></button>
+                <button type="button" class="btn-back-auth" (click)="backStep()" aria-label="Voltar para alterar os dados de acesso"><i class="pi pi-arrow-left"></i></button>
                 <p-button label="Criar Espaço" styleClass="btn-login-main flex-1" [loading]="isLoading" [disabled]="!form.nome || !form.slug" (onClick)="nextStep()"></p-button>
               </div>
             </ng-container>
@@ -148,12 +179,18 @@
             <!-- CONCLUSÃO -->
             <ng-container *ngIf="onStep === 'conclusao'">
               <p role="status" *ngIf="isLoading">Preparando seu cadastro…</p>
+              <div class="error-box" role="alert" *ngIf="errorMessage && !isLoading">{{errorMessage}}</div>
               <div class="final-message-login" *ngIf="!isLoading" role="status">
                 <div class="success-icon-wrap"><i class="pi pi-envelope"></i></div>
-                <h3 class="glow-text">Quase lá!</h3>
-                <p>Confira a caixa de entrada e o spam do e-mail:</p>
+                <h3 class="glow-text">{{accountCreated && !accountNeedsConfirmation ? 'Sua conta está pronta!' : 'Quase lá!'}}</h3>
+                <p>{{accountCreated && !accountNeedsConfirmation ? 'Você pode continuar para o painel com este e-mail:' : 'Confira a caixa de entrada e o spam do e-mail:'}}</p>
                 <div class="email-badge">{{form.email}}</div>
                 <p class="hint">{{ successMessage }}</p>
+                <button type="button" class="signup-success-continue" *ngIf="accountCreated && !accountNeedsConfirmation"
+                  (click)="continuarCadastroCriado()">
+                  <i class="pi pi-arrow-right" aria-hidden="true"></i>
+                  Abrir meu painel
+                </button>
                 <p-button label="Voltar ao Início" styleClass="p-button-text w-full mt-4" (onClick)="returnToLogin()"></p-button>
               </div>
             </ng-container>

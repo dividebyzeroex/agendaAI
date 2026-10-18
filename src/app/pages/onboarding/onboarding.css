@@ -1,1 +1,11 @@
 :host{display:block;min-height:100dvh;background:var(--bg-color,#f7f8fa)}.signup-workspace{max-width:620px;padding:32px 24px 64px}.signup-brand{font-weight:600;color:var(--primary-color)!important;font-size:20px;letter-spacing:-.5px;margin-bottom:24px!important}.signup-terms{display:flex;flex-direction:column;gap:16px;padding:24px 0;font-size:13px}.signup-terms label{display:flex;align-items:flex-start;gap:10px;font-size:13px;font-weight:400;line-height:1.6}.signup-terms input{width:18px;height:18px;margin:2px 0 0;flex-shrink:0}.signup-terms a{color:var(--primary-color)}.signup-submit{width:100%;margin-bottom:12px}.signup-workspace input[type=color]{max-width:90px;height:46px}
+
+
+/* Non-blocking post-registration recovery: keep navigation available. */
+.signup-created{max-width:500px;margin:16px auto;text-align:center;padding:28px 18px;background:var(--surface-card,#fff);border:1px solid var(--glass-border,#e2def5);border-radius:20px;display:grid;justify-items:center;gap:13px}
+.signup-created>.pi{font-size:2.4rem;color:#0a9766}
+.signup-created h2{font-size:1.45rem;color:var(--text-main,#181b2d);font-weight:800;margin:0}
+.signup-created p{color:var(--text-muted,#67748b);font-size:.93rem;line-height:1.6;margin:0}
+.signup-created .feedback.error{color:#b42344}
+.signup-created button{width:100%;max-width:360px}
+.signup-created a{font-size:.86rem;color:var(--primary-color,#6366f1);font-weight:600}

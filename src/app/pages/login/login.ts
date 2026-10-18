@@ -7,6 +7,8 @@ import { Card } from 'primeng/card';
 import { Router, ActivatedRoute } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
+import { passwordRequirements, isValidSignupPassword, PASSWORD_HELP,
+  classifySignupError, signupErrorMessage } from '../../core/signup-guardrails';
 
 type OnboardingStep = 'overview' | 'conclusao';
 
@@ -37,6 +39,16 @@ export class Login implements OnInit {
   step: 'email' | 'auth' = 'email';
   authType: 'email' | 'phone' | 'password' = 'password';
   password = '';
+  passwordTouched = false;
+  get passwordChecks() { return passwordRequirements(this.password); }
+  get passwordIsValid() { return isValidSignupPassword(this.password); }
+  get showSignupRecovery() { return this.isSignupMode && !this.isLoading && !!this.errorMessage; }
+  accountCreated = false;
+  accountNeedsConfirmation = false;
+  private persistSignupDraft():void {
+    try { localStorage.setItem('ag_temp_onboarding_data',JSON.stringify(this.form)); }
+    catch { /* Private browsing or storage disabled must never block signup. */ }
+  }
 
   // Estados Onboarding Integrado (Elite Gatekeeper)
   isDoingOnboarding = false;
@@ -82,14 +94,15 @@ export class Login implements OnInit {
     try {
       if (this.isSignupMode) {
          if (!this.termsAccepted) throw new Error('Leia e aceite as condições do teste para continuar.');
-         localStorage.setItem('ag_terms_accepted', 'true');
-         localStorage.setItem('ag_marketing_consent', String(this.marketingConsent));
-         if (this.authType === 'password' && (!this.password || this.password.length < 8)) {
-           this.errorMessage = 'Sua senha deve ter no mínimo 8 caracteres.';
-           this.isLoading = false;
-           this.cdr.detectChanges();
+         if (this.authType === 'password' && !this.passwordIsValid) {
+           this.passwordTouched = true;
+           this.errorMessage = PASSWORD_HELP;
            return;
          }
+         try {
+           localStorage.setItem('ag_terms_accepted', 'true');
+           localStorage.setItem('ag_marketing_consent', String(this.marketingConsent));
+         } catch { /* Consent is also sent through auth metadata when storage works. */ }
          this.isDoingOnboarding = true;
          this.onStep = 'overview';
          this.form.email = this.email;
@@ -122,8 +135,12 @@ export class Login implements OnInit {
         this.successMessage = 'Pronto! Verifique sua caixa de entrada e clique no link mágico para acessar o painel.';
       }
 
-    } catch (error: any) {
-      this.errorMessage = error.message || 'Houve um erro na autenticação.';
+    } catch (error: unknown) {
+      const code=(error as {code?:string})?.code;
+      this.errorMessage = code==='invalid_credentials' ||
+        /invalid login credentials/i.test((error as Error)?.message||'')
+        ? 'E-mail ou senha incorretos. Confira os dados ou entre pelo link de acesso.'
+        : signupErrorMessage(error);
     } finally {
       this.isLoading = false;
       this.cdr.detectChanges();
@@ -157,6 +174,57 @@ export class Login implements OnInit {
   backStep() {
     this.isDoingOnboarding = false;
     this.errorMessage = '';
+    // Company name and reserved URL remain in memory while editing the password.
+  }
+
+  /** Password-free recovery is available before and after company details are entered. */
+  async solicitarLinkDeAcesso() {
+    if (this.isLoading) return;
+    if (!this.termsAccepted) {
+      this.errorMessage = 'Aceite as condições do teste para continuar.';
+      return;
+    }
+    const email=String(this.form.email||this.email).trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      this.errorMessage='Informe um e-mail válido para receber seu link de acesso.';
+      return;
+    }
+    this.form.email=email;
+    this.isLoading=true;
+    this.errorMessage='';
+    this.persistSignupDraft();
+    this.cdr.detectChanges();
+    try {
+      await this.authService.signInWithOtp(email,{
+        termsAccepted:this.termsAccepted,marketingConsent:this.marketingConsent
+      });
+      this.authType='email';
+      this.accountNeedsConfirmation=true;
+      this.successMessage='Enviamos um link seguro para seu e-mail. Abra-o para continuar criando seu espaço, sem perder os dados.';
+      this.isDoingOnboarding=true;
+      this.onStep='conclusao';
+    } catch (error:unknown) {
+      this.errorMessage=signupErrorMessage(error);
+      this.isDoingOnboarding=false;
+    } finally {
+      this.isLoading=false;
+      this.cdr.detectChanges();
+    }
+  }
+
+  /** Navigating after successful registration must never call Auth.signUp twice. */
+  async continuarCadastroCriado() {
+    if (!this.accountCreated || this.isLoading) return;
+    this.isLoading=true;
+    this.errorMessage='';
+    this.cdr.detectChanges();
+    try { await this.authService.redirectAfterLogin(); }
+    catch {
+      this.errorMessage='Sua conta já foi criada. Se o painel não abrir, entre com o mesmo e-mail para continuar.';
+    } finally {
+      this.isLoading=false;
+      this.cdr.detectChanges();
+    }
   }
 
   async finalizarOnboarding() {
@@ -167,34 +235,65 @@ export class Login implements OnInit {
       this.errorMessage = 'Informe o nome e o link do estabelecimento.';
       return;
     }
+    if (this.authType==='password' && !this.accountCreated && !this.passwordIsValid) {
+      this.passwordTouched=true;
+      this.errorMessage=PASSWORD_HELP;
+      this.isDoingOnboarding=false; // Return to the actual editable password field.
+      this.cdr.detectChanges();
+      return;
+    }
+    if (this.accountCreated) {
+      await this.continuarCadastroCriado();
+      return;
+    }
     this.errorMessage = '';
     this.isLoading = true;
     this.onStep = 'conclusao';
     this.cdr.detectChanges();
-
     try {
-      if (!this.form.email) {
-        this.form.email = this.email;
-      }
-      localStorage.setItem('ag_temp_onboarding_data', JSON.stringify(this.form));
-
+      this.form.email = String(this.form.email||this.email).trim().toLowerCase();
+      this.persistSignupDraft();
       if (this.authType === 'password') {
-        const signup = await this.authService.signUpWithPassword(this.form.email, this.password);
-        if (signup.session) await this.authService.redirectAfterLogin();
-        else this.successMessage = 'Abra o link de confirmação para continuar. Se já possui cadastro, volte ao início e entre com sua senha.';
+        const signup = await this.authService.signUpWithPassword(this.form.email, this.password,{
+          termsAccepted:this.termsAccepted,marketingConsent:this.marketingConsent
+        });
+        this.accountCreated=!!signup?.user;
+        this.accountNeedsConfirmation=!signup?.session;
+        if (signup?.session) {
+          this.successMessage='Sua conta foi criada! Vamos abrir sua agenda.';
+          await this.continueToAccountAfterSignup();
+        } else {
+          this.successMessage='Abra o link de confirmação para continuar. Se já possui cadastro, volte ao início e entre com sua senha.';
+        }
       } else {
-        await this.authService.signInWithOtp(this.form.email);
-        this.successMessage = 'Abra o link de acesso para continuar o cadastro e ativar seu teste.';
+        await this.authService.signInWithOtp(this.form.email,{
+          termsAccepted:this.termsAccepted,marketingConsent:this.marketingConsent
+        });
+        this.accountNeedsConfirmation=true;
+        this.successMessage='Abra o link de acesso para continuar o cadastro e ativar seu teste.';
       }
-
+    } catch (err:unknown) {
+      const issue=classifySignupError(err);
+      if(this.accountCreated) {
+        this.onStep='conclusao';
+        this.errorMessage='Sua conta foi criada, mas não conseguimos abrir o painel. Tente acessar novamente; não precisa se cadastrar outra vez.';
+      } else {
+        this.onStep='overview';
+        this.errorMessage=signupErrorMessage(err);
+        if(issue==='password' || issue==='invalid-email') {
+          this.isDoingOnboarding=false; // Editable password/email and same company draft.
+          this.passwordTouched=issue==='password';
+        }
+      }
+    } finally {
       this.isLoading = false;
-      this.cdr.detectChanges();
-    } catch (err: any) {
-      this.errorMessage = err.message || 'Houve um problema ao processar seu cadastro.';
-      this.isLoading = false;
-      this.onStep = 'overview';
       this.cdr.detectChanges();
     }
+  }
+
+  private async continueToAccountAfterSignup():Promise<void> {
+    // Account already created. A navigation failure is not a signup failure.
+    await this.authService.redirectAfterLogin();
   }
 
   async loginComGoogle() {
@@ -202,7 +301,7 @@ export class Login implements OnInit {
     try {
       await this.authService.signInWithGoogle();
     } catch(err: any) {
-      this.errorMessage = err.message || 'Erro ao autenticar com o Google.';
+      this.errorMessage = signupErrorMessage(err);
       this.isLoading = false;
       this.cdr.detectChanges();
     }
@@ -216,6 +315,8 @@ export class Login implements OnInit {
     this.onStep = 'overview';
     this.errorMessage = '';
     this.successMessage = '';
+    this.accountCreated=false;
+    this.accountNeedsConfirmation=false;
   }
 
   toggleMode() {
@@ -225,6 +326,9 @@ export class Login implements OnInit {
     this.authType = 'password';
     this.successMessage = '';
     this.errorMessage = '';
+    this.accountCreated=false;
+    this.accountNeedsConfirmation=false;
+    this.passwordTouched=false;
     this.cdr.detectChanges();
   }
 

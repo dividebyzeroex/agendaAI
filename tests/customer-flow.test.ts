@@ -506,3 +506,37 @@ it('includes every scheduled service and assigned professional in one cashier tr
     })
   );
 });
+
+it('does not block a new workspace when optional commercial/Hotmart APIs are unavailable',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockRejectedValue(new Error('Network unavailable')));
+  const f=TestBed.createComponent(Onboarding);f.detectChanges();await f.whenStable();
+  const c=f.componentInstance;
+  Object.assign(c.form,{nome:'Studio Integração',segmento:'salao_beleza',telefone:'11999999999',slug:'studio-integracao'});
+  c.termsAccepted=true;
+  await c.finalizar();f.detectChanges();
+  expect(est.createEstabelecimento).toHaveBeenCalledTimes(1);
+  expect(auth.redirectAfterLogin).toHaveBeenCalledTimes(1);
+  expect(c.completed).toBe(true);
+  expect(c.errorMessage).toBe('');
+  f.destroy();
+});
+
+it('keeps a completed workspace accessible when navigation fails, without creating a second tenant',async()=>{
+  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,status:200}));
+  auth.redirectAfterLogin.mockRejectedValueOnce(new Error('Navigation interrupted'));
+  const f=TestBed.createComponent(Onboarding);f.detectChanges();await f.whenStable();
+  const c=f.componentInstance;
+  Object.assign(c.form,{nome:'Studio Recuperação',segmento:'salao_beleza',telefone:'11999999999',slug:'studio-recuperacao'});
+  c.termsAccepted=true;
+  await c.finalizar();f.detectChanges();
+  expect(c.completed).toBe(true);
+  expect(f.nativeElement.textContent).toContain('Seu espaço está criado');
+  expect(f.nativeElement.textContent).toContain('Abrir minha agenda');
+  expect(est.createEstabelecimento).toHaveBeenCalledTimes(1);
+  await c.finalizar();
+  expect(est.createEstabelecimento).toHaveBeenCalledTimes(1);
+  auth.redirectAfterLogin.mockResolvedValue(undefined);
+  await c.continuarAcesso();
+  expect(auth.redirectAfterLogin).toHaveBeenCalledTimes(2);
+  f.destroy();
+});
