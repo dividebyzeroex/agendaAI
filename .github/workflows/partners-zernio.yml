@@ -1,0 +1,32 @@
+name: Founders Club and Zernio — regression checks
+on:
+  pull_request:
+    branches: [develop]
+    paths:
+      - 'api/zernio.ts'
+      - 'server/billing.ts'
+      - 'src/app/pages/partners-program/**'
+      - 'src/app/pages/zernio-workspace/**'
+      - 'src/app/app.routes.ts'
+      - 'src/app/app.ts'
+      - 'src/app/layouts/**'
+      - 'supabase/migrations/20261018150000_founders_indica_zernio.sql'
+      - 'tests/partners-zernio.test.ts'
+      - '.github/workflows/partners-zernio.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - run: npm run test:api
+      - run: npm run test:db
+      - run: npm run typecheck:api
+      - run: npm run build

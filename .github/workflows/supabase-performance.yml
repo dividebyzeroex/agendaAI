@@ -1,0 +1,37 @@
+name: Supabase — pressure relief regression
+on:
+  pull_request:
+    branches: [develop, main]
+    paths:
+      - '.github/workflows/supabase-performance.yml'
+      - 'api/cron/bot-recepcao.ts'
+      - 'server/growth-worker.ts'
+      - 'src/app/services/security.service.ts'
+      - 'src/app/services/agenda-event.service.ts'
+      - 'src/app/services/cliente.service.ts'
+      - 'src/app/pages/admin-caixa/admin-caixa.ts'
+      - 'supabase/migrations/20261018093000_reduce_worker_pressure.sql'
+      - 'tests/performance-pressure.test.ts'
+      - 'tests/database-migrations.mjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safe-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - run: npm ci
+      - name: API and performance regressions
+        run: npm run test:api
+      - name: Verify entire migration history locally
+        run: npm run test:db
+      - name: Typecheck backend
+        run: npm run typecheck:api
+      - name: Production Angular build
+        run: npm run build

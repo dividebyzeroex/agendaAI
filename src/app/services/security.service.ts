@@ -12,12 +12,15 @@ export class SecurityService {
   private estService = inject(EstabelecimentoService);
 
   private cachedKey: CryptoKey | null = null;
+  private inFlightKey: { tenant: string; promise: Promise<CryptoKey> } | null = null;
   private estId: string | null = null;
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
+      if (this.estId === id) return;
       this.estId = id;
       this.cachedKey = null; // Invalida cache ao trocar estabelecimento
+      this.inFlightKey = null; // Não reutilizar chave de outro estabelecimento
     });
   }
 
@@ -26,30 +29,36 @@ export class SecurityService {
    */
   private async getEncryptionKey(): Promise<CryptoKey> {
     if (this.cachedKey) return this.cachedKey;
-    if (!this.estId) throw new Error('Contexto de estabelecimento não identificado.');
+    const tenant = this.estId;
+    if (!tenant) throw new Error('Contexto de estabelecimento não identificado.');
 
-    // RPC: get_or_create_establishment_key (Definida no SQL do Plano de Implementação)
-    const { data: b64Key, error } = await this.supabase.rpc('get_or_create_establishment_key', {
-      p_establishment_id: this.estId
-    });
+    // A lista de clientes é descriptografada em paralelo: sem single-flight,
+    // cada item pode provocar uma RPC simultânea para a mesma chave.
+    if (this.inFlightKey?.tenant === tenant) return this.inFlightKey.promise;
 
-    if (error || !b64Key) {
-      const msg = error?.message || 'Chave não encontrada no Vault.';
-      console.warn(`[SecurityService] Falha ao recuperar chave (Pode ser um erro de infraestrutura SQL): ${msg}`);
-      throw new Error(`Falha de segurança: ${msg}`);
+    const request = (async (): Promise<CryptoKey> => {
+      const { data: b64Key, error } = await this.supabase.rpc(
+        'get_or_create_establishment_key', { p_establishment_id: tenant }
+      );
+      if (error || !b64Key) {
+        const msg = error?.message || 'Chave não encontrada no Vault.';
+        throw new Error('Falha de segurança: ' + msg);
+      }
+      const rawKey = Uint8Array.from(atob(b64Key), c => c.charCodeAt(0));
+      const key = await window.crypto.subtle.importKey(
+        'raw', rawKey, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+      );
+      // Se a unidade foi trocada durante a rede, a chave antiga nunca será
+      // escrita no cache da nova unidade e nem usada no retorno.
+      if (this.estId !== tenant) throw new Error('Estabelecimento alterado. Tente novamente.');
+      this.cachedKey = key;
+      return key;
+    })();
+    this.inFlightKey = { tenant, promise: request };
+    try { return await request; }
+    finally {
+      if (this.inFlightKey?.promise === request) this.inFlightKey = null;
     }
-
-    // Importar a chave Base64 para o formato de CryptoKey do navegador
-    const rawKey = Uint8Array.from(atob(b64Key), c => c.charCodeAt(0));
-    this.cachedKey = await window.crypto.subtle.importKey(
-      'raw',
-      rawKey,
-      { name: 'AES-GCM', length: 256 },
-      false,
-      ['encrypt', 'decrypt']
-    );
-
-    return this.cachedKey;
   }
 
   /**

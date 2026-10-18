@@ -123,4 +123,19 @@ export async function recordPaidInvoice(db: SupabaseClient, invoice: Stripe.Invo
     paid_at: new Date((invoice.status_transitions.paid_at || invoice.created) * 1000).toISOString(),
   }, { onConflict: 'id' });
   if (error) throw new BillingError(503, 'Falha ao registrar pagamento.');
+  // Only a verified, live, first subscription invoice may qualify an indication.
+  // Database RPC is idempotent by invoice ID, and leaves the commission pending
+  // for human review after the refund window. Never transfers Pix automatically.
+  if (invoice.livemode === true && invoice.billing_reason === 'subscription_create' &&
+      invoice.currency === 'brl' && invoice.amount_paid >= 7900) {
+    const { error: referralError } = await db.rpc('partner_record_first_paid_invoice', {
+      p_event_id: 'invoice:' + invoice.id,
+      p_invoice_id: invoice.id,
+      p_referred_id: estab.id,
+      p_amount_cents: invoice.amount_paid,
+      p_currency: invoice.currency,
+      p_livemode: true,
+    });
+    if (referralError) throw new BillingError(503, 'Falha ao conferir a indicação do pagamento.');
+  }
 }

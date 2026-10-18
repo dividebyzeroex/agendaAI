@@ -349,7 +349,7 @@ const multiPro=(await db.query(`insert into profissionais(estabelecimento_id,nom
 const multiSvc=(await db.query(`insert into servicos(estabelecimento_id,titulo,preco,duracao_min,ativo)
   values($1,'Manicure',40,30,true) returning id`,[pilot])).rows[0].id;
 const multiStart=(await db.query(`select ((date_trunc('day',now() at time zone 'America/Sao_Paulo')
-  +interval '3 days 14 hours') at time zone 'America/Sao_Paulo') as start`)).rows[0].start;
+  +interval '180 days 14 hours') at time zone 'America/Sao_Paulo') as start`)).rows[0].start;
 const slotsFor=(deltaDays=0)=>{
   const start=new Date(new Date(multiStart).getTime()+deltaDays*86400000);
   return [

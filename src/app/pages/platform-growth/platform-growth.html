@@ -1,5 +1,14 @@
 <main class="growth">
   <header><div><p class="eyebrow">OPERAÇÃO COMERCIAL</p><h1>Oportunidades</h1><p class="muted">Foco de prospecção: barbearias independentes, uma unidade e de 1 a 5 profissionais. O atendimento aos clientes existentes continua.</p></div><button class="secondary" (click)="load()" [disabled]="loading">Atualizar</button></header>
+  <section class="panel" aria-label="Ferramentas de crescimento">
+    <p class="eyebrow">NOVIDADE · PARCERIAS E REDES</p>
+    <h2>Atração e fidelização de estabelecimentos</h2>
+    <p>Gerencie os primeiros salões fundadores, acompanhe as indicações e planeje o conteúdo da marca.</p>
+    <div style="display:flex;gap:12px;flex-wrap:wrap">
+      <a class="secondary" href="/platform-admin/partners">Founders Club e Indica+</a>
+      <a class="secondary" href="/platform-admin/social">Redes sociais do AgendaAI · Zernio</a>
+    </div>
+  </section>
   <div class="alert error" role="alert" *ngIf="error">{{ error }} <button (click)="load()">Tentar novamente</button></div>
   <div class="alert success" role="status" *ngIf="notice">{{ notice }}</div>
   <p role="status" *ngIf="loading">Carregando dados comerciais…</p>

@@ -48,15 +48,42 @@ export class AgendaEventService {
   reload(){return this.fetchEvents();}
 
   private loadVersion=0;
+  private realtimeRefreshTimer: ReturnType<typeof setTimeout> | null = null;
+  private refreshWhenVisible = false;
   private isLoadingSubject = new BehaviorSubject<boolean>(true);
   isLoading$ = this.isLoadingSubject.asObservable();
 
   constructor() {
     this.estService.activeId$.subscribe(id => {
-      ++this.loadVersion;this.eventsSubject.next([]);
+      ++this.loadVersion;
+      if (this.realtimeRefreshTimer) clearTimeout(this.realtimeRefreshTimer);
+      this.realtimeRefreshTimer = null;
+      this.refreshWhenVisible = false;
+      this.eventsSubject.next([]);
       if (id) this.fetchEvents();else this.isLoadingSubject.next(false);
     });
     this.subscribeRealtime();
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && this.refreshWhenVisible) {
+          this.refreshWhenVisible = false;
+          this.scheduleRealtimeRefresh();
+        }
+      });
+    }
+  }
+  private scheduleRealtimeRefresh() {
+    // A burst of multiple scheduled services should produce ONE list refresh,
+    // not one expensive full-table RPC and decryption per inserted row.
+    if (typeof document !== 'undefined' && document.visibilityState === 'hidden') {
+      this.refreshWhenVisible = true;
+      return;
+    }
+    if (this.realtimeRefreshTimer) clearTimeout(this.realtimeRefreshTimer);
+    this.realtimeRefreshTimer = setTimeout(() => {
+      this.realtimeRefreshTimer = null;
+      void this.fetchEvents();
+    }, 550);
   }
 
   private async fetchEvents() {
@@ -105,8 +132,16 @@ export class AgendaEventService {
     this.supabase
       .channel('realtime_agenda_events')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'agenda_events' }, (payload: any) => {
-        this.handleRealtimeChange(payload);
-        this.fetchEvents();
+        const currentTenant = (this.estService as any)['activeIdSubject'].value;
+        if (!currentTenant) return;
+        const record = payload.new || payload.old;
+        // DELETE payloads may include only the id; accept those only for a
+        // previously loaded appointment in the active unit.
+        if (record?.estabelecimento_id && record.estabelecimento_id !== currentTenant) return;
+        if (!record?.estabelecimento_id && payload.eventType === 'DELETE' &&
+            !this.currentEvents.some(e => e.id === payload.old?.id)) return;
+        void this.handleRealtimeChange(payload);
+        this.scheduleRealtimeRefresh();
       })
       .subscribe();
   }
