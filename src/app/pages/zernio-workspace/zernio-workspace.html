@@ -35,4 +35,13 @@
       <small class="hint">Custos e limites de cada canal são definidos pelo Zernio. Consulte a política comercial antes de adicionar contas adicionais.</small>
     </section>
   </div>
+
+  <section *ngIf="isOwner" class="social-card" style="margin-top:18px">
+    <h2>Perfis dos estabelecimentos</h2>
+    <p>Visão de supervisão dos salões conectados. As publicações de cada salão continuam isoladas e só podem ser feitas pelo proprietário.</p>
+    <p *ngIf="!tenantProfiles.length" class="empty">Nenhum salão vinculou um perfil Zernio ainda.</p>
+    <div *ngFor="let item of tenantProfiles" class="account-row">
+      <span><strong>{{item.nome}}</strong><small>{{item.connectedAccounts}} conta(s) ativa(s) · Perfil separado</small></span>
+    </div>
+  </section>
 </div>
