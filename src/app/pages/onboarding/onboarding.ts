@@ -7,6 +7,7 @@ import { SEGMENTO_OPTIONS } from '../../services/segmento-config.service';
 import { EstabelecimentoPublicoService } from '../../services/estabelecimento-publico.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { AuthService } from '../../services/auth.service';
+import { signupErrorMessage } from '../../core/signup-guardrails';
 
 
 @Component({
@@ -24,8 +25,11 @@ export class Onboarding implements OnInit {
   public bookingOrigin=window.location.origin+'/agendar/';
   private router = inject(Router);
   private supabase = inject(SupabaseService).client;
-  termsAccepted = localStorage.getItem('ag_terms_accepted') === 'true';
-  marketingConsent = localStorage.getItem('ag_marketing_consent') === 'true';
+  private readFlag(key:string):boolean {
+    try{return localStorage.getItem(key)==='true';}catch{return false;}
+  }
+  termsAccepted = this.readFlag('ag_terms_accepted');
+  marketingConsent = this.readFlag('ag_marketing_consent');
   errorMessage = '';
   completed = false;
 
@@ -60,7 +64,8 @@ export class Onboarding implements OnInit {
   async ngOnInit() {
     const {data:{user}} = await this.supabase.auth.getUser();
     if (user?.email) this.form.email=user.email;
-    const chosenSegment=localStorage.getItem('ag_signup_segment');
+    let chosenSegment:string|null=null;
+    try{chosenSegment=localStorage.getItem('ag_signup_segment');}catch{}
     if(chosenSegment&&this.segmentOptions.some(s=>s.value===chosenSegment))this.form.segmento=chosenSegment;
     try { const draft=JSON.parse(localStorage.getItem('ag_temp_onboarding_data')||'{}'); if (draft.email === user?.email) this.form={...this.form,...draft,email:user?.email||''}; } catch {}
     this.cdr.markForCheck();
@@ -81,31 +86,94 @@ export class Onboarding implements OnInit {
     }
   }
 
+  /** Commercial enrolment/Hotmart enrichment is never a prerequisite for opening an account. */
+  private async finishOptionalIntegrations(token: string): Promise<void> {
+    const authHeaders={Authorization:`Bearer ${token}`};
+    const signal=AbortSignal.timeout(3500);
+    const tasks=[
+      fetch('/api/commercial?action=enroll',{
+        method:'POST',signal,
+        headers:{...authHeaders,'Content-Type':'application/json'},
+        body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})
+      }).then(r=>{if(!r.ok)throw Error('commercial integration pending');}),
+      fetch('/api/hotmart-activate',{
+        method:'POST',signal,headers:authHeaders
+      }).then(r=>{if(!r.ok && r.status!==503)throw Error('license integration pending');})
+    ];
+    const results=await Promise.allSettled(tasks);
+    if(results.some(r=>r.status==='rejected'))
+      console.warn('AgendaAI: integrações de cadastro pendentes; o espaço permanece criado.');
+  }
+
+  async continuarAcesso(): Promise<void> {
+    if(!this.completed || this.isSaving)return;
+    this.isSaving=true;
+    try { await this.authService.redirectAfterLogin(); }
+    catch {this.errorMessage='Seu espaço já foi criado. Entre novamente com o mesmo e-mail para continuar.';}
+    finally {this.isSaving=false;this.cdr.markForCheck();}
+  }
+
   async finalizar() {
-    if(!this.form.nome.trim()||!this.form.segmento||!this.form.telefone.trim()||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(this.form.slug)){this.errorMessage='Confira nome, tipo de negócio, telefone e link de reservas.';return;}
-    if (!this.termsAccepted) { this.errorMessage='Aceite as condições para iniciar o teste.'; return; }
-    if (this.isSaving) return;
-    this.isSaving=true; this.errorMessage='';
+    if (this.isSaving || this.completed) return;
+    if(!this.form.nome.trim()||!this.form.segmento||!this.form.telefone.trim()||!/^[a-z0-9]+(-[a-z0-9]+)*$/.test(this.form.slug)){
+      this.errorMessage='Confira nome, tipo de negócio, telefone e link de reservas.';return;
+    }
+    if (!this.termsAccepted) {
+      this.errorMessage='Aceite as condições para iniciar o teste.';return;
+    }
+    this.isSaving=true;
+    this.errorMessage='';
+    let created=false;
     try {
       const {data:{session}}=await this.supabase.auth.getSession();
-      if(!session)throw new Error('Sua sessão expirou. Entre novamente.');
-      // Save acceptance before creating a tenant; retrying never starts a second trial.
-      const response=await fetch('/api/commercial?action=enroll',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})});
-      if(!response.ok)throw new Error('Não foi possível registrar o aceite. Tente novamente.');
-      const {data:existing,error}=await this.supabase.rpc('get_estabelecimento_by_user',{p_user_id:session.user.id});
+      if(!session) {
+        this.errorMessage='Sua sessão expirou. Entre novamente para continuar com os dados já preenchidos.';
+        return;
+      }
+      // Idempotent recovery: if a previous attempt created the tenant but
+      // failed to navigate/enrol, do not insert a duplicate business.
+      const {data:existing,error}=await this.supabase.rpc('get_estabelecimento_by_user',{
+        p_user_id:session.user.id
+      });
       if(error)throw error;
-      if(!existing?.length) await this.estabService.createEstabelecimento({...this.form,onboarding_completo:true});
-      // Connect the newly created tenant to its explicitly consented commercial journey.
-      const enrolled=await fetch('/api/commercial?action=enroll',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${session.access_token}`},body:JSON.stringify({termsAccepted:true,marketingConsent:this.marketingConsent})});
-      if(!enrolled.ok)throw new Error('Empresa criada; não foi possível concluir o cadastro comercial. Tente novamente.');
-      // Compradores Hotmart recebem automaticamente a licença após criar a barbearia.
-      // A inexistência de compra não impede o onboarding convencional.
-      const activation=await fetch('/api/hotmart-activate',{method:'POST',headers:{Authorization:`Bearer ${session.access_token}`}});
-      if(!activation.ok && activation.status!==503) console.warn('Ativação Hotmart pendente; cliente pode tentar novamente no próximo acesso.');
-      localStorage.removeItem('ag_temp_onboarding_data');
+      if(!existing?.length) {
+        try {
+          await this.estabService.createEstabelecimento({...this.form,onboarding_completo:true});
+        } catch(createError) {
+          // If another tab/connection completed the tenant insert, a failed
+          // response must not become a second signup attempt.
+          const recovered=await this.supabase.rpc('get_estabelecimento_by_user',{
+            p_user_id:session.user.id
+          });
+          if(recovered.error || !recovered.data?.length) throw createError;
+        }
+      }
+      created=true;
       this.completed=true;
-      await this.authService.redirectAfterLogin();
-    } catch(error) { this.errorMessage=error instanceof Error?error.message:'Não foi possível concluir o cadastro.'; }
-    finally { this.isSaving=false; this.cdr.markForCheck(); }
+      try {localStorage.removeItem('ag_temp_onboarding_data');}catch{}
+      // Terms were explicitly accepted, and consent was already saved in
+      // Auth user metadata. Commercial sync and license checks are best effort.
+      try {
+        await this.finishOptionalIntegrations(session.access_token);
+      } catch { console.warn('AgendaAI: sincronização opcional indisponível.'); }
+      try {await this.authService.redirectAfterLogin();}
+      catch {
+        this.errorMessage='Seu espaço foi criado! Se o painel não abrir, toque em "Abrir minha agenda" ou entre novamente.';
+      }
+    } catch(error:unknown) {
+      if(created) {
+        this.completed=true;
+        this.errorMessage='Seu espaço já está pronto. Entre com o mesmo e-mail para continuar.';
+      } else {
+        const code=(error as {code?:string})?.code;
+        const message=(error as Error)?.message||'';
+        this.errorMessage=code==='23505'||/duplicate|slug.*already|link.*uso|já existe/i.test(message)
+          ? 'Este link de reservas já está em uso. Escolha outro nome para o seu link.'
+          : signupErrorMessage(error);
+      }
+    } finally {
+      this.isSaving=false;
+      this.cdr.markForCheck();
+    }
   }
 }
