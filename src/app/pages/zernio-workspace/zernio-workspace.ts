@@ -20,6 +20,7 @@ export class ZernioWorkspace implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   get isOwner() { return this.router.url.startsWith('/platform-admin'); }
   accounts: SocialAccount[] = [];
+  tenantProfiles: Array<{nome:string;profileId:string;connectedAccounts:number}> = [];
   selected = new Set<string>();
   platforms = [
     { value:'instagram',label:'Instagram' },{value:'facebook',label:'Facebook'},
@@ -65,6 +66,7 @@ export class ZernioWorkspace implements OnInit {
       const data = await this.api('overview');
       this.profileId = data.profileId;
       this.accounts = data.accounts || [];
+      this.tenantProfiles = this.isOwner ? (data.tenants || []) : [];
       this.selected = new Set(Array.from(this.selected).filter(id => this.accounts.some(a=>a.id===id)));
       if (new URLSearchParams(window.location.search).has('connected')) this.notice = 'Autorização recebida. Confira a lista de contas conectadas.';
     } catch(e) { this.error = e instanceof Error ? e.message : 'Falha de integração.'; }
