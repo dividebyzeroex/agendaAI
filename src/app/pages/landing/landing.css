@@ -2238,3 +2238,8 @@
     line-height: 1.13;
   }
 }
+
+/* Responsive pricing pilot: no fixed inline columns on small screens. */
+.aa-pricing-three { grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch; }
+@media (max-width:1050px) { .aa-pricing-three { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+@media (max-width:720px) { .aa-pricing-three { grid-template-columns:minmax(0,1fr); } }

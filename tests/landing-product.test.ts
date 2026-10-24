@@ -49,7 +49,9 @@ describe('AgendaAI product story and conversion experience',()=>{
     expect(html).toContain('goToLogin()');
     expect(html).toContain('goToDemo()');
     expect(html).toContain('requestPilot()');
-    expect(html).toContain('R$ 97');
+    expect(html).toContain('AgendaAI Agenda');
+    expect(html).toContain('AgendaAI Gestão');
+    expect(html).toContain('Growth e adicionais ainda não estão disponíveis');
     expect(html).toContain('30 dias');
     expect(index).toContain('name="description"');
     expect(index).toContain('rel="canonical"');
