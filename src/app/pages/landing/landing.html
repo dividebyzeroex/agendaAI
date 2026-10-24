@@ -13,6 +13,7 @@
         <a href="#comparativo" (click)="scrollTo('comparativo')">Comparar preços</a>
         <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
         <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
+        <a href="#inteligencia" (click)="scrollTo('inteligencia')">Inteligência</a>
         <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
         <a href="#precos" (click)="scrollTo('precos')">Planos</a>
         <a href="#modulos" (click)="scrollTo('modulos')">Adicionais</a>
@@ -34,6 +35,7 @@
       <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
       <a href="#comparativo" (click)="scrollTo('comparativo')">Compare os preços</a>
       <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
+      <a href="#inteligencia" (click)="scrollTo('inteligencia')">Inteligência</a>
       <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
       <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express e Stripe</a>
       <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
@@ -57,11 +59,11 @@
       <div class="hero-content">
         <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> GESTÃO COMPLETA, SEM TAXA POR AGENDA ADICIONAL</div>
         <h1 class="hero-title">Seu salão cresce. <span>Sua mensalidade não precisa crescer junto.</span></h1>
-        <p class="hero-subtitle">Mais profissionais, sem pagar mais por agenda. Organize reservas, clientes, comissões e caixa — e use o AgendaAI Growth para transformar horários livres em oportunidades.</p>
+        <p class="hero-subtitle">Mais profissionais, sem pagar por agenda extra. Organize reservas, comissões, caixa e divulgação — agora com um Intelligence Hub em piloto para transformar dados reais do salão em decisões mais claras.</p>
         <div class="hero-feature-proof" aria-label="Diferenciais da plataforma">
           <span><i class="pi pi-check-circle" aria-hidden="true"></i> R$ 0 por agenda extra</span>
           <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento, caixa e comissões</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Campanhas básicas incluídas</span>
+          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Intelligence Hub em piloto</span>
         </div>
         <div class="hero-cta-group">
           <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
@@ -495,6 +497,49 @@
       </div>
     </section>
 
+
+    <!-- AGENDAAI INTELLIGENCE — availability deliberately limited to pilot accounts -->
+    <section class="aa-intelligence" id="inteligencia" aria-labelledby="aa-intelligence-title">
+      <div class="container">
+        <header class="aa-intel-intro">
+          <div class="aa-intel-heading">
+            <span class="aa-intel-eyebrow"><i class="pi pi-sparkles" aria-hidden="true"></i> AGENDAAI INTELLIGENCE · PILOTO CONTROLADO</span>
+            <h2 id="aa-intelligence-title">Seu salão já tem os dados. <em>Agora eles ajudam a decidir.</em></h2>
+          </div>
+          <p>O Intelligence Hub reúne sinais da rotina, aponta oportunidades para investigar e transforma informação em próximos passos. A inteligência entra para apoiar quem administra — a decisão continua sendo sua.</p>
+        </header>
+
+        <div class="aa-intel-tracks">
+          <article class="aa-intel-track">
+            <div class="aa-intel-track-head"><span>01 / AGENDA</span><i class="pi pi-calendar" aria-hidden="true"></i></div>
+            <h3>Descubra onde há espaço para atender melhor.</h3>
+            <p>Leituras dos horários, da agenda e dos serviços ajudam o proprietário a observar disponibilidade e organizar a próxima ação.</p>
+            <div class="aa-intel-prompt"><small>PERGUNTA QUE IMPORTA</small><strong>Quais horários merecem atenção nesta semana?</strong></div>
+          </article>
+          <article class="aa-intel-track">
+            <div class="aa-intel-track-head"><span>02 / GESTÃO</span><i class="pi pi-chart-bar" aria-hidden="true"></i></div>
+            <h3>Entenda o movimento por trás dos números.</h3>
+            <p>Pagamentos confirmados, cancelamentos e faltas dão contexto às leituras de operação — sem inventar faturamento ou resultados.</p>
+            <div class="aa-intel-prompt"><small>PERGUNTA QUE IMPORTA</small><strong>O que merece uma decisão antes do próximo mês?</strong></div>
+          </article>
+          <article class="aa-intel-track aa-intel-track-growth">
+            <div class="aa-intel-track-head"><span>03 / GROWTH IA</span><i class="pi pi-megaphone" aria-hidden="true"></i></div>
+            <h3>Transforme um horário livre em uma ideia de campanha.</h3>
+            <p>Na prévia por convite, a IA prepara rascunhos com disponibilidade real e links rastreáveis. Você revisa e decide se vai divulgar.</p>
+            <div class="aa-intel-prompt"><small>CONTROLE DO SALÃO</small><strong>Nenhuma campanha é publicada ou enviada sozinha.</strong></div>
+          </article>
+        </div>
+
+        <div class="aa-intel-footer">
+          <div><span class="aa-intel-control-icon"><i class="pi pi-shield" aria-hidden="true"></i></span>
+            <div><strong>Informação real. Aprovação humana.</strong><p>O painel é do proprietário. A IA não movimenta o caixa, não altera reservas e não envia mensagens sem uma ação autorizada.</p></div>
+          </div>
+          <a href="#precos" (click)="scrollTo('precos')">Entenda os planos <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <p class="aa-intel-disclaimer">Intelligence Hub em liberação gradual para contas piloto, conforme dados e habilitação do estabelecimento. O Growth IA ainda não está disponível para contratação. Exemplos ilustrativos, sem promessa de resultado ou publicação automática.</p>
+      </div>
+    </section>
+
     <!-- JOURNEY OF THE CUSTOMER AND THE BUSINESS -->
     <section class="evolution-section" id="novidades" aria-labelledby="evolution-title">
       <div class="container">
@@ -572,7 +617,7 @@
     <!-- PRODUCT CAPABILITIES -->
     <section class="section-block capabilities-section" id="recursos">
       <div class="container">
-        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Escolha o que deseja explorar: atendimento, pagamentos, relacionamento ou gestão. Tudo pensado para trabalhar em conjunto, sem espalhar o controle por vários sistemas.</p></div>
+        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Escolha o que deseja explorar: atendimento, pagamentos, relacionamento ou gestão. Tudo pensado para trabalhar em conjunto — inclusive leituras inteligentes em piloto, sem perder o controle da operação.</p></div>
         <div class="capability-filters" role="group" aria-label="Filtrar recursos por área">
             <button type="button" *ngFor="let pillar of capabilityPillars"
               [class.is-selected]="activeCapabilityPillar===pillar.id"
@@ -608,6 +653,7 @@
               <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por profissional adicional</li>
               <li><i class="pi pi-check"></i> Clientes, serviços e horários</li>
               <li><i class="pi pi-check"></i> Histórico de agendamentos</li>
+              <li><i class="pi pi-sparkles"></i> Leituras da agenda (piloto gradual)</li>
               <li><i class="pi pi-check"></i> Suporte por e-mail</li>
             </ul>
             <button class="btn-primary w-full" (click)="goToLogin()">Começar teste gratuito</button>
@@ -624,19 +670,20 @@
               <li><i class="pi pi-check"></i> Comandas, caixa e comissões</li>
               <li><i class="pi pi-check"></i> Múltiplos serviços e Pay Express*</li>
               <li><i class="pi pi-check"></i> Relatórios e implantação assistida</li>
+              <li><i class="pi pi-sparkles"></i> Insights de operação (piloto gradual)</li>
             </ul>
             <button class="btn-primary w-full" (click)="goToLogin()">Experimentar Gestão</button>
           </article>
           <article class="pricing-tier">
             <div class="tier-head"><span class="tier-name">AgendaAI Growth IA</span>
               <div class="tier-cost"><span class="currency">R$</span><span class="val">169</span><span class="cycle">/mês previsto</span></div>
-              <p class="tier-description">Automação comercial e retenção: em validação, ainda não contratável.</p>
+              <p class="tier-description">Inteligência para campanhas e retenção, em piloto por convite. Ainda não contratável.</p>
             </div>
-            <ul class="tier-checklist"><li><i class="pi pi-check"></i> Tudo do Gestão</li><li><i class="pi pi-clock"></i> Campanhas avançadas</li><li><i class="pi pi-clock"></i> Automações e análise de retenção</li></ul>
+            <ul class="tier-checklist"><li><i class="pi pi-check"></i> Tudo do Gestão</li><li><i class="pi pi-clock"></i> Rascunhos de campanhas assistidos por IA</li><li><i class="pi pi-clock"></i> Links rastreáveis e revisão humana</li><li><i class="pi pi-clock"></i> Automações avançadas em validação</li></ul>
             <a href="#piloto" class="btn-primary w-full" (click)="scrollTo('piloto')">Registrar interesse</a>
           </article>
         </div>
-        <p class="pricing-disclaimer">Preços mensais de lançamento sujeitos a revisão para novas contratações. Nenhum desconto ou alteração automática é aplicada a contratos existentes. Growth e adicionais ainda não estão disponíveis para compra. *Pay Express requer habilitação do provedor; taxas de pagamentos, IA, SMS/WhatsApp e integrações externas podem ser cobradas separadamente. Diferenciação técnica de acesso aos recursos está em validação no piloto.</p>
+        <p class="pricing-disclaimer">Preços mensais de lançamento sujeitos a revisão para novas contratações. Nenhum desconto ou alteração automática é aplicada a contratos existentes. Growth e adicionais ainda não estão disponíveis para compra. As leituras de inteligência estão em piloto controlado, sujeitas à habilitação por estabelecimento e sem garantia de disponibilidade imediata em cada plano. *Pay Express requer habilitação do provedor; taxas de pagamentos, IA, SMS/WhatsApp e integrações externas podem ser cobradas separadamente. Diferenciação técnica de acesso aos recursos está em validação no piloto.</p>
       </div>
     </section>
     <!-- Add-ons are not for sale until feature and margin validation. -->
@@ -691,7 +738,7 @@
       <div class="container">
         <div class="cta-box">
           <h2>Seu próximo profissional não deveria custar outra mensalidade.</h2>
-          <p>Experimente por 30 dias a agenda, o caixa, as comissões e as campanhas básicas de crescimento. Traga a equipe e continue crescendo sem tarifa por agenda adicional.</p>
+          <p>Experimente por 30 dias a agenda, o caixa, as comissões e as ferramentas de divulgação. Conheça também a evolução Intelligence Hub, em piloto gradual. Continue crescendo sem tarifa por agenda adicional.</p>
           <div class="cta-actions">
             <button class="btn-primary btn-lg" (click)="goToLogin()">
               Criar conta gratuita agora

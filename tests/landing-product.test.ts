@@ -57,4 +57,19 @@ describe('AgendaAI product story and conversion experience',()=>{
     expect(index).toContain('rel="canonical"');
     expect(index).toContain('Stripe Connect');
   });
+
+  it('introduces the Intelligence Hub with honest pilot availability and owner controls',()=>{
+    expect(html).toContain('id="inteligencia"');
+    expect(html).toContain('AGENDAAI INTELLIGENCE · PILOTO CONTROLADO');
+    expect(html).toContain('Growth IA ainda não está disponível para contratação');
+    expect(html).toContain('Leituras da agenda (piloto gradual)');
+    expect(html).toContain('Insights de operação (piloto gradual)');
+    expect(html).toContain('Nenhuma campanha é publicada ou enviada sozinha');
+    expect(component).toContain('O que é o AgendaAI Intelligence?');
+    expect(component).toContain('A IA pode publicar campanhas ou enviar mensagens sozinha?');
+    expect(stylesheet).toContain('.aa-intel-tracks{');
+    expect(stylesheet).toContain('@media(max-width:780px)');
+    expect(index).not.toContain('Essencial R$ 97/mês');
+    expect(index).toContain('Intelligence Hub em piloto');
+  });
 });
