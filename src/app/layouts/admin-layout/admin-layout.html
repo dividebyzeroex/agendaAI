@@ -29,6 +29,7 @@
         *ngIf="canClients | async"
         ><i class="pi pi-users" aria-hidden="true"></i>Clientes</a
       >
+      <a routerLink="/admin/intelligence" routerLinkActive="active" ariaCurrentWhenActive="page" *ngIf="isDono | async"><i class="pi pi-sparkles" aria-hidden="true"></i>Intelligence Hub</a>
       <a
         routerLink="/admin/caixa"
         routerLinkActive="active"

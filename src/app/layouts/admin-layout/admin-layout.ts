@@ -76,7 +76,7 @@ export class AdminLayout {
       .subscribe(() => this.closeSidebar());
   }
   get managementActive() {
-    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|integracoes|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|resultados|clube|retencao|unidades|primeiros-passos|portal|social|indicacoes)/.test(
+    return /\/admin\/(profissionais|produtos|comissoes|analytics|configuracoes|billing|recebimentos|integracoes|fila|fidelizacao|satisfacao|financeiro|estoque|fichas|relacionamento|pagina|resultados|clube|retencao|unidades|primeiros-passos|portal|social|indicacoes|intelligence)/.test(
       this.router.url,
     );
   }

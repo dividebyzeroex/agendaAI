@@ -292,62 +292,16 @@ export class AiAssistantComponent {
   }
 
   processIntent(text: string) {
-    const lowerText = text.toLowerCase();
-    
-    // Simplistic NLP logic for scheduling
-    // Example: "Agendar Joao para amanha as 14 horas"
-    if (lowerText.includes('agendar') || lowerText.includes('marcar')) {
-      const isTomorrow = lowerText.includes('amanhã');
-      
-      let date = new Date();
-      if (isTomorrow) {
-        date.setDate(date.getDate() + 1);
-      }
-      
-      // Attempt to extract hour
-      const hourMatch = lowerText.match(/(\d{1,2})\s*(?:horas|h|:00)/);
-      let hour = 10; // Default to 10
-      if (hourMatch && hourMatch[1]) {
-        hour = parseInt(hourMatch[1], 10);
-      }
-      
-      date.setHours(hour, 0, 0, 0);
-      
-      const startStr = date.toISOString().split('.')[0];
-      const endStr = new Date(date.getTime() + 60 * 60 * 1000).toISOString().split('.')[0];
-      
-      this.agendaService.addEvent({
-        title: `Agendamento via IA: ${text}`,
-        start: startStr,
-        end: endStr,
-        backgroundColor: '#f43f5e'
-      });
-      
-      this.messages.push({
-        role: 'assistant',
-        content: `Entendido! Agendei um evento para o dia ${date.toLocaleDateString('pt-BR')} às ${hour}h.`,
-        timestamp: new Date()
-      });
-      
-      // Navigate to calendar if not there
-      this.router.navigate(['/admin/agenda']);
-      
-    } else if (lowerText.includes('cancelar')) {
-       // Just a demo answer
-       this.messages.push({
-        role: 'assistant',
-        content: 'Para cancelar um agendamento, navegue até a sua agenda clicando no evento e confirme a exclusão.',
-        timestamp: new Date()
-      });
-    } else if (lowerText.includes('fechar') || lowerText.includes('sair')) {
-      this.isOpen = false;
-    } else {
-      this.messages.push({
-        role: 'assistant',
-        content: 'Desculpe, ainda estou aprendendo. Você pode me pedir para agendar horários, como: "Agendar um corte amanhã às 15 horas".',
-        timestamp: new Date()
-      });
-    }
+    const wantsBooking = /agendar|marcar|reagendar|cancelar/i.test(text);
+    this.messages.push({
+      role: 'assistant',
+      content: wantsBooking
+        ? 'Posso te orientar. Para evitar conflitos e cobranças indevidas, abra a agenda, escolha o serviço, o profissional e confirme os dados. Eu não criei nem alterei nenhum agendamento.'
+        : 'Consulte o Intelligence Hub para analisar sua agenda com dados reais, ou use o menu para encontrar a função desejada.',
+      timestamp: new Date()
+    });
+    if (wantsBooking) this.router.navigate(['/admin/agenda']);
+    else if (/relat[oó]rio|an[aá]lise|intelig[eê]ncia|insight/i.test(text)) this.router.navigate(['/admin/intelligence']);
   }
 
   scrollToBottom() {

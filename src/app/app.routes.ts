@@ -241,6 +241,12 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'intelligence',
+        loadComponent: () => import('./pages/admin-intelligence/admin-intelligence').then((m) => m.AdminIntelligence),
+        canActivate: [roleGuard],
+        data: { roles: ['dono'] },
+      },
+      {
         path: 'analytics',
         loadComponent: () =>
           import('./pages/admin-analytics/admin-analytics').then((m) => m.AdminAnalytics),

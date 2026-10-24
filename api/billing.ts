@@ -1,3 +1,4 @@
+import { intelligenceHandler } from '../server/intelligence.js';
 import { TERMS_VERSION } from '../server/commercial.js';
 import { isSellablePlan, PRICING_CATALOG } from '../src/app/core/pricing-catalog.js';
 import { integrationsHandler } from '../server/integrations.js';
@@ -22,6 +23,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   res.setHeader('Cache-Control', 'no-store');
   try {
     const action = req.query['action'];
+    if(typeof action==='string' && action.startsWith('ai-')) return intelligenceHandler(req,res);
     if (
       typeof action === 'string' &&
       (action.startsWith('integration-') || action.startsWith('fiscal-'))
