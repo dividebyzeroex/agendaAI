@@ -8,3 +8,12 @@ describe('Commercial contact controls',()=>{
  it('separates paying-customer retention from trial selling',()=>expect(nextStage({status:'won',created_at:'2026-08-01'},null,Date.parse('2026-10-04'))).toBe('retention'));
  it('discloses automation and no automatic subscription',()=>{const m=messageFor('invitation','Test Business','https://example.test');expect(m.body).toContain('automatizado');expect(m.body).toContain('30 dias');expect(m.body).toContain('sem cobrança automática');expect(m.body).toContain('https://example.test/login?trial=30')});
 });
+
+import { TERMS_VERSION, messageFor } from '../server/commercial.js';
+it('alinha a versão contratual e as ofertas comerciais ao catálogo vigente',()=>{
+ expect(TERMS_VERSION).toBe('2026-10-24');
+ expect(messageFor('invitation','Exemplo','https://agendaai.test').body).toContain('R$ 79');
+ const message=messageFor('trial-ending','Exemplo','https://agendaai.test').body;
+ expect(message).toContain('Gestão: R$ 119');
+ expect(message).not.toContain('R$ 349');
+});

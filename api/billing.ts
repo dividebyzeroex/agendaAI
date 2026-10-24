@@ -1,3 +1,4 @@
+import { TERMS_VERSION } from '../server/commercial.js';
 import { isSellablePlan, PRICING_CATALOG } from '../src/app/core/pricing-catalog.js';
 import { integrationsHandler } from '../server/integrations.js';
 import { adminClient } from '../server/security.js';
@@ -207,7 +208,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { error: acceptanceError } = await db
         .from('commercial_terms_acceptances')
         .upsert(
-          { user_id: user.id, version: '2026-10-10', marketing_consent: false },
+          { user_id: user.id, version: TERMS_VERSION, marketing_consent: false },
           { onConflict: 'user_id,version', ignoreDuplicates: true },
         );
       if (acceptanceError)
