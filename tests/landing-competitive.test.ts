@@ -13,7 +13,7 @@ describe('Página de vendas — modelo de concorrente anônimo',()=>{
    expect(competitorMonthlyComparison(5)).toBe(179.99);
    expect(competitorMonthlyComparison(10)).toBe(279.99);
    expect(competitorMonthlyComparison(0)).toBe(99.99);
-   expect(agendaAiMonthlyComparison).toBe(97);
+   expect(agendaAiMonthlyComparison).toBe(79);
  });
  it('usa apenas a designação concorrente e não envia visitantes a sites externos',()=>{
    expect(html).toContain('id="comparativo"');
@@ -29,27 +29,20 @@ describe('Página de vendas — modelo de concorrente anônimo',()=>{
      for(const content of [html,ts,moduleCode]) expect(content.toLowerCase()).not.toContain(forbidden);
    }
  });
- it('mostra módulos adicionais com preços propostos, sem checkout falso',()=>{
+ it('mostra os três níveis, sem vender produtos em estudo',()=>{
+   const pricing=html.split('id="precos"')[1].split('id="modulos"')[0];
+   for (const price of ['>79</span>','>119</span>','>169</span>']) expect(pricing).toContain(price);
+   expect(pricing).toContain('sem cartão ou cobrança automática');
+   expect(pricing).toContain('Sem taxa por agenda adicional');
+   expect(pricing).toContain('Growth e adicionais ainda não estão disponíveis');
    const addons=html.split('id="modulos"')[1].split('id="piloto"')[0];
    for (const name of ['Social Studio Pro','Growth Automations','Retenção Premium','Inteligência Financeira','Multiunidades e Franquias','Concierge Plus']) expect(addons).toContain(name);
-   for (const price of ['R$ 79','R$ 49','R$ 39']) expect(addons).toContain(price);
-   // Add-ons are additional charges on top of the R$ 97 base, never standalone plans.
-   expect(addons).toContain('R$ 97/mês do Essencial');
-   for(const total of ['R$ 176/mês','R$ 146/mês','R$ 136/mês']) expect(addons).toContain(total);
-   for(const formula of ['R$ 97 + R$ 79','R$ 97 + R$ 49','R$ 97 + R$ 39']) expect(addons).toContain(formula);
-   expect(addons).toContain('somados aos R$ 97/mês do Essencial');
-   expect(addons).toContain('taxa única sob orçamento');
-   expect(addons).toContain('consumo');
-   expect(ts).toContain('Como funciona a cobrança dos módulos adicionais?');
-
-   expect(addons).toContain('Preços em estudo, ainda não disponíveis para contratação.');
+   expect(addons).toContain('Nenhum adicional será cobrado automaticamente');
    expect(addons).not.toContain('Comprar agora');
-   expect(addons).not.toContain('href="http');
-   expect(html).toContain('sem cobrança por agenda ou profissional adicional');
+   expect(ts).toContain('Como funciona a cobrança dos módulos adicionais?');
  });
- it('mantém preço básico e exclusão de limite por agenda',()=>{
+ it('mantém agenda sem limite por profissional',()=>{
    expect(html).not.toContain('Até 5 profissionais ativos');
-   expect(ts).not.toContain('até cinco profissionais ativos');
    expect(migration).toContain('drop trigger if exists enforce_professional_limit');
    expect(html).toContain('Sem taxa por agenda ou profissional adicional');
  });

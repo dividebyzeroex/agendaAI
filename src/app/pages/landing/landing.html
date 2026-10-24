@@ -71,7 +71,7 @@
         <div class="hero-metrics-row" aria-label="Vantagens do teste">
           <div class="metric-item"><span class="m-val">R$ 0</span><span class="m-lbl">por profissional adicional</span></div>
           <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Essencial após o teste</span></div>
+          <div class="metric-item"><span class="m-val">A partir de R$ 79/mês</span><span class="m-lbl">Plano Agenda após o teste</span></div>
           <div class="metric-divider"></div>
           <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">grátis, sem cartão</span></div>
         </div>
@@ -178,7 +178,7 @@
         <div class="aa-value-intro">
           <span class="aa-value-kicker">POR QUE O AGENDAAI</span>
           <h2 id="aa-value-title">Mais profissionais. <em>A mesma mensalidade.</em></h2>
-          <p>Contratar alguém deveria aumentar sua capacidade de atendimento — não o custo de cada agenda. No Essencial, a quantidade de profissionais do mesmo estabelecimento não acrescenta uma nova mensalidade.</p>
+          <p>Contratar alguém deveria aumentar sua capacidade de atendimento — não o custo de cada agenda. Nos planos Agenda e Gestão, a quantidade de profissionais do mesmo estabelecimento não acrescenta uma nova mensalidade.</p>
         </div>
         <div class="aa-value-grid">
           <article class="aa-value-card aa-value-primary">
@@ -186,7 +186,7 @@
             <strong class="aa-value-amount">R$ 0</strong>
             <h3>Por agenda adicional.</h3>
             <p>Cadastre os profissionais do seu salão sem pagar uma taxa mensal extra para cada nova agenda.</p>
-            <span class="aa-value-note">No mesmo estabelecimento, com o Essencial.</span>
+            <span class="aa-value-note">No mesmo estabelecimento, nos planos Agenda ou Gestão.</span>
           </article>
           <article class="aa-value-card">
             <div class="aa-value-card-head"><i class="pi pi-calendar-plus" aria-hidden="true"></i><span>ATENDIMENTO DE VERDADE</span></div>
@@ -216,7 +216,7 @@
           <div><span class="aa-value-kicker">COMPARE SEM COMPLICAÇÃO</span>
             <h2 id="aa-price-title">Quanto custa <em>crescer a equipe?</em></h2>
           </div>
-          <p>Algumas plataformas somam agendas ou mudam a faixa do plano. No AgendaAI Essencial, o valor mensal anunciado não varia com o número de profissionais do mesmo salão.</p>
+          <p>Algumas plataformas somam agendas ou mudam a faixa do plano. Nos planos Agenda e Gestão, o valor mensal anunciado não varia com o número de profissionais do mesmo salão.</p>
         </div>
         <div class="aa-price-workspace">
           <div class="aa-price-controls">
@@ -230,8 +230,8 @@
           </div>
           <div class="aa-compare-cards">
             <div class="aa-compare-card aa-compare-us">
-              <span class="aa-compare-brand"><i class="pi pi-check-circle" aria-hidden="true"></i> AgendaAI Essencial</span>
-              <strong>R$ 97<small>/mês</small></strong>
+              <span class="aa-compare-brand"><i class="pi pi-check-circle" aria-hidden="true"></i> AgendaAI Agenda</span>
+              <strong>R$ 79<small>/mês</small></strong>
               <p>Sem taxa por agenda adicional.</p>
               <span class="aa-compare-tag">Mesmo valor para {{comparisonTeamSize}} {{comparisonTeamSize===1?'profissional':'profissionais'}}</span>
             </div>
@@ -252,7 +252,7 @@
         <div class="aa-market-notes" aria-label="Entenda os modelos de cobrança">
           <div><strong>Concorrente por profissional</strong><p>Alguns planos acrescentam uma tarifa mensal quando um novo profissional entra na equipe.</p></div>
           <div><strong>Concorrente por faixa</strong><p>Outros planos aumentam de preço conforme a equipe ultrapassa determinadas faixas.</p></div>
-          <div><strong>AgendaAI</strong><p>O Essencial custa R$ 97/mês na contratação mensal, depois de 30 dias grátis. Sem taxa por agenda adicional no mesmo estabelecimento.</p><a href="#precos" (click)="scrollTo('precos')">Veja o que está incluído <i class="pi pi-arrow-right"></i></a></div>
+          <div><strong>AgendaAI</strong><p>O Agenda custa R$ 79/mês na contratação mensal, depois de 30 dias grátis. Sem taxa por agenda adicional no mesmo estabelecimento.</p><a href="#precos" (click)="scrollTo('precos')">Veja o que está incluído <i class="pi pi-arrow-right"></i></a></div>
         </div>
       </div>
     </section>
@@ -593,121 +593,62 @@
     <section class="section-block bg-subtle border-top border-bottom" id="precos">
       <div class="container">
         <div class="section-intro">
-          <span class="section-tag">Planos & Investimento</span>
-          <h2>Um preço claro. Sua equipe inteira.</h2>
-          <p>Comece com 30 dias grátis, sem cartão. Depois, o Essencial custa R$ 97/mês — sem cobrança por agenda ou profissional adicional no mesmo estabelecimento.</p>
-
+          <span class="section-tag">Planos &amp; Investimento</span>
+          <h2>Comece simples. Cresça com clareza.</h2>
+          <p>30 dias grátis, sem cartão ou cobrança automática. Depois, escolha o pacote para a sua rotina. Sem taxa por agenda ou profissional adicional no mesmo estabelecimento.</p>
         </div>
-        <div class="pricing-grid" style="grid-template-columns:minmax(0,520px);justify-content:center">
-          <div class="pricing-tier featured">
-            <div class="featured-badge">Comece por aqui</div>
-            <div class="tier-head"><span class="tier-name">AgendaAI Essencial</span>
-              <div class="tier-cost"><span class="currency">R$</span><span class="val">97</span><span class="cycle">/mês após contratação</span></div>
-              <p class="tier-description">Para barbearias e salões de todos os tamanhos que querem organizar a operação sem pagar mais a cada novo profissional.</p>
+        <div class="pricing-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;align-items:stretch">
+          <article class="pricing-tier">
+            <div class="tier-head"><span class="tier-name">AgendaAI Agenda</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">79</span><span class="cycle">/mês</span></div>
+              <p class="tier-description">Para organizar horários e facilitar os agendamentos no dia a dia.</p>
             </div>
             <ul class="tier-checklist">
-              <li><i class="pi pi-check"></i> Agenda e link público de agendamento</li>
-              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por agenda ou profissional adicional</li>
-              <li><i class="pi pi-check"></i> Cadastro de clientes e serviços</li>
-              <li><i class="pi pi-check"></i> Comanda, caixa e comissões por profissional</li>
-              <li><i class="pi pi-check"></i> Campanhas básicas do AgendaAI Growth</li>
-              <li><i class="pi pi-check"></i> Histórico e relatórios operacionais básicos</li>
-              <li><i class="pi pi-check"></i> Atendimento por e-mail comercial</li>
+              <li><i class="pi pi-check"></i> Agenda e link público</li>
+              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por profissional adicional</li>
+              <li><i class="pi pi-check"></i> Clientes, serviços e horários</li>
+              <li><i class="pi pi-check"></i> Histórico de agendamentos</li>
+              <li><i class="pi pi-check"></i> Suporte por e-mail</li>
             </ul>
-            <button class="btn-primary w-full" (click)="goToLogin()">Começar meus 30 dias grátis</button>
-            <p class="pricing-disclaimer">30 dias grátis, sem cartão ou cobrança automática. R$ 97/mês é o valor do Essencial na contratação mensal. Pagamentos, mensageria, publicação social multicanal e complementos opcionais podem ter tarifas próprias; chatbot de WhatsApp não está incluído. A regra sem taxa por agenda se aplica aos profissionais do mesmo estabelecimento.</p>
-          </div>
+            <button class="btn-primary w-full" (click)="goToLogin()">Começar teste gratuito</button>
+          </article>
+          <article class="pricing-tier featured">
+            <div class="featured-badge">Para quem quer gerenciar mais</div>
+            <div class="tier-head"><span class="tier-name">AgendaAI Gestão</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">119</span><span class="cycle">/mês</span></div>
+              <p class="tier-description">Organização da operação e acompanhamento do negócio em um só lugar.</p>
+            </div>
+            <ul class="tier-checklist">
+              <li><i class="pi pi-check"></i> Tudo do Agenda</li>
+              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por agenda adicional</li>
+              <li><i class="pi pi-check"></i> Comandas, caixa e comissões</li>
+              <li><i class="pi pi-check"></i> Múltiplos serviços e Pay Express*</li>
+              <li><i class="pi pi-check"></i> Relatórios e implantação assistida</li>
+            </ul>
+            <button class="btn-primary w-full" (click)="goToLogin()">Experimentar Gestão</button>
+          </article>
+          <article class="pricing-tier">
+            <div class="tier-head"><span class="tier-name">AgendaAI Growth</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">169</span><span class="cycle">/mês previsto</span></div>
+              <p class="tier-description">Automação comercial e retenção: em validação, ainda não contratável.</p>
+            </div>
+            <ul class="tier-checklist"><li><i class="pi pi-check"></i> Tudo do Gestão</li><li><i class="pi pi-clock"></i> Campanhas avançadas</li><li><i class="pi pi-clock"></i> Automações e análise de retenção</li></ul>
+            <a href="#piloto" class="btn-primary w-full" (click)="scrollTo('piloto')">Registrar interesse</a>
+          </article>
         </div>
+        <p class="pricing-disclaimer">Preços mensais de lançamento sujeitos a revisão para novas contratações. Nenhum desconto ou alteração automática é aplicada a contratos existentes. Growth e adicionais ainda não estão disponíveis para compra. *Pay Express requer habilitação do provedor; taxas de pagamentos, IA, SMS/WhatsApp e integrações externas podem ser cobradas separadamente. Diferenciação técnica de acesso aos recursos está em validação no piloto.</p>
       </div>
     </section>
-
-    <!-- Optional modules: base + add-on pricing, clearly identified as proposals -->
+    <!-- Add-ons are not for sale until feature and margin validation. -->
     <section class="aa-addons" id="modulos" aria-labelledby="aa-addons-title">
       <div class="container">
-        <header class="aa-addons-head">
-          <div>
-            <span class="aa-addons-eyebrow"><i class="pi pi-box" aria-hidden="true"></i> EXPANDA QUANDO FIZER SENTIDO</span>
-            <h2 id="aa-addons-title">O essencial já está incluído. <em>O extra é escolha sua.</em></h2>
-          </div>
-          <p>Sua agenda não precisa de adicionais para funcionar bem. Módulos avançados são opcionais e, quando estiverem disponíveis, o valor de cada um será <strong>somado à assinatura Essencial</strong>.</p>
+        <header class="aa-addons-head"><div><span class="aa-addons-eyebrow"><i class="pi pi-box" aria-hidden="true"></i> EXPANDA QUANDO FIZER SENTIDO</span><h2 id="aa-addons-title">Módulos opcionais. <em>Preço definido com dados.</em></h2></div>
+          <p>Social Studio Pro, Growth Automations, Retenção Premium, Inteligência Financeira, Multiunidades e Franquias e Concierge Plus estão em estudo. Não é possível comprá-los nesta etapa.</p>
         </header>
-
-        <div class="aa-addons-pricing-rule" aria-label="Como funciona a cobrança dos adicionais">
-          <div class="aa-addons-rule-intro">
-            <span class="aa-addons-rule-label">COMO FUNCIONA O PREÇO</span>
-            <strong>R$ 97/mês do Essencial <span>+</span> valor do módulo escolhido</strong>
-            <p>O adicional não substitui os R$ 97 do plano. Ele é acrescentado à mensalidade. Se escolher dois módulos, os dois valores serão somados.</p>
-          </div>
-          <div class="aa-addons-rule-example" aria-label="Exemplo de cálculo de mensalidade">
-            <span>EXEMPLO · SOCIAL STUDIO PRO</span>
-            <div><span>Essencial</span><strong>R$ 97</strong></div>
-            <div><span>+ Social Studio Pro</span><strong>R$ 79</strong></div>
-            <div class="aa-addons-example-total"><span>Total mensal previsto</span><strong>R$ 176/mês</strong></div>
-          </div>
+        <div class="aa-addons-pricing-rule"><div class="aa-addons-rule-intro"><span class="aa-addons-rule-label">PRECIFICAÇÃO RESPONSÁVEL</span><strong>Assinatura contratada <span>+</span> adicionais escolhidos no futuro</strong><p>Antes de ativar um módulo, informaremos preço total, limites, eventuais tarifas de consumo e condições de contratação. Nenhum adicional será cobrado automaticamente.</p></div>
+          <div class="aa-addons-rule-example"><span>DISPONIBILIDADE</span><div><span>Preço do módulo</span><strong>Em estudo</strong></div><div class="aa-addons-example-total"><span>Contratação de adicional</span><strong>Indisponível</strong></div></div>
         </div>
-
-        <div class="aa-addons-core" aria-label="O que continua incluído no Essencial">
-          <i class="pi pi-check-circle" aria-hidden="true"></i>
-          <div><strong>Incluído nos R$ 97/mês — sem contratar módulos</strong><span>Agendas adicionais sem taxa no mesmo estabelecimento, clientes, serviços, comissões, caixa, comandas, relatórios básicos e campanhas manuais do AgendaAI Growth.</span></div>
-        </div>
-
-        <div class="aa-addons-grid">
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-share-alt" aria-hidden="true"></i></div>
-            <h3>Social Studio Pro</h3>
-            <p>Calendário editorial, fila de publicações multicanal, revisão de conteúdo e métricas detalhadas das redes.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 79<small>/mês</small></strong></div>
-            <div class="aa-addon-total">R$ 97 + R$ 79 = <strong>R$ 176/mês</strong></div>
-            <small>Conexões sociais e eventuais custos externos serão informados antes da contratação.</small>
-          </article>
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-bolt" aria-hidden="true"></i></div>
-            <h3>Growth Automations</h3>
-            <p>Sugestões recorrentes de campanhas para horários vagos, regras avançadas, aprovações em lote e testes de campanhas.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 49<small>/mês</small></strong></div>
-            <div class="aa-addon-total">R$ 97 + R$ 49 = <strong>R$ 146/mês</strong></div>
-            <small>Publicações e ações automatizadas dependerão de aprovação e configuração.</small>
-          </article>
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-heart" aria-hidden="true"></i></div>
-            <h3>Retenção Premium</h3>
-            <p>Segmentos de clientes, campanhas autorizadas de retorno e relatórios avançados de recorrência.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 49<small>/mês</small></strong></div>
-            <div class="aa-addon-total">R$ 97 + R$ 49 = <strong>R$ 146/mês</strong></div>
-            <small>Mensagens externas poderão gerar custos adicionais de consumo, com consentimento.</small>
-          </article>
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">PREÇO PREVISTO · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-chart-bar" aria-hidden="true"></i></div>
-            <h3>Inteligência Financeira</h3>
-            <p>Previsões de caixa, margens por serviço e profissional, metas e análises avançadas de desempenho.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional ao Essencial</span><strong>+ R$ 39<small>/mês</small></strong></div>
-            <div class="aa-addon-total">R$ 97 + R$ 39 = <strong>R$ 136/mês</strong></div>
-            <small>O caixa e os relatórios operacionais básicos continuam incluídos no Essencial.</small>
-          </article>
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">SOB PROPOSTA · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-building" aria-hidden="true"></i></div>
-            <h3>Multiunidades e Franquias</h3>
-            <p>Visão consolidada de diferentes estabelecimentos, comparativos e permissões administrativas para redes.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Valor adicional ao Essencial</span><strong class="aa-addon-consult">+ Sob orçamento</strong></div>
-            <div class="aa-addon-total">Essencial + <strong>valor por unidade sob proposta</strong></div>
-            <small>O preço total será informado em proposta comercial antes de qualquer contratação.</small>
-          </article>
-          <article class="aa-addon-card">
-            <span class="aa-addon-status">SOB PROPOSTA · EM PLANEJAMENTO</span>
-            <div class="aa-addon-icon"><i class="pi pi-headphones" aria-hidden="true"></i></div>
-            <h3>Concierge Plus</h3>
-            <p>Migração complexa de cadastros, integrações específicas e treinamento dedicado da equipe.</p>
-            <div class="aa-addon-price"><span class="aa-addon-price-prefix">Adicional de contratação única</span><strong class="aa-addon-consult">+ Orçamento único</strong></div>
-            <div class="aa-addon-total">Essencial R$ 97/mês + <strong>taxa única sob orçamento</strong></div>
-            <small>Não é outra mensalidade: a taxa única será apresentada previamente. Suporte básico continua incluso.</small>
-          </article>
-        </div>
-        <p class="aa-addons-disclaimer"><i class="pi pi-info-circle" aria-hidden="true"></i> <span><strong>Preços em estudo, ainda não disponíveis para contratação.</strong> Todos os preços mensais adicionais informados são valores <strong>somados aos R$ 97/mês do Essencial</strong>, nunca substitutos do plano-base. Custos externos, consumo e condições especiais podem ser cobrados à parte quando especificados. Nenhum módulo é contratado automaticamente.</span></p>
+        <p class="aa-addons-disclaimer"><i class="pi pi-info-circle" aria-hidden="true"></i><span><strong>Sem checkout de módulos.</strong> O caixa e os recursos operacionais do piloto permanecem sujeitos às condições do plano contratado e à validação de suas regras de acesso.</span></p>
       </div>
     </section>
 

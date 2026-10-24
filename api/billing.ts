@@ -1,3 +1,4 @@
+import { isSellablePlan, PRICING_CATALOG } from '../src/app/core/pricing-catalog.js';
 import { integrationsHandler } from '../server/integrations.js';
 import { adminClient } from '../server/security.js';
 import { clubHandler } from '../server/growth-payments.js';
@@ -180,7 +181,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         );
       if (req.body?.termsAccepted !== true)
         throw new BillingError(400, 'Aceite as condições da assinatura.');
-      if (req.body?.planId !== 'basico')
+      if (!isSellablePlan(req.body?.planId))
         throw new BillingError(400, 'Plano indisponível na oferta de lançamento.');
       const { planId, months, amount } = quote(req.body?.planId, req.body?.months);
       if (estab.stripe_subscription_id) {
@@ -227,7 +228,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
                 unit_amount: amount,
                 recurring: { interval: 'month', interval_count: months },
                 product_data: {
-                  name: `Agenda AI — ${planId}`,
+                  name: PRICING_CATALOG[planId].name,
                   description: `Assinatura recorrente de ${months} mês(es).`,
                 },
               },

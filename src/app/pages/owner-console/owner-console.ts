@@ -1,4 +1,5 @@
 import { ChangeDetectorRef, Component, inject, OnInit } from '@angular/core';
+import { estimateContribution } from '../../core/pricing-catalog';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -9,6 +10,13 @@ export class OwnerConsole implements OnInit {
  data:OwnerSnapshot|null=null;loading=false;error='';notice='';days=30;tab='overview';query='';filter='';busy='';selected:OwnerTenant|null=null;
  offerCode='';offerPercent=20;offerResult:{code:string;percent:number;expires_at:string;conditions:string}|null=null;
  billing:{ready:boolean;mode:string;reason?:string}|null=null;latency:number|null=null;
+ pricingPrice=119;pricingVariableCost=15;pricingTaxPercent=6;pricingChurnPercent=10;pricingAffiliate=true;
+ get pricingContribution(){return estimateContribution(Number(this.pricingPrice),Number(this.pricingVariableCost),Number(this.pricingTaxPercent)/100);}
+ get pricingMargin(){return this.pricingContribution===null?null:this.pricingContribution/Number(this.pricingPrice)*100;}
+ get pricingCac(){return this.pricingAffiliate?Number(this.pricingPrice):0;}
+ get pricingPayback(){return this.pricingContribution!==null&&this.pricingContribution>0?this.pricingCac/this.pricingContribution:null;}
+ get pricingLtv(){return this.pricingContribution!==null&&Number(this.pricingChurnPercent)>0?this.pricingContribution/(Number(this.pricingChurnPercent)/100):null;}
+
  readonly tabs=[{id:'overview',label:'Visão executiva'},{id:'customers',label:'Clientes e ativação'},{id:'growth',label:'Prospecção'},{id:'finance',label:'Receita e assinaturas'},{id:'users',label:'Usuários'},{id:'health',label:'Saúde e auditoria'}];
  async ngOnInit(){this.tab=this.route.snapshot.data['view']||this.route.snapshot.queryParamMap.get('view')||'overview';await this.refresh();}
  async refresh(){this.loading=true;this.error='';const start=performance.now();try{const [d,b]=await Promise.all([this.service.snapshot(Number(this.days)),fetch('/api/billing?action=status').then(r=>r.ok?r.json():null).catch(()=>null)]);this.data=d;this.billing=b;this.latency=Math.round(performance.now()-start);if(this.selected)this.selected=d.tenants.find(t=>t.id===this.selected?.id)||null;}catch{this.error='Não foi possível conferir os dados. Tente atualizar; a visão anterior foi preservada.';}finally{this.loading=false;this.cdr.markForCheck();}}

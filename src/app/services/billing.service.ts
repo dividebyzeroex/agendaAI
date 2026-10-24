@@ -1,4 +1,5 @@
 import { Injectable, inject } from '@angular/core';
+import { PRICING_CATALOG, pricingQuote } from '../core/pricing-catalog';
 import { BehaviorSubject, map, Observable, of } from 'rxjs';
 import { EstabelecimentoService, Estabelecimento } from './estabelecimento.service';
 import { SupabaseService } from './supabase.service';
@@ -20,6 +21,7 @@ export interface BillingPlan {
   smsLimit: number;
   price?: number;     // Total price with discount
   discount?: number;  // % off
+  status: 'active' | 'preview' | 'legacy';
 }
 
 export interface Invoice {
@@ -38,25 +40,21 @@ export class BillingService {
   private supabase = inject(SupabaseService).client;
 
 
-  plans: BillingPlan[] = [{
-    id: 'basico', name: 'AgendaAI Essencial', basePrice: 97, months: 1,
-    highlight: true, tokensLimit: 0, smsLimit: 0,
-    features: [
-      { text: 'Agenda e link público de agendamento', included: true },
-      { text: 'Cadastro de clientes e serviços', included: true },
-      { text: 'Equipe com até 5 profissionais ativos', included: true },
-      { text: 'Histórico de atendimentos e gestão de caixa', included: true },
-      { text: 'Suporte por e-mail comercial', included: true }
-    ]
-  }];
+  private fromCatalog(id: keyof typeof PRICING_CATALOG): BillingPlan {
+    const plan = PRICING_CATALOG[id];
+    return {
+      id: plan.id, name: plan.name, basePrice: plan.monthlyCents / 100,
+      months: 1, status: plan.status, highlight: id === 'gestao',
+      tokensLimit: 0, smsLimit: 0,
+      features: plan.features.map(text => ({ text, included: true })),
+    };
+  }
+  plans: BillingPlan[] = (['agenda','gestao','growth'] as const).map(id => this.fromCatalog(id));
+  private legacyPlans: BillingPlan[] = (['basico','completo','premium'] as const).map(id => this.fromCatalog(id));
 
   calculatePlanForCycle(plan: BillingPlan, cycleMonths: number): BillingPlan {
-    let discount = 0;
-    if (cycleMonths === 3) discount = 5;
-    if (cycleMonths === 6) discount = 10;
-    if (cycleMonths === 12) discount = 20;
-
-    const totalPrice = Math.round(((plan.basePrice || plan.price || 0) * cycleMonths) * (1 - discount / 100) * 100) / 100;
+    const { amount, discount } = pricingQuote(plan.id, cycleMonths);
+    const totalPrice = amount / 100;
 
     return {
       ...plan,
@@ -109,7 +107,7 @@ export class BillingService {
     if (!current?.id) throw new Error('Estabelecimento ainda não carregado. Atualize a página e tente novamente.');
 
     let plan = this.plans.find(p => p.id === planId);
-    if (!plan) return undefined;
+    if (!plan || plan.status !== 'active') return undefined;
 
     // Recalculate with chosen cycle before sending to Stripe!
     plan = this.calculatePlanForCycle(plan, months);
@@ -275,7 +273,7 @@ export class BillingService {
           const now = new Date();
           const expires = new Date(e.plano_expires_at);
           if (expires > now && e.plano) {
-            return this.plans.find(p => p.id === e.plano);
+            return [...this.plans, ...this.legacyPlans].find(p => p.id === e.plano);
           }
         }
 
@@ -285,7 +283,7 @@ export class BillingService {
           const ends = new Date(e.trial_ends_at);
           if (ends > now) {
             // Give default 1_month features during trial
-            return this.plans.find(p => p.id === 'basico');
+            return this.plans.find(p => p.id === 'agenda');
           }
         }
 

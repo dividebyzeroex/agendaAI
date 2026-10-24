@@ -9,6 +9,9 @@ const paidInvoice = { id: 'in_1', status: 'paid' } as Stripe.Invoice;
 
 describe('server billing catalog', () => {
   it('uses exact cent prices and approved cycle discounts', () => {
+    expect(quote('agenda', 1).amount).toBe(7900);
+    expect(quote('gestao', 1).amount).toBe(11900);
+    expect(quote('growth', 1).amount).toBe(16900);
     expect(quote('basico', 1).amount).toBe(9700);
     expect(quote('completo', 3).amount).toBe(56145);
     expect(quote('premium', 6).amount).toBe(188460);
