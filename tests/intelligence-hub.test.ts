@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { intelligenceTier,intelligenceLimit,metricsFromEvidence,insightsFromEvidence } from '../server/intelligence-core.js';
+import { intelligenceTier,intelligenceLimit,metricsFromEvidence,insightsFromEvidence,gatewayModelConfig } from '../server/intelligence-core.js';
 import { readFileSync } from 'node:fs';
 const api=readFileSync(new URL('../api/billing.ts',import.meta.url),'utf8');
 const server=readFileSync(new URL('../server/intelligence.ts',import.meta.url),'utf8');
@@ -16,6 +16,16 @@ describe('AgendaAI Intelligence — real data and tenant protection',()=>{
   expect(intelligenceLimit('agenda','campaign_draft')).toBe(0);
   expect(intelligenceLimit('gestao','campaign_draft')).toBe(0);
   expect(intelligenceLimit('growth','campaign_draft')).toBe(8);
+ });
+ it('keeps generative spending disabled until explicit Gateway opt-in',()=>{
+  const configured={AI_GATEWAY_MODEL:'google/gemini-3.5-flash-lite',VERCEL_OIDC_TOKEN:'test-token'};
+  expect(gatewayModelConfig(configured)).toBeNull();
+  expect(gatewayModelConfig({...configured,AI_GATEWAY_ENABLED:'false'})).toBeNull();
+  expect(gatewayModelConfig({...configured,AI_GATEWAY_ENABLED:'true'})).toBe('google/gemini-3.5-flash-lite');
+  expect(gatewayModelConfig({...configured,VERCEL_OIDC_TOKEN:undefined,AI_GATEWAY_ENABLED:'true'})).toBeNull();
+  expect(gatewayModelConfig({...configured,AI_GATEWAY_MODEL:'not-a-provider',AI_GATEWAY_ENABLED:'true'})).toBeNull();
+  expect(server).toContain('https://ai-gateway.vercel.sh/v1/chat/completions');
+  expect(server).not.toContain('generativelanguage.googleapis.com');
  });
  it('counts true paid amounts after refunds, without inventing data',()=>{
   const e=[
