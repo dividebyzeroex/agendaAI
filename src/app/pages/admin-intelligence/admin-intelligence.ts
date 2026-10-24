@@ -48,6 +48,7 @@ export class AdminIntelligence implements OnInit {
   private businessDate(){
     return new Intl.DateTimeFormat('sv-SE',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
   }
+  get todayDate(){return this.businessDate();}
   get maxDate(){
     const today=new Date(this.businessDate()+'T12:00:00Z');
     today.setUTCDate(today.getUTCDate()+14);

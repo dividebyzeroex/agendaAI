@@ -26,3 +26,6 @@
 - Novos recursos premium dependem de testes de integração e validação econômica; Growth permanece em \`preview\` no catálogo Stripe.
 - Ferramentas de leitura em linguagem natural, detecção de anomalias em comissões e atribuição financeira fina por campanha serão ondas posteriores.
 - Usar controle de acesso no backend, não apenas no menu ou template Angular.
+
+- Bloqueio preventivo: allowlist Growth IA ignorada em ambiente de produção. Endpoint experimental `ai-chat-test` retorna HTTP 410, evitando operações de agenda pelo protótipo legado.
+- Intelligence Hub em Gerenciar; o menu principal mantém quatro entradas operacionais.

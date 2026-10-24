@@ -58,7 +58,7 @@
       <div class="ai-fields">
         <label>Serviço<select [(ngModel)]="selectedService" (ngModelChange)="slots=[];selectedSlot=''"><option value="">Selecione</option><option *ngFor="let service of d.services" [value]="service.id">{{service.title}}</option></select></label>
         <label>Profissional<select [(ngModel)]="selectedProfessional" (ngModelChange)="slots=[];selectedSlot=''"><option value="">Selecione</option><option *ngFor="let professional of d.professionals" [value]="professional.id">{{professional.name}}</option></select></label>
-        <label>Dia<input type="date" [(ngModel)]="selectedDate" [min]="selectedDate" [max]="maxDate" (ngModelChange)="slots=[];selectedSlot=''"></label>
+        <label>Dia<input type="date" [(ngModel)]="selectedDate" [min]="todayDate" [max]="maxDate" (ngModelChange)="slots=[];selectedSlot=''"></label>
       </div>
       <button class="ai-action ai-secondary" (click)="checkSlots()" [disabled]="checkingSlots || !canDraft || !selectedService || !selectedProfessional">
         <i class="pi pi-calendar"></i> {{checkingSlots?'Conferindo agenda…':'Consultar vagas reais'}}

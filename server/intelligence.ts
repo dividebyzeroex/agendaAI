@@ -35,7 +35,9 @@ async function context(req:VercelRequest,tenant:unknown) {
   if(estError||!est)throw new IntelligenceError(403,'Somente o proprietário deste estabelecimento pode utilizar a inteligência.');
   if(est.active!==true||Math.max(Date.parse(est.trial_ends_at||'')||0,Date.parse(est.plano_expires_at||'')||0)<=Date.now())
     throw new IntelligenceError(403,'O estabelecimento precisa de acesso vigente.');
-  const pilot=String(process.env['AI_GROWTH_PILOT_TENANTS']||'').split(',').map(s=>s.trim()).includes(tenant);
+  // Preview-only pilot; environment allowlists cannot upgrade live customers.
+  const pilot=process.env['VERCEL_ENV']!=='production'
+    && String(process.env['AI_GROWTH_PILOT_TENANTS']||'').split(',').map(s=>s.trim()).includes(tenant);
   return {db,user,est,token,tier:intelligenceTier(est.plano,pilot)};
 }
 async function evidence(db:DB,est:any,tier:IntelligenceTier){
@@ -192,7 +194,9 @@ export async function intelligenceHandler(req:VercelRequest,res:VercelResponse) 
           status:'draft',created_by:user.id
         }).select('id,tracking_code').single();
         if(error||!campaign)throw new IntelligenceError(503,'Não foi possível registrar o rascunho.');
-        const origin=new URL(process.env['PROJECT_URL']||'https://example.invalid').origin;
+        const configuredOrigin=process.env['PROJECT_URL']||'';
+        if(!/^https:\/\//.test(configuredOrigin))throw new IntelligenceError(503,'Endereço público HTTPS ainda não está configurado.');
+        const origin=new URL(configuredOrigin).origin;
         const bookingLink=origin+'/agendar/'+encodeURIComponent(String(est.slug||''))+'?campanha='+campaign.tracking_code;
         const caption=(message+'\n\nConsulte a disponibilidade e reserve: '+bookingLink).slice(0,2400);
         const {error:updated}=await db.from('growth_social_campaigns').update({caption}).eq('id',campaign.id).eq('estabelecimento_id',est.id).eq('status','draft');
