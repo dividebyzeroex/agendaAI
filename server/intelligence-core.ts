@@ -77,3 +77,12 @@ export function insightsFromEvidence(m:Metrics,tier:IntelligenceTier,returningEl
   }
   return insights;
 }
+
+/** Explicit cost gate: missing flag, valid model ID or server credential means rules-only mode. */
+export function gatewayModelConfig(env:Record<string,string|undefined>):string|null {
+  if(env['AI_GATEWAY_ENABLED']!=='true')return null;
+  const model=env['AI_GATEWAY_MODEL']||'';
+  if(!/^[a-z0-9][a-z0-9._-]{0,31}\/[a-z0-9][a-z0-9._-]{0,95}$/i.test(model))return null;
+  if(!env['VERCEL_OIDC_TOKEN']&&!env['AI_GATEWAY_API_KEY'])return null;
+  return model;
+}
