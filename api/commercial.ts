@@ -1,4 +1,5 @@
 import { acquisitionInFocus, PROSPECT_FOCUS } from '../server/prospect-focus.js';
+import zernioHandler from '../server/zernio.js';
 import { growthProposal } from '../server/growth-proposal.js';
 import { createHmac } from 'node:crypto';
 import type { VercelRequest,VercelResponse } from '../server/http.js';
@@ -31,6 +32,9 @@ export default async function handler(req:VercelRequest,res:VercelResponse){
  res.setHeader('Cache-Control','no-store');
  try {
   const action=String(req.query['action']||'status');
+  // Zernio uses the same serverless entrypoint to stay within Hobby function limits.
+  // The delegated handler performs its own mandatory JWT/tenant checks.
+  if(action.startsWith('zernio-')) return zernioHandler(req,res);
   if(action==='ping'&&req.method==='GET')return res.status(200).json({status:'ok',message:'AgendaAi Serverless Runtime is active',timestamp:new Date().toISOString(),node_version:process.version});
   if(action==='terms'&&req.method==='GET') return res.status(200).json({name:env('BUSINESS_LEGAL_NAME'),taxId:env('BUSINESS_TAX_ID'),contact:env('BUSINESS_CONTACT_EMAIL'),address:env('BUSINESS_ADDRESS'),ready:env('CONTRACT_READY')==='true'});
   const sb=db();

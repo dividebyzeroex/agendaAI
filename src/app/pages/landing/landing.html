@@ -1,170 +1,243 @@
-<div class="site-container">
+<div class="site-container" [class.sales-expanded]="salesExploreOpen">
 
-  <!-- ═══════════════ HEADER & NAV ═══════════════ -->
-  <header class="site-header" [class.scrolled]="isScrolled">
+  <header class="site-header discovery-header" [class.scrolled]="isScrolled">
     <div class="header-inner">
-      <a href="#hero" class="brand" (click)="scrollTo('hero')" aria-label="AgendaAI, voltar ao início">
-        <span class="brand-symbol">▲</span>
-        <span class="brand-text">AgendaAI</span>
+      <a href="#hero" class="brand" (click)="scrollTo('hero')" aria-label="AgendaAI, página inicial">
+        <span class="brand-symbol">▲</span><span class="brand-text">AgendaAI</span>
       </a>
-
-      <nav class="nav-links desktop-only">
-        <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
-        <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express</a>
-        <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
-        <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
-        <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
-        <a href="#precos" (click)="scrollTo('precos')">Planos</a>
+      <nav class="discovery-header-nav" aria-label="Navegação principal">
+        <button type="button" (click)="toggleSalesExplore()" [attr.aria-expanded]="salesExploreOpen" aria-controls="longform">{{salesExploreOpen?'Ocultar detalhes':'Explorar plataforma'}} <i class="pi" [class.pi-arrow-up-right]="!salesExploreOpen" [class.pi-chevron-up]="salesExploreOpen" aria-hidden="true"></i></button>
       </nav>
-
-      <div class="header-actions">
-        <button class="btn-link desktop-only" (click)="signIn()">Entrar</button>
-        <button class="btn-primary" (click)="goToLogin()">Criar conta grátis</button>
-        <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Abrir ou fechar menu" [attr.aria-expanded]="isMobileMenuOpen" aria-controls="landing-mobile-nav">
-          <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
-        </button>
+      <div class="discovery-header-actions">
+        <button type="button" class="discovery-sign-in" (click)="signIn()">Entrar</button>
+        <button type="button" class="discovery-try" (click)="goToLogin()">Começar grátis <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Menu Drawer -->
-  <div class="mobile-nav" id="landing-mobile-nav" [class.open]="isMobileMenuOpen" [attr.aria-hidden]="!isMobileMenuOpen">
-    <div class="mobile-links">
-      <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
-      <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express e Stripe</a>
-      <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
-      <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
-      <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
-      <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
-      <a href="#precos" (click)="scrollTo('precos')">Preços</a>
-      <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
-    </div>
-    <div class="mobile-actions">
-      <button class="btn-primary w-full" (click)="goToLogin(); toggleMobileMenu()">Criar conta grátis</button>
-      <button class="btn-outline w-full mt-2" (click)="signIn(); toggleMobileMenu()">Acessar painel</button>
-    </div>
-  </div>
-
   <main>
 
-    <!-- ═══════════════ HERO ═══════════════ -->
-    <section class="hero-section" id="hero">
-      <div class="hero-content">
-        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> A operação completa do seu salão, em uma plataforma</div>
-        <h1 class="hero-title">Seu cliente vem pela experiência. <span>Seu negócio cresce com a operação.</span></h1>
-        <p class="hero-subtitle">Agenda, recepção, profissionais, comanda digital e recebimentos integrados. Uma jornada que começa na reserva, acompanha o atendimento e termina com um checkout à altura da sua marca.</p>
-        <div class="hero-feature-proof" aria-label="Diferenciais da plataforma">
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento online</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Checkout em duas telas</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Stripe Connect integrado</span>
-        </div>
-        <div class="hero-cta-group">
-          <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
-          <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração</button>
-        </div>
-        <p class="hero-cta-note">30 dias grátis sem cartão. Pagamentos integrados disponíveis mediante habilitação; taxas de processamento e condições adicionais podem se aplicar.</p>
-        <div class="hero-metrics-row" aria-label="Vantagens do teste">
-          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">Para testar na prática</span></div>
-          <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">R$ 97/mês</span><span class="m-lbl">Plano Essencial, depois do teste</span></div>
-          <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">Do agendamento ao caixa</span><span class="m-lbl">Um fluxo para a equipe e o cliente</span></div>
-        </div>
+    <!-- Intent-first discovery: reveal the product only after the visitor tells us what matters. -->
+    <section class="discovery-stage" id="hero" [class.has-insight]="salesRecommendation!==null" aria-labelledby="discovery-title">
+      <div class="discovery-ambient" aria-hidden="true">
+        <span class="discovery-orbit discovery-orbit-one"></span>
+        <span class="discovery-orbit discovery-orbit-two"></span>
+        <span class="discovery-ambient-dot"></span>
       </div>
+      <div class="container discovery-shell" id="consultoria">
+        <div class="discovery-intro">
+          <div class="discovery-eyebrow"><span class="discovery-live-dot"></span> AGENDAAI · SUA EXPERIÊNCIA COMEÇA AQUI</div>
+          <h1 id="discovery-title">E se seu salão funcionasse <em>do seu jeito?</em></h1>
+          <p>Conte o que precisa melhorar. Nós encontramos a solução que faz sentido para o seu negócio.</p>
+        </div>
 
-      <!-- ═══════════════ PRODUCT INTERFACE VIEW ═══════════════ -->
-      <div class="product-viewport-wrap">
-        <div class="product-viewport">
-          <!-- App Header -->
-          <div class="app-chrome">
-            <div class="chrome-title">
-              <span class="chrome-crumb">AgendaAI</span>
-              <span class="chrome-sep">/</span>
-              <span class="chrome-active">Demonstração ilustrativa • Dados fictícios</span>
+        <div class="discovery-search-wrap">
+          <form class="discovery-search" (submit)="submitSalesMessage($event)" aria-label="Descubra os recursos certos para seu negócio">
+            <label for="sales-prompt" class="discovery-screenreader">O que você gostaria de melhorar no seu salão?</label>
+            <textarea id="sales-prompt" name="salesPrompt" [(ngModel)]="salesPrompt"
+              rows="2" maxlength="600" placeholder="Meu maior desafio no salão é..."
+              aria-label="Conte o que gostaria de melhorar no seu salão"></textarea>
+            <div class="discovery-search-bottom">
+              <span><i class="pi pi-sparkles" aria-hidden="true"></i> Recomendações sob medida</span>
+              <button type="submit" [disabled]="!salesPrompt.trim()" aria-label="Descobrir minha solução">
+                <span>Descobrir</span><i class="pi pi-arrow-up-right" aria-hidden="true"></i>
+              </button>
             </div>
-            <div class="chrome-actions">
-              <span class="status-indicator">
-                <span class="indicator-dot"></span> Exemplo ilustrativo
-              </span>
+          </form>
+          <div class="discovery-prompt-row" aria-label="Exemplos de problemas">
+            <span *ngIf="salesUserMessages.length===0">Ou comece com</span>
+            <span *ngIf="salesUserMessages.length>0">Refine sua busca</span>
+            <button type="button" *ngFor="let starter of salesStarters" (click)="chooseSalesStarter(starter)">{{starter}} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
+          </div>
+          <div class="discovery-prompt-guidance" *ngIf="salesUserMessages.length>0 && !salesRecommendation" role="status">
+            Descreva um pouco mais: o desafio está na agenda, no caixa, nas comissões ou em conquistar clientes?
+          </div>
+        </div>
+
+        <div class="discovery-output" id="sales-result" *ngIf="salesRecommendation as recommendation">
+          <div class="discovery-output-overline">
+            <span class="discovery-output-spark">✳</span>
+            <span>ENTENDI O SEU CENÁRIO</span>
+            <button type="button" (click)="resetSalesDiscovery()" aria-label="Começar uma nova busca">Nova busca <i class="pi pi-refresh" aria-hidden="true"></i></button>
+          </div>
+          <div class="discovery-input-echo"><span>Você contou</span> “{{salesLastMessage}}”</div>
+          <div class="discovery-output-grid">
+            <div class="discovery-diagnosis">
+              <h2>{{recommendation.headline}}</h2>
+              <p>{{recommendation.answer}}</p>
+              <div class="discovery-matched">
+                <span class="discovery-mini-label">O QUE FAZ SENTIDO PARA VOCÊ</span>
+                <div *ngFor="let need of recommendation.needs" class="discovery-match">
+                  <i class="pi pi-check-circle" aria-hidden="true"></i>
+                  <div><strong>{{need.title}}</strong><span>{{need.detail}}</span></div>
+                </div>
+              </div>
+              <p class="discovery-pilot-note" *ngIf="recommendation.growthPreview">Growth IA segue em prévia por convite e não está disponível para contratar.</p>
+            </div>
+
+            <div class="discovery-scene" aria-label="Prévia ilustrativa do recurso recomendado">
+              <div class="discovery-scene-header">
+                <span><i class="pi pi-circle-fill" aria-hidden="true"></i> UM VISLUMBRE DO AGENDAAI</span>
+                <strong>DEMONSTRAÇÃO · DADOS FICTÍCIOS</strong>
+              </div>
+              <ng-container [ngSwitch]="salesShowcase">
+                <div *ngSwitchCase="'agenda'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Agenda do dia</span><strong>Terça-feira, exemplo</strong></div>
+                  <div class="discovery-agenda-line"><span>09:00</span><div class="is-booked"><strong>Corte + barba</strong><small>Marcos · confirmado</small></div></div>
+                  <div class="discovery-agenda-line"><span>10:30</span><div class="is-free"><strong>Horário disponível</strong><small>Pronto para receber reservas</small></div></div>
+                  <div class="discovery-agenda-line"><span>11:30</span><div class="is-booked"><strong>Escova</strong><small>Camila · confirmado</small></div></div>
+                  <div class="discovery-agenda-line"><span>14:00</span><div class="is-free"><strong>Horário disponível</strong><small>Divulgue seu link de agendamento</small></div></div>
+                  <p class="discovery-scene-caption">Veja quem está reservado e o que ainda pode ser agendado.</p>
+                </div>
+                <div *ngSwitchCase="'equipe'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Equipe e comissões</span><strong>Exemplo de fechamento</strong></div>
+                  <div class="discovery-commission-row"><div><strong>Marcos</strong><small>Vendas R$ 300 · comissão 40%</small></div><span>R$ 120,00</span></div>
+                  <div class="discovery-commission-row"><div><strong>Camila</strong><small>Vendas R$ 180 · comissão 35%</small></div><span>R$ 63,00</span></div>
+                  <div class="discovery-commission-total"><span>Comissões calculadas</span><strong>R$ 183,00</strong></div>
+                  <p class="discovery-scene-caption">Valores fictícios. Você define as regras aplicadas a cada profissional.</p>
+                </div>
+                <div *ngSwitchCase="'pagamentos'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Comanda digital</span><strong>Exemplo de atendimento</strong></div>
+                  <div class="discovery-receipt-line"><span>Corte de cabelo</span><strong>R$ 55,00</strong></div>
+                  <div class="discovery-receipt-line"><span>Barba</span><strong>R$ 30,00</strong></div>
+                  <div class="discovery-receipt-line discovery-receipt-total"><span>Total</span><strong>R$ 85,00</strong></div>
+                  <div class="discovery-payment-state"><i class="pi pi-clock" aria-hidden="true"></i> Aguardando confirmação de pagamento</div>
+                  <p class="discovery-scene-caption">Pay Express depende de habilitação do provedor. Nenhuma cobrança é gerada nesta prévia.</p>
+                </div>
+                <div *ngSwitchDefault class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Growth IA</span><strong>Conceito em prévia</strong></div>
+                  <div class="discovery-campaign-note"><span>IDEIA DE CAMPANHA · RASCUNHO</span><p>Abriu um horário especial esta semana? Compartilhe seu link de agendamento com seus clientes.</p><small>Sujeito à revisão e aprovação do proprietário.</small></div>
+                  <p class="discovery-scene-caption">A versão Growth IA ainda está em validação. Nenhuma mensagem é publicada automaticamente.</p>
+                </div>
+              </ng-container>
             </div>
           </div>
 
-          <!-- App Body: Split Layout (Calendar + Live Chat) -->
-          <div class="app-split-view">
-            <!-- Left: Real Agenda Timeline -->
-            <div class="app-agenda-panel">
-              <div class="agenda-controls">
-                <div class="agenda-date">
-                  <strong>Terça-feira · exemplo</strong>
-                  <span>Agenda de demonstração</span>
-                </div>
-                <div class="agenda-view-tabs">
-                  <span class="tab active">Dia</span>
-                  <span class="tab">Semana</span>
-                  <span class="tab">Mês</span>
-                </div>
-              </div>
-
-              <div class="timeline-rows">
-                <div class="time-slot past">
-                  <div class="time-col">09:00</div>
-                  <div class="slot-event past-event">
-                    <div class="event-meta">
-                      <strong>Carlos Eduardo Silva</strong>
-                      <span>Corte • Marcos</span>
-                    </div>
-                    <span class="badge-finished">Finalizado</span>
-                  </div>
-                </div>
-
-                <div class="time-slot active-slot">
-                  <div class="time-col">10:30</div>
-                  <div class="slot-event current-event">
-                    <div class="event-meta">
-                      <strong>Mariana Vasconcelos</strong>
-                      <span>Coloração • Camila</span>
-                    </div>
-                    <span class="badge-current">Em atendimento</span>
-                  </div>
-                </div>
-
-                <div class="time-slot target-slot">
-                  <div class="time-col">14:00</div>
-                  <div class="slot-event booked-event">
-                    <div class="event-meta">
-                      <strong>Juliana Mendes Ribeiro</strong>
-                      <span>Escova • Camila</span>
-                    </div>
-                    <span class="badge-whatsapp"><i class="pi pi-check"></i> Reservado pelo link</span>
-                  </div>
-                </div>
-
-                <div class="time-slot">
-                  <div class="time-col">15:30</div>
-                  <div class="slot-event available-event">
-                    <span class="avail-text">Horário vago • Aguardando agendamento</span>
-                  </div>
-                </div>
-
-                <div class="time-slot">
-                  <div class="time-col">16:30</div>
-                  <div class="slot-event booked-event">
-                    <div class="event-meta">
-                      <strong>Lucas Gabriel Moreira</strong>
-                      <span>Corte e barba • Marcos</span>
-                    </div>
-                    <span class="badge-confirmed">Confirmado</span>
-                  </div>
-                </div>
-              </div>
+          <div class="discovery-offer">
+            <div class="discovery-offer-plan">
+              <span>O MELHOR PONTO DE PARTIDA</span>
+              <strong>{{recommendation.planName}}</strong>
+              <small>Sem taxa por agenda adicional no mesmo estabelecimento.</small>
             </div>
-
-            <div class="app-chat-sidebar"><div class="chat-sidebar-header"><strong>Seu link de agendamento</strong></div><div class="chat-stream"><p>O cliente escolhe serviço, profissional e horário disponível pelo link público.</p><p>Compartilhe no WhatsApp ou Instagram. A reserva aparece na sua agenda.</p><p>Ilustração com dados fictícios.</p></div></div>
+            <div class="discovery-offer-price">
+              <span *ngIf="salesQuoteLoading">Consultando valores…</span>
+              <ng-container *ngIf="salesQuote as quote">
+                <strong>{{(quote.amount/100) | currency:'BRL':'symbol':'1.2-2'}}</strong>
+                <span>/ {{quote.months===1?'mês':quote.months+' meses'}}</span>
+              </ng-container>
+              <span *ngIf="salesQuoteError">{{salesQuoteError}}</span>
+              <details class="discovery-billing-details">
+                <summary>Opções de pagamento</summary>
+                <div class="discovery-billing-cycles" role="group" aria-label="Escolha o período da assinatura">
+                  <button type="button" [class.is-active]="salesCycle===1" (click)="setSalesCycle(1)">1 mês</button>
+                  <button type="button" [class.is-active]="salesCycle===3" (click)="setSalesCycle(3)">3 meses</button>
+                  <button type="button" [class.is-active]="salesCycle===6" (click)="setSalesCycle(6)">6 meses</button>
+                  <button type="button" [class.is-active]="salesCycle===12" (click)="setSalesCycle(12)">12 meses</button>
+                </div>
+                <small *ngIf="salesQuote && salesQuote.discount>0">{{salesQuote.discount}}% de desconto no ciclo, cobrado integralmente. Serviços de terceiros podem ter custos extras.</small>
+              </details>
+            </div>
+            <div class="discovery-offer-actions">
+              <button type="button" class="discovery-primary-cta" (click)="goToLogin()">Experimentar 30 dias <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
+              <button type="button" class="discovery-secondary-cta" (click)="goToDemo()">Ver demonstração completa</button>
+            </div>
           </div>
+        </div>
+
+        <div class="discovery-lowkey-footer">
+          <span>Sem cadastro para descobrir. Sem cartão no teste.</span>
+          <button type="button" (click)="toggleSalesExplore()">{{salesExploreOpen?'Recolher detalhes':'Explorar recursos e preços'}} <i class="pi pi-arrow-down" aria-hidden="true"></i></button>
+          <span>Dados da sua agenda não são acessados. Conexão em modo leitura: próxima etapa.</span>
         </div>
       </div>
     </section>
 
+    <div class="sales-longform" id="longform" [hidden]="!salesExploreOpen">
+
+    <!-- DIFFERENTIATION — purpose-built for owners, no fabricated social proof -->
+    <section class="aa-value-section" id="diferenciais" aria-labelledby="aa-value-title">
+      <div class="container">
+        <div class="aa-value-intro">
+          <span class="aa-value-kicker">POR QUE O AGENDAAI</span>
+          <h2 id="aa-value-title">Mais profissionais. <em>A mesma mensalidade.</em></h2>
+          <p>Contratar alguém deveria aumentar sua capacidade de atendimento — não o custo de cada agenda. Nos planos Agenda e Gestão, a quantidade de profissionais do mesmo estabelecimento não acrescenta uma nova mensalidade.</p>
+        </div>
+        <div class="aa-value-grid">
+          <article class="aa-value-card aa-value-primary">
+            <div class="aa-value-card-head"><i class="pi pi-users" aria-hidden="true"></i><span>UMA EQUIPE QUE PODE CRESCER</span></div>
+            <strong class="aa-value-amount">R$ 0</strong>
+            <h3>Por agenda adicional.</h3>
+            <p>Cadastre os profissionais do seu salão sem pagar uma taxa mensal extra para cada nova agenda.</p>
+            <span class="aa-value-note">No mesmo estabelecimento, nos planos Agenda ou Gestão.</span>
+          </article>
+          <article class="aa-value-card">
+            <div class="aa-value-card-head"><i class="pi pi-calendar-plus" aria-hidden="true"></i><span>ATENDIMENTO DE VERDADE</span></div>
+            <h3>Uma visita, vários serviços.</h3>
+            <p>Corte, barba e manicure em sequência ou ao mesmo tempo, com profissionais e comissões individuais em uma comanda.</p>
+            <a href="#multi-service" (click)="scrollTo('multi-service')">Conhecer multisserviços <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+          </article>
+          <article class="aa-value-card">
+            <div class="aa-value-card-head"><i class="pi pi-chart-line" aria-hidden="true"></i><span>GESTÃO + CRESCIMENTO</span></div>
+            <h3>A agenda também ajuda a divulgar.</h3>
+            <p>Crie campanhas simples a partir de horários vagos e acompanhe acessos e reservas atribuídas aos seus links.</p>
+            <a href="#crescimento" (click)="scrollTo('crescimento')">Conhecer AgendaAI Growth <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+          </article>
+          <article class="aa-value-card aa-value-photo-card">
+            <img src="https://images.unsplash.com/photo-1582771498000-8ad44e6c84db?auto=format&amp;fit=crop&amp;w=900&amp;q=80"
+              alt="Atendimento em barbearia, imagem ilustrativa" width="520" height="380" loading="lazy" decoding="async"/>
+            <div><span>VOCÊ CUIDA DO CLIENTE.</span><h3>O AgendaAI organiza os bastidores.</h3></div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRANSPARENT, SOURCE-ATTRIBUTED PRICE COMPARISON -->
+    <section class="aa-price-section" id="comparativo" aria-labelledby="aa-price-title">
+      <div class="container">
+        <div class="aa-price-header">
+          <div><span class="aa-value-kicker">COMPARE SEM COMPLICAÇÃO</span>
+            <h2 id="aa-price-title">Quanto custa <em>crescer a equipe?</em></h2>
+          </div>
+          <p>Algumas plataformas somam agendas ou mudam a faixa do plano. Nos planos Agenda e Gestão, o valor mensal anunciado não varia com o número de profissionais do mesmo salão.</p>
+        </div>
+        <div class="aa-price-workspace">
+          <div class="aa-price-controls">
+            <label for="aa-professional-count">Quantos profissionais trabalham no seu salão?</label>
+            <div class="aa-count"><strong>{{comparisonTeamSize}}</strong><span>{{comparisonTeamSize===1?'profissional':'profissionais'}}</span></div>
+            <input id="aa-professional-count" type="range" min="1" max="12" step="1" [(ngModel)]="comparisonTeamSize"
+              aria-label="Número de profissionais para comparação de preços" />
+            <div class="aa-range-limits"><span>1 profissional</span><span>12 profissionais</span></div>
+            <p>Simulação com um exemplo de concorrente que cobra R$ 99,99/mês e R$ 20 por profissional adicional, antes de impostos. Outros concorrentes podem cobrar de maneiras diferentes.</p>
+            <span class="aa-example-note">Exemplo ilustrativo, não representa todo o mercado.</span>
+          </div>
+          <div class="aa-compare-cards">
+            <div class="aa-compare-card aa-compare-us">
+              <span class="aa-compare-brand"><i class="pi pi-check-circle" aria-hidden="true"></i> AgendaAI Agenda</span>
+              <strong>R$ 79<small>/mês</small></strong>
+              <p>Sem taxa por agenda adicional.</p>
+              <span class="aa-compare-tag">Mesmo valor para {{comparisonTeamSize}} {{comparisonTeamSize===1?'profissional':'profissionais'}}</span>
+            </div>
+            <div class="aa-compare-card">
+              <span class="aa-compare-brand">Concorrente <small>· exemplo</small></span>
+              <strong>{{competitorMonthlyComparison | currency:'BRL':'symbol':'1.2-2'}}<small>/mês</small></strong>
+              <p>Simulação para {{comparisonTeamSize}} {{comparisonTeamSize===1?'profissional':'profissionais'}} da equipe, antes de impostos.</p>
+              <span class="aa-compare-tag aa-compare-muted">Exemplo: R$ 20 por profissional adicional</span>
+            </div>
+          </div>
+        </div>
+        <div class="aa-saving-strip">
+          <div><span>Diferença mensal na simulação com o concorrente</span><strong>{{comparisonSavings | currency:'BRL':'symbol':'1.2-2'}}</strong></div>
+          <div><span>Diferença em 12 meses*</span><strong>{{comparisonAnnualSavings | currency:'BRL':'symbol':'1.2-2'}}</strong></div>
+          <button type="button" (click)="goToLogin()">Quero testar sem taxa por agenda <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+        </div>
+        <p class="aa-price-fineprint">*Comparação ilustrativa com um modelo de cobrança de concorrente, consultado em 18/10/2026. Não representa todos os concorrentes nem economia garantida. Valores sem impostos, descontos, tarifas extras ou serviços de terceiros. Recursos e condições podem ser diferentes.</p>
+        <div class="aa-market-notes" aria-label="Entenda os modelos de cobrança">
+          <div><strong>Concorrente por profissional</strong><p>Alguns planos acrescentam uma tarifa mensal quando um novo profissional entra na equipe.</p></div>
+          <div><strong>Concorrente por faixa</strong><p>Outros planos aumentam de preço conforme a equipe ultrapassa determinadas faixas.</p></div>
+          <div><strong>AgendaAI</strong><p>O Agenda custa R$ 79/mês na contratação mensal, depois de 30 dias grátis. Sem taxa por agenda adicional no mesmo estabelecimento.</p><a href="#precos" (click)="scrollTo('precos')">Veja o que está incluído <i class="pi pi-arrow-right"></i></a></div>
+        </div>
+      </div>
+    </section>
 
     <!-- PAY EXPRESS / INTERACTIVE TWO-SCREEN CUSTOMER JOURNEY -->
     <section class="product-pay-section" id="pay-express" aria-labelledby="pay-title">
@@ -353,6 +426,100 @@
       </div>
     </section>
 
+    <!-- GROWTH — photo-led editorial storytelling, conversion-safe claims -->
+    <section class="ag-growth-showcase" id="crescimento" aria-labelledby="ag-growth-title">
+      <div class="container">
+        <header class="ag-growth-intro">
+          <div><span class="ag-growth-eyebrow"><i class="pi pi-sparkles" aria-hidden="true"></i> AGENDAAI GROWTH · NOVO</span>
+          <h2 id="ag-growth-title">Não basta organizar a agenda. <em>É hora de movimentá-la.</em></h2></div>
+          <p>Da divulgação de um horário livre até a reserva: prepare campanhas para as suas redes e acompanhe o interesse que chega pelo link de agendamento. Tudo conectado à rotina do salão.</p>
+        </header>
+        <div class="ag-growth-photos">
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1582771498000-8ad44e6c84db?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional atendendo um cliente em uma barbearia" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-megaphone"></i> CONTEÚDO E DIVULGAÇÃO</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">01 / DESPERTE INTERESSE</span>
+              <h3>Seu próximo post pode começar em um horário livre.</h3>
+              <p>Escolha um serviço, um profissional e uma vaga sugerida. O AgendaAI prepara uma legenda e um link rastreável para você divulgar com sua própria foto ou vídeo.</p></div>
+          </article>
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1547648946-2b1fd7eab923?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional em uma barbearia moderna" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-calendar-check"></i> RESERVAS E RESULTADOS</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">02 / CONVERTA EM RESERVA</span>
+              <h3>Da rede social direto para a sua agenda.</h3>
+              <p>O cliente consulta os horários e reserva pelo link. O painel mostra acessos aproximados e agendamentos atribuídos à campanha, sem confundir reservas com vendas pagas.</p></div>
+          </article>
+          <article class="ag-growth-photo-card">
+            <div class="ag-growth-photo">
+              <img src="https://images.unsplash.com/photo-1750263147700-8bea3899f287?auto=format&amp;fit=crop&amp;w=1150&amp;q=80"
+                alt="Profissional e cliente conversando em um salão de beleza" width="700" height="560" loading="lazy" decoding="async"/>
+              <span class="ag-growth-photo-label"><i class="pi pi-heart"></i> RETENÇÃO RESPONSÁVEL</span>
+            </div>
+            <div class="ag-growth-card-copy"><span class="ag-growth-index">03 / FAÇA VOLTAR</span>
+              <h3>O relacionamento não termina no primeiro corte.</h3>
+              <p>Identifique clientes sem visitas recentes e organize campanhas de retorno pelos canais autorizados. Nada de mensagens disparadas sem consentimento.</p></div>
+          </article>
+        </div>
+        <div class="ag-growth-conversion">
+          <div class="ag-growth-conversion-title"><span>AGENDA + MARKETING, TRABALHANDO JUNTOS</span><strong>Mais clareza para divulgar. Mais contexto para acompanhar o resultado.</strong></div>
+          <div class="ag-growth-conversion-actions">
+            <button type="button" class="btn-primary" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+            <span>As integrações com redes sociais exigem conexão e permissões dos canais. Publicações dependem da aprovação do salão.</span>
+          </div>
+        </div>
+        <p class="ag-growth-credits">Fotografias: André Reis, Wylkon Cardoso e SumUp, via Unsplash (licença gratuita). Imagens ilustrativas; não representam clientes reais do AgendaAI.</p>
+      </div>
+    </section>
+
+
+    <!-- AGENDAAI INTELLIGENCE — availability deliberately limited to pilot accounts -->
+    <section class="aa-intelligence" id="inteligencia" aria-labelledby="aa-intelligence-title">
+      <div class="container">
+        <header class="aa-intel-intro">
+          <div class="aa-intel-heading">
+            <span class="aa-intel-eyebrow"><i class="pi pi-sparkles" aria-hidden="true"></i> AGENDAAI INTELLIGENCE · PILOTO CONTROLADO</span>
+            <h2 id="aa-intelligence-title">Seu salão já tem os dados. <em>Agora eles ajudam a decidir.</em></h2>
+          </div>
+          <p>O Intelligence Hub reúne sinais da rotina, aponta oportunidades para investigar e transforma informação em próximos passos. A inteligência entra para apoiar quem administra — a decisão continua sendo sua.</p>
+        </header>
+
+        <div class="aa-intel-tracks">
+          <article class="aa-intel-track">
+            <div class="aa-intel-track-head"><span>01 / AGENDA</span><i class="pi pi-calendar" aria-hidden="true"></i></div>
+            <h3>Descubra onde há espaço para atender melhor.</h3>
+            <p>Leituras dos horários, da agenda e dos serviços ajudam o proprietário a observar disponibilidade e organizar a próxima ação.</p>
+            <div class="aa-intel-prompt"><small>PERGUNTA QUE IMPORTA</small><strong>Quais horários merecem atenção nesta semana?</strong></div>
+          </article>
+          <article class="aa-intel-track">
+            <div class="aa-intel-track-head"><span>02 / GESTÃO</span><i class="pi pi-chart-bar" aria-hidden="true"></i></div>
+            <h3>Entenda o movimento por trás dos números.</h3>
+            <p>Pagamentos confirmados, cancelamentos e faltas dão contexto às leituras de operação — sem inventar faturamento ou resultados.</p>
+            <div class="aa-intel-prompt"><small>PERGUNTA QUE IMPORTA</small><strong>O que merece uma decisão antes do próximo mês?</strong></div>
+          </article>
+          <article class="aa-intel-track aa-intel-track-growth">
+            <div class="aa-intel-track-head"><span>03 / GROWTH IA</span><i class="pi pi-megaphone" aria-hidden="true"></i></div>
+            <h3>Transforme um horário livre em uma ideia de campanha.</h3>
+            <p>Na prévia por convite, a IA prepara rascunhos com disponibilidade real e links rastreáveis. Você revisa e decide se vai divulgar.</p>
+            <div class="aa-intel-prompt"><small>CONTROLE DO SALÃO</small><strong>Nenhuma campanha é publicada ou enviada sozinha.</strong></div>
+          </article>
+        </div>
+
+        <div class="aa-intel-footer">
+          <div><span class="aa-intel-control-icon"><i class="pi pi-shield" aria-hidden="true"></i></span>
+            <div><strong>Informação real. Aprovação humana.</strong><p>O painel é do proprietário. A IA não movimenta o caixa, não altera reservas e não envia mensagens sem uma ação autorizada.</p></div>
+          </div>
+          <a href="#precos" (click)="scrollTo('precos')">Entenda os planos <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+        </div>
+        <p class="aa-intel-disclaimer">Intelligence Hub em liberação gradual para contas piloto, conforme dados e habilitação do estabelecimento. O Growth IA ainda não está disponível para contratação. Exemplos ilustrativos, sem promessa de resultado ou publicação automática.</p>
+      </div>
+    </section>
+
     <!-- JOURNEY OF THE CUSTOMER AND THE BUSINESS -->
     <section class="evolution-section" id="novidades" aria-labelledby="evolution-title">
       <div class="container">
@@ -430,7 +597,7 @@
     <!-- PRODUCT CAPABILITIES -->
     <section class="section-block capabilities-section" id="recursos">
       <div class="container">
-        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Escolha o que deseja explorar: atendimento, pagamentos, relacionamento ou gestão. Tudo pensado para trabalhar em conjunto, sem espalhar o controle por vários sistemas.</p></div>
+        <div class="section-intro"><span class="section-tag">Recursos que acompanham seu crescimento</span><h2>Uma plataforma pensada para a rotina real de quem atende.</h2><p>Escolha o que deseja explorar: atendimento, pagamentos, relacionamento ou gestão. Tudo pensado para trabalhar em conjunto — inclusive leituras inteligentes em piloto, sem perder o controle da operação.</p></div>
         <div class="capability-filters" role="group" aria-label="Filtrar recursos por área">
             <button type="button" *ngFor="let pillar of capabilityPillars"
               [class.is-selected]="activeCapabilityPillar===pillar.id"
@@ -451,29 +618,64 @@
     <section class="section-block bg-subtle border-top border-bottom" id="precos">
       <div class="container">
         <div class="section-intro">
-          <span class="section-tag">Planos & Investimento</span>
-          <h2>Um começo simples. Um caminho para crescer.</h2>
-          <p>Faça seu primeiro agendamento real durante o teste. Depois, escolha se deseja continuar. O Essencial reúne as ferramentas para começar; módulos avançados e integrações têm condições próprias.</p>
-
+          <span class="section-tag">Planos &amp; Investimento</span>
+          <h2>Comece simples. Cresça com clareza.</h2>
+          <p>30 dias grátis, sem cartão ou cobrança automática. Depois, escolha o pacote para a sua rotina. Sem taxa por agenda ou profissional adicional no mesmo estabelecimento.</p>
         </div>
-        <div class="pricing-grid" style="grid-template-columns:minmax(0,520px);justify-content:center">
-          <div class="pricing-tier featured">
-            <div class="featured-badge">Comece por aqui</div>
-            <div class="tier-head"><span class="tier-name">AgendaAI Essencial</span>
-              <div class="tier-cost"><span class="currency">R$</span><span class="val">97</span><span class="cycle">/mês após contratação</span></div>
-              <p class="tier-description">Para profissionais e equipes que querem uma rotina organizada sem trocar todos os processos de uma vez.</p>
+        <div class="pricing-grid aa-pricing-three">
+          <article class="pricing-tier">
+            <div class="tier-head"><span class="tier-name">AgendaAI Agenda</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">79</span><span class="cycle">/mês</span></div>
+              <p class="tier-description">Para organizar horários e facilitar os agendamentos no dia a dia.</p>
             </div>
             <ul class="tier-checklist">
-              <li><i class="pi pi-check"></i> Agenda e link público de agendamento</li>
-              <li><i class="pi pi-check"></i> Até 5 profissionais ativos</li>
-              <li><i class="pi pi-check"></i> Cadastro de clientes e serviços</li>
-              <li><i class="pi pi-check"></i> Histórico de atendimentos e caixa</li>
-              <li><i class="pi pi-check"></i> Atendimento por e-mail comercial</li>
+              <li><i class="pi pi-check"></i> Agenda e link público</li>
+              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por profissional adicional</li>
+              <li><i class="pi pi-check"></i> Clientes, serviços e horários</li>
+              <li><i class="pi pi-check"></i> Histórico de agendamentos</li>
+              <li><i class="pi pi-sparkles"></i> Leituras da agenda (piloto gradual)</li>
+              <li><i class="pi pi-check"></i> Suporte por e-mail</li>
             </ul>
-            <button class="btn-primary w-full" (click)="goToLogin()">Começar meus 30 dias grátis</button>
-            <p class="pricing-disclaimer">30 dias grátis, sem cartão ou cobrança automática. Mensageria, serviços de pagamento e recursos avançados dependem de integração e condições específicas; chatbot de WhatsApp não está incluído.</p>
-          </div>
+            <button class="btn-primary w-full" (click)="goToLogin()">Começar teste gratuito</button>
+          </article>
+          <article class="pricing-tier featured">
+            <div class="featured-badge">Para quem quer gerenciar mais</div>
+            <div class="tier-head"><span class="tier-name">AgendaAI Gestão</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">119</span><span class="cycle">/mês</span></div>
+              <p class="tier-description">Organização da operação e acompanhamento do negócio em um só lugar.</p>
+            </div>
+            <ul class="tier-checklist">
+              <li><i class="pi pi-check"></i> Tudo do Agenda</li>
+              <li class="aa-pricing-highlight"><i class="pi pi-check"></i> Sem taxa por agenda adicional</li>
+              <li><i class="pi pi-check"></i> Comandas, caixa e comissões</li>
+              <li><i class="pi pi-check"></i> Múltiplos serviços e Pay Express*</li>
+              <li><i class="pi pi-check"></i> Relatórios e implantação assistida</li>
+              <li><i class="pi pi-sparkles"></i> Insights de operação (piloto gradual)</li>
+            </ul>
+            <button class="btn-primary w-full" (click)="goToLogin()">Experimentar Gestão</button>
+          </article>
+          <article class="pricing-tier">
+            <div class="tier-head"><span class="tier-name">AgendaAI Growth IA</span>
+              <div class="tier-cost"><span class="currency">R$</span><span class="val">169</span><span class="cycle">/mês previsto</span></div>
+              <p class="tier-description">Inteligência para campanhas e retenção, em piloto por convite. Ainda não contratável.</p>
+            </div>
+            <ul class="tier-checklist"><li><i class="pi pi-check"></i> Tudo do Gestão</li><li><i class="pi pi-clock"></i> Rascunhos de campanhas assistidos por IA</li><li><i class="pi pi-clock"></i> Links rastreáveis e revisão humana</li><li><i class="pi pi-clock"></i> Automações avançadas em validação</li></ul>
+            <a href="#piloto" class="btn-primary w-full" (click)="scrollTo('piloto')">Registrar interesse</a>
+          </article>
         </div>
+        <p class="pricing-disclaimer">Preços mensais de lançamento sujeitos a revisão para novas contratações. Nenhum desconto ou alteração automática é aplicada a contratos existentes. Growth e adicionais ainda não estão disponíveis para compra. As leituras de inteligência estão em piloto controlado, sujeitas à habilitação por estabelecimento e sem garantia de disponibilidade imediata em cada plano. *Pay Express requer habilitação do provedor; taxas de pagamentos, IA, SMS/WhatsApp e integrações externas podem ser cobradas separadamente. Diferenciação técnica de acesso aos recursos está em validação no piloto.</p>
+      </div>
+    </section>
+    <!-- Add-ons are not for sale until feature and margin validation. -->
+    <section class="aa-addons" id="modulos" aria-labelledby="aa-addons-title">
+      <div class="container">
+        <header class="aa-addons-head"><div><span class="aa-addons-eyebrow"><i class="pi pi-box" aria-hidden="true"></i> EXPANDA QUANDO FIZER SENTIDO</span><h2 id="aa-addons-title">Módulos opcionais. <em>Preço definido com dados.</em></h2></div>
+          <p>Social Studio Pro, Growth Automations, Retenção Premium, Inteligência Financeira, Multiunidades e Franquias e Concierge Plus estão em estudo. Não é possível comprá-los nesta etapa.</p>
+        </header>
+        <div class="aa-addons-pricing-rule"><div class="aa-addons-rule-intro"><span class="aa-addons-rule-label">PRECIFICAÇÃO RESPONSÁVEL</span><strong>Assinatura contratada <span>+</span> adicionais escolhidos no futuro</strong><p>Antes de ativar um módulo, informaremos preço total, limites, eventuais tarifas de consumo e condições de contratação. Nenhum adicional será cobrado automaticamente.</p></div>
+          <div class="aa-addons-rule-example"><span>DISPONIBILIDADE</span><div><span>Preço do módulo</span><strong>Em estudo</strong></div><div class="aa-addons-example-total"><span>Contratação de adicional</span><strong>Indisponível</strong></div></div>
+        </div>
+        <p class="aa-addons-disclaimer"><i class="pi pi-info-circle" aria-hidden="true"></i><span><strong>Sem checkout de módulos.</strong> O caixa e os recursos operacionais do piloto permanecem sujeitos às condições do plano contratado e à validação de suas regras de acesso.</span></p>
       </div>
     </section>
 
@@ -515,8 +717,8 @@
     <section class="cta-banner-section">
       <div class="container">
         <div class="cta-box">
-          <h2>Comece pela agenda. Descubra o que mais o seu negócio pode fazer.</h2>
-          <p>Configure os serviços, teste o link de reservas e conheça os recursos de gestão durante 30 dias. Você decide depois se vale a pena continuar.</p>
+          <h2>Seu próximo profissional não deveria custar outra mensalidade.</h2>
+          <p>Experimente por 30 dias a agenda, o caixa, as comissões e as ferramentas de divulgação. Conheça também a evolução Intelligence Hub, em piloto gradual. Continue crescendo sem tarifa por agenda adicional.</p>
           <div class="cta-actions">
             <button class="btn-primary btn-lg" (click)="goToLogin()">
               Criar conta gratuita agora
@@ -526,6 +728,8 @@
         </div>
       </div>
     </section>
+
+    </div><!-- /sales-longform -->
 
   </main>
 
@@ -545,10 +749,13 @@
 
         <div class="footer-nav-col">
           <strong>Navegação</strong>
+          <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
+          <a href="#comparativo" (click)="scrollTo('comparativo')">Comparação de preços</a>
           <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
           <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos atendidos</a>
           <a href="#recursos" (click)="scrollTo('recursos')">Recursos da plataforma</a>
           <a href="#precos" (click)="scrollTo('precos')">Tabela de preços</a>
+          <a href="#modulos" (click)="scrollTo('modulos')">Módulos adicionais</a>
           <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
         </div>
 

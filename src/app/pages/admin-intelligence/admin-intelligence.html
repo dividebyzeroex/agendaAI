@@ -1,0 +1,75 @@
+
+<div class="ai-hub">
+  <header class="ai-hero">
+    <div class="ai-hero-top"><span class="ai-overline"><i class="pi pi-sparkles"></i> AGENDAAI INTELLIGENCE</span>
+      <span class="ai-tier" *ngIf="data">{{ labelTier }} · {{ data.providerReady ? 'IA generativa conectável' : 'Análise de dados ativa' }}</span>
+    </div>
+    <h1>Clareza para decidir.<br><em>Inteligência para agir.</em></h1>
+    <p>Acompanhe seu negócio com dados reais e transforme oportunidades em ações — sem promessas automáticas nem números inventados.</p>
+    <div class="ai-hero-actions"><button type="button" class="ai-hero-primary" (click)="load()" [disabled]="loading">Atualizar análise <i class="pi pi-refresh"></i></button><a routerLink="/admin/agenda">Abrir agenda <i class="pi pi-arrow-up-right"></i></a></div>
+  </header>
+  <div role="alert" class="ai-alert" *ngIf="error"><i class="pi pi-exclamation-circle"></i> {{ error }}</div>
+  <div role="status" class="ai-notice" *ngIf="notice">{{ notice }}</div>
+  <p class="ai-loading" *ngIf="loading && !data">Consultando os registros do estabelecimento…</p>
+  <ng-container *ngIf="data as d">
+    <div class="ai-section-heading"><div><span class="ai-label">01 / RETRATO ATUAL</span><h2>O que os seus dados mostram</h2></div><span class="ai-period">Últimos 30 dias · agenda futura: 7 dias</span></div>
+    <section class="ai-metrics" aria-label="Indicadores operacionais">
+      <article><span>Agendamentos no período</span><strong>{{ d.metrics.booked30 }}</strong><small>Sem cancelamentos</small></article>
+      <article><span>Concluídos</span><strong>{{ d.metrics.completed30 }}</strong><small>Marcados como concluídos</small></article>
+      <article><span>Próximos 7 dias</span><strong>{{ d.metrics.upcoming7 }}</strong><small>Reservas ainda não canceladas</small></article>
+      <article><span>{{ d.metrics.received30===null?'Receita comprovada':'Recebimentos' }}</span>
+        <strong [class.muted]="d.metrics.received30===null">{{formatMoney(d.metrics.received30)}}</strong>
+        <small>{{revenueLabel}}</small></article>
+    </section>
+    <p class="ai-method">Fonte: registros do próprio estabelecimento. Um serviço concluído não equivale a pagamento confirmado. <span *ngIf="d.metrics.sampleLimited">Amostra parcial, confira o relatório completo.</span></p>
+
+    <div class="ai-section-heading"><div><span class="ai-label">02 / OPORTUNIDADES</span><h2>O próximo passo certo</h2></div><span class="ai-period">Recomendações com fonte identificada</span></div>
+    <div class="ai-insights">
+      <article *ngFor="let insight of d.insights" class="ai-insight">
+        <div class="ai-insight-top"><span class="ai-kind">{{insight.kind==='fact'?'LEITURA OPERACIONAL':'OPORTUNIDADE'}}</span><i class="pi" [class.pi-chart-bar]="insight.kind==='fact'" [class.pi-bolt]="insight.kind==='opportunity'"></i></div>
+        <h3>{{insight.title}}</h3><p>{{insight.detail}}</p>
+        <div class="ai-insight-bottom"><small><i class="pi pi-database"></i> {{insight.source}}</small><a [routerLink]="insight.destination" aria-label="Abrir área relacionada">Explorar <i class="pi pi-arrow-right"></i></a></div>
+      </article>
+    </div>
+    <div class="ai-copilot">
+      <div class="ai-copilot-head">
+        <div><span class="ai-label">03 / COPILOTO</span><h2>Uma orientação sob medida</h2>
+          <p>Uma IA pode explicar prioridades a partir dos indicadores acima. Os valores continuam vindo do banco, não do modelo de linguagem.</p></div>
+        <span class="ai-counter">{{d.usage.narrative.used}} / {{d.usage.narrative.limit}} leituras no mês</span>
+      </div>
+      <div class="ai-copilot-result" *ngIf="narrative as n">
+        <span>{{ n.mode==='model'?'INTERPRETAÇÃO GERADA POR IA':'ORIENTAÇÃO POR REGRAS' }}</span>
+        <h3>{{ n.title }}</h3><p>{{ n.message }}</p><small *ngIf="n.note">{{n.note}}</small>
+      </div>
+      <button class="ai-action" (click)="generateNarrative()" [disabled]="working || !canNarrate">
+        <i class="pi pi-sparkles"></i> {{working?'Analisando…':canNarrate?'Gerar leitura orientada':'Franquia mensal utilizada'}}
+      </button>
+      <p class="ai-method" *ngIf="!d.providerReady">O modelo generativo ainda não está configurado neste ambiente. A orientação por regras continua disponível, sem apresentar respostas simuladas como IA.</p>
+    </div>
+
+    <div class="ai-section-heading"><div><span class="ai-label">04 / GROWTH IA</span><h2>Das oportunidades à ação comercial</h2></div><span class="ai-period">Sempre sob controle do estabelecimento</span></div>
+    <section class="ai-growth" *ngIf="!growthEnabled">
+      <div class="ai-growth-icon"><i class="pi pi-lock"></i></div>
+      <div><span class="ai-label">ACESSO CONTROLADO</span><h3>Um copiloto de crescimento, não uma máquina de disparos.</h3><p>O Growth IA está em piloto. Ele encontra oportunidades de campanha usando vagas reais, gera um rascunho com link rastreável e pede sua revisão antes de qualquer publicação.</p><small>Preço previsto: R$ 169/mês. Ainda não disponível para contratação.</small></div>
+      <a routerLink="/admin/crescimento">Explorar o Growth Studio <i class="pi pi-arrow-up-right"></i></a>
+    </section>
+    <section class="ai-growth ai-growth-ready" *ngIf="growthEnabled">
+      <div class="ai-growth-intro"><div><span class="ai-label">GROWTH IA · PILOTO</span><h3>Prepare uma campanha para uma vaga real</h3><p>Escolha um serviço, confirme os horários disponíveis e salve uma sugestão em rascunho. Nenhuma mensagem é enviada.</p></div><span class="ai-counter">{{d.usage.campaignDraft.used}} / {{d.usage.campaignDraft.limit}} rascunhos/mês</span></div>
+      <div class="ai-fields">
+        <label>Serviço<select [(ngModel)]="selectedService" (ngModelChange)="slots=[];selectedSlot=''"><option value="">Selecione</option><option *ngFor="let service of d.services" [value]="service.id">{{service.title}}</option></select></label>
+        <label>Profissional<select [(ngModel)]="selectedProfessional" (ngModelChange)="slots=[];selectedSlot=''"><option value="">Selecione</option><option *ngFor="let professional of d.professionals" [value]="professional.id">{{professional.name}}</option></select></label>
+        <label>Dia<input type="date" [(ngModel)]="selectedDate" [min]="todayDate" [max]="maxDate" (ngModelChange)="slots=[];selectedSlot=''"></label>
+      </div>
+      <button class="ai-action ai-secondary" (click)="checkSlots()" [disabled]="checkingSlots || !canDraft || !selectedService || !selectedProfessional">
+        <i class="pi pi-calendar"></i> {{checkingSlots?'Conferindo agenda…':'Consultar vagas reais'}}
+      </button>
+      <div class="ai-slots" *ngIf="slots.length">
+        <label>Selecione uma vaga disponível</label>
+        <div class="ai-slot-grid"><button *ngFor="let slot of slots" type="button" [class.selected]="selectedSlot===slot" (click)="selectedSlot=slot">{{formatSlot(slot)}}</button></div>
+        <button class="ai-action" (click)="generateDraft()" [disabled]="!selectedSlot || working">{{working?'Preparando…':'Criar rascunho com link rastreável'}} <i class="pi pi-arrow-right"></i></button>
+      </div>
+      <article class="ai-draft" *ngIf="draft as campaign"><span class="ai-label">RASCUNHO SALVO · NENHUM ENVIO</span><h3>{{campaign.title}}</h3><p>{{campaign.caption}}</p><div class="ai-draft-actions"><button (click)="copyDraft()"><i class="pi pi-copy"></i> Copiar legenda</button><a routerLink="/admin/crescimento">Abrir Growth Studio <i class="pi pi-arrow-up-right"></i></a></div><small>{{campaign.note}}</small></article>
+    </section>
+    <p class="ai-footnote">AgendaAI Intelligence trabalha com dados disponíveis e pode apresentar análises incompletas quando o histórico for pequeno. Nenhuma sugestão representa garantia de faturamento, aumento de vendas ou ocupação futura.</p>
+  </ng-container>
+</div>

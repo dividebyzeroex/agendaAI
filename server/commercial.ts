@@ -1,5 +1,5 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-export const TERMS_VERSION = '2026-10-10';
+export const TERMS_VERSION = '2026-10-24';
 export function unsubscribeToken(id: string, secret: string): string { return createHmac('sha256',secret).update(`unsubscribe:${id}`).digest('hex'); }
 export function validUnsubscribe(id: string, token: string, secret: string): boolean {
  if (!secret || !/^[a-f0-9]{64}$/.test(token)) return false;
@@ -27,11 +27,11 @@ export function messageFor(stage: string,business:string,url:string):{subject:st
  const content: Record<string,[string,string]>={
  'paid-welcome':['Sua assinatura está ativa','Obrigado por escolher a AgendaAI. Mantenha os horários atualizados, revise a disponibilidade da equipe e acompanhe seus agendamentos no painel. Você pode consultar faturas e gerenciar sua renovação na área de faturamento.'],
  'retention':['A AgendaAI está ajudando na sua rotina?','Queremos saber como está a experiência da sua equipe. Qual tarefa ainda exige trabalho manual? Responda com seu feedback para orientar as próximas melhorias. Confira também se os serviços e horários publicados continuam atualizados.'],
- 'invitation':['Sua agenda merece menos trabalho manual','Que tal reunir agendamentos, cadastro de clientes, equipe e controle do atendimento em um só lugar? A AgendaAI oferece 30 dias de teste, sem cartão e sem cobrança automática. Você configura seus serviços, compartilha seu link e avalia a rotina com seu próprio negócio. Os planos mensais começam em R$ 97. Recursos de mensageria dependem da configuração dos canais e dos limites do plano.'],
+ 'invitation':['Sua agenda merece menos trabalho manual','Que tal reunir agendamentos, cadastro de clientes, equipe e controle do atendimento em um só lugar? A AgendaAI oferece 30 dias de teste, sem cartão e sem cobrança automática. Você configura seus serviços, compartilha seu link e avalia a rotina com seu próprio negócio. Os planos mensais de lançamento começam em R$ 79. Recursos de mensageria dependem da configuração dos canais e dos limites do plano.'],
  'follow-up':['Uma forma prática de avaliar a AgendaAI','Se organizar horários e acompanhar clientes ainda toma tempo da sua equipe, o teste de 30 dias pode ajudar você a avaliar uma alternativa. Comece por um serviço e um profissional; acompanhe os agendamentos antes de decidir. Sem promessa de resultado garantido e sem cobrança automática ao fim do teste.'],
  'welcome':['Seu teste de 30 dias: vamos preparar o primeiro agendamento','Bem-vindo à AgendaAI. Para começar: cadastre um serviço, defina o horário de atendimento e compartilhe o link da sua agenda. Faça uma reserva de teste para conferir a experiência do cliente. Você pode responder a este e-mail se precisar de ajuda.'],
  'activation':['Como está a primeira semana com a AgendaAI?','Você já publicou seu link de agendamento? Confira os horários, cadastre sua equipe e revise o cadastro dos clientes. O objetivo do teste é você avaliar se a plataforma simplifica a sua rotina. Conte por resposta o que está faltando; seu retorno fica com a equipe responsável.'],
- 'trial-ending':['Seu teste está chegando ao fim','Seu período de avaliação termina nos próximos três dias. Para continuar, escolha um plano na área de faturamento. Starter: R$ 97/mês; Business Pro: R$ 197/mês; Premium: R$ 349/mês. Nenhuma assinatura é iniciada sem sua contratação no checkout.'],
+ 'trial-ending':['Seu teste está chegando ao fim','Seu período de avaliação termina nos próximos três dias. Para continuar, escolha um plano na área de faturamento. Agenda: R$ 79/mês; Gestão: R$ 119/mês. Growth (R$ 169/mês previsto) permanece indisponível para contratação. Nenhuma assinatura é iniciada sem sua contratação no checkout.'],
  'trial-ended':['Seu período de avaliação terminou','Obrigado por experimentar a AgendaAI. O teste terminou e não gerou cobrança automática. Você pode consultar as opções de assinatura na área de faturamento. Se ainda houver uma dúvida para decidir, responda a este e-mail.']
  };
  const [subject,body]=content[stage]||content['welcome'];

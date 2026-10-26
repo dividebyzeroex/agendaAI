@@ -30,6 +30,18 @@ type BookingStep = 'marketplace' | 'step0' | 'step1' | 'step_pro' | 'step2' | 's
 export class Agendar implements OnInit {
   private route = inject(ActivatedRoute);
   private publicDb = inject(SupabaseService).client;
+  readonly growthCode = this.route.snapshot.queryParamMap.get('campanha') || '';
+  private growthVisitStarted = false;
+  private recordCampaignVisit(tenantId:string) {
+    if (this.growthVisitStarted || !/^[0-9a-f-]{36}$/i.test(this.growthCode)) return;
+    this.growthVisitStarted = true;
+    const key = 'growth-visit-'+tenantId+'-'+this.growthCode;
+    try {
+      if (sessionStorage.getItem(key)) return;
+      sessionStorage.setItem(key,'1');
+    } catch { /* Strict browsing modes may disable session storage. */ }
+    void this.publicDb.rpc('growth_record_visit',{p_tenant:tenantId,p_code:this.growthCode});
+  }
   portalToken = this.route.snapshot.queryParamMap.get('portal') || '';
   portalEvent = this.route.snapshot.queryParamMap.get('event') || '';
   portalPass = this.route.snapshot.queryParamMap.get('pass') || '';
@@ -205,6 +217,7 @@ export class Agendar implements OnInit {
     this.pubService.data$.subscribe((data) => {
       if (data && data.estabelecimento) {
         this.estab = data.estabelecimento;
+        if (this.estab.id) this.recordCampaignVisit(this.estab.id);
         void this.loadPublicPage();
         this.services = data.servicos || [];
         this.schedule = data.horarios || [];
@@ -626,6 +639,7 @@ export class Agendar implements OnInit {
           title: eventTitle,
           event_metadata: eventMeta,
           reservation_key: this.reservationAttempt.key,
+          ...( /^[0-9a-f-]{36}$/i.test(this.growthCode) && !this.portalToken ? { campaign_code:this.growthCode } : {} ),
           ...(this.portalToken
             ? {
                 portal_token: this.portalToken,

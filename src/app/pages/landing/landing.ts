@@ -2,6 +2,8 @@ import { Component, HostListener, OnInit, ElementRef, ChangeDetectorRef } from '
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
+import { competitorMonthlyComparison, agendaAiMonthlyComparison } from './plan-comparison';
+import { discoverSalesNeeds, SALES_STARTERS, type SalesRecommendation } from '../../core/consultative-sales';
 
 interface SegmentDetail {
   id: string;
@@ -28,6 +30,110 @@ interface SegmentDetail {
   styleUrls: ['./landing.css']
 })
 export class Landing implements OnInit {
+  // Public pre-sales discovery: anonymous and local, with a trusted server-side quote.
+  readonly salesStarters = SALES_STARTERS;
+  salesPrompt = '';
+  salesExploreOpen = false;
+  salesMessages: { role: 'assistant' | 'user'; text: string }[] = [
+    {role:'assistant', text:'Olá! Me conte o que gostaria de melhorar no seu salão. Vou sugerir recursos e mostrar o plano compatível, sem compromisso.'}
+  ];
+  salesUserMessages: string[] = [];
+  salesRecommendation: SalesRecommendation | null = null;
+  salesCycle: 1 | 3 | 6 | 12 = 1;
+  salesQuote: {planId: string; months: number; name: string; amount: number; monthlyCents: number; discount: number; status: string} | null = null;
+  salesQuoteLoading = false;
+  salesQuoteError = '';
+  private salesQuoteSequence = 0;
+
+  get salesShowcase(): 'agenda' | 'equipe' | 'pagamentos' | 'crescimento' {
+    const ids = this.salesRecommendation?.needs.map(need => need.id) || [];
+    return ids.includes('equipe') ? 'equipe' : ids.includes('pagamentos') ? 'pagamentos' :
+      ids.includes('agenda') ? 'agenda' : 'crescimento';
+  }
+
+  get salesLastMessage(): string {
+    return this.salesUserMessages[this.salesUserMessages.length - 1] || '';
+  }
+
+  resetSalesDiscovery(): void {
+    this.salesPrompt = '';
+    this.salesUserMessages = [];
+    this.salesRecommendation = null;
+    this.salesMessages = [{role:'assistant',text:'Me conte o que você gostaria de melhorar no seu salão.'}];
+    this.salesQuote = null;
+    this.salesQuoteError = '';
+    ++this.salesQuoteSequence;
+    document.getElementById('hero')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  toggleSalesExplore(): void {
+    this.salesExploreOpen = !this.salesExploreOpen;
+    if (this.salesExploreOpen)
+      setTimeout(() => document.getElementById('longform')?.scrollIntoView({behavior:'smooth',block:'start'}), 30);
+    else document.getElementById('hero')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  chooseSalesStarter(prompt: string): void {
+    this.salesPrompt = prompt;
+    this.submitSalesMessage();
+  }
+
+  submitSalesMessage(event?: Event): void {
+    event?.preventDefault();
+    const message = this.salesPrompt.trim().slice(0,600);
+    if (!message) return;
+    this.salesPrompt = '';
+    this.salesUserMessages = [...this.salesUserMessages, message].slice(-8);
+    this.salesMessages = [...this.salesMessages, {role:'user',text:message}];
+    this.salesRecommendation = discoverSalesNeeds(this.salesUserMessages);
+    if (this.salesRecommendation) {
+      this.salesMessages = [...this.salesMessages, {
+        role:'assistant',
+        text:this.salesRecommendation.answer + ' ' + this.salesRecommendation.nextQuestion
+      }];
+      void this.loadSalesQuote();
+      setTimeout(() => document.getElementById('sales-result')?.scrollIntoView({behavior:'smooth',block:'start'}), 70);
+    } else {
+      this.salesMessages = [...this.salesMessages, {
+        role:'assistant',
+        text:'Entendi. O que pesa mais no seu dia a dia: agenda e faltas, caixa e pagamentos, comissões ou conquistar clientes?'
+      }];
+    }
+  }
+
+  setSalesCycle(cycle: 1 | 3 | 6 | 12): void {
+    if (this.salesCycle === cycle) return;
+    this.salesCycle = cycle;
+    if (this.salesRecommendation) void this.loadSalesQuote();
+  }
+
+  async loadSalesQuote(): Promise<void> {
+    const plan = this.salesRecommendation?.planId;
+    if (!plan) return;
+    const seq = ++this.salesQuoteSequence;
+    this.salesQuoteLoading = true;
+    this.salesQuoteError = '';
+    this.salesQuote = null;
+    try {
+      const response = await fetch('/api/billing?action=public-quote&planId='+encodeURIComponent(plan)+'&months='+this.salesCycle, {cache:'no-store'});
+      if (!response.ok) throw new Error('Não foi possível consultar o catálogo de preços.');
+      const quote = await response.json();
+      if (quote.planId !== plan || quote.months !== this.salesCycle || quote.status !== 'active' ||
+          !Number.isSafeInteger(quote.amount) || !Number.isSafeInteger(quote.monthlyCents) ||
+          quote.amount < 0 || quote.monthlyCents < 0)
+        throw new Error('A cotação retornada está inconsistente.');
+      if (seq === this.salesQuoteSequence) this.salesQuote = quote;
+    } catch (error) {
+      if (seq === this.salesQuoteSequence)
+        this.salesQuoteError = 'Cotação temporariamente indisponível. Consulte os planos abaixo.';
+    } finally {
+      if (seq === this.salesQuoteSequence) {
+        this.salesQuoteLoading = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
   pilot = {business_name:'',email:'',website:'',termsAccepted:false};
   pilotSending = false;
   pilotMessage = '';
@@ -47,6 +153,11 @@ export class Landing implements OnInit {
   isScrolled = false;
   isMobileMenuOpen = false;
   isAnnualBilling = false;
+  comparisonTeamSize = 5;
+  readonly agendaAiMonthlyComparison = agendaAiMonthlyComparison;
+  get competitorMonthlyComparison() { return competitorMonthlyComparison(this.comparisonTeamSize); }
+  get comparisonSavings() { return Math.max(0, Math.round((this.competitorMonthlyComparison-this.agendaAiMonthlyComparison)*100)/100); }
+  get comparisonAnnualSavings() { return Math.round(this.comparisonSavings*12*100)/100; }
   // Demonstration only. No remote payment is ever created by this preview.
   checkoutScene: 'cart' | 'payment' | 'success' = 'cart';
   readonly checkoutScenes = [
@@ -193,15 +304,22 @@ export class Landing implements OnInit {
     {pillar:'growth',category:'RECORRÊNCIA',icon:'pi-refresh',name:'Clubes e pacotes',description:'Sessões pré-pagas, planos recorrentes e controle de utilização, quando habilitados.',note:'Configuração adicional'},
     {pillar:'growth',category:'EXPERIÊNCIA',icon:'pi-user',name:'Área privativa do cliente',description:'Acesso às próprias reservas e ações permitidas pelas regras do estabelecimento.'},
     {pillar:'growth',category:'QUALIDADE',icon:'pi-star',name:'Feedback e avaliações',description:'Registre a experiência de quem foi atendido e encontre oportunidades para melhorar.'},
+    {pillar:'growth',category:'GROWTH IA · PILOTO',icon:'pi-sparkles',name:'Rascunhos de campanhas com IA',description:'Com disponibilidade real, a inteligência sugere textos e links rastreáveis. O salão revisa antes de divulgar.',note:'Prévia por convite'},
     {pillar:'management',category:'ESTOQUE',icon:'pi-box',name:'Produtos, insumos e reposição',description:'Acompanhe movimentações, consumo interno e pontos de atenção para a reposição.'},
     {pillar:'management',category:'FINANCEIRO',icon:'pi-chart-bar',name:'Caixa e visão financeira',description:'Movimentações, contas a pagar e receber, relatórios e acompanhamento de resultados.'},
+    {pillar:'management',category:'INTELLIGENCE · PILOTO',icon:'pi-chart-line',name:'Leituras inteligentes para o proprietário',description:'Sinais de agenda, faltas e pagamentos confirmados para apoiar decisões, sem inventar resultados.',note:'Liberação gradual'},
     {pillar:'management',category:'OPERAÇÃO',icon:'pi-building',name:'Unidades e permissões',description:'Estruture o acesso da equipe e acompanhe diferentes unidades conforme o módulo contratado.',note:'Conforme plano'},
     {pillar:'management',category:'SUA MARCA',icon:'pi-image',name:'Página com identidade própria',description:'Seu estabelecimento em primeiro plano, com serviços e informações para agendar.'}
   ];
 
   faqs = [
     { q: 'Como funcionam os 30 dias gratuitos?', a: 'Você cadastra seu negócio e pode configurar serviços, profissionais e o link de agendamento para avaliar a rotina real. Não pedimos cartão e não fazemos cobrança automática. A assinatura é opcional ao final do teste.', open: true },
-    { q: 'O plano Essencial custa mesmo R$ 97 por mês?', a: 'Sim. O plano Essencial anunciado custa R$ 97/mês na contratação mensal e oferece agenda e link público de agendamento, até cinco profissionais ativos, cadastro de clientes e serviços, histórico, caixa e suporte por e-mail. Recursos adicionais podem ter condições próprias.', open: false },
+    { q: 'Quanto custa o AgendaAI?', a: 'O Agenda custa R$ 79/mês e o Gestão R$ 119/mês após o teste, na contratação mensal. O Growth de R$ 169/mês é uma proposta em validação e ainda não pode ser contratado. Não há tarifa por agenda adicional no mesmo estabelecimento. Serviços externos podem ter custos próprios.', open: false },
+    { q: 'O que é o AgendaAI Intelligence?', a: 'É um painel de leituras para o proprietário, em liberação gradual. No Agenda, trabalha com agenda e disponibilidade; no Gestão, acrescenta contexto de caixa confirmado, faltas e cancelamentos. A geração de textos com IA depende da habilitação no piloto e não é uma função garantida em toda conta hoje.', open: false },
+    { q: 'A IA pode publicar campanhas ou enviar mensagens sozinha?', a: 'Não. A prévia Growth IA propõe rascunhos de texto e links rastreáveis com base em disponibilidade real. O proprietário revisa e decide sobre a divulgação. O módulo não dispara mensagens, publica nas redes, altera reservas ou movimenta pagamentos automaticamente. Growth IA ainda não está disponível para contratação.', open: false },
+    { q: 'Como funciona a cobrança dos módulos adicionais?', a: 'Os módulos adicionais continuam em estudo e não estão disponíveis para contratação. Quando lançados, cada módulo terá preço e limites informados antes de contratar, em acréscimo ao plano escolhido. Nenhuma cobrança é automática.', open: false },
+    { q: 'Vou pagar mais quando contratar outro barbeiro ou profissional?', a: 'Não. Nos planos Agenda e Gestão você pode cadastrar agendas de profissionais do mesmo estabelecimento sem taxa por agenda adicional. A mensalidade do plano não aumenta automaticamente com o tamanho da equipe. Planos para múltiplas unidades e integrações externas têm condições próprias.', open: false },
+    { q: 'Qual a diferença do AgendaAI para um concorrente?', a: 'Nos planos Agenda e Gestão você pode adicionar profissionais do mesmo estabelecimento sem pagar mais por agenda. Alguns concorrentes cobram por profissional ou por faixas de equipe. Nosso comparador usa apenas um modelo ilustrativo, que não representa todo o mercado.', open: false },
     { q: 'Meus clientes conseguem agendar pelo WhatsApp?', a: 'Você pode compartilhar o link de reservas pelo WhatsApp, Instagram ou site para o cliente agendar online. Isso não significa que um robô de WhatsApp esteja incluso; mensagens automatizadas exigem integração própria e autorização do destinatário.', open: false },
     { q: 'Como funciona o Stripe Connect no AgendaAI?', a: 'O estabelecimento pode vincular sua própria conta Stripe Connect ao AgendaAI, sujeito à habilitação e análise do provedor. A plataforma gera cobranças integradas e acompanha o status por confirmação do servidor. Taxas do AgendaAI e da Stripe podem se aplicar; o vínculo não significa uma parceria ou endosso comercial da Stripe.', open: false },
     { q: 'O cliente precisa preencher dados de cartão no balcão?', a: 'Não no caixa do salão. Com o Pay Express ativo, a segunda tela pode apresentar a comanda e o QR da cobrança. O cliente usa o próprio celular e o checkout seguro hospedado pelo provedor. O AgendaAI exibe sucesso somente após confirmar o pagamento pelo sistema.', open: false },
@@ -248,10 +366,10 @@ export class Landing implements OnInit {
 
   scrollTo(id: string) {
     this.isMobileMenuOpen = false;
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (id !== 'hero' && id !== 'consultoria') this.salesExploreOpen = true;
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 30);
   }
 
   toggleMobileMenu() {

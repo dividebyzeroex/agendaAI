@@ -17,12 +17,12 @@ beforeEach(()=>{TestBed.resetTestingModule();tenant=new BehaviorSubject<any>(nul
 it('preserves the actionable server error when checkout fails',async()=>{
  const service=TestBed.inject(BillingService);tenant.next({id:'tenant-a'});
  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:false,json:async()=>({error:'Já existe uma assinatura.'})}));
- await expect(service.processStripeCheckout('basico',1,true)).rejects.toThrow('Já existe uma assinatura.');
+ await expect(service.processStripeCheckout('agenda',1,true)).rejects.toThrow('Já existe uma assinatura.');
 });
 it('does not redirect to a malformed checkout URL',async()=>{
  const service=TestBed.inject(BillingService);tenant.next({id:'tenant-a'});
  vi.stubGlobal('fetch',vi.fn().mockResolvedValue({ok:true,json:async()=>({init_point:'https://evil.example/pay'})}));
- await expect(service.processStripeCheckout('basico',1,true)).rejects.toThrow('endereço válido');
+ await expect(service.processStripeCheckout('agenda',1,true)).rejects.toThrow('endereço válido');
 });
 it('keeps a valid trial usable after an old paid period expires',async()=>{
  const service=TestBed.inject(BillingService);tenant.next({plano_expires_at:'2000-01-01',trial_ends_at:'2099-01-01'});

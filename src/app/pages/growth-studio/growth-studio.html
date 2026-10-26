@@ -1,0 +1,55 @@
+<main class="growth-studio">
+ <header class="gs-head"><div><span class="gs-eyebrow"><i class="pi pi-sparkles"></i> AGENDAAI GROWTH</span><h1>Transforme horários livres em oportunidades.</h1><p>Crie campanhas a partir da sua agenda, compartilhe seu link nas redes e acompanhe as reservas atribuídas — sem promessas de faturamento.</p></div><a routerLink="/admin/social" class="gs-ghost" href="/admin/social"><i class="pi pi-share-alt"></i> Redes sociais</a></header>
+ <div *ngIf="error" class="gs-alert negative" role="alert"><i class="pi pi-exclamation-circle"></i>{{error}}</div>
+ <div *ngIf="notice" class="gs-alert positive" role="status"><i class="pi pi-check-circle"></i>{{notice}}</div>
+ <section class="gs-stats" aria-label="Resultados das campanhas">
+  <div><span><i class="pi pi-eye"></i> Acessos aos links</span><strong>{{totalClicks}}</strong><small>Aproximados; não são visitantes únicos</small></div>
+  <div><span><i class="pi pi-calendar-plus"></i> Reservas atribuídas</span><strong>{{totalBookings}}</strong><small>Reservas, não pagamentos</small></div>
+  <div><span><i class="pi pi-megaphone"></i> Campanhas prontas</span><strong>{{confirmedCampaigns}}</strong><small>Criadas para divulgação</small></div>
+  <div><span><i class="pi pi-heart"></i> Retornos a trabalhar</span><strong>{{retention.email_opt_in30||0}}</strong><small>Sem visita há 30 dias e com e-mail autorizado</small></div>
+ </section>
+ <div class="gs-columns">
+  <section class="gs-card" aria-labelledby="opp-title">
+   <div class="gs-section-head"><span class="gs-step">01</span><div><h2 id="opp-title">Encontrar oportunidades</h2><p>Escolha um serviço, um profissional e um dia. Mostramos sugestões livres na agenda atual.</p></div></div>
+   <div class="gs-form-grid">
+    <label>Serviço<select [(ngModel)]="selectedService" (ngModelChange)="loadSlots()" [disabled]="loading||busy"><option *ngFor="let s of services" [value]="s.id">{{s.titulo}} · {{s.preco|currency:'BRL'}}</option></select></label>
+    <label>Profissional<select [(ngModel)]="selectedProfessional" (ngModelChange)="loadSlots()" [disabled]="loading||busy"><option *ngFor="let p of professionals" [value]="p.id">{{p.nome}}</option></select></label>
+    <label>Data<input type="date" [min]="minDay" [max]="maxDay" [(ngModel)]="selectedDay" (ngModelChange)="loadSlots()" [disabled]="loading||busy"/></label>
+   </div>
+   <div class="gs-slot-label">Sugestões de horários disponíveis</div>
+   <div class="gs-slots" *ngIf="slots.length"><button type="button" *ngFor="let slot of slots" [class.active]="selectedSlot===slot.slot_start" (click)="selectedSlot=slot.slot_start">{{slot.slot_start|date:'HH:mm':'-0300'}}</button></div>
+   <p class="gs-muted" *ngIf="!slots.length && !loading">Nenhum horário encontrado para esta seleção. Tente outro dia, serviço ou profissional.</p>
+   <p class="gs-footnote"><i class="pi pi-info-circle"></i> A agenda é verificada novamente antes da reserva. As sugestões não bloqueiam horários e não substituem regras específicas de encaixe.</p>
+  </section>
+  <section class="gs-card gs-compose" aria-labelledby="campaign-title">
+   <div class="gs-section-head"><span class="gs-step">02</span><div><h2 id="campaign-title">Criar campanha</h2><p>Produza uma sugestão de legenda com link de agendamento rastreável.</p></div></div>
+   <div class="gs-choice"><button type="button" [class.active]="variation==='simple'" (click)="variation='simple'">Elegante</button><button type="button" [class.active]="variation==='urgency'" (click)="variation='urgency'">Últimos horários</button></div>
+   <div class="gs-preview" *ngIf="hasOpportunity; else noOpportunity"><span>PRÉVIA DE TEXTO</span><p>{{draftCaption('seu link de agendamento') }}</p></div>
+   <ng-template #noOpportunity><div class="gs-preview gs-placeholder"><i class="pi pi-calendar"></i> Selecione um horário na agenda para visualizar a campanha.</div></ng-template>
+   <button type="button" class="gs-primary" [disabled]="!hasOpportunity||busy" (click)="createCampaign()"><i class="pi pi-sparkles"></i> {{busy?'Preparando campanha…':'Criar campanha e link'}}</button>
+   <div class="gs-copy" *ngIf="generatedLink"><span>{{generatedLink}}</span><button type="button" (click)="copy(generatedLink)"><i class="pi pi-copy"></i> Copiar</button></div>
+   <p class="gs-footnote">Nenhuma publicação é enviada automaticamente. Nas redes visuais, o Instagram exige imagem ou vídeo.</p>
+  </section>
+ </div>
+ <section class="gs-card gs-history" aria-labelledby="history-title">
+  <div class="gs-section-head"><span class="gs-step">03</span><div><h2 id="history-title">Campanhas e resultados</h2><p>Consulte cliques aproximados e reservas atribuídas ao link de cada campanha.</p></div></div>
+  <div *ngIf="!campaigns.length&&!loading" class="gs-empty"><i class="pi pi-chart-bar"></i><strong>Sua primeira campanha começa aqui</strong><p>Crie um link para um horário e use-o nas redes sociais ou nas respostas aos interessados.</p></div>
+  <div class="gs-list" *ngIf="campaigns.length">
+    <article *ngFor="let c of campaigns" class="gs-campaign">
+     <div><span class="gs-chip" [class.off]="c.status==='paused'">{{c.status==='paused'?'Pausada':c.status==='draft'?'Rascunho':'Pronta para divulgar'}}</span><h3>{{c.title}}</h3><p>{{formatSlot(c.slot_start)}} · Data do horário oferecido</p></div>
+     <div class="gs-numbers"><span><strong>{{c.visits}}</strong> acessos</span><span><strong>{{c.bookings}}</strong> reservas</span></div>
+     <div class="gs-actions">
+       <button type="button" (click)="copy(bookingLink(c))"><i class="pi pi-link"></i> Link</button>
+       <button type="button" (click)="copy(replyTemplate(c))"><i class="pi pi-comments"></i> Resposta pronta</button>
+       <button type="button" class="highlight" (click)="openComposer(c)"><i class="pi pi-share-alt"></i> Criar post</button>
+       <button type="button" *ngIf="c.status!=='paused'" (click)="setStatus(c,'paused')" [disabled]="busy">Pausar</button>
+       <button type="button" *ngIf="c.status==='paused'" (click)="setStatus(c,'ready')" [disabled]="busy">Reativar</button>
+     </div>
+    </article>
+  </div>
+ </section>
+ <section class="gs-bottom" aria-labelledby="relationship-title">
+  <div><span class="gs-eyebrow">RELACIONAMENTO RESPONSÁVEL</span><h2 id="relationship-title">Recupere clientes sem mensagens indesejadas.</h2><p>{{retention.inactive30||0}} cliente(s) sem visitar há 30 dias, dos quais {{retention.email_opt_in30||0}} têm consentimento registrado para contato por e-mail. Use as campanhas e regras já existentes para preparar comunicações autorizadas.</p><div class="gs-actions"><a routerLink="/admin/retencao" href="/admin/retencao" class="gs-primary">Configurar retenção <i class="pi pi-arrow-right"></i></a><a routerLink="/admin/relacionamento" href="/admin/relacionamento" class="gs-ghost">Campanhas de relacionamento</a></div></div>
+  <div class="gs-message-example"><span><i class="pi pi-comment"></i> Resposta sugerida</span><p>“Olá! Obrigado pelo contato. Nosso link mostra os serviços e os horários disponíveis. Você escolhe o melhor para você.”</p><small>Copie e responda manualmente quando houver uma conversa iniciada pelo cliente.</small></div>
+ </section>
+</main>

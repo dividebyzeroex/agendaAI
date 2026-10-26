@@ -28,7 +28,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     lease = claim.lease;
     const results = await Promise.allSettled([
       platform ? runAppointmentMessages() : Promise.resolve({ status: 'not_scheduled_here' }),
-      runGrowthWorker({ db }),
+      runGrowthWorker({ db, scheduled: growth }),
     ]);
     const result = {
       ok:

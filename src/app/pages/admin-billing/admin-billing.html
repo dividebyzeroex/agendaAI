@@ -76,6 +76,7 @@
 
           <div class="p-pro-header">
             <h3>{{ plan.name }}</h3>
+            <small *ngIf="plan.status === 'preview'">Preço previsto · recursos em validação · sem contratação</small>
             <div class="p-pro-price">
               <span class="p-currency">R$</span>
               <span class="p-amount">{{ formatAmount(plan.basePrice * (1 - (plan.discount || 0)/100)) }}</span>
@@ -94,11 +95,12 @@
           <div class="p-pro-footer">
             <button class="btn-pro-action" 
                     (click)="openUpgrade(plan)" 
-                    [disabled]="status === 'ACTIVE' || !checkoutAvailable">
+                    [disabled]="status === 'ACTIVE' || !checkoutAvailable || plan.status !== 'active'">
               <span *ngIf="(currentPlan$ | async)?.id === plan.id && (estabService.estabelecimento$ | async)?.['months'] === plan.months">
                 Plano em Uso
               </span>
-              <span *ngIf="(currentPlan$ | async)?.id !== plan.id || (estabService.estabelecimento$ | async)?.['months'] !== plan.months">
+              <span *ngIf="plan.status === 'preview'">Em planejamento</span>
+              <span *ngIf="plan.status !== 'preview' && ((currentPlan$ | async)?.id !== plan.id || (estabService.estabelecimento$ | async)?.['months'] !== plan.months)">
                 Selecionar {{ plan.name }}
               </span>
             </button>

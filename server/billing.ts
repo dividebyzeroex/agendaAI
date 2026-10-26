@@ -1,16 +1,13 @@
 import Stripe from 'stripe';
+import { PRICING_CATALOG, pricingQuote } from '../src/app/core/pricing-catalog.js';
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export class BillingError extends Error {
   constructor(public status: number, message: string) { super(message); }
 }
-const PRICES = { basico: 9700, completo: 19700, premium: 34900 } as const;
-const DISCOUNTS: Record<number, number> = { 1: 0, 3: 5, 6: 10, 12: 20 };
 export function quote(planId: unknown, months: unknown) {
-  if (typeof planId !== 'string' || !Object.hasOwn(PRICES, planId) || typeof months !== 'number' || !Object.hasOwn(DISCOUNTS, months)) {
-    throw new BillingError(400, 'Plano ou ciclo inválido.');
-  }
-  return { planId, months, amount: Math.round(PRICES[planId as keyof typeof PRICES] * months * (100 - DISCOUNTS[months]) / 100) };
+  try { return pricingQuote(planId, months); }
+  catch { throw new BillingError(400, 'Plano ou ciclo inválido.'); }
 }
 export function billingReadiness(env: Record<string,string|undefined> = process.env) {
   const key = env['STRIPE_SECRET_KEY'] || '';
@@ -80,7 +77,7 @@ export function subscriptionPatch(subscription: Stripe.Subscription, invoice: St
     stripe_current_period_end: subscriptionPeriodEnd(subscription),
   };
   // An active status alone is not proof that the renewed period was paid.
-  if (subscription.status === 'active' && invoice?.status === 'paid' && objectId(subscription.latest_invoice) === invoice.id && planId && Object.hasOwn(PRICES, planId)) {
+  if (subscription.status === 'active' && invoice?.status === 'paid' && objectId(subscription.latest_invoice) === invoice.id && planId && Object.hasOwn(PRICING_CATALOG, planId)) {
     patch['stripe_mrr_cents'] = subscription.items.data.reduce((sum, item) => {
       const price = item.price;
       if (price.currency !== 'brl' || price.recurring?.interval !== 'month') return sum;
@@ -123,4 +120,19 @@ export async function recordPaidInvoice(db: SupabaseClient, invoice: Stripe.Invo
     paid_at: new Date((invoice.status_transitions.paid_at || invoice.created) * 1000).toISOString(),
   }, { onConflict: 'id' });
   if (error) throw new BillingError(503, 'Falha ao registrar pagamento.');
+  // Only a verified, live, first subscription invoice may qualify an indication.
+  // Database RPC is idempotent by invoice ID, and leaves the commission pending
+  // for human review after the refund window. Never transfers Pix automatically.
+  if (invoice.livemode === true && invoice.billing_reason === 'subscription_create' &&
+      invoice.currency === 'brl' && invoice.amount_paid >= 7900) {
+    const { error: referralError } = await db.rpc('partner_record_first_paid_invoice', {
+      p_event_id: 'invoice:' + invoice.id,
+      p_invoice_id: invoice.id,
+      p_referred_id: estab.id,
+      p_amount_cents: invoice.amount_paid,
+      p_currency: invoice.currency,
+      p_livemode: true,
+    });
+    if (referralError) throw new BillingError(503, 'Falha ao conferir a indicação do pagamento.');
+  }
 }
