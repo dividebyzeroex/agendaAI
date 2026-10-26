@@ -1,157 +1,158 @@
-<div class="site-container">
+<div class="site-container" [class.sales-expanded]="salesExploreOpen">
 
-  <!-- ═══════════════ HEADER & NAV ═══════════════ -->
-  <header class="site-header" [class.scrolled]="isScrolled">
+  <header class="site-header discovery-header" [class.scrolled]="isScrolled">
     <div class="header-inner">
-      <a href="#hero" class="brand" (click)="scrollTo('hero')" aria-label="AgendaAI, voltar ao início">
-        <span class="brand-symbol">▲</span>
-        <span class="brand-text">AgendaAI</span>
+      <a href="#hero" class="brand" (click)="scrollTo('hero')" aria-label="AgendaAI, página inicial">
+        <span class="brand-symbol">▲</span><span class="brand-text">AgendaAI</span>
       </a>
-
-      <nav class="nav-links desktop-only" aria-label="Navegação principal">
-        <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
-        <a href="#comparativo" (click)="scrollTo('comparativo')">Comparar preços</a>
-        <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
-        <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
-        <a href="#inteligencia" (click)="scrollTo('inteligencia')">Inteligência</a>
-        <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
-        <a href="#precos" (click)="scrollTo('precos')">Planos</a>
-        <a href="#modulos" (click)="scrollTo('modulos')">Adicionais</a>
+      <nav class="discovery-header-nav" aria-label="Navegação principal">
+        <button type="button" (click)="toggleSalesExplore()" [attr.aria-expanded]="salesExploreOpen" aria-controls="longform">{{salesExploreOpen?'Ocultar detalhes':'Explorar plataforma'}} <i class="pi" [class.pi-arrow-up-right]="!salesExploreOpen" [class.pi-chevron-up]="salesExploreOpen" aria-hidden="true"></i></button>
       </nav>
-
-      <div class="header-actions">
-        <button class="btn-link desktop-only" (click)="signIn()">Entrar</button>
-        <button class="btn-primary" (click)="goToLogin()">Criar conta grátis</button>
-        <button class="mobile-toggle" (click)="toggleMobileMenu()" aria-label="Abrir ou fechar menu" [attr.aria-expanded]="isMobileMenuOpen" aria-controls="landing-mobile-nav">
-          <i class="pi" [class.pi-bars]="!isMobileMenuOpen" [class.pi-times]="isMobileMenuOpen"></i>
-        </button>
+      <div class="discovery-header-actions">
+        <button type="button" class="discovery-sign-in" (click)="signIn()">Entrar</button>
+        <button type="button" class="discovery-try" (click)="goToLogin()">Começar grátis <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
       </div>
     </div>
   </header>
 
-  <!-- Mobile Menu Drawer -->
-  <div class="mobile-nav" id="landing-mobile-nav" [class.open]="isMobileMenuOpen" [attr.aria-hidden]="!isMobileMenuOpen">
-    <div class="mobile-links">
-      <a href="#diferenciais" (click)="scrollTo('diferenciais')">Por que AgendaAI</a>
-      <a href="#comparativo" (click)="scrollTo('comparativo')">Compare os preços</a>
-      <a href="#crescimento" (click)="scrollTo('crescimento')">Growth</a>
-      <a href="#inteligencia" (click)="scrollTo('inteligencia')">Inteligência</a>
-      <a href="#como-funciona" (click)="scrollTo('como-funciona')">Como funciona</a>
-      <a href="#pay-express" (click)="scrollTo('pay-express')">Pay Express e Stripe</a>
-      <a href="#multi-service" (click)="scrollTo('multi-service')">Multisserviços</a>
-      <a href="#novidades" (click)="scrollTo('novidades')">Soluções</a>
-      <a href="#segmentos" (click)="scrollTo('segmentos')">Segmentos</a>
-      <a href="#recursos" (click)="scrollTo('recursos')">Recursos</a>
-      <a href="#precos" (click)="scrollTo('precos')">Preços</a>
-      <a href="#modulos" (click)="scrollTo('modulos')">Módulos adicionais</a>
-      <a href="#faq" (click)="scrollTo('faq')">Dúvidas frequentes</a>
-    </div>
-    <div class="mobile-actions">
-      <button class="btn-primary w-full" (click)="goToLogin(); toggleMobileMenu()">Criar conta grátis</button>
-      <button class="btn-outline w-full mt-2" (click)="signIn(); toggleMobileMenu()">Acessar painel</button>
-    </div>
-  </div>
-
   <main>
 
-    <!-- CONVERSATIONAL SALES — live answers + price read from the server catalog -->
-    <section class="sales-hero" id="hero" aria-labelledby="sales-hero-title">
-      <div class="container sales-intro">
-        <span class="sales-eyebrow"><span class="sales-status-pulse" aria-hidden="true"></span> AGENDAAI · UMA SOLUÇÃO PARA O SEU NEGÓCIO</span>
-        <h1 id="sales-hero-title">Conte o que seu salão precisa. <em>Nós mostramos por onde começar.</em></h1>
-        <p>Não precisa escolher um plano antes de entender o produto. Conte seu desafio e descubra as funcionalidades que fazem sentido para sua rotina — com preço transparente e demonstração.</p>
-        <div class="sales-quick-proof">
-          <span><i class="pi pi-check" aria-hidden="true"></i> 30 dias grátis</span>
-          <span><i class="pi pi-check" aria-hidden="true"></i> Sem cartão</span>
-          <span><i class="pi pi-check" aria-hidden="true"></i> Sem taxa por agenda extra</span>
-        </div>
+    <!-- Intent-first discovery: reveal the product only after the visitor tells us what matters. -->
+    <section class="discovery-stage" id="hero" [class.has-insight]="salesRecommendation!==null" aria-labelledby="discovery-title">
+      <div class="discovery-ambient" aria-hidden="true">
+        <span class="discovery-orbit discovery-orbit-one"></span>
+        <span class="discovery-orbit discovery-orbit-two"></span>
+        <span class="discovery-ambient-dot"></span>
       </div>
+      <div class="container discovery-shell" id="consultoria">
+        <div class="discovery-intro">
+          <div class="discovery-eyebrow"><span class="discovery-live-dot"></span> AGENDAAI · SUA EXPERIÊNCIA COMEÇA AQUI</div>
+          <h1 id="discovery-title">E se seu salão funcionasse <em>do seu jeito?</em></h1>
+          <p>Conte o que precisa melhorar. Nós encontramos a solução que faz sentido para o seu negócio.</p>
+        </div>
 
-      <div class="container sales-workspace" id="consultoria">
-        <div class="sales-conversation" aria-label="Consultoria interativa de funcionalidades">
-          <div class="sales-window-header">
-            <div class="sales-assistant-brand"><span class="sales-assistant-mark" aria-hidden="true">▲</span>
-              <div><strong>AgendaAI Consultor</strong><small>Recomendações instantâneas, sem cadastro</small></div>
-            </div>
-            <span class="sales-window-label">EXPERIÊNCIA INTERATIVA</span>
-          </div>
-          <div class="sales-chat-log" role="log" aria-live="polite" aria-relevant="additions text">
-            <div *ngFor="let line of salesMessages" class="sales-chat-line" [class.from-visitor]="line.role==='user'">
-              <span class="sales-message-icon" *ngIf="line.role==='assistant'" aria-hidden="true">✦</span>
-              <p>{{line.text}}</p>
-            </div>
-          </div>
-          <div class="sales-starting-prompts" *ngIf="salesUserMessages.length===0">
-            <span>Você pode começar por aqui</span>
-            <div class="sales-prompt-list">
-              <button type="button" *ngFor="let starter of salesStarters" (click)="chooseSalesStarter(starter)">{{starter}} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
-            </div>
-          </div>
-          <form class="sales-composer" (submit)="submitSalesMessage($event)" aria-label="Descreva a necessidade do seu salão">
-            <label for="sales-prompt" class="visually-hidden">O que você gostaria de melhorar no seu salão?</label>
+        <div class="discovery-search-wrap">
+          <form class="discovery-search" (submit)="submitSalesMessage($event)" aria-label="Descubra os recursos certos para seu negócio">
+            <label for="sales-prompt" class="discovery-screenreader">O que você gostaria de melhorar no seu salão?</label>
             <textarea id="sales-prompt" name="salesPrompt" [(ngModel)]="salesPrompt"
-              placeholder="Ex.: Tenho 4 profissionais e preciso controlar comissões..."
-              rows="2" maxlength="600" aria-label="Descreva o que seu negócio precisa"></textarea>
-            <button type="submit" [disabled]="!salesPrompt.trim()" aria-label="Enviar minha necessidade">
-              <i class="pi pi-arrow-up" aria-hidden="true"></i>
-            </button>
+              rows="2" maxlength="600" placeholder="Meu maior desafio no salão é..."
+              aria-label="Conte o que gostaria de melhorar no seu salão"></textarea>
+            <div class="discovery-search-bottom">
+              <span><i class="pi pi-sparkles" aria-hidden="true"></i> Recomendações sob medida</span>
+              <button type="submit" [disabled]="!salesPrompt.trim()" aria-label="Descobrir minha solução">
+                <span>Descobrir</span><i class="pi pi-arrow-up-right" aria-hidden="true"></i>
+              </button>
+            </div>
           </form>
-          <div class="sales-privacy-note"><i class="pi pi-lock" aria-hidden="true"></i> Suas respostas são analisadas nesta página. Dados da sua agenda não são acessados.</div>
+          <div class="discovery-prompt-row" aria-label="Exemplos de problemas">
+            <span *ngIf="salesUserMessages.length===0">Ou comece com</span>
+            <span *ngIf="salesUserMessages.length>0">Refine sua busca</span>
+            <button type="button" *ngFor="let starter of salesStarters" (click)="chooseSalesStarter(starter)">{{starter}} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
+          </div>
+          <div class="discovery-prompt-guidance" *ngIf="salesUserMessages.length>0 && !salesRecommendation" role="status">
+            Descreva um pouco mais: o desafio está na agenda, no caixa, nas comissões ou em conquistar clientes?
+          </div>
         </div>
 
-        <aside class="sales-proposal" aria-label="Recomendação personalizada de plano">
-          <div class="sales-proposal-head">
-            <span class="sales-proposal-kicker">RECOMENDAÇÃO PARA VOCÊ</span>
-            <span class="sales-proposal-icon"><i class="pi pi-sparkles" aria-hidden="true"></i></span>
+        <div class="discovery-output" id="sales-result" *ngIf="salesRecommendation as recommendation">
+          <div class="discovery-output-overline">
+            <span class="discovery-output-spark">✳</span>
+            <span>ENTENDI O SEU CENÁRIO</span>
+            <button type="button" (click)="resetSalesDiscovery()" aria-label="Começar uma nova busca">Nova busca <i class="pi pi-refresh" aria-hidden="true"></i></button>
           </div>
-          <ng-container *ngIf="salesRecommendation as recommendation; else salesBlankState">
-            <h2>{{recommendation.headline}}</h2>
-            <p class="sales-proposal-subhead">Com base no que você contou, estas são as áreas mais relevantes do AgendaAI:</p>
-            <div class="sales-need-list">
-              <div *ngFor="let need of recommendation.needs" class="sales-need-item">
-                <span class="sales-need-check"><i class="pi pi-check" aria-hidden="true"></i></span>
-                <div><strong>{{need.title}}</strong><small>{{need.detail}}</small></div>
+          <div class="discovery-input-echo"><span>Você contou</span> “{{salesLastMessage}}”</div>
+          <div class="discovery-output-grid">
+            <div class="discovery-diagnosis">
+              <h2>{{recommendation.headline}}</h2>
+              <p>{{recommendation.answer}}</p>
+              <div class="discovery-matched">
+                <span class="discovery-mini-label">O QUE FAZ SENTIDO PARA VOCÊ</span>
+                <div *ngFor="let need of recommendation.needs" class="discovery-match">
+                  <i class="pi pi-check-circle" aria-hidden="true"></i>
+                  <div><strong>{{need.title}}</strong><span>{{need.detail}}</span></div>
+                </div>
               </div>
+              <p class="discovery-pilot-note" *ngIf="recommendation.growthPreview">Growth IA segue em prévia por convite e não está disponível para contratar.</p>
             </div>
-            <div class="sales-plan-quote">
-              <span>PLANO RECOMENDADO</span>
-              <strong>{{recommendation.planName}}</strong>
-              <div class="sales-billing-options" role="group" aria-label="Ciclo da assinatura">
-                <button type="button" [class.is-active]="salesCycle===1" (click)="setSalesCycle(1)">Mensal</button>
-                <button type="button" [class.is-active]="salesCycle===3" (click)="setSalesCycle(3)">3 meses</button>
-                <button type="button" [class.is-active]="salesCycle===6" (click)="setSalesCycle(6)">6 meses</button>
-                <button type="button" [class.is-active]="salesCycle===12" (click)="setSalesCycle(12)">12 meses</button>
+
+            <div class="discovery-scene" aria-label="Prévia ilustrativa do recurso recomendado">
+              <div class="discovery-scene-header">
+                <span><i class="pi pi-circle-fill" aria-hidden="true"></i> UM VISLUMBRE DO AGENDAAI</span>
+                <strong>DEMONSTRAÇÃO · DADOS FICTÍCIOS</strong>
               </div>
-              <p class="sales-quote-loading" *ngIf="salesQuoteLoading">Consultando preço atualizado…</p>
-              <ng-container *ngIf="salesQuote as quote">
-                <div class="sales-quote-price">{{(quote.amount/100) | currency:'BRL':'symbol':'1.2-2'}} <small>/ {{quote.months===1?'mês':quote.months+' meses'}}</small></div>
-                <p *ngIf="quote.discount>0">{{quote.discount}}% de desconto no ciclo escolhido. Pagamento do período completo.</p>
-                <p *ngIf="quote.discount===0">Valor da contratação mensal, depois do teste grátis.</p>
+              <ng-container [ngSwitch]="salesShowcase">
+                <div *ngSwitchCase="'agenda'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Agenda do dia</span><strong>Terça-feira, exemplo</strong></div>
+                  <div class="discovery-agenda-line"><span>09:00</span><div class="is-booked"><strong>Corte + barba</strong><small>Marcos · confirmado</small></div></div>
+                  <div class="discovery-agenda-line"><span>10:30</span><div class="is-free"><strong>Horário disponível</strong><small>Pronto para receber reservas</small></div></div>
+                  <div class="discovery-agenda-line"><span>11:30</span><div class="is-booked"><strong>Escova</strong><small>Camila · confirmado</small></div></div>
+                  <div class="discovery-agenda-line"><span>14:00</span><div class="is-free"><strong>Horário disponível</strong><small>Divulgue seu link de agendamento</small></div></div>
+                  <p class="discovery-scene-caption">Veja quem está reservado e o que ainda pode ser agendado.</p>
+                </div>
+                <div *ngSwitchCase="'equipe'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Equipe e comissões</span><strong>Exemplo de fechamento</strong></div>
+                  <div class="discovery-commission-row"><div><strong>Marcos</strong><small>Vendas R$ 300 · comissão 40%</small></div><span>R$ 120,00</span></div>
+                  <div class="discovery-commission-row"><div><strong>Camila</strong><small>Vendas R$ 180 · comissão 35%</small></div><span>R$ 63,00</span></div>
+                  <div class="discovery-commission-total"><span>Comissões calculadas</span><strong>R$ 183,00</strong></div>
+                  <p class="discovery-scene-caption">Valores fictícios. Você define as regras aplicadas a cada profissional.</p>
+                </div>
+                <div *ngSwitchCase="'pagamentos'" class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Comanda digital</span><strong>Exemplo de atendimento</strong></div>
+                  <div class="discovery-receipt-line"><span>Corte de cabelo</span><strong>R$ 55,00</strong></div>
+                  <div class="discovery-receipt-line"><span>Barba</span><strong>R$ 30,00</strong></div>
+                  <div class="discovery-receipt-line discovery-receipt-total"><span>Total</span><strong>R$ 85,00</strong></div>
+                  <div class="discovery-payment-state"><i class="pi pi-clock" aria-hidden="true"></i> Aguardando confirmação de pagamento</div>
+                  <p class="discovery-scene-caption">Pay Express depende de habilitação do provedor. Nenhuma cobrança é gerada nesta prévia.</p>
+                </div>
+                <div *ngSwitchDefault class="discovery-scene-body">
+                  <div class="discovery-scene-title"><span>Growth IA</span><strong>Conceito em prévia</strong></div>
+                  <div class="discovery-campaign-note"><span>IDEIA DE CAMPANHA · RASCUNHO</span><p>Abriu um horário especial esta semana? Compartilhe seu link de agendamento com seus clientes.</p><small>Sujeito à revisão e aprovação do proprietário.</small></div>
+                  <p class="discovery-scene-caption">A versão Growth IA ainda está em validação. Nenhuma mensagem é publicada automaticamente.</p>
+                </div>
               </ng-container>
-              <p class="sales-quote-loading" *ngIf="salesQuoteError">{{salesQuoteError}}</p>
-              <small>Oferta baseada no catálogo vigente. Módulos externos e serviços de terceiros podem ter custos adicionais.</small>
             </div>
-            <p class="sales-growth-notice" *ngIf="recommendation.growthPreview"><i class="pi pi-info-circle" aria-hidden="true"></i> Growth IA está em prévia por convite e não pode ser contratado nesta etapa.</p>
-          </ng-container>
-          <ng-template #salesBlankState>
-            <h2>Seu próximo passo começa com uma pergunta.</h2>
-            <p class="sales-proposal-subhead">Você conta o desafio. Nós encontramos os recursos do AgendaAI mais próximos da sua necessidade e consultamos o preço real do plano.</p>
-            <div class="sales-empty-list">
-              <span><i class="pi pi-calendar" aria-hidden="true"></i> Atendimento e agenda</span>
-              <span><i class="pi pi-users" aria-hidden="true"></i> Equipe e comissões</span>
-              <span><i class="pi pi-credit-card" aria-hidden="true"></i> Caixa e pagamentos</span>
-              <span><i class="pi pi-chart-line" aria-hidden="true"></i> Crescimento e inteligência</span>
-            </div>
-          </ng-template>
-          <div class="sales-proposal-actions">
-            <button type="button" class="btn-primary" (click)="goToLogin()">Experimentar 30 dias grátis <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
-            <button type="button" class="sales-demo-link" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração com dados fictícios</button>
           </div>
-          <p class="sales-not-live">Conexão com Google Agenda e importação de horários reais estão previstas para a próxima etapa. Nenhuma agenda é sincronizada nesta experiência.</p>
-        </aside>
+
+          <div class="discovery-offer">
+            <div class="discovery-offer-plan">
+              <span>O MELHOR PONTO DE PARTIDA</span>
+              <strong>{{recommendation.planName}}</strong>
+              <small>Sem taxa por agenda adicional no mesmo estabelecimento.</small>
+            </div>
+            <div class="discovery-offer-price">
+              <span *ngIf="salesQuoteLoading">Consultando valores…</span>
+              <ng-container *ngIf="salesQuote as quote">
+                <strong>{{(quote.amount/100) | currency:'BRL':'symbol':'1.2-2'}}</strong>
+                <span>/ {{quote.months===1?'mês':quote.months+' meses'}}</span>
+              </ng-container>
+              <span *ngIf="salesQuoteError">{{salesQuoteError}}</span>
+              <details class="discovery-billing-details">
+                <summary>Opções de pagamento</summary>
+                <div class="discovery-billing-cycles" role="group" aria-label="Escolha o período da assinatura">
+                  <button type="button" [class.is-active]="salesCycle===1" (click)="setSalesCycle(1)">1 mês</button>
+                  <button type="button" [class.is-active]="salesCycle===3" (click)="setSalesCycle(3)">3 meses</button>
+                  <button type="button" [class.is-active]="salesCycle===6" (click)="setSalesCycle(6)">6 meses</button>
+                  <button type="button" [class.is-active]="salesCycle===12" (click)="setSalesCycle(12)">12 meses</button>
+                </div>
+                <small *ngIf="salesQuote && salesQuote.discount>0">{{salesQuote.discount}}% de desconto no ciclo, cobrado integralmente. Serviços de terceiros podem ter custos extras.</small>
+              </details>
+            </div>
+            <div class="discovery-offer-actions">
+              <button type="button" class="discovery-primary-cta" (click)="goToLogin()">Experimentar 30 dias <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
+              <button type="button" class="discovery-secondary-cta" (click)="goToDemo()">Ver demonstração completa</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="discovery-lowkey-footer">
+          <span>Sem cadastro para descobrir. Sem cartão no teste.</span>
+          <button type="button" (click)="toggleSalesExplore()">{{salesExploreOpen?'Recolher detalhes':'Explorar recursos e preços'}} <i class="pi pi-arrow-down" aria-hidden="true"></i></button>
+          <span>Dados da sua agenda não são acessados. Conexão em modo leitura: próxima etapa.</span>
+        </div>
       </div>
-      <div class="container sales-below-note">Prefere explorar no seu ritmo? <a href="#diferenciais" (click)="scrollTo('diferenciais')">Conheça os recursos</a> ou <a href="#precos" (click)="scrollTo('precos')">veja todos os planos</a>.</div>
     </section>
+
+    <div class="sales-longform" id="longform" [hidden]="!salesExploreOpen">
 
     <!-- DIFFERENTIATION — purpose-built for owners, no fabricated social proof -->
     <section class="aa-value-section" id="diferenciais" aria-labelledby="aa-value-title">
@@ -727,6 +728,8 @@
         </div>
       </div>
     </section>
+
+    </div><!-- /sales-longform -->
 
   </main>
 

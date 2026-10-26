@@ -27,6 +27,16 @@ describe('Conversational AgendaAI sales journey', () => {
     expect(SALES_STARTERS).toHaveLength(4);
     expect(proposal?.needs.map(x=>x.id)).toContain('agenda');
   });
+  it('keeps a calm first impression and reveals proof only after discovery', () => {
+    expect(landing).toContain('id="hero" [class.has-insight]="salesRecommendation!==null"');
+    expect(landing).toContain('*ngIf="salesRecommendation as recommendation"');
+    expect(landing).toContain('id="longform" [hidden]="!salesExploreOpen"');
+    expect(landing).toContain('discovery-scene');
+    expect(landing).toContain('[ngSwitch]="salesShowcase"');
+    expect(landing).toContain('DADOS FICTÍCIOS');
+    expect(component).toContain('toggleSalesExplore()');
+    expect(component).toContain('get salesShowcase()');
+  });
   it('uses the authorized server-side catalog and leaves real calendar sync for later', () => {
     expect(api).toContain("action === 'public-quote'");
     expect(api).toContain('isSellablePlan(req.query');

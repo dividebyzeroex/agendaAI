@@ -26,3 +26,9 @@ A recomendação é exploratória. Não assegura migração nem acesso automáti
 ## Segurança comercial
 
 Não há alteração em pagamento, webhook, dados de clientes ou produção. O endpoint público valida uma lista estrita de planos e ciclos; a autoridade para contratação continua no checkout autenticado no servidor.
+
+## Revisão de experiência visual (26/10)
+
+A primeira proposta em duas colunas foi rejeitada por excesso de elementos. A página agora abre em uma única busca central, com recomendação, produto ilustrativo e cotação mostrados apenas após a primeira resposta relevante. O conteúdo informativo tradicional existe atrás da ação explícita "Explorar plataforma", sem limitar o acesso aos links de preço, FAQ e condições.
+
+São renderizadas quatro cenas distintas de produto, sempre rotuladas como fictícias, sem acesso a eventos reais. A prévia mantém mensagens sem cadastro e não habilita integração de calendários externos.

@@ -33,6 +33,7 @@ export class Landing implements OnInit {
   // Public pre-sales discovery: anonymous and local, with a trusted server-side quote.
   readonly salesStarters = SALES_STARTERS;
   salesPrompt = '';
+  salesExploreOpen = false;
   salesMessages: { role: 'assistant' | 'user'; text: string }[] = [
     {role:'assistant', text:'Olá! Me conte o que gostaria de melhorar no seu salão. Vou sugerir recursos e mostrar o plano compatível, sem compromisso.'}
   ];
@@ -43,6 +44,33 @@ export class Landing implements OnInit {
   salesQuoteLoading = false;
   salesQuoteError = '';
   private salesQuoteSequence = 0;
+
+  get salesShowcase(): 'agenda' | 'equipe' | 'pagamentos' | 'crescimento' {
+    const ids = this.salesRecommendation?.needs.map(need => need.id) || [];
+    return ids.includes('equipe') ? 'equipe' : ids.includes('pagamentos') ? 'pagamentos' :
+      ids.includes('agenda') ? 'agenda' : 'crescimento';
+  }
+
+  get salesLastMessage(): string {
+    return this.salesUserMessages[this.salesUserMessages.length - 1] || '';
+  }
+
+  resetSalesDiscovery(): void {
+    this.salesPrompt = '';
+    this.salesUserMessages = [];
+    this.salesRecommendation = null;
+    this.salesMessages = [{role:'assistant',text:'Me conte o que você gostaria de melhorar no seu salão.'}];
+    this.salesQuote = null;
+    this.salesQuoteError = '';
+    ++this.salesQuoteSequence;
+  }
+
+  toggleSalesExplore(): void {
+    this.salesExploreOpen = !this.salesExploreOpen;
+    if (this.salesExploreOpen)
+      setTimeout(() => document.getElementById('longform')?.scrollIntoView({behavior:'smooth',block:'start'}), 30);
+    else document.getElementById('hero')?.scrollIntoView({behavior:'smooth',block:'start'});
+  }
 
   chooseSalesStarter(prompt: string): void {
     this.salesPrompt = prompt;
@@ -336,10 +364,10 @@ export class Landing implements OnInit {
 
   scrollTo(id: string) {
     this.isMobileMenuOpen = false;
-    const element = document.getElementById(id);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    if (id !== 'hero' && id !== 'consultoria') this.salesExploreOpen = true;
+    setTimeout(() => {
+      document.getElementById(id)?.scrollIntoView({behavior:'smooth',block:'start'});
+    }, 30);
   }
 
   toggleMobileMenu() {
