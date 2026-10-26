@@ -63,6 +63,7 @@ export class Landing implements OnInit {
     this.salesQuote = null;
     this.salesQuoteError = '';
     ++this.salesQuoteSequence;
+    document.getElementById('hero')?.scrollIntoView({behavior:'smooth',block:'start'});
   }
 
   toggleSalesExplore(): void {
@@ -91,6 +92,7 @@ export class Landing implements OnInit {
         text:this.salesRecommendation.answer + ' ' + this.salesRecommendation.nextQuestion
       }];
       void this.loadSalesQuote();
+      setTimeout(() => document.getElementById('sales-result')?.scrollIntoView({behavior:'smooth',block:'start'}), 70);
     } else {
       this.salesMessages = [...this.salesMessages, {
         role:'assistant',

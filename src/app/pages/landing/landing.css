@@ -2613,3 +2613,5 @@
   .discovery-orbit,.discovery-output{animation:none}
   .discovery-search,.discovery-try,.discovery-primary-cta,.discovery-prompt-row button{transition:none}
 }
+
+.discovery-output{scroll-margin-top:92px}
