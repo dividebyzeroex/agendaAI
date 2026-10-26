@@ -3,6 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { competitorMonthlyComparison, agendaAiMonthlyComparison } from './plan-comparison';
+import { discoverSalesNeeds, SALES_STARTERS, type SalesRecommendation } from '../../core/consultative-sales';
 
 interface SegmentDetail {
   id: string;
@@ -29,6 +30,80 @@ interface SegmentDetail {
   styleUrls: ['./landing.css']
 })
 export class Landing implements OnInit {
+  // Public pre-sales discovery: anonymous and local, with a trusted server-side quote.
+  readonly salesStarters = SALES_STARTERS;
+  salesPrompt = '';
+  salesMessages: { role: 'assistant' | 'user'; text: string }[] = [
+    {role:'assistant', text:'Olá! Me conte o que gostaria de melhorar no seu salão. Vou sugerir recursos e mostrar o plano compatível, sem compromisso.'}
+  ];
+  salesUserMessages: string[] = [];
+  salesRecommendation: SalesRecommendation | null = null;
+  salesCycle: 1 | 3 | 6 | 12 = 1;
+  salesQuote: {planId: string; months: number; name: string; amount: number; monthlyCents: number; discount: number; status: string} | null = null;
+  salesQuoteLoading = false;
+  salesQuoteError = '';
+  private salesQuoteSequence = 0;
+
+  chooseSalesStarter(prompt: string): void {
+    this.salesPrompt = prompt;
+    this.submitSalesMessage();
+  }
+
+  submitSalesMessage(event?: Event): void {
+    event?.preventDefault();
+    const message = this.salesPrompt.trim().slice(0,600);
+    if (!message) return;
+    this.salesPrompt = '';
+    this.salesUserMessages = [...this.salesUserMessages, message].slice(-8);
+    this.salesMessages = [...this.salesMessages, {role:'user',text:message}];
+    this.salesRecommendation = discoverSalesNeeds(this.salesUserMessages);
+    if (this.salesRecommendation) {
+      this.salesMessages = [...this.salesMessages, {
+        role:'assistant',
+        text:this.salesRecommendation.answer + ' ' + this.salesRecommendation.nextQuestion
+      }];
+      void this.loadSalesQuote();
+    } else {
+      this.salesMessages = [...this.salesMessages, {
+        role:'assistant',
+        text:'Entendi. O que pesa mais no seu dia a dia: agenda e faltas, caixa e pagamentos, comissões ou conquistar clientes?'
+      }];
+    }
+  }
+
+  setSalesCycle(cycle: 1 | 3 | 6 | 12): void {
+    if (this.salesCycle === cycle) return;
+    this.salesCycle = cycle;
+    if (this.salesRecommendation) void this.loadSalesQuote();
+  }
+
+  async loadSalesQuote(): Promise<void> {
+    const plan = this.salesRecommendation?.planId;
+    if (!plan) return;
+    const seq = ++this.salesQuoteSequence;
+    this.salesQuoteLoading = true;
+    this.salesQuoteError = '';
+    this.salesQuote = null;
+    try {
+      const response = await fetch('/api/billing?action=public-quote&planId='+encodeURIComponent(plan)+'&months='+this.salesCycle, {cache:'no-store'});
+      if (!response.ok) throw new Error('Não foi possível consultar o catálogo de preços.');
+      const quote = await response.json();
+      if (quote.planId !== plan || quote.months !== this.salesCycle || quote.status !== 'active' ||
+          !Number.isSafeInteger(quote.amount) || !Number.isSafeInteger(quote.monthlyCents) ||
+          quote.amount < 0 || quote.monthlyCents < 0)
+        throw new Error('A cotação retornada está inconsistente.');
+      if (seq === this.salesQuoteSequence) this.salesQuote = quote;
+    } catch (error) {
+      if (seq === this.salesQuoteSequence)
+        this.salesQuoteError = 'Cotação temporariamente indisponível. Consulte os planos abaixo.';
+    } finally {
+      if (seq === this.salesQuoteSequence) {
+        this.salesQuoteLoading = false;
+        this.cdr.detectChanges();
+      }
+    }
+  }
+
   pilot = {business_name:'',email:'',website:'',termsAccepted:false};
   pilotSending = false;
   pilotMessage = '';

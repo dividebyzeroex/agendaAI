@@ -54,125 +54,104 @@
 
   <main>
 
-    <!-- ═══════════════ HERO ═══════════════ -->
-    <section class="hero-section" id="hero">
-      <div class="hero-content">
-        <div class="section-tag hero-eyebrow"><span class="tag-orbit" aria-hidden="true"></span> GESTÃO COMPLETA, SEM TAXA POR AGENDA ADICIONAL</div>
-        <h1 class="hero-title">Seu salão cresce. <span>Sua mensalidade não precisa crescer junto.</span></h1>
-        <p class="hero-subtitle">Mais profissionais, sem pagar por agenda extra. Organize reservas, comissões, caixa e divulgação — agora com um Intelligence Hub em piloto para transformar dados reais do salão em decisões mais claras.</p>
-        <div class="hero-feature-proof" aria-label="Diferenciais da plataforma">
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> R$ 0 por agenda extra</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Agendamento, caixa e comissões</span>
-          <span><i class="pi pi-check-circle" aria-hidden="true"></i> Intelligence Hub em piloto</span>
-        </div>
-        <div class="hero-cta-group">
-          <button class="btn-primary btn-lg" (click)="goToLogin()">Experimentar por 30 dias <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
-          <button class="btn-outline btn-lg" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Ver demonstração</button>
-        </div>
-        <p class="hero-cta-note">30 dias grátis, sem cartão e sem cobrança automática. Sem taxa por profissional adicional no mesmo estabelecimento; serviços externos e módulos opcionais podem ter custos próprios.</p>
-        <div class="hero-metrics-row" aria-label="Vantagens do teste">
-          <div class="metric-item"><span class="m-val">R$ 0</span><span class="m-lbl">por profissional adicional</span></div>
-          <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">A partir de R$ 79/mês</span><span class="m-lbl">Plano Agenda após o teste</span></div>
-          <div class="metric-divider"></div>
-          <div class="metric-item"><span class="m-val">30 dias</span><span class="m-lbl">grátis, sem cartão</span></div>
+    <!-- CONVERSATIONAL SALES — live answers + price read from the server catalog -->
+    <section class="sales-hero" id="hero" aria-labelledby="sales-hero-title">
+      <div class="container sales-intro">
+        <span class="sales-eyebrow"><span class="sales-status-pulse" aria-hidden="true"></span> AGENDAAI · UMA SOLUÇÃO PARA O SEU NEGÓCIO</span>
+        <h1 id="sales-hero-title">Conte o que seu salão precisa. <em>Nós mostramos por onde começar.</em></h1>
+        <p>Não precisa escolher um plano antes de entender o produto. Conte seu desafio e descubra as funcionalidades que fazem sentido para sua rotina — com preço transparente e demonstração.</p>
+        <div class="sales-quick-proof">
+          <span><i class="pi pi-check" aria-hidden="true"></i> 30 dias grátis</span>
+          <span><i class="pi pi-check" aria-hidden="true"></i> Sem cartão</span>
+          <span><i class="pi pi-check" aria-hidden="true"></i> Sem taxa por agenda extra</span>
         </div>
       </div>
 
-      <!-- ═══════════════ PRODUCT INTERFACE VIEW ═══════════════ -->
-      <div class="product-viewport-wrap">
-        <div class="product-viewport">
-          <!-- App Header -->
-          <div class="app-chrome">
-            <div class="chrome-title">
-              <span class="chrome-crumb">AgendaAI</span>
-              <span class="chrome-sep">/</span>
-              <span class="chrome-active">Demonstração ilustrativa • Dados fictícios</span>
+      <div class="container sales-workspace" id="consultoria">
+        <div class="sales-conversation" aria-label="Consultoria interativa de funcionalidades">
+          <div class="sales-window-header">
+            <div class="sales-assistant-brand"><span class="sales-assistant-mark" aria-hidden="true">▲</span>
+              <div><strong>AgendaAI Consultor</strong><small>Recomendações instantâneas, sem cadastro</small></div>
             </div>
-            <div class="chrome-actions">
-              <span class="status-indicator">
-                <span class="indicator-dot"></span> Exemplo ilustrativo
-              </span>
+            <span class="sales-window-label">EXPERIÊNCIA INTERATIVA</span>
+          </div>
+          <div class="sales-chat-log" role="log" aria-live="polite" aria-relevant="additions text">
+            <div *ngFor="let line of salesMessages" class="sales-chat-line" [class.from-visitor]="line.role==='user'">
+              <span class="sales-message-icon" *ngIf="line.role==='assistant'" aria-hidden="true">✦</span>
+              <p>{{line.text}}</p>
             </div>
           </div>
-
-          <!-- App Body: Split Layout (Calendar + Live Chat) -->
-          <div class="app-split-view">
-            <!-- Left: Real Agenda Timeline -->
-            <div class="app-agenda-panel">
-              <div class="agenda-controls">
-                <div class="agenda-date">
-                  <strong>Terça-feira · exemplo</strong>
-                  <span>Agenda de demonstração</span>
-                </div>
-                <div class="agenda-view-tabs">
-                  <span class="tab active">Dia</span>
-                  <span class="tab">Semana</span>
-                  <span class="tab">Mês</span>
-                </div>
-              </div>
-
-              <div class="timeline-rows">
-                <div class="time-slot past">
-                  <div class="time-col">09:00</div>
-                  <div class="slot-event past-event">
-                    <div class="event-meta">
-                      <strong>Carlos Eduardo Silva</strong>
-                      <span>Corte • Marcos</span>
-                    </div>
-                    <span class="badge-finished">Finalizado</span>
-                  </div>
-                </div>
-
-                <div class="time-slot active-slot">
-                  <div class="time-col">10:30</div>
-                  <div class="slot-event current-event">
-                    <div class="event-meta">
-                      <strong>Mariana Vasconcelos</strong>
-                      <span>Coloração • Camila</span>
-                    </div>
-                    <span class="badge-current">Em atendimento</span>
-                  </div>
-                </div>
-
-                <div class="time-slot target-slot">
-                  <div class="time-col">14:00</div>
-                  <div class="slot-event booked-event">
-                    <div class="event-meta">
-                      <strong>Juliana Mendes Ribeiro</strong>
-                      <span>Escova • Camila</span>
-                    </div>
-                    <span class="badge-whatsapp"><i class="pi pi-check"></i> Reservado pelo link</span>
-                  </div>
-                </div>
-
-                <div class="time-slot">
-                  <div class="time-col">15:30</div>
-                  <div class="slot-event available-event">
-                    <span class="avail-text">Horário vago • Aguardando agendamento</span>
-                  </div>
-                </div>
-
-                <div class="time-slot">
-                  <div class="time-col">16:30</div>
-                  <div class="slot-event booked-event">
-                    <div class="event-meta">
-                      <strong>Lucas Gabriel Moreira</strong>
-                      <span>Corte e barba • Marcos</span>
-                    </div>
-                    <span class="badge-confirmed">Confirmado</span>
-                  </div>
-                </div>
-              </div>
+          <div class="sales-starting-prompts" *ngIf="salesUserMessages.length===0">
+            <span>Você pode começar por aqui</span>
+            <div class="sales-prompt-list">
+              <button type="button" *ngFor="let starter of salesStarters" (click)="chooseSalesStarter(starter)">{{starter}} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button>
             </div>
-
-            <div class="app-chat-sidebar"><div class="chat-sidebar-header"><strong>Seu link de agendamento</strong></div><div class="chat-stream"><p>O cliente escolhe serviço, profissional e horário disponível pelo link público.</p><p>Compartilhe no WhatsApp ou Instagram. A reserva aparece na sua agenda.</p><p>Ilustração com dados fictícios.</p></div></div>
           </div>
+          <form class="sales-composer" (submit)="submitSalesMessage($event)" aria-label="Descreva a necessidade do seu salão">
+            <label for="sales-prompt" class="visually-hidden">O que você gostaria de melhorar no seu salão?</label>
+            <textarea id="sales-prompt" name="salesPrompt" [(ngModel)]="salesPrompt"
+              placeholder="Ex.: Tenho 4 profissionais e preciso controlar comissões..."
+              rows="2" maxlength="600" aria-label="Descreva o que seu negócio precisa"></textarea>
+            <button type="submit" [disabled]="!salesPrompt.trim()" aria-label="Enviar minha necessidade">
+              <i class="pi pi-arrow-up" aria-hidden="true"></i>
+            </button>
+          </form>
+          <div class="sales-privacy-note"><i class="pi pi-lock" aria-hidden="true"></i> Suas respostas são analisadas nesta página. Dados da sua agenda não são acessados.</div>
         </div>
+
+        <aside class="sales-proposal" aria-label="Recomendação personalizada de plano">
+          <div class="sales-proposal-head">
+            <span class="sales-proposal-kicker">RECOMENDAÇÃO PARA VOCÊ</span>
+            <span class="sales-proposal-icon"><i class="pi pi-sparkles" aria-hidden="true"></i></span>
+          </div>
+          <ng-container *ngIf="salesRecommendation as recommendation; else salesBlankState">
+            <h2>{{recommendation.headline}}</h2>
+            <p class="sales-proposal-subhead">Com base no que você contou, estas são as áreas mais relevantes do AgendaAI:</p>
+            <div class="sales-need-list">
+              <div *ngFor="let need of recommendation.needs" class="sales-need-item">
+                <span class="sales-need-check"><i class="pi pi-check" aria-hidden="true"></i></span>
+                <div><strong>{{need.title}}</strong><small>{{need.detail}}</small></div>
+              </div>
+            </div>
+            <div class="sales-plan-quote">
+              <span>PLANO RECOMENDADO</span>
+              <strong>{{recommendation.planName}}</strong>
+              <div class="sales-billing-options" role="group" aria-label="Ciclo da assinatura">
+                <button type="button" [class.is-active]="salesCycle===1" (click)="setSalesCycle(1)">Mensal</button>
+                <button type="button" [class.is-active]="salesCycle===3" (click)="setSalesCycle(3)">3 meses</button>
+                <button type="button" [class.is-active]="salesCycle===6" (click)="setSalesCycle(6)">6 meses</button>
+                <button type="button" [class.is-active]="salesCycle===12" (click)="setSalesCycle(12)">12 meses</button>
+              </div>
+              <p class="sales-quote-loading" *ngIf="salesQuoteLoading">Consultando preço atualizado…</p>
+              <ng-container *ngIf="salesQuote as quote">
+                <div class="sales-quote-price">{{(quote.amount/100) | currency:'BRL':'symbol':'1.2-2'}} <small>/ {{quote.months===1?'mês':quote.months+' meses'}}</small></div>
+                <p *ngIf="quote.discount>0">{{quote.discount}}% de desconto no ciclo escolhido. Pagamento do período completo.</p>
+                <p *ngIf="quote.discount===0">Valor da contratação mensal, depois do teste grátis.</p>
+              </ng-container>
+              <p class="sales-quote-loading" *ngIf="salesQuoteError">{{salesQuoteError}}</p>
+              <small>Oferta baseada no catálogo vigente. Módulos externos e serviços de terceiros podem ter custos adicionais.</small>
+            </div>
+            <p class="sales-growth-notice" *ngIf="recommendation.growthPreview"><i class="pi pi-info-circle" aria-hidden="true"></i> Growth IA está em prévia por convite e não pode ser contratado nesta etapa.</p>
+          </ng-container>
+          <ng-template #salesBlankState>
+            <h2>Seu próximo passo começa com uma pergunta.</h2>
+            <p class="sales-proposal-subhead">Você conta o desafio. Nós encontramos os recursos do AgendaAI mais próximos da sua necessidade e consultamos o preço real do plano.</p>
+            <div class="sales-empty-list">
+              <span><i class="pi pi-calendar" aria-hidden="true"></i> Atendimento e agenda</span>
+              <span><i class="pi pi-users" aria-hidden="true"></i> Equipe e comissões</span>
+              <span><i class="pi pi-credit-card" aria-hidden="true"></i> Caixa e pagamentos</span>
+              <span><i class="pi pi-chart-line" aria-hidden="true"></i> Crescimento e inteligência</span>
+            </div>
+          </ng-template>
+          <div class="sales-proposal-actions">
+            <button type="button" class="btn-primary" (click)="goToLogin()">Experimentar 30 dias grátis <i class="pi pi-arrow-right" aria-hidden="true"></i></button>
+            <button type="button" class="sales-demo-link" (click)="goToDemo()"><i class="pi pi-play-circle" aria-hidden="true"></i> Explorar demonstração com dados fictícios</button>
+          </div>
+          <p class="sales-not-live">Conexão com Google Agenda e importação de horários reais estão previstas para a próxima etapa. Nenhuma agenda é sincronizada nesta experiência.</p>
+        </aside>
       </div>
+      <div class="container sales-below-note">Prefere explorar no seu ritmo? <a href="#diferenciais" (click)="scrollTo('diferenciais')">Conheça os recursos</a> ou <a href="#precos" (click)="scrollTo('precos')">veja todos os planos</a>.</div>
     </section>
-
-
 
     <!-- DIFFERENTIATION — purpose-built for owners, no fabricated social proof -->
     <section class="aa-value-section" id="diferenciais" aria-labelledby="aa-value-title">

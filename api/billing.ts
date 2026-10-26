@@ -1,6 +1,6 @@
 import { intelligenceHandler } from '../server/intelligence.js';
 import { TERMS_VERSION } from '../server/commercial.js';
-import { isSellablePlan, PRICING_CATALOG } from '../src/app/core/pricing-catalog.js';
+import { isSellablePlan, PRICING_CATALOG, pricingQuote } from '../src/app/core/pricing-catalog.js';
 import { integrationsHandler } from '../server/integrations.js';
 import { adminClient } from '../server/security.js';
 import { clubHandler } from '../server/growth-payments.js';
@@ -29,6 +29,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       (action.startsWith('integration-') || action.startsWith('fiscal-'))
     )
       return integrationsHandler(req, res);
+    // Public, read-only price quote. Same catalog and arithmetic as authenticated Stripe checkout.
+    if (action === 'public-quote') {
+      if (req.method !== 'GET') {
+        res.setHeader('Allow', 'GET');
+        return res.status(405).json({error:'Método não permitido.'});
+      }
+      if (!isSellablePlan(req.query['planId']))
+        return res.status(400).json({error:'Plano não está disponível para contratação.'});
+      const months = Number(req.query['months']);
+      if (![1,3,6,12].includes(months))
+        return res.status(400).json({error:'Ciclo de pagamento inválido.'});
+      const result = pricingQuote(req.query['planId'], months);
+      const plan = PRICING_CATALOG[result.planId];
+      return res.status(200).json({...result, name:plan.name, monthlyCents:plan.monthlyCents, status:plan.status, currency:'BRL', notice:'Simulação de preço antes da contratação. Serviços externos podem ter custos adicionais.'});
+    }
     if (action === 'status' && req.method === 'GET')
       return res.status(200).json(await operationalBillingReadiness());
     if (typeof action === 'string' && action.startsWith('club-')) {

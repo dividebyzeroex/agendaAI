@@ -2436,3 +2436,107 @@
 @media(max-width:700px){
   .aa-intel-intro h2{font-size:clamp(2rem,8vw,2.8rem);line-height:1.13}
 }
+
+
+/* ── Consultative sales experience: an editorial interface, not a simulated chat bot ── */
+.sales-hero{
+  position:relative;
+  padding:clamp(105px,12vw,156px) 0 56px;
+  background:radial-gradient(circle at 52% 5%,#f0eaff 0,transparent 46%),#faf9fd;
+  color:var(--landing-dark,#170f2b);
+}
+.sales-intro{max-width:920px;text-align:center;margin-bottom:37px}
+.sales-eyebrow{display:inline-flex;align-items:center;gap:10px;color:var(--brand-violet,#6941c6);font-size:11px;letter-spacing:.15em;font-weight:750}
+.sales-status-pulse{width:7px;height:7px;background:var(--brand-violet,#6941c6);border-radius:50%;box-shadow:0 0 0 5px #e6dbfb}
+.sales-intro h1{max-width:880px;margin:22px auto 14px;font-family:var(--font-sans);font-size:clamp(2.5rem,5.2vw,4.75rem);line-height:1.09;font-weight:700;letter-spacing:-.055em}
+.sales-intro h1 em{font-style:normal;color:var(--brand-violet,#6941c6)}
+.sales-intro>p{max-width:680px;margin:0 auto;color:#645b73;line-height:1.7;font-size:clamp(1rem,1.6vw,1.12rem)}
+.sales-quick-proof{display:flex;justify-content:center;flex-wrap:wrap;gap:10px 22px;margin-top:21px;color:#5e546d;font-size:12px;font-weight:600}
+.sales-quick-proof .pi{color:var(--brand-violet,#6941c6);margin-right:4px;font-size:11px}
+.sales-workspace{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(340px,.8fr);align-items:stretch;gap:17px;max-width:1140px}
+.sales-conversation,.sales-proposal{min-width:0;border:1px solid #e8e3ef;border-radius:22px;background:#fff;box-shadow:0 14px 52px rgba(48,30,78,.07)}
+.sales-conversation{display:flex;flex-direction:column;overflow:hidden;min-height:535px}
+.sales-window-header{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:20px 22px;border-bottom:1px solid #efecf4}
+.sales-assistant-brand{display:flex;align-items:center;gap:11px}
+.sales-assistant-mark{display:grid;place-items:center;width:34px;height:34px;color:#fff;background:var(--brand-violet,#6941c6);border-radius:11px;font-size:16px}
+.sales-assistant-brand>div{display:flex;flex-direction:column;gap:3px}
+.sales-assistant-brand strong{font-size:14px;color:#291b43;font-weight:700}
+.sales-assistant-brand small{font-size:11px;color:#7a7387}
+.sales-window-label{font-size:9px;letter-spacing:.1em;font-weight:700;color:#9a91a9;text-align:right}
+.sales-chat-log{display:flex;flex:1;flex-direction:column;gap:17px;overflow-y:auto;max-height:330px;min-height:215px;padding:26px 23px;scrollbar-color:#dbd1eb transparent}
+.sales-chat-line{display:flex;align-items:flex-start;gap:10px;max-width:93%}
+.sales-chat-line p{font-size:13px;line-height:1.7;color:#453958;border-radius:0 14px 14px 14px;background:#f6f2fc;padding:12px 15px;margin:0;white-space:pre-line}
+.sales-message-icon{flex-shrink:0;display:grid;place-items:center;width:25px;height:25px;border-radius:9px;background:#6941c6;color:white;margin-top:1px;font-size:13px}
+.sales-chat-line.from-visitor{align-self:flex-end;justify-content:flex-end}
+.sales-chat-line.from-visitor p{border-radius:14px 14px 0 14px;background:#2b1b46;color:#fff}
+.sales-starting-prompts{padding:0 22px 15px}
+.sales-starting-prompts>span{display:block;color:#8a8195;font-size:11px;margin-bottom:9px}
+.sales-prompt-list{display:flex;flex-wrap:wrap;gap:7px}
+.sales-prompt-list button{display:flex;align-items:center;gap:7px;text-align:left;max-width:100%;background:#fff;border:1px solid #e2d8f0;border-radius:999px;padding:8px 11px;color:#53387c;font-size:11px;cursor:pointer;transition:background .16s,border-color .16s}
+.sales-prompt-list button:hover{background:#f4eefd;border-color:var(--brand-violet,#6941c6)}
+.sales-prompt-list .pi{font-size:9px}
+.sales-composer{margin:0 19px 7px;padding:11px 11px 10px 14px;border:1px solid #d9ceeb;border-radius:15px;display:flex;align-items:flex-end;gap:8px;background:#fff;box-shadow:0 2px 10px #32204b08}
+.sales-composer:focus-within{border-color:var(--brand-violet,#6941c6);box-shadow:0 0 0 3px #6941c619}
+.sales-composer textarea{min-height:46px;max-height:110px;resize:vertical;flex:1;background:transparent;border:0;outline:0;color:#2a1b42;font:inherit;font-size:13px;line-height:1.55}
+.sales-composer textarea::placeholder{color:#92889f}
+.sales-composer button{display:grid;place-items:center;flex-shrink:0;width:35px;height:35px;border:0;border-radius:10px;color:#fff;background:var(--brand-violet,#6941c6);cursor:pointer}
+.sales-composer button:disabled{cursor:not-allowed;background:#ccc3d7}
+.sales-privacy-note{display:flex;align-items:center;justify-content:center;gap:7px;margin:3px 10px 15px;color:#877e91;font-size:10px;text-align:center}
+.sales-proposal{padding:25px 24px;display:flex;flex-direction:column;gap:14px}
+.sales-proposal-head{display:flex;justify-content:space-between;align-items:center}
+.sales-proposal-kicker{color:#7e6a98;font-size:10px;font-weight:750;letter-spacing:.12em}
+.sales-proposal-icon{display:grid;place-items:center;background:#f2ebff;border-radius:11px;width:37px;height:37px;color:var(--brand-violet,#6941c6)}
+.sales-proposal h2{font-size:clamp(1.5rem,2.6vw,2rem);letter-spacing:-.045em;line-height:1.17;font-weight:700;color:#291b43;margin:0}
+.sales-proposal-subhead{font-size:13px;color:#766e80;line-height:1.65;margin:0}
+.sales-empty-list{display:flex;flex-direction:column;gap:9px;margin:8px 0}
+.sales-empty-list span{display:flex;align-items:center;gap:10px;padding:10px 12px;background:#faf8fe;border-radius:9px;font-size:12px;color:#584b6e}
+.sales-empty-list .pi{color:#7954b8}
+.sales-need-list{display:flex;flex-direction:column;gap:11px}
+.sales-need-item{display:flex;gap:10px;align-items:flex-start}
+.sales-need-check{display:grid;place-items:center;flex-shrink:0;width:23px;height:23px;border-radius:50%;background:#f0e8fe;color:#6941c6}
+.sales-need-check .pi{font-size:10px}
+.sales-need-item>div{display:flex;flex-direction:column;gap:3px}
+.sales-need-item strong{font-size:12px;line-height:1.35;color:#322448}
+.sales-need-item small{font-size:11px;line-height:1.5;color:#82798d}
+.sales-plan-quote{padding:14px 15px;border:1px solid #e8e0f3;border-radius:13px;background:#faf8ff;display:flex;flex-direction:column;gap:7px}
+.sales-plan-quote>span{letter-spacing:.11em;color:#745c99;font-size:9px;font-weight:750}
+.sales-plan-quote>strong{font-size:14px;color:#37264e}
+.sales-billing-options{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:3px;margin:3px 0}
+.sales-billing-options button{background:transparent;border:1px solid transparent;border-radius:7px;color:#7c6d90;font-size:10px;cursor:pointer;padding:8px 3px}
+.sales-billing-options button.is-active{color:#5b2cab;border-color:#cfc0e9;background:#fff;font-weight:750}
+.sales-quote-price{font-size:clamp(1.5rem,3vw,2.2rem);font-weight:750;letter-spacing:-.04em;color:#291b43}
+.sales-quote-price small{font-size:11px;color:#7b7288;font-weight:500;letter-spacing:0}
+.sales-plan-quote p,.sales-plan-quote>small{font-size:10px;line-height:1.5;color:#74677f;margin:0}
+.sales-plan-quote .sales-quote-loading{font-size:12px}
+.sales-growth-notice{font-size:11px;color:#6b528c;background:#f5effe;padding:9px 11px;border-radius:8px;line-height:1.5;margin:0}
+.sales-proposal-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;margin-top:auto}
+.sales-proposal-actions .btn-primary{display:flex;justify-content:center;align-items:center;gap:9px;padding:13px 12px;border-radius:11px;font-size:13px;min-height:45px}
+.sales-demo-link{background:transparent;border:0;color:#614387;font-size:12px;text-align:center;cursor:pointer;padding:8px 0}
+.sales-demo-link .pi{margin-right:6px}
+.sales-not-live{margin:0;color:#948ba1;font-size:10px;line-height:1.6;text-align:center}
+.sales-below-note{margin-top:23px;text-align:center;color:#756b82;font-size:12px}
+.sales-below-note a{color:var(--brand-violet,#6941c6);font-weight:700;text-underline-offset:3px}
+.sales-hero button:focus-visible,.sales-hero a:focus-visible{outline:3px solid var(--brand-violet,#6941c6);outline-offset:3px}
+.sales-hero .visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(max-width:900px){
+  .sales-workspace{grid-template-columns:minmax(0,1fr)}
+  .sales-conversation{min-height:445px}
+  .sales-proposal{min-height:320px}
+  .sales-chat-log{max-height:275px}
+}
+@media(max-width:600px){
+  .sales-hero{padding:96px 0 38px}
+  .sales-intro{margin-bottom:25px}
+  .sales-intro h1{font-size:clamp(2.15rem,9vw,3.1rem)}
+  .sales-intro>p{font-size:14px}
+  .sales-workspace{gap:12px}
+  .sales-conversation,.sales-proposal{border-radius:16px}
+  .sales-window-header{padding:16px 14px}
+  .sales-window-label{max-width:80px;line-height:1.3}
+  .sales-chat-log{padding:17px 14px;min-height:175px}
+  .sales-prompt-list button{font-size:10px}
+  .sales-starting-prompts{padding:0 13px 14px}
+  .sales-composer{margin:0 12px 7px}
+  .sales-proposal{padding:19px 17px}
+}
+@media(prefers-reduced-motion:reduce){.sales-prompt-list button{transition:none}}
