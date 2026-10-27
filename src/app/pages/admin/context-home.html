@@ -1,0 +1,83 @@
+<ng-container *ngIf="isManager$ | async; else professionalPortal">
+  <div class="context-home" *ngIf="!loading; else homeLoading">
+    <header class="context-header">
+      <div>
+        <p class="eyebrow"><span class="live-dot"></span> SEU NEGÓCIO, AGORA</p>
+        <h1>{{ greeting }}</h1>
+        <p class="header-description">O essencial do seu dia, no momento certo.</p>
+      </div>
+      <a class="new-appointment" routerLink="/admin/agenda/novo"><i class="pi pi-plus" aria-hidden="true"></i> Novo agendamento</a>
+    </header>
+
+    <p class="context-error" *ngIf="agenda.error$ | async as loadError" role="alert">
+      {{ loadError }} <button type="button" (click)="agenda.reload()">Tentar novamente</button>
+    </p>
+
+    <ng-container *ngIf="!(agenda.error$ | async)">
+
+    <section class="daily-focus" *ngIf="primaryInsight as focus" [class.attention]="focus.tone === 'attention'" aria-labelledby="focus-title">
+      <div class="focus-copy">
+        <p class="eyebrow"><i class="pi pi-sparkles" aria-hidden="true"></i> {{ focus.eyebrow }}</p>
+        <h2 id="focus-title">{{ focus.title }}</h2>
+        <p>{{ focus.description }}</p>
+        <a [routerLink]="focus.action.route">{{ focus.action.label }} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></a>
+      </div>
+      <div class="focus-mark" aria-hidden="true"><span>a</span><span class="focus-orbit"></span></div>
+    </section>
+
+    <div class="daily-metrics" aria-label="Indicadores da agenda de hoje">
+      <div><span>Agenda de hoje</span><strong>{{ context.totalToday }}</strong><small>não cancelados</small></div>
+      <div><span>Em atendimento</span><strong>{{ context.inProgress }}</strong><small>agora</small></div>
+      <div><span>Concluídos</span><strong>{{ context.completed }}</strong><small>hoje</small></div>
+      <div><span>Para conferir</span><strong [class.metric-alert]="context.late.length">{{ context.late.length }}</strong><small>horários iniciados há mais de 10 min</small></div>
+    </div>
+
+    <div class="context-columns">
+      <section class="conversation-panel" aria-labelledby="conversation-title">
+        <div class="section-head"><div><p class="eyebrow">ASSISTENTE CONTEXTUAL</p><h2 id="conversation-title">Como posso ajudar?</h2></div><i class="pi pi-sparkles" aria-hidden="true"></i></div>
+        <div class="conversation-intro" *ngIf="!conversation.length">
+          <p>Conheço os dados disponíveis desta unidade e posso conduzir você até a próxima ação.</p>
+          <div class="prompt-list"><button type="button" *ngFor="let suggestion of suggestions" (click)="ask(suggestion)">{{ suggestion }} <i class="pi pi-arrow-up-right" aria-hidden="true"></i></button></div>
+        </div>
+        <div class="conversation-history" *ngIf="conversation.length" role="log" aria-live="polite" aria-label="Conversa contextual">
+          <div class="conversation-turn" *ngFor="let turn of conversation">
+            <p class="user-question">{{ turn.question }}</p>
+            <div class="context-answer"><span class="answer-symbol" aria-hidden="true">a</span><div><h3>{{ turn.answer.title }}</h3><p>{{ turn.answer.message }}</p><a *ngIf="turn.answer.action as action" [routerLink]="action.route">{{ action.label }} <i class="pi pi-arrow-right" aria-hidden="true"></i></a></div></div>
+          </div>
+        </div>
+        <form class="context-composer" (ngSubmit)="ask()">
+          <label class="sr-only" for="home-prompt">Pergunte sobre o seu negócio</label>
+          <input id="home-prompt" type="text" name="prompt" [(ngModel)]="question" maxlength="300" autocomplete="off" placeholder="Pergunte sobre o seu negócio..." />
+          <button type="submit" aria-label="Enviar pergunta" [disabled]="!question.trim()"><i class="pi pi-arrow-up" aria-hidden="true"></i></button>
+        </form>
+        <p class="conversation-note">Consultas e navegação contextual nesta etapa. Alterações exigem revisão nas telas operacionais.</p>
+      </section>
+
+      <section class="today-panel" aria-labelledby="today-title">
+        <div class="section-head"><div><p class="eyebrow">OPERAÇÃO</p><h2 id="today-title">Próximos passos</h2></div><a routerLink="/admin/agenda" aria-label="Abrir agenda"><i class="pi pi-arrow-up-right" aria-hidden="true"></i></a></div>
+        <div class="appointment-list" *ngIf="upcomingAppointments.length; else emptyAgenda">
+          <a class="appointment-row" *ngFor="let apt of upcomingAppointments" [routerLink]="['/admin/agenda/atendimento', apt.id]">
+            <time>{{ apt.start | date:'HH:mm' }}</time>
+            <span class="appointment-name"><strong>{{ apt.title }}</strong><small>{{ apt.profissional_nome || 'Equipe a definir' }}</small></span>
+            <span class="appointment-status">{{ statusLabel(apt.status) }}</span>
+          </a>
+        </div>
+        <ng-template #emptyAgenda><p class="empty-agenda">Nenhum atendimento ativo para mostrar. Abra a agenda para organizar seu dia.</p></ng-template>
+        <a class="all-appointments" routerLink="/admin/agenda">Ver agenda completa <i class="pi pi-arrow-right" aria-hidden="true"></i></a>
+      </section>
+    </div>
+
+    <section class="context-bottom" *ngIf="otherInsights.length || birthdays.length">
+      <div class="section-head"><div><p class="eyebrow">EM SEGUNDO PLANO</p><h2>Vale acompanhar</h2></div></div>
+      <div class="quiet-insights">
+        <div class="quiet-insight" *ngFor="let insight of otherInsights"><span class="insight-rule"></span><h3>{{ insight.title }}</h3><p>{{ insight.description }}</p><a [routerLink]="insight.action.route">{{ insight.action.label }} <i class="pi pi-arrow-right" aria-hidden="true"></i></a></div>
+        <div class="quiet-insight" *ngIf="birthdays.length"><span class="insight-rule"></span><h3>{{ birthdays.length }} {{ birthdays.length === 1 ? 'aniversariante' : 'aniversariantes' }} no mês</h3><p *ngFor="let client of birthdays | slice:0:3">{{ client.nome }} · {{ client.nascimento | date:'dd/MM' }}</p><p *ngIf="birthdays.length > 3">E mais {{ birthdays.length - 3 }}.</p><a routerLink="/admin/clientes" *ngIf="isOwner$ | async">Ver clientes <i class="pi pi-arrow-right" aria-hidden="true"></i></a></div>
+      </div>
+    </section>
+    </ng-container>
+
+    <app-activation-summary *ngIf="isOwner$ | async"></app-activation-summary>
+  </div>
+</ng-container>
+<ng-template #homeLoading><div class="context-loading" role="status"><span class="live-dot"></span> Preparando o contexto da sua unidade...</div></ng-template>
+<ng-template #professionalPortal><app-portal-profissional></app-portal-profissional></ng-template>

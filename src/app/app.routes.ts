@@ -80,6 +80,11 @@ export const routes: Routes = [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       {
         path: 'dashboard',
+        loadComponent: () => import('./pages/admin/context-home').then((m) => m.ContextHome),
+      },
+      // Rota de contingência: mantém a home anterior enquanto a experiência contextual evolui.
+      {
+        path: 'dashboard-classico',
         loadComponent: () => import('./pages/admin/admin').then((m) => m.Admin),
       },
       {
